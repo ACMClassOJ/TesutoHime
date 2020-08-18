@@ -39,7 +39,7 @@ CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Description TEXT, Input Tex
 * Friendly_Name: TINYTEXT
 * Password: TINYTEXT // sha-512 with salt
 * Salt: INT
-* Privilege: INT
+* Privilege: INT // 0: Normal User, 1: Admin(Normal User + Problem Edit), 2: Super(Problem Editor + User Modify + Judge Server Manually Add/Delete);
 
 ```sql
 CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username TINYTEXT, Student_ID BIGINT, Friendly_Name TINYTEXT, Password TINYTEXT, Salt INT, Privilege INT, PRIMARY KEY(tempID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

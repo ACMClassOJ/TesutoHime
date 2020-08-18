@@ -50,13 +50,15 @@ CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username TINYTEXT, Student
 * ID: INT, auto_increment, PRIMARY KEY
 * Code: TEXT
 * User: TINYTEXT
+* Problem_ID: INT
+* Language: INT
 * Status: INT
 * Score: INT
 * Time: BIGINT // unix nano
 * Detail: MEDIUMTEXT // may exceed 64 KB
 
 ```sql
-CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Status INT, Score INT, Time BIGINT, Detail MEDIUMTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Problem_ID INT, Language INT, Status INT, Score INT, Time BIGINT, Detail MEDIUMTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 #### Contest:
@@ -103,3 +105,18 @@ CREATE TABLE Contest_Player(tempID INT NOT NULL AUTO_INCREMENT, Belong INT, User
 ```sql
 CREATE TABLE Discuss(ID INT NOT NULL AUTO_INCREMENT, Problem_ID INT, Username TINYTEXT, Data Text, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
+
+#### Judge_Server
+
+* ID: INT, auto_increment, PRIMARY KEY
+* Secret_Key: TINYTEXT // uuid4
+* Last_Seen_Time: BIGINT
+* Busy: BOOLEAN
+* Friendly_Name: TINYTEXT
+* Provider: TINYTEXT
+* Detail: TINYTEXT
+
+```sql
+CREATE TABLE Judge_Server(ID INT NOT NULL AUTO_INCREMENT, Secret_Key TINYTEXT, Last_Seen_Time BIGINT, Busy BOOLEAN, Friendly_Name TINYTEXT, Provider TINYTEXT, Detail TINYTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+

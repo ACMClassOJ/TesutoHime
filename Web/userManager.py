@@ -88,3 +88,13 @@ class UserManager:
         data = cursor.fetchone()
         db.close()
         return int(data[0])
+
+    def Delete_User(self, Username: str):
+        db = DB_Connect()
+        cursor = db.cursor()
+        try:
+            cursor.execute("DELETE FROM User WHERE Username = '%s'" % (Username))
+        except:
+            db.rollback()
+            return
+        db.close()

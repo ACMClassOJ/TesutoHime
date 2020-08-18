@@ -98,3 +98,13 @@ class ProblemManager:
         data = cursor.fetchone()
         db.close()
         return data[0]
+
+    def Delete_Problem(self, ID: int):
+        db = DB_Connect()
+        cursor = db.cursor()
+        try:
+            cursor.execute("DELETE FROM Problem WHERE ID = '%s'" % (str(ID)))
+        except:
+            db.rollback()
+            return
+        db.close()

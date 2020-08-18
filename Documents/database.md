@@ -14,7 +14,8 @@
 
 #### User:
 
-* Username: TINYTEXT, PRIMARY KEY
+* tempID auto_increment, PRIMARY KEY
+* Username: TINYTEXT
 * Student_ID: BIGINT
 * Friendly_Name: TINYTEXT
 * Password: TINYTEXT // sha-512 with salt

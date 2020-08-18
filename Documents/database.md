@@ -16,7 +16,7 @@ USE OJ;
 #### Problem:
 
 * ID: INT, auto_increment, PRIMARY KEY
-
+* Title: TEXT
 * Description: TEXT
 * Input: TEXT
 * Output: TEXT
@@ -27,13 +27,12 @@ USE OJ;
 * Flag_Count: INT // 在比赛或作业中的次数
 
 ```sql
-CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Description TEXT, Input Text, Output Text, Example_Input Text, Example_Output Text, Data_Range Text, Release_Time BIGINT, Flag_Count INT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Title TEXT, Description TEXT, Input Text, Output Text, Example_Input Text, Example_Output Text, Data_Range Text, Release_Time BIGINT, Flag_Count INT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 #### User:
 
 * tempID auto_increment, PRIMARY KEY
-
 * Username: VARCHAR(20), UNIQUE
 * Student_ID: BIGINT
 * Friendly_Name: TINYTEXT

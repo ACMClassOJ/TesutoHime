@@ -25,22 +25,32 @@
 			<h4>题目描述</h4>
 			<p id="problem_details_descrption">{{description}}</p>
 			<h3>输入格式</h3>
-			<p id="problem_details_input">{{input}}</p>
+			<code id="problem_details_input">{{input}}</code>
 			<h3>输出格式</h3>
-			<p id="problem_details_output">{{output}}</p>
+			<code id="problem_details_output">{{output}}</code>
 			<h3>其他</h3>
 			<p id="problem_details_others">{{others}}</p>
 		</div>
 	</div>
-	<div class="card card-body">
-		<div class="btn-group">
+	<div class="col-lg-3 m-auto">
+		<div class="btn-group m-auto">
 			<a href="" class="btn btn-primary"> 提交 </a>
-			<a href="" class="btn btn-warning"> 评测状态 </a>
+			<a href="" class="btn btn-info"> 评测状态 </a>
+			<a href="" class="btn btn-success"> 讨论 </a>
 		</div>
 	</div>
 	<div class="card card-body">
+		<h3>提交</h3>
+		<form>
+			<textarea id="problem_details_submit"></textarea>
+		</form>
+	</div>
+	<div class="card card-body">
+		<h3>本题评测情况</h3>
+	</div>
+	<div class="card card-body">
 		<h3>奇怪的markdown讨论区</h3>
-		<h3>来发表你的看法吧~</h3>
+		<h5>来发表你的看法吧~</h5>
 		<form>
 			<textarea id="problem_details_discussion"></textarea>
 		</form>

@@ -4,7 +4,7 @@ from api import api
 
 
 def RunFlask(f, port):
-    f(port=port)
+    f(host='0.0.0.0', port=port)
 
 
 global web

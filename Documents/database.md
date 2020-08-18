@@ -1,8 +1,22 @@
+### 建立数据库
+
+数据库名称为OJ，root密码为Progynova。
+
+```sql
+UPDATE mysql.user SET authentication_string = PASSWORD ("Progynova") WHERE User = "root" AND Host="localhost";
+UPDATE mysql.user SET plugin='mysql_native_password' WHERE user='root';
+FLUSH PRIVILEGES;
+
+CREATE DATABASE OJ;
+USE OJ;
+```
+
 ### 数据表格式：
 
 #### Problem:
 
 * ID: INT, auto_increment, PRIMARY KEY
+
 * Description: TEXT
 * Input: TEXT
 * Output: TEXT
@@ -12,9 +26,14 @@
 * Release_Time: BIGINT // unix nano
 * Flag_Count: INT // 在比赛或作业中的次数
 
+```sql
+CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Description TEXT, Input Text, Output Text, Example_Input Text, Example_Output Text, Data_Range Text, Release_Time BIGINT, Flag_Count INT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
 #### User:
 
 * tempID auto_increment, PRIMARY KEY
+
 * Username: TINYTEXT
 * Student_ID: BIGINT
 * Friendly_Name: TINYTEXT
@@ -22,28 +41,45 @@
 * Salt: INT
 * Privilege: INT
 
+```sql
+CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username TINYTEXT, Student_ID BIGINT, Friendly_Name TINYTEXT, Password TINYTEXT, Salt INT, Privilege INT, PRIMARY KEY(tempID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
 #### Judge:
 
 * ID: INT, auto_increment, PRIMARY KEY
 * Code: TEXT
-* User: INT
-* Result: INT
+* User: TINYTEXT
+* Status: INT
 * Score: INT
 * Time: BIGINT // unix nano
 * Detail: MEDIUMTEXT // may exceed 64 KB
 
+```sql
+CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Status INT, Score INT, Time BIGINT, Detail MEDIUMTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
 #### Contest:
 
 * ID: INT, auto_increment, PRIMARY KEY
+* Name TINYTEXT
 * Start_Time: BIGINT // unix nano
 * End_Time: BIGINT // unix nano
 * Type: INT // Contest or Homework
+
+```sql
+CREATE TABLE Contest(ID INT NOT NULL AUTO_INCREMENT, Name TINYTEXT, Start_Time BIGINT, End_Time BIGINT, Type INT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
 
 #### Contest_Problem:
 
 * tempID: INT, auto_increment, PRIMARY KEY // useless
 * Belong: INT // Contest it belongs to
 * Problem_ID: INT
+
+```sql
+CREATE TABLE Contest_Problem(tempID INT NOT NULL AUTO_INCREMENT, Belong INT, Problem_ID INT, PRIMARY KEY(tempID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
 
 #### Contest_Player:
 
@@ -53,9 +89,17 @@
 
 如何查询比赛中提交？比赛->用户+题目->组合查提交(反正mysql非常快对不对)
 
+```sql
+CREATE TABLE Contest_Player(tempID INT NOT NULL AUTO_INCREMENT, Belong INT, Username TINYTEXT, PRIMARY KEY(tempID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
 #### Discuss:
 
 * ID: INT, auto_increment, PRIMARY KEY
 * Problem_ID: INT
 * Username: TINYTEXT
 * Data: TEXT
+
+```sql
+CREATE TABLE Discuss(ID INT NOT NULL AUTO_INCREMENT, Problem_ID INT, Username TINYTEXT, Data Text, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```

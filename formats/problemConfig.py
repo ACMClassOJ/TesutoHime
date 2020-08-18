@@ -1,4 +1,5 @@
-class ProblemConfig:
+class DataConfig:
+    # todo used as datawise config
     def __init__(self,
                  configVersion: int,
                  ID: str,
@@ -18,3 +19,7 @@ class ProblemConfig:
         self.compileTimeLimit=compileTimeLimit # ms
         self.diskLimit=diskLimit # kb
         
+class ProblemConfig:
+    # todo implementation
+    def __init__(self):
+        pass

@@ -16,7 +16,7 @@ USE OJ;
 #### Problem:
 
 * ID: INT, auto_increment, PRIMARY KEY
-
+* Title: TEXT
 * Description: TEXT
 * Input: TEXT
 * Output: TEXT
@@ -27,14 +27,13 @@ USE OJ;
 * Flag_Count: INT // 在比赛或作业中的次数
 
 ```sql
-CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Description TEXT, Input Text, Output Text, Example_Input Text, Example_Output Text, Data_Range Text, Release_Time BIGINT, Flag_Count INT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Title TEXT, Description TEXT, Input Text, Output Text, Example_Input Text, Example_Output Text, Data_Range Text, Release_Time BIGINT, Flag_Count INT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 #### User:
 
 * tempID auto_increment, PRIMARY KEY
-
-* Username: TINYTEXT
+* Username: VARCHAR(20), UNIQUE
 * Student_ID: BIGINT
 * Friendly_Name: TINYTEXT
 * Password: TINYTEXT // sha-512 with salt
@@ -42,7 +41,7 @@ CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Description TEXT, Input Tex
 * Privilege: INT // 0: Normal User, 1: Admin(Normal User + Problem Edit), 2: Super(Problem Editor + User Modify + Judge Server Manually Add/Delete);
 
 ```sql
-CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username TINYTEXT, Student_ID BIGINT, Friendly_Name TINYTEXT, Password TINYTEXT, Salt INT, Privilege INT, PRIMARY KEY(tempID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username VARCHAR(20), Student_ID BIGINT, Friendly_Name TINYTEXT, Password TINYTEXT, Salt INT, Privilege INT, PRIMARY KEY(tempID), UNIQUE KEY(Username))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 #### Judge:

@@ -99,6 +99,13 @@ class ProblemManager:
         db.close()
         return data[0]
 
+    def Problem_In_Range(self, startID: int, endID: int, timeNow: int):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= '%s' and ID <= '%s' and Release_Time <= '%s'" % (str(startID), str(endID), str(timeNow)))
+        ret = cursor.fetchall()
+        return ret
+
     def Delete_Problem(self, ID: int):
         db = DB_Connect()
         cursor = db.cursor()

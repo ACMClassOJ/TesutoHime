@@ -49,13 +49,15 @@ CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username VARCHAR(20), Stud
 * ID: INT, auto_increment, PRIMARY KEY
 * Code: TEXT
 * User: TINYTEXT
+* Problem_ID: INT
+* Language: INT
 * Status: INT
 * Score: INT
 * Time: BIGINT // unix nano
 * Detail: MEDIUMTEXT // may exceed 64 KB
 
 ```sql
-CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Status INT, Score INT, Time BIGINT, Detail MEDIUMTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Problem_ID INT, Language INT, Status INT, Score INT, Time BIGINT, Detail MEDIUMTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 #### Contest:
@@ -64,7 +66,7 @@ CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Sta
 * Name TINYTEXT
 * Start_Time: BIGINT // unix nano
 * End_Time: BIGINT // unix nano
-* Type: INT // Contest or Homework
+* Type: INT // 0 for Contest and 1 for Homework
 
 ```sql
 CREATE TABLE Contest(ID INT NOT NULL AUTO_INCREMENT, Name TINYTEXT, Start_Time BIGINT, End_Time BIGINT, Type INT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

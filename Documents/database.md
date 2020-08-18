@@ -34,7 +34,7 @@ CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Description TEXT, Input Tex
 
 * tempID auto_increment, PRIMARY KEY
 
-* Username: TINYTEXT
+* Username: VARCHAR(20), UNIQUE
 * Student_ID: BIGINT
 * Friendly_Name: TINYTEXT
 * Password: TINYTEXT // sha-512 with salt
@@ -42,7 +42,7 @@ CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Description TEXT, Input Tex
 * Privilege: INT
 
 ```sql
-CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username TINYTEXT, Student_ID BIGINT, Friendly_Name TINYTEXT, Password TINYTEXT, Salt INT, Privilege INT, PRIMARY KEY(tempID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username VARCHAR(20), Student_ID BIGINT, Friendly_Name TINYTEXT, Password TINYTEXT, Salt INT, Privilege INT, PRIMARY KEY(tempID), UNIQUE KEY(Username))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 #### Judge:

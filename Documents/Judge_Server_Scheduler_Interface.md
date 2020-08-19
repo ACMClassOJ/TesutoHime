@@ -14,7 +14,7 @@
   	* Server_Secret：字符串，Web Server的API Key，由评测机上的Config文件预置，错误时拒绝评测。
   	* Problem_ID：4位数字，表示题号。
   	* Judge_ID：多位数字，表示该次评测ID。
-  	* Lang: 字符串，表示
+  	* Lang: 字符串，表示程序语言，为'C++'或'Git'(其他语言尚未实装)
   	* Code：代码。
   
   若添加成功返回字符串'0'，否则返回字符串'-1'。

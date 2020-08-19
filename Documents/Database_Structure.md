@@ -51,7 +51,7 @@ CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username VARCHAR(20), Stud
 * User: TINYTEXT
 * Problem_ID: INT
 * Language: INT // 0 for C++, 1 for git, 2 for python3(Not Supported Yet)
-* Status: INT
+* Status: INT // (AC、WA、CE、RE、TLE、MLE、RE、CE、Memory Leak、System Error)
 * Score: INT
 * Time: BIGINT // unix nano
 * Time_Used: INT // ms

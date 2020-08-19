@@ -18,7 +18,7 @@ class DataConfig:
         self.version = configVersion
         self.ID = ID
         self.timeLimit = timeLimit  # ms
-        self.memoryLimit = memoryLimit  # kb
+        self.memoryLimit = memoryLimit  # kb    
         self.compileTimeLimit = compileTimeLimit  # ms
         self.diskLimit = diskLimit  # kb
         self.fullScore = fullScore

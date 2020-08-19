@@ -56,7 +56,7 @@ class JudgeResult:
                  ):
         self.subtasks = subtasks 
 
-class JudgeCore:
+class JudgerCore:
     def __init__(self, problemConfig):
         self.problemConfig = problemConfig
     

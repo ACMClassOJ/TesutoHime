@@ -24,10 +24,10 @@ USE OJ;
 * Example_Output: TEXT
 * Data_Range: TEXT
 * Release_Time: BIGINT // unix nano
-* Flag_Count: INT // 在比赛或作业中的次数
+* Flag_Count: INT DEFAULT 0// 在比赛或作业中的次数
 
 ```sql
-CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Title TEXT, Description TEXT, Input Text, Output Text, Example_Input Text, Example_Output Text, Data_Range Text, Release_Time BIGINT, Flag_Count INT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Title TEXT, Description TEXT, Input Text, Output Text, Example_Input Text, Example_Output Text, Data_Range Text, Release_Time BIGINT, Flag_Count INT DEFAULT 0, PRIMARY KEY(ID))ENGINE=InnoDB AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8mb4;
 ```
 
 #### User:
@@ -66,7 +66,7 @@ CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Pro
 * Name TINYTEXT
 * Start_Time: BIGINT // unix nano
 * End_Time: BIGINT // unix nano
-* Type: INT // Contest or Homework
+* Type: INT // 0 for Contest and 1 for Homework
 
 ```sql
 CREATE TABLE Contest(ID INT NOT NULL AUTO_INCREMENT, Name TINYTEXT, Start_Time BIGINT, End_Time BIGINT, Type INT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

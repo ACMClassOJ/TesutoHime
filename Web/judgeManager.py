@@ -19,7 +19,7 @@ class JudgeManager:
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status) VALUES('%s', '%s', '%s', '%s', '%s', '0')",
+            cursor.execute("INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status) VALUES(%s, %s, %s, %s, %s, '0')",
                            (Code, User, str(Problem_ID), str(Language), str(Time)))
             db.commit()
         except:
@@ -32,7 +32,7 @@ class JudgeManager:
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Judge SET Status = '%s' WHERE ID = '%s'", (str(NewStatus), str(ID)))
+            cursor.execute("UPDATE Judge SET Status = %s WHERE ID = %s", (str(NewStatus), str(ID)))
             db.commit()
         except:
             db.rollback()
@@ -44,7 +44,7 @@ class JudgeManager:
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Judge SET Status = '%s', Score = '%s', Detail = '%s' WHERE ID = '%s'", (str(NewStatus), str(ID), str(Score), Detail))
+            cursor.execute("UPDATE Judge SET Status = %s, Score = %s, Detail = %s WHERE ID = %s", (str(NewStatus), str(ID), str(Score), Detail))
             db.commit()
         except:
             db.rollback()
@@ -52,10 +52,10 @@ class JudgeManager:
         db.close()
         return
 
-    def Query_Judge(self, ID: int)->dict:
+    def Query_Judge(self, ID: int)->dict: # for details
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used FROM Judge WHERE ID = '%s'", (str(ID)))
+        cursor.execute("SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used FROM Judge WHERE ID = %s", (str(ID)))
         data = cursor.fetchone()
         db.close()
         if data == None:
@@ -72,7 +72,7 @@ class JudgeManager:
     def Judge_In_Range(self, startID: int, endID: int): # [{}], for page display.
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used FROM Judge WHERE ID >= '%s' and ID <= '%s'", (str(startID), str(endID)))
+        cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used FROM Judge WHERE ID >= %s and ID <= %s", (str(startID), str(endID)))
         data = cursor.fetchall()
         ret = []
         for d in data:
@@ -87,11 +87,16 @@ class JudgeManager:
         db.close()
         return ret
 
+    def Get_Contest_Judge(self, Problem_ID: int, Username: str, Start_Time: int, End_Time: int):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT ID, Status, Score FROM Judge WHERE Problem_ID = %s AND User = %s AND Time >= %s AND Time <= %s", (str(Problem_ID), Username, str(Start_Time), str(End_Time)))
+
     def Delete_Judge(self, ID: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("DELETE FROM Judge WHERE  ID = '%s'", (str(ID)))
+            cursor.execute("DELETE FROM Judge WHERE  ID = %s", (str(ID)))
             db.commit()
         except:
             db.rollback()

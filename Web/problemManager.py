@@ -6,7 +6,7 @@ class ProblemManager:
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("INSERT INTO Problem(Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')" % \
+            cursor.execute("INSERT INTO Problem(Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
                            (Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time))
             db.commit()
         except:
@@ -19,7 +19,7 @@ class ProblemManager:
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Problem SET Title = '%s', Description = '%s', Input = '%s', Output = '%s', Example_Input = '%s', Example_Output = '%s', Data_Range = '%s', Release_Time = '%s' WHERE ID = '%s'" % \
+            cursor.execute("UPDATE Problem SET Title = '%s', Description = '%s', Input = '%s', Output = '%s', Example_Input = '%s', Example_Output = '%s', Data_Range = '%s', Release_Time = '%s' WHERE ID = '%s'",
                            (Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time, str(ID)))
             db.commit()
         except:
@@ -31,7 +31,7 @@ class ProblemManager:
     def Get_Problem(self, ID:int)->dict:
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM Problem WHERE ID = '%s'" % (str(ID)))
+        cursor.execute("SELECT * FROM Problem WHERE ID = '%s'", (str(ID)))
         data = cursor.fetchone()
         db.close()
         if data == None:
@@ -53,7 +53,7 @@ class ProblemManager:
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Problem SET Flag_Count = Flag_Count + 1 WHERE ID = '%s'" % (str(ID)))
+            cursor.execute("UPDATE Problem SET Flag_Count = Flag_Count + 1 WHERE ID = '%s'", (str(ID)))
             db.commit()
         except:
             db.rollback()
@@ -64,7 +64,7 @@ class ProblemManager:
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Problem SET Flag_Count = Flag_Count - 1 WHERE ID = '%s'" % (str(ID)))
+            cursor.execute("UPDATE Problem SET Flag_Count = Flag_Count - 1 WHERE ID = '%s'", (str(ID)))
             db.commit()
         except:
             db.rollback()
@@ -74,7 +74,7 @@ class ProblemManager:
     def Get_Title(self, ID:int) -> str:
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT Title FROM Problem WHERE ID = '%s'" % (str(ID)))
+        cursor.execute("SELECT Title FROM Problem WHERE ID = '%s'", (str(ID)))
         data = cursor.fetchone()
         db.close()
         if data == None:
@@ -84,7 +84,7 @@ class ProblemManager:
     def In_Contest(self, ID: int) -> bool: # return True when this Problem is in a Contest or Homework
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT Flag_Count FROM Problem WHERE ID = '%s'" % (str(ID)))
+        cursor.execute("SELECT Flag_Count FROM Problem WHERE ID = '%s'", (str(ID)))
         data = cursor.fetchone()
         db.close()
         if data == None:
@@ -102,7 +102,7 @@ class ProblemManager:
     def Problem_In_Range(self, startID: int, endID: int, timeNow: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= '%s' and ID <= '%s' and Release_Time <= '%s'" % (str(startID), str(endID), str(timeNow)))
+        cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= '%s' and ID <= '%s' and Release_Time <= '%s'", (str(startID), str(endID), str(timeNow)))
         ret = cursor.fetchall()
         return ret
 
@@ -110,7 +110,7 @@ class ProblemManager:
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("DELETE FROM Problem WHERE ID = '%s'" % (str(ID)))
+            cursor.execute("DELETE FROM Problem WHERE ID = '%s'", (str(ID)))
         except:
             db.rollback()
             return

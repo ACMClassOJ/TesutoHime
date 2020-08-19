@@ -24,10 +24,10 @@ USE OJ;
 * Example_Output: TEXT
 * Data_Range: TEXT
 * Release_Time: BIGINT // unix nano
-* Flag_Count: INT // 在比赛或作业中的次数
+* Flag_Count: INT DEFAULT 0// 在比赛或作业中的次数
 
 ```sql
-CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Title TEXT, Description TEXT, Input Text, Output Text, Example_Input Text, Example_Output Text, Data_Range Text, Release_Time BIGINT, Flag_Count INT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Title TEXT, Description TEXT, Input Text, Output Text, Example_Input Text, Example_Output Text, Data_Range Text, Release_Time BIGINT, Flag_Count INT DEFAULT 0, PRIMARY KEY(ID))ENGINE=InnoDB AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8mb4;
 ```
 
 #### User:
@@ -50,14 +50,16 @@ CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username VARCHAR(20), Stud
 * Code: TEXT
 * User: TINYTEXT
 * Problem_ID: INT
-* Language: INT
-* Status: INT
+* Language: INT // 0 for C++, 1 for git, 2 for python3(Not Supported Yet)
+* Status: INT // (AC、WA、CE、RE、TLE、MLE、RE、CE、Memory Leak、System Error)
 * Score: INT
 * Time: BIGINT // unix nano
+* Time_Used: INT // ms
+* Mem_Used: INT // Byte
 * Detail: MEDIUMTEXT // may exceed 64 KB
 
 ```sql
-CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Problem_ID INT, Language INT, Status INT, Score INT, Time BIGINT, Detail MEDIUMTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Problem_ID INT, Language INT, Status INT, Score INT, Time BIGINT, Time_Used INT, Mem_Used INT, Detail MEDIUMTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 #### Contest:
@@ -66,7 +68,7 @@ CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Pro
 * Name TINYTEXT
 * Start_Time: BIGINT // unix nano
 * End_Time: BIGINT // unix nano
-* Type: INT // Contest or Homework
+* Type: INT // 0 for Contest and 1 for Homework
 
 ```sql
 CREATE TABLE Contest(ID INT NOT NULL AUTO_INCREMENT, Name TINYTEXT, Start_Time BIGINT, End_Time BIGINT, Type INT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -108,14 +110,14 @@ CREATE TABLE Discuss(ID INT NOT NULL AUTO_INCREMENT, Problem_ID INT, Username TI
 #### Judge_Server
 
 * ID: INT, auto_increment, PRIMARY KEY
+* Address: TINYTEXT
 * Secret_Key: TINYTEXT // uuid4
-* Last_Seen_Time: BIGINT
-* Busy: BOOLEAN
+* Last_Seen_Time: BIGINT 0
+* Busy: BOOLEAN 0
 * Friendly_Name: TINYTEXT
-* Provider: TINYTEXT
 * Detail: TINYTEXT
 
 ```sql
-CREATE TABLE Judge_Server(ID INT NOT NULL AUTO_INCREMENT, Secret_Key TINYTEXT, Last_Seen_Time BIGINT, Busy BOOLEAN, Friendly_Name TINYTEXT, Provider TINYTEXT, Detail TINYTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Judge_Server(ID INT NOT NULL AUTO_INCREMENT, Address TINYTEXT, Secret_Key TINYTEXT, Last_Seen_Time BIGINT DEFAULT 0, Busy BOOLEAN DEFAULT FALSE, Friendly_Name TINYTEXT, Detail TINYTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>注册</title>
+<!--
+<script src="/static/jquery.min.js"></script>
+<link href="/static/bootstrap.min.css" rel="stylesheet">
+<link href="/static/main.css" rel="stylesheet">
+<script src="/static/popper.min.js" ></script>
+<script src="/static/bootstrap.min.js" ></script>
+-->
+<link href="assets/css/lib/bootstrap.min.css" rel="stylesheet">
+<link href="assets/css/style.css" rel="stylesheet">
+</head>
+			
+
+<body>
+<div class="container">
+	<div class="sidebar sidebar-hide-to-small sidebar-shrink sidebar-gestures"></div>
+	<div class="card card-body col-lg-6 m-auto">
+		<div class="page-header">
+			<h1 class="text-center"> 注册 </h1>
+		</div>
+		<div id="content">
+			<form id="register" method="post" action="/register">
+			用户名：
+			<input class="form-control input-default" placeholder="学号，例：519021910001" required="required" id="id" name="id" type="number">
+			昵称：
+			<input class="form-control input-default" placeholder="如何称呼您？" required="required" id="username" name="username" type="text">
+			密码：
+			<input class="form-control input-default" type="password" placeholder="密码" required="required" id="password" name="password">
+			<div class="btn-group m-auto">
+               <input type="submit" class="btn btn-primary" value="注册"></input>
+               <input type="reset" class="btn btn-primary"  value="清空" onclick="$('div input').val('');"></input>
+            </div>
+		</form>
+	</div>
+</div>
+
+<footer>
+	<div class="container text-center">SJTU OnlineJudge &copy 2020 Power by 1234567890</div>
+</footer>
+</body>
+<script src="assets/js/lib/jquery.min.js"></script>
+<script src="assets/js/lib/jquery.form.js"></script>
+<script src="assets/js/lib/sweetalert/sweetalert.min.js"></script> 
+<script src="assets/js/register.js"></script>
+</html>

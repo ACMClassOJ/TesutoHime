@@ -5,13 +5,16 @@
 * http接口，用于接收评测请求：
 
   ```
-  url/judge?Server_Secret=STR&Problem_ID=INT&Judge_ID=INT&Code=STR
+  url/judge
   ```
+  Post方式发送
+  
   其中数据为：
   
   	* Server_Secret：字符串，Web Server的API Key，由评测机上的Config文件预置，错误时拒绝评测。
   	* Problem_ID：4位数字，表示题号。
   	* Judge_ID：多位数字，表示该次评测ID。
+  	* Lang: 字符串，表示
   	* Code：代码。
   
   若添加成功返回字符串'0'，否则返回字符串'-1'。
@@ -19,9 +22,10 @@
 * http接口，用于查询是否正忙：
 
   ```
-  url/isBusy?Server_Secret=STR
+  url/isBusy
   ```
-
+  Post方式发送
+  
   其中数据为：
 
   * Server_Secret：意义同上。
@@ -45,9 +49,10 @@
 * http接口，用于接收评测机心跳包。
 
   ```
-  url/heartBeat?Server_Secret=STR
+  url/heartBeat
   ```
-
+  Post方式发送
+  
   其中数据为：
 
   * Server_Secret：字符串，用于标识评测机身份。
@@ -59,9 +64,10 @@
 * http接口，用于接收评测结果：
 
   ```
-  url/pushResult?Server_Secret=STR&Judge_ID=INT&Result=STR
+  url/pushResult
   ```
-
+  Post方式发送
+  
   其中数据为：
 
   * Server_Secret：字符串，用于标识评测机身份。

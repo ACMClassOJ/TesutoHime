@@ -116,3 +116,5 @@ class ConetstManager:
         cursor.execute("SELECT Username FROM Contest_Player WHERE Belong = %s", (str(Contest_ID)))
         ret = cursor.fetchall()
         return ret
+
+Conetst_Manager = ConetstManager()

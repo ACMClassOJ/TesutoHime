@@ -44,3 +44,5 @@ class DiscussManager:
             sys.stderr.write("SQL Error in DiscussManager: Erase_Discuss\n")
             db.close()
         return
+
+Discuss_Manager = DiscussManager()

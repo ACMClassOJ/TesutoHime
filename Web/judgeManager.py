@@ -102,3 +102,5 @@ class JudgeManager:
             db.rollback()
             sys.stderr.write("SQL Error in JudgeManager: Erase_Judge\n")
         return
+
+Judge_Manager = JudgeManager()

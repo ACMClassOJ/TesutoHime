@@ -106,3 +106,5 @@ class UserManager:
             db.rollback()
             return
         db.close()
+
+User_Manager = UserManager

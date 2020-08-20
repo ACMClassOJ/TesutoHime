@@ -48,3 +48,5 @@ class SessionManager:
         if not (lid in self.mem):
             return 0 # lowest Privilege for Guests
         return UserManager().Get_Privilege(self.mem['Login_ID'])
+
+Login_Manager = SessionManager()

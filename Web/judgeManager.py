@@ -69,10 +69,18 @@ class JudgeManager:
         ret['Mem_Used'] = int(data[5])
         return ret
 
+    def Max_ID(self):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT MAX(ID) FROM Judge")
+        data = cursor.fetchone()
+        db.close()
+        return int(data)
+
     def Judge_In_Range(self, startID: int, endID: int): # [{}], for page display.
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used FROM Judge WHERE ID >= %s and ID <= %s", (str(startID), str(endID)))
+        cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE ID >= %s and ID <= %s", (str(startID), str(endID)))
         data = cursor.fetchall()
         ret = []
         for d in data:
@@ -83,6 +91,8 @@ class JudgeManager:
             cur['Time'] = int(d[3])
             cur['Time_Used'] = int(d[4])
             cur['Mem_Used'] = int(d[5])
+            cur['Status'] = str(d[6])
+            cur['Lang'] = str(d[7])
             ret.append(cur)
         db.close()
         return ret
@@ -90,7 +100,7 @@ class JudgeManager:
     def Get_Contest_Judge(self, Problem_ID: int, Username: str, Start_Time: int, End_Time: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, Status, Score FROM Judge WHERE Problem_ID = %s AND User = %s AND Time >= %s AND Time <= %s", (str(Problem_ID), Username, str(Start_Time), str(End_Time)))
+        cursor.execute("SELECT ID, Status, Score, Time FROM Judge WHERE Problem_ID = %s AND User = %s AND Time >= %s AND Time <= %s", (str(Problem_ID), Username, str(Start_Time), str(End_Time)))
 
     def Delete_Judge(self, ID: int):
         db = DB_Connect()

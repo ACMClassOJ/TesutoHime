@@ -101,6 +101,30 @@ class JudgeManager:
         db = DB_Connect()
         cursor = db.cursor()
         cursor.execute("SELECT ID, Status, Score, Time FROM Judge WHERE Problem_ID = %s AND User = %s AND Time >= %s AND Time <= %s", (str(Problem_ID), Username, str(Start_Time), str(End_Time)))
+        ret = cursor.fetchone()
+        db.close()
+        return ret
+
+    def Search_Judge(self, Arg_Submitter, Arg_Problem_ID):
+        db = DB_Connect()
+        cursor = db.cursor()
+        if Arg_Problem_ID == None:
+            cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE User = %s", (Arg_Submitter))
+        elif Arg_Submitter == None:
+            cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE Problem_ID = %s", (str(Arg_Problem_ID)))
+        else:
+            cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE User = %s and Problem_ID = %s", (Arg_Submitter, str(Arg_Problem_ID)))
+        ret = cursor.fetchall()
+        db.close
+        return ret
+
+    def Search_AC(self, Problem_ID):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT ID, User, Time_Used, Mem_Used, Language, Time FROM Judge WHERE Problem_ID = %s and Status = 0", (str(Problem_ID)))
+        ret = cursor.fetchall()
+        db.close()
+        return ret
 
     def Delete_Judge(self, ID: int):
         db = DB_Connect()

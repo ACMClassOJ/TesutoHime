@@ -26,6 +26,8 @@ class String:
 
 class ReturnCode:
     SUC = {'e': 0}
+    SUC_LOGIN = {'e': 0, 'msg': 'logged in successfully'}
+    SUC_LOGOUT = {'e': 0, 'msg': 'logged out successfully'}
     SUC_ADD_USER = {'e': 0, 'msg': 'user added successfully'}
     SUC_MOD_USER = {'e': 0, 'msg': 'user modified successfully'}
     SUC_DEL_USER = {'e': 0, 'msg': 'user removed successfully'}
@@ -41,6 +43,8 @@ class ReturnCode:
     SUC_DEL_USER_FROM_CONTEST = {'e': 0, 'msg': 'user removed from contest successfully'}
 
     ERR_BAD_DATA = {'e': -1, 'msg': 'bad data'}
+    ERR_LOGIN = {'e': -10, 'msg': 'login failed'}
+    ERR_LOGOUT = {'e': -11, 'msg': 'logout failed'}
 
     ERR_USER_NOT_LOGGED_IN = {'e': -100, 'msg': 'user not logged in'}
     ERR_INSUFFICIENT_PRIVILEGE = {'e': -101, 'msg': 'insufficient privilege'}

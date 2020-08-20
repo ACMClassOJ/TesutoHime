@@ -13,40 +13,40 @@ contest = ConetstManager()
 
 # TODO(Pioooooo): validate data
 def _validate_user_data(form):
-    if 'type' not in form:
+    if String.TYPE not in form:
         return ReturnCode.ERR_BAD_DATA
     # TODO: validate username
-    if 0 <= form['type'] < 2:
+    if 0 <= form[String.TYPE] < 2:
         # TODO: validate
         return None
     return None
 
 
 def _validate_problem_data(form):
-    if 'type' not in form:
+    if String.TYPE not in form:
         return ReturnCode.ERR_BAD_DATA
-    if 1 <= form['type'] < 3:
+    if 1 <= form[String.TYPE] < 3:
         # TODO: validate ID
         return None
-    if 0 <= form['type'] < 2:
+    if 0 <= form[String.TYPE] < 2:
         # TODO: validate
         return None
     return None
 
 
 def _validate_contest_data(form):
-    if 'type' not in form:
+    if String.TYPE not in form:
         return ReturnCode.ERR_BAD_DATA
-    if 1 <= form['type'] < 6:
+    if 1 <= form[String.TYPE] < 6:
         # TODO: validate contest ID
         return None
-    if 0 <= form['type'] < 2:
+    if 0 <= form[String.TYPE] < 2:
         # TODO: validate
         return None
-    elif 3 <= form['type'] < 5:
+    elif 3 <= form[String.TYPE] < 5:
         # TODO: validate problem ID
         return None
-    elif 5 <= form['type'] < 6:
+    elif 5 <= form[String.TYPE] < 6:
         # TODO: validate username
         return None
     return None
@@ -57,10 +57,32 @@ def index():
     return 'index'
 
 
+@admin.route('/login', methods=['get', 'post'])
+def login():
+    if request.method == 'get':
+        return 'login page.'
+    form = request.form
+    if String.TYPE not in form:
+        return ReturnCode.ERR_BAD_DATA
+    if form[String.TYPE] == 0:
+        # TODO: validate
+        if user.Check_Login(form[String.USERNAME], form[String.PASSWORD]):
+            session[String.SESSION] = form[String.USERNAME]
+            return ReturnCode.SUC_LOGIN
+        return ReturnCode.ERR_LOGIN
+    elif form[String.TYPE] == 1:
+        if session.get(String.SESSION) is None:
+            return ReturnCode.ERR_USER_NOT_LOGGED_IN
+        session.pop(String.SESSION)
+        return ReturnCode.SUC_LOGOUT
+    else:
+        return ReturnCode.ERR_BAD_DATA
+
+
 @admin.route('/user', methods=['post'])
 def user_manager():
     form = request.form
-    if String.SESSION not in session:
+    if session.get(String.SESSION) is None:
         return ReturnCode.ERR_USER_NOT_LOGGED_IN
     if user.Get_Privilege(session[String.SESSION]) < Privilege.SUPER:
         return ReturnCode.ERR_INSUFFICIENT_PRIVILEGE
@@ -90,7 +112,7 @@ def user_manager():
 @admin.route('/problem', methods=['post'])
 def problem_manager():
     form = request.form
-    if String.SESSION not in session:
+    if session.get(String.SESSION) is None:
         return ReturnCode.ERR_USER_NOT_LOGGED_IN
     if user.Get_Privilege(session[String.SESSION]) < Privilege.ADMIN:
         return ReturnCode.ERR_INSUFFICIENT_PRIVILEGE
@@ -121,7 +143,7 @@ def problem_manager():
 @admin.route('/contest', methods=['post'])
 def contest_manager():
     form = request.form
-    if String.SESSION not in session:
+    if session.get(String.SESSION) is None:
         return ReturnCode.ERR_USER_NOT_LOGGED_IN
     if user.Get_Privilege(session[String.SESSION]) < Privilege.ADMIN:
         return ReturnCode.ERR_INSUFFICIENT_PRIVILEGE

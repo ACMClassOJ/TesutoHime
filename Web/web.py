@@ -27,11 +27,11 @@ def Login():
     Password = request.form.get('password')
     Next = request.form.get('next') # return this argument to ME
     if not User_Manager.Check_Login(Username, Password): # no need to avoid sql injection
-        return render_template('login_failure.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Inputed_Username = Username, Inputed_Password = Password) # implement it with js.
+        return render_template('login_failure.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Next = next, Inputed_Username = Username, Inputed_Password = Password) # implement it with js.
     lid = str(uuid4())
     Login_Manager.New_Session(Username, lid)
     ret = redirect(Next)
-    ret.set_cookie(key = 'Login_ID', value = Username, max_age = LoginConfig.Login_Life_Time)
+    ret.set_cookie(key = 'Login_ID', value = lid, max_age = LoginConfig.Login_Life_Time)
     return ret
 
 def Validate(Username: str, Password: str, Friendly_Name: str, Student_ID: str) -> bool:
@@ -50,47 +50,53 @@ def Register():
     Student_ID = request.form.get('student_id')
     if not Validate(Username, Password, Friendly_Name, Student_ID):
         return render_template('register_failure.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Inputed_Username = Username, Inputed_Password = Password, Inputed_Friendly_Name = Friendly_Name, Inputed_Student_ID = Student_ID)
-    return render_template('register_complete.html')
+    User_Manager.Add_User(Username, Student_ID, Friendly_Name, Password, '0')
+    return render_template('register_complete.html', Friendly_Username = Login_Manager.Get_FriendlyName())
 
 @web.route('/problems')
 def Problem_List(): # todo: page
     if not Login_Manager.Check_User_Status():
-        return redirect('login?next=' + request.path)
+        return redirect('login?next=' + request.url)
     Page = request.args.get('page')
     Page = int(Page) if Page != None else 1
-    startID = (Page - 1) * WebConfig.Problems_Each_Page + 1
-    endID = Page * WebConfig.Problems_Each_Page
+    if Page > (Problem_Manager.Get_Max_ID() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page:
+        Page = (Problem_Manager.Get_Max_ID() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page
+    if Page <= 0:
+        Page = 1
+    startID = (Page - 1) * WebConfig.Problems_Each_Page + 1 + 999
+    endID = Page * WebConfig.Problems_Each_Page + 999
     Problems = Problem_Manager.Problem_In_Range(startID, endID, UnixNano())
     return render_template('problem_list.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problems = Problems)
 
 @web.route('/problem')
 def Problem_Detail():
     if not Login_Manager.Check_User_Status():
-        return redirect('login?next=' + request.path)
-    id = request.args.get('id')
+        return redirect('login?next=' + request.url)
+    id = request.args.get('problem_id')
     if id == None:
         return redirect('/') # No argument fed
     Detail = Problem_Manager.Get_Problem(id)
-    In_Contest = Problem_Manager.In_Contest(id)
+    In_Contest = Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0
     return render_template('problem_details.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Detial = Detail, In_Contest = In_Contest)
 
 @web.route('/submit', methods=['GET', 'POST'])
 def Submit_Problem():
     if request.method == 'GET':
         if not Login_Manager.Check_User_Status():
-            return redirect('login?next=' + request.path)
+            return redirect('login?next=' + request.url)
         Problem_ID = int(request.args.get('problem_id'))
         Title = Problem_Manager.Get_Title(Problem_ID)
         Username = Login_Manager.Get_Username()
-        return render_template('problem_submit.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problem_ID = Problem_ID, Title = Title, Username = Username)
+        return render_template('problem_submit.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problem_ID = Problem_ID, Title = Title)
     else:
         if not Login_Manager.Check_User_Status():
             return redirect('login')
         Problem_ID = int(request.form.get('problem_id'))
-        Username = int(request.form.get('Username'))
-        Lang = int(request.form.get('Lang'))
-        Code = request.form.get('Code')
-        # todo: start Judge
+        Username = Login_Manager.Get_Username()
+        Lang = 0 if str(request.form.get('lang')) == 'cpp' else 1
+        Code = request.form.get('code')
+        print("At TODO")
+        # todo: start Judge & Judge_Server Scheduler
         return redirect('/status')
 
 @web.route('/rank')
@@ -101,7 +107,7 @@ def Problem_Rank(): # Todo: Problem Rank
 def Discuss():
     if request.method == 'GET':
         if not Login_Manager.Check_User_Status():
-            return redirect('login?next=' + request.path)
+            return redirect('login?next=' + request.url)
         Problem_ID = int(request.args.get('problem_id'))
         if Problem_ID == None:
             return redirect('/')
@@ -144,10 +150,10 @@ def Discuss():
 @web.route('/status')
 def Status(): # todo: page
     if not Login_Manager.Check_User_Status():
-        return redirect('login?next=' + request.path)
+        return redirect('login?next=' + request.url)
     Page = request.args.get('page')
     Page = int(Page) if Page != None else 1
-    if Page > Judge_Manager.Max_ID() / JudgeConfig.Judge_Each_Page:
+    if Page > (Judge_Manager.Max_ID() + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page:
         Page = Judge_Manager.Max_ID() / JudgeConfig.Judge_Each_Page
     if Page <= 0:
         Page = 1
@@ -170,7 +176,7 @@ def Status(): # todo: page
         cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
         cur['Time'] = ele['Time']
         Data.append(cur)
-    return render_template('status.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data)
+    return render_template('status.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data) # todo: template
 
 
 @web.route('/code')
@@ -178,9 +184,9 @@ def Code(): # todo: View Judge Detail
     return 'Todo'
 
 @web.route('/contest')
-def Contest():
+def Contest(): # todo: debug Contest and homework
     if not Login_Manager.Check_User_Status():
-        return redirect('login?next=' + request.path)
+        return redirect('login?next=' + request.url)
     Contest_ID = request.args.get('contest_id')
     if Contest_ID == None: # display contest list
         List = Conetst_Manager.List_Contest(0)
@@ -228,7 +234,7 @@ def Contest():
 @web.route('/homework')
 def Homework():
     if not Login_Manager.Check_User_Status():
-        return redirect('login?next=' + request.path)
+        return redirect('login?next=' + request.url)
     Contest_ID = request.args.get('contest_id')
     if Contest_ID == None: # display contest list
         List = Conetst_Manager.List_Contest(1)

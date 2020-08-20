@@ -24,12 +24,12 @@ class SessionManager:
         lid = request.cookies.get('Login_ID')
         if not (lid in self.mem):
             return 'Nobody'
-        return UserManager().Get_Friendly_Name(self.mem['Login_ID'])
+        return UserManager().Get_Friendly_Name(self.mem[lid])
 
     def Get_Privilege(self) -> int:
         lid = request.cookies.get('Login_ID')
         if not (lid in self.mem):
             return 0 # lowest Privilege for Guests
-        return UserManager().Get_Privilege(self.mem['Login_ID'])
+        return UserManager().Get_Privilege(self.mem[lid])
 
 Login_Manager = SessionManager()

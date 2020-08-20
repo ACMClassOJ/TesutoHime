@@ -75,7 +75,7 @@ class JudgeManager:
         cursor.execute("SELECT MAX(ID) FROM Judge")
         data = cursor.fetchone()
         db.close()
-        return int(data)
+        return int(data[0])
 
     def Judge_In_Range(self, startID: int, endID: int): # [{}], for page display.
         db = DB_Connect()

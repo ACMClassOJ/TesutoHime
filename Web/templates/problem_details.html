@@ -1,50 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>问题详情</title>
-<!--
-<script src="/static/jquery.min.js"></script>
-<link href="/static/bootstrap.min.css" rel="stylesheet">
-<link href="/static/main.css" rel="stylesheet">
-<script src="/static/popper.min.js" ></script>
-<script src="/static/bootstrap.min.js" ></script>
--->
-<link href="assets/css/lib/bootstrap.min.css" rel="stylesheet">
-<link href="assets/css/style.css" rel="stylesheet">
-</head>
-			
+Current User: {{Friendly_Username}}
 
-<body>
-<div class="container">
-	<div class="sidebar sidebar-hide-to-small sidebar-shrink sidebar-gestures">
-	</div>
-	<div class="card card-body">
-		<div class="page-header">
-			<h1 class="text-center"> {{问题编号}}.{{问题名称}} </h1>
-		</div>
-		<div class="btn-group m-auto">
-			<a href="" class="btn btn-primary"> 提交 </a>
-			<a href="" class="btn btn-info"> 评测状态 </a>
-			<a href="" class="btn btn-success"> 讨论 </a>
-		</div>
-		<div id="content">
-			<h4>题目描述</h4>
-			<p id="problem_details_descrption">{{description}}</p>
-			<h3>输入格式</h3>
-			<code id="problem_details_input">{{input}}</code>
-			<h3>输出格式</h3>
-			<code id="problem_details_output">{{output}}</code>
-			<h3>其他</h3>
-			<p id="problem_details_others">{{others}}</p>
-		</div>
-	</div>
-</div>
+<a href="submit?problem_id={{Detial['ID']}}" target="_blank" rel="noopener noreferrer">submit</a>
+{% if not In_Contest %}
+<a href="rank?problem_id={{Detial['ID']}}" target="_blank" rel="noopener noreferrer">ranklist</a>
+<a href="discuss?problem_id={{Detial['ID']}}" target="_blank" rel="noopener noreferrer">discuss</a>
+{% endif %}
 
-<footer>
-	<div class="container text-center">SJTU OnlineJudge &copy 2020 Power by 1234567890</div>
-</footer>
-</body>
-<script src="assets/js/lib/jquery.min.js"></script>
-<script src="assets/js/lib/jquery.form.js"></script>
-<script src="assets/js/lib/sweetalert/sweetalert.min.js"></script> 
-</html>
+{{Detial['ID']}} {{Detial['Title']}}<br>
+{{Detial['Description']}}<br>
+{{Detial['Input']}}<br>
+{{Detial['Output']}}<br>
+{{Detial['Example_Input']}}<br>
+{{Detial['Example_Output']}}<br>
+{{Detial['Data_Range']}}<br>

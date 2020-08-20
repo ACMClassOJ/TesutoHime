@@ -107,4 +107,4 @@ class UserManager:
             return
         db.close()
 
-User_Manager = UserManager
+User_Manager = UserManager()

@@ -110,8 +110,28 @@ def Submit_Problem():
         return redirect('/status')
 
 @web.route('/rank')
-def Problem_Rank(): # Todo: Problem Rank
-    return 'Todo'
+def Problem_Rank():
+    if not Login_Manager.Check_User_Status():
+        return redirect('login?next=' + request.url)
+    Problem_ID = request.args.get('problem_id')
+    if Problem_ID == None:
+        return redirect('/')
+    Sort_Parameter = request.args.get('sort_param')
+    if Sort_Parameter != 'time' and Sort_Parameter != 'memory' and Sort_Parameter != 'submit_time':
+        Sort_Parameter = 'time'
+    Record = Judge_Manager.Search_AC(Problem_ID)
+    for i in range(0, len(Record)): # ID, User, Time_Used, Mem_Used, Language, Time
+        Record[i][2] = int(Record[i][2])
+        Record[i][3] = int(Record[i][3])
+        Record[i][5] = int(Record[i][5])
+    if Sort_Parameter == 'time':
+        Record = sorted(Record, key = lambda x, y: x[2] < y[2])
+    elif Sort_Parameter == 'memory':
+        Record = sorted(Record, key = lambda x, y: x[3] < y[3])
+    elif Sort_Parameter == 'memory':
+        Record = sorted(Record, key = lambda x, y: x[5] < y[5])
+    return render_template('problem_rank.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problem_ID = Problem_ID, Title = Problem_Manager.Get_Title(Problem_ID), Data = Record)
+
 
 @web.route('/discuss', methods=['GET', 'POST'])
 def Discuss():
@@ -122,11 +142,19 @@ def Discuss():
         if Problem_ID == None:
             return redirect('/')
         if Problem_Manager.In_Contest(Problem_ID) and Login_Manager.Get_Privilege() <= 0: # Problem in Contest or Homework and Current User is NOT administrator
-            return render_template('problem_discussion.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problem_ID = Problem_ID, Blocked = True) # Discussion Closed
+            return render_template('problem_discussion.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problem_ID = Problem_ID, Title = Problem_Manager.Get_Title(Problem_ID), Blocked = True) # Discussion Closed
         Username = Login_Manager.Get_Username() # for whether to display edit or delete
         Privilge = Login_Manager.Get_Privilege()
-        Discuss = Discuss_Manager.Get_Discuss_For_Problem(Problem_ID)
-        return render_template('problem_discussion.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problem_ID = Problem_ID, Username = Username, Privilge = Privilge, Discuss = Discuss)
+        Data = Discuss_Manager.Get_Discuss_For_Problem(Problem_ID)
+        Discuss = []
+        for ele in Data:
+            tmp = [ele[0], ele[1], Readable_Time(int(ele[2]))]
+            if ele[0] == Username or Privilge == 2: # ele[3]: editable?
+                tmp.append(True)
+            else:
+                tmp.append(False)
+            Discuss.append(tmp)
+        return render_template('problem_discussion.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Title = Problem_Manager.Get_Title(Problem_ID), Discuss = Discuss)
     else:
         if not Login_Manager.Check_User_Status():
             return redirect('login')
@@ -158,34 +186,61 @@ def Discuss():
             return redirect('/discuss?problem_id=' + Problem_ID)
 
 @web.route('/status')
-def Status(): # todo: Search: use other function to build page?
+def Status():
     if not Login_Manager.Check_User_Status():
         return redirect('login?next=' + request.url)
+
     Page = request.args.get('page')
-    Page = int(Page) if Page != None else 1
-    max_Page = int((Judge_Manager.Max_ID() + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
-    Page = max(min(max_Page, Page), 1)
-    endID = Judge_Manager.Max_ID() - (Page - 1) * JudgeConfig.Judge_Each_Page
-    startID = endID - JudgeConfig.Judge_Each_Page + 1
-    print('id = ', startID, endID)
-    Record = Judge_Manager.Judge_In_Range(startID, endID)
+    Arg_Submitter = request.args.get('submitter')
+    Arg_Problem_ID = request.args.get('problem_id')
     Username = Login_Manager.Get_Username()
     Privilege = Login_Manager.Get_Privilege()
-    Data = []
-    for ele in Record:
-        cur = {}
-        cur['ID'] = ele['ID']
-        cur['Friendly_Name'] = User_Manager.Get_Friendly_Name(ele['Username'])
-        cur['Problem_ID'] = ele['Problem_ID']
-        cur['Problem_Title'] = Problem_Manager.Get_Title(ele['Problem_ID'])
-        cur['Status'] = ele['Status']
-        cur['Time_Used'] = ele['Time_Used']
-        cur['Mem_Used'] = ele['Mem_Used']
-        cur['Lang'] = ele['Lang']
-        cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
-        cur['Time'] = Readable_Time(ele['Time'])
-        Data.append(cur)
-    return render_template('status.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data, Pages = Gen_Page(Page, max_Page))
+
+    if Arg_Submitter == None and Arg_Problem_ID == None:
+        Page = int(Page) if Page != None else 1
+        max_Page = int((Judge_Manager.Max_ID() + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
+        Page = max(min(max_Page, Page), 1)
+        endID = Judge_Manager.Max_ID() - (Page - 1) * JudgeConfig.Judge_Each_Page
+        startID = endID - JudgeConfig.Judge_Each_Page + 1
+        Record = Judge_Manager.Judge_In_Range(startID, endID)
+        Data = []
+        for ele in Record:
+            cur = {}
+            cur['ID'] = ele['ID']
+            cur['Friendly_Name'] = User_Manager.Get_Friendly_Name(ele['Username'])
+            cur['Problem_ID'] = ele['Problem_ID']
+            cur['Problem_Title'] = Problem_Manager.Get_Title(ele['Problem_ID'])
+            cur['Status'] = ele['Status']
+            cur['Time_Used'] = ele['Time_Used']
+            cur['Mem_Used'] = ele['Mem_Used']
+            cur['Lang'] = ele['Lang']
+            cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
+            cur['Time'] = Readable_Time(ele['Time'])
+            Data.append(cur)
+        return render_template('status.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data, Pages = Gen_Page(Page, max_Page))
+    else:
+        Record = Judge_Manager.Search_Judge(Arg_Submitter, Arg_Problem_ID)
+        max_Page = int((len(Record) + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
+        Page = max(min(max_Page, Page), 1)
+        endID = len(Record) - (Page - 1) * JudgeConfig.Judge_Each_Page
+        startID = max(endID - JudgeConfig.Judge_Each_Page + 1, 1)
+        Record = Record[startID - 1: endID - 1]
+        Data = []
+        for ele in Record:
+            cur = {}
+            cur['ID'] = ele['ID']
+            cur['Friendly_Name'] = User_Manager.Get_Friendly_Name(ele['Username'])
+            cur['Problem_ID'] = ele['Problem_ID']
+            cur['Problem_Title'] = Problem_Manager.Get_Title(ele['Problem_ID'])
+            cur['Status'] = ele['Status']
+            cur['Time_Used'] = ele['Time_Used']
+            cur['Mem_Used'] = ele['Mem_Used']
+            cur['Lang'] = ele['Lang']
+            cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
+            cur['Time'] = Readable_Time(ele['Time'])
+            Data.append(cur)
+        return render_template('status.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data, Pages = Gen_Page(Page, max_Page), Submitter = Arg_Submitter, Problem_ID = Arg_Problem_ID)
+
 
 
 @web.route('/code')

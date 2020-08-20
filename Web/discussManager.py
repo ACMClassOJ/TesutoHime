@@ -6,8 +6,8 @@ class DiscussManager:
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("INSERT INTO Discuss(Problem_ID, Username, Data) VALUES(%s, %s, %s, 0)",
-                           (str(Problem_ID), Username, Data))
+            cursor.execute("INSERT INTO Discuss(Problem_ID, Username, Data, Time) VALUES(%s, %s, %s, 0, %s)",
+                           (str(Problem_ID), Username, Data, str(UnixNano())))
             db.commit()
         except:
             db.rollback()
@@ -36,7 +36,7 @@ class DiscussManager:
     def Get_Discuss_For_Problem(self, ID: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, Username, DATA FROM Discuss WHERE Problem_ID = %s", (str(ID)))
+        cursor.execute("SELECT Username, DATA, Time FROM Discuss WHERE Problem_ID = %s", (str(ID)))
         ret = cursor.fetchall()
         db.close()
         return ret

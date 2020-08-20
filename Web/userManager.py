@@ -17,7 +17,7 @@ class UserManager:
         # print("INSERT INTO User(Username, Student_ID, Friendly_Name, Password, Salt, Privilege) VALUES(%s, %s, %s, %s, %s, %s)" % (Username, Student_ID, Friendly_Name, Password, str(Salt), Privilege))
         try:
             cursor.execute("INSERT INTO User(Username, Student_ID, Friendly_Name, Password, Salt, Privilege) VALUES(%s, %s, %s, %s, %s, %s)",
-                        (Username,str(Student_ID), Friendly_Name, Password, str(Salt), Privilege))
+                        (Username, str(Student_ID), Friendly_Name, Password, str(Salt), Privilege))
             db.commit()
         except:
             db.rollback()

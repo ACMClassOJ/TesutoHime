@@ -9,7 +9,7 @@ def randInt():
     return random.randint(3456, 89786576)
 
 class UserManager:
-    def Add_User(self, Username:str, Student_ID:str, Friendly_Name:str, Password:str, Privilege:str): # will not check whether the argument is illegal
+    def Add_User(self, Username:str, Student_ID:int, Friendly_Name:str, Password:str, Privilege:str): # will not check whether the argument is illegal
         Salt = randInt()
         Password = hash(Password, Salt)
         db = DB_Connect()
@@ -17,7 +17,7 @@ class UserManager:
         # print("INSERT INTO User(Username, Student_ID, Friendly_Name, Password, Salt, Privilege) VALUES(%s, %s, %s, %s, %s, %s)" % (Username, Student_ID, Friendly_Name, Password, str(Salt), Privilege))
         try:
             cursor.execute("INSERT INTO User(Username, Student_ID, Friendly_Name, Password, Salt, Privilege) VALUES(%s, %s, %s, %s, %s, %s)",
-                        (Username, Student_ID, Friendly_Name, Password, str(Salt), Privilege))
+                        (Username, str(Student_ID), Friendly_Name, Password, str(Salt), Privilege))
             db.commit()
         except:
             db.rollback()
@@ -60,6 +60,7 @@ class UserManager:
         cursor.execute("SELECT * FROM User WHERE Username = %s", (Username))
         data = cursor.fetchone()
         db.close()
+        print(data)
         return data == None
 
     def Check_Login(self, Username:str, Password:str) -> bool:
@@ -106,3 +107,5 @@ class UserManager:
             db.rollback()
             return
         db.close()
+
+User_Manager = UserManager()

@@ -1,0 +1,12 @@
+Current User: {{Friendly_Username}}
+{% if Logged_In %}
+    Please Logout First
+{% else %}
+display something.
+<form action="login" method="post">
+    Username: <input type="text" name="username"><br>
+    Password: <input type="text" name="password"><br>
+    <input type="hidden" name="next" value="{{Next}}">
+    <input type="submit" value="Submit">
+</form>
+{% endif %}

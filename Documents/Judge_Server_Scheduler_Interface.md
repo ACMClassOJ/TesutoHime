@@ -84,13 +84,20 @@
 
 ```python
 class Result:
-     def __init__():
+     def __init__(self):
       	self.Status=...;(状态)
         self.Score=...;(分数:pts)
       	self.Time_Used = ...;(时间:ms)
         self.Mem_Used = ...;(内存：Byte)
         self.Details = [[id(数字), result(AC、WA、CE、RE、TLE、MLE、RE、CE、Memory Leak、System Error), score(pts), time(ms), mem(Byte), disk(kb, -1当不存在), 错误提示信息(如CE信息和WA的对比,RE的系统输出,ML时的valgrind结果)]*n(多个)];
+        self.Config = Problem_Config(一个题目配置文件的实例)
+class Problem_Config:
+      def __init__(self):
+        self.Groups = [[group_ID(测试点组的id), group_Name(测试组名), group_Score(测试组全部通过的分数), [Test Point List(存储测试点的id列表)]]] 
+        self.Details = [[id, dependency, time_Limit, mem_Limit, disk_Limit] * n] # 存储每个测试点的3项限制, dependency为依赖测试，当且仅当dependency正常评测，才正常评测当前测试点。
 ```
+
+在评分器中，也利用以上两个结构体计算本题分数。（当然Result.Score不可能给出）　
 
 **所有的http操作通过自签名的证书保证SSL加密(你现在可以先按照不加密http做，之后再改)**
 

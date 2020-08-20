@@ -1,0 +1,27 @@
+Current User: {{Friendly_Username}}<br>
+build a search box
+{% for cur in Data %}
+    {{cur['ID']}} {{cur['Friendly_Name']}} {{cur['Problem_ID']}} {{cur['Problem_Title']}} {{cur['Status']}} {{cur['Time_Used']}}
+    {{cur['Mem_Used']}}
+    {% if cur['Visible'] %}
+        <a href="code?submit_id={{cur['ID']}}" target="_blank" rel="noopener noreferrer">{{cur['Lang']}}</a>
+    {%else%}
+        {{cur['Lang']}}
+    {%endif%}
+    {{cur['Time']}}<br>
+{% endfor%}
+
+{% if Submitter %}
+    {{Submitter}}<br>
+    hold it with js, and build it into bottom link<br>
+{% endif %}
+
+{% if Problem_ID %}
+    {{Problem_ID}}<br>
+    hold it with js, and build it into bottom link<br>
+{% endif %}
+
+
+{% for x in Pages %}
+    {{x}} todo: build as link. x[3](-1, 0, 1) for disable, normal, highlight(current page)<br>
+{% endfor %}

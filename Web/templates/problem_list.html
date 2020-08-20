@@ -2,3 +2,6 @@ Current User: {{Friendly_Username}}<br>
 {% for Problem in Problems %}
     <a href="problem?problem_id={{Problem[0]}}" target="_blank" rel="noopener noreferrer">{{Problem[0]}} {{Problem[1]}}</a><br>
 {% endfor %}
+{% for x in Pages %}
+    {{x}}
+{% endfor %}

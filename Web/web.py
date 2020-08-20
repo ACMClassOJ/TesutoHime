@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, redirect
 from uuid import uuid4
+import re
 from sessionManager import Login_Manager
 from userManager import User_Manager
 from problemManager import Problem_Manager
@@ -35,7 +36,18 @@ def Login():
     return ret
 
 def Validate(Username: str, Password: str, Friendly_Name: str, Student_ID: str) -> bool:
-    # Todo: check with regex
+    Username_Reg = '([a-zA-Z][a-zA-Z0-9_]{0,19})$'
+    Password_Reg = '([a-zA-Z0-9_\!\@\#\$\%\^&\*\(\)]{6,30})$'
+    Friendly_Name_Reg = '([a-zA-Z0-9_]{1,60})$'
+    Student_ID_Reg = '([0-9]{12})$'
+    if re.match(Username_Reg, Username) == None:
+        return False
+    if re.match(Password_Reg, Password) == None:
+        return False
+    if re.match(Friendly_Name_Reg, Friendly_Name) == None:
+        return False
+    if re.match(Student_ID_Reg, Student_ID) == None:
+        return False
     return User_Manager.Validate_Username(Username)
 
 @web.route('/register', methods=['GET', 'POST'])
@@ -54,19 +66,17 @@ def Register():
     return render_template('register_complete.html', Friendly_Username = Login_Manager.Get_FriendlyName())
 
 @web.route('/problems')
-def Problem_List(): # todo: page
+def Problem_List():
     if not Login_Manager.Check_User_Status():
         return redirect('login?next=' + request.url)
     Page = request.args.get('page')
     Page = int(Page) if Page != None else 1
-    if Page > (Problem_Manager.Get_Max_ID() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page:
-        Page = (Problem_Manager.Get_Max_ID() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page
-    if Page <= 0:
-        Page = 1
+    max_Page = int((Problem_Manager.Get_Max_ID() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
+    Page = max(min(max_Page, Page), 1)
     startID = (Page - 1) * WebConfig.Problems_Each_Page + 1 + 999
     endID = Page * WebConfig.Problems_Each_Page + 999
     Problems = Problem_Manager.Problem_In_Range(startID, endID, UnixNano())
-    return render_template('problem_list.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problems = Problems)
+    return render_template('problem_list.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problems = Problems, Pages = Gen_Page(Page, max_Page))
 
 @web.route('/problem')
 def Problem_Detail():
@@ -148,15 +158,13 @@ def Discuss():
             return redirect('/discuss?problem_id=' + Problem_ID)
 
 @web.route('/status')
-def Status(): # todo: page
+def Status(): # todo: Search: use other function to build page?
     if not Login_Manager.Check_User_Status():
         return redirect('login?next=' + request.url)
     Page = request.args.get('page')
     Page = int(Page) if Page != None else 1
-    if Page > (Judge_Manager.Max_ID() + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page:
-        Page = Judge_Manager.Max_ID() / JudgeConfig.Judge_Each_Page
-    if Page <= 0:
-        Page = 1
+    max_Page = int((Judge_Manager.Max_ID() + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
+    Page = max(min(max_Page, Page), 1)
     endID = Judge_Manager.Max_ID() - Page * JudgeConfig.Judge_Each_Page
     startID = endID - JudgeConfig.Judge_Each_Page + 1
     Record = Judge_Manager.Judge_In_Range(startID, endID)
@@ -176,7 +184,7 @@ def Status(): # todo: page
         cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
         cur['Time'] = ele['Time']
         Data.append(cur)
-    return render_template('status.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data) # todo: template
+    return render_template('status.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data, Pages = Gen_Page(Page, max_Page)) # todo: template
 
 
 @web.route('/code')

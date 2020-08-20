@@ -8,7 +8,7 @@ class LoginConfig:
     Login_Life_Time = 24 * 60 * 60 # s
 
 class WebConfig:
-    Problems_Each_Page = 1
+    Problems_Each_Page = 10
 
 class JudgeConfig:
     Judge_Each_Page = 15

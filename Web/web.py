@@ -165,8 +165,9 @@ def Status(): # todo: Search: use other function to build page?
     Page = int(Page) if Page != None else 1
     max_Page = int((Judge_Manager.Max_ID() + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
     Page = max(min(max_Page, Page), 1)
-    endID = Judge_Manager.Max_ID() - Page * JudgeConfig.Judge_Each_Page
+    endID = Judge_Manager.Max_ID() - (Page - 1) * JudgeConfig.Judge_Each_Page
     startID = endID - JudgeConfig.Judge_Each_Page + 1
+    print('id = ', startID, endID)
     Record = Judge_Manager.Judge_In_Range(startID, endID)
     Username = Login_Manager.Get_Username()
     Privilege = Login_Manager.Get_Privilege()
@@ -174,7 +175,7 @@ def Status(): # todo: Search: use other function to build page?
     for ele in Record:
         cur = {}
         cur['ID'] = ele['ID']
-        cur['Friendly_Username'] = User_Manager.Get_Friendly_Name(ele['Username'])
+        cur['Friendly_Name'] = User_Manager.Get_Friendly_Name(ele['Username'])
         cur['Problem_ID'] = ele['Problem_ID']
         cur['Problem_Title'] = Problem_Manager.Get_Title(ele['Problem_ID'])
         cur['Status'] = ele['Status']
@@ -182,9 +183,9 @@ def Status(): # todo: Search: use other function to build page?
         cur['Mem_Used'] = ele['Mem_Used']
         cur['Lang'] = ele['Lang']
         cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
-        cur['Time'] = ele['Time']
+        cur['Time'] = Readable_Time(ele['Time'])
         Data.append(cur)
-    return render_template('status.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data, Pages = Gen_Page(Page, max_Page)) # todo: template
+    return render_template('status.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data, Pages = Gen_Page(Page, max_Page))
 
 
 @web.route('/code')

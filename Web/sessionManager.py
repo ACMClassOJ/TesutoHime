@@ -29,7 +29,7 @@ class SessionManager:
     def Get_Privilege(self) -> int:
         lid = request.cookies.get('Login_ID')
         if not (lid in self.mem):
-            return 0 # lowest Privilege for Guests
+            return -1 # lowest Privilege for Guests
         return UserManager().Get_Privilege(self.mem[lid])
 
 Login_Manager = SessionManager()

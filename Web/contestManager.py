@@ -52,7 +52,7 @@ class ConetstManager:
             db.rollback()
             sys.stderr.write("SQL Error in ConetstManager: Delete_Contest(3)\n")
 
-        db.commit()
+        db.close()
         return
 
     def Add_Problem_To_Contest(self, Contest_ID: int, Problem_ID: int):
@@ -64,7 +64,7 @@ class ConetstManager:
         except:
             db.rollback()
             sys.stderr.write("SQL Error in ConetstManager: Add_Problem_To_Contest\n")
-        db.commit()
+        db.close()
         return
 
     def Delete_Problem_From_Contest(self, Contest_ID: int, Problem_ID: int):
@@ -76,7 +76,7 @@ class ConetstManager:
         except:
             db.rollback()
             sys.stderr.write("SQL Error in ConetstManager: Delete_Problem_From_Contest\n")
-        db.commit()
+        db.close()
         return
 
     def Add_Player_To_Contest(self, Contest_ID: int, Username: str):
@@ -88,7 +88,7 @@ class ConetstManager:
         except:
             db.rollback()
             sys.stderr.write("SQL Error in ConetstManager: Add_Player_To_Contest\n")
-        db.commit()
+        db.close()
         return
 
     def Delete_Player_From_Contest(self, Contest_ID: int, Username: str):
@@ -100,14 +100,29 @@ class ConetstManager:
         except:
             db.rollback()
             sys.stderr.write("SQL Error in ConetstManager: Delete_Player_From_Contest\n")
-        db.commit()
+        db.close()
         return
+
+    def List_Contest(self, Type: int):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT ID, Name, Start_Time, End_Time FROM Contest")
+        ret = cursor.fetchall()
+        return ret
+
+    def Get_Time(self, ID: int):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Start_Time, End_Time FROM Contest WHERE ID = %s", (str(ID)))
+        ret = cursor.fetchone()
+        return int(ret[0]), int(ret[1])
 
     def List_Problem_For_Contest(self, Contest_ID: int):
         db = DB_Connect()
         cursor = db.cursor()
         cursor.execute("SELECT Problem_ID FROM Contest_Problem WHERE Belong = %s", (str(Contest_ID)))
         ret = cursor.fetchall()
+        db.close()
         return ret
 
     def List_Player_For_Contest(self, Contest_ID: int):
@@ -115,4 +130,7 @@ class ConetstManager:
         cursor = db.cursor()
         cursor.execute("SELECT Username FROM Contest_Player WHERE Belong = %s", (str(Contest_ID)))
         ret = cursor.fetchall()
+        db.close()
         return ret
+
+Conetst_Manager = ConetstManager()

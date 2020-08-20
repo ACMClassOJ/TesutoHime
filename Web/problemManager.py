@@ -115,3 +115,5 @@ class ProblemManager:
             db.rollback()
             return
         db.close()
+
+Problem_Manager = ProblemManager()

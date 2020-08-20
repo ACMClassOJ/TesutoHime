@@ -12,7 +12,7 @@ class DiscussManager:
         except:
             db.rollback()
             sys.stderr.write("SQL Error in DiscussManager: Add_Discuss\n")
-            db.close()
+        db.close()
         return
     def Modify_Discuss(self, ID: int, NewData: str):
         db = DB_Connect()
@@ -23,14 +23,22 @@ class DiscussManager:
         except:
             db.rollback()
             sys.stderr.write("SQL Error in DiscussManager: Modify_Discuss\n")
-            db.close()
+        db.close()
         return
+
+    def Get_Author(self, ID: int):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Username FROM Discuss WHERE Problem_ID = %s", (str(ID)))
+        ret = cursor.fetchone()
+        return ret
 
     def Get_Discuss_For_Problem(self, ID: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT Username, DATA FROM Discuss WHERE Problem_ID = %s", (str(ID)))
+        cursor.execute("SELECT ID, Username, DATA FROM Discuss WHERE Problem_ID = %s", (str(ID)))
         ret = cursor.fetchall()
+        db.close()
         return ret
 
     def Delete_Discuss(self, ID: int):
@@ -42,5 +50,7 @@ class DiscussManager:
         except:
             db.rollback()
             sys.stderr.write("SQL Error in DiscussManager: Erase_Discuss\n")
-            db.close()
+        db.close()
         return
+
+Discuss_Manager = DiscussManager()

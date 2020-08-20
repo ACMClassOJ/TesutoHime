@@ -60,3 +60,5 @@ class JudgeServerManager:
         data = cursor.fetchall()
         db.close()
         return data
+
+JudgeServer_Manager = JudgeServerManager()

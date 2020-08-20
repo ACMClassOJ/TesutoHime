@@ -60,6 +60,7 @@ class UserManager:
         cursor.execute("SELECT * FROM User WHERE Username = %s", (Username))
         data = cursor.fetchone()
         db.close()
+        print(data)
         return data == None
 
     def Check_Login(self, Username:str, Password:str) -> bool:
@@ -106,3 +107,5 @@ class UserManager:
             db.rollback()
             return
         db.close()
+
+User_Manager = UserManager()

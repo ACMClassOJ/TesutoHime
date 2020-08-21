@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>问题详情</title>
+<!--
+<script src="/static/jquery.min.js"></script>
+<link href="/static/bootstrap.min.css" rel="stylesheet">
+<link href="/static/main.css" rel="stylesheet">
+<script src="/static/popper.min.js" ></script>
+<script src="/static/bootstrap.min.js" ></script>
+-->
+<link href="assets/css/lib/bootstrap.min.css" rel="stylesheet">
+<link href="assets/css/style.css" rel="stylesheet">
+</head>
+			
+
+<body>
+<div class="container">
+	<div class="sidebar sidebar-hide-to-small sidebar-shrink sidebar-gestures">
+	</div>
+	<div class="card card-body">
+		<div class="page-header">
+			<h1 class="text-center"> {{问题编号}}.{{问题名称}} </h1>
+		</div>
+		<div class="btn-group m-auto">
+			<a href="" class="btn btn-primary"> 提交 </a>
+			<a href="" class="btn btn-info"> 评测状态 </a>
+			<a href="" class="btn btn-success"> 讨论 </a>
+		</div>
+	</div>
+	<div class="card card-body">
+		<h3>奇怪的markdown讨论区</h3>
+		<h5>来发表你的看法吧~</h5>
+		<form>
+			<textarea id="problem_details_discussion"></textarea>
+		</form>
+	</div>
+</div>
+
+<footer>
+	<div class="container text-center">SJTU OnlineJudge &copy 2020 Power by 1234567890</div>
+</footer>
+</body>
+<script src="assets/js/lib/jquery.min.js"></script>
+<script src="assets/js/lib/jquery.form.js"></script>
+<script src="assets/js/lib/sweetalert/sweetalert.min.js"></script> 
+</html>

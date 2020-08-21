@@ -50,14 +50,16 @@ CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username VARCHAR(20), Stud
 * Code: TEXT
 * User: TINYTEXT
 * Problem_ID: INT
-* Language: INT
-* Status: INT
+* Language: INT // 0 for C++, 1 for git, 2 for python3(Not Supported Yet)
+* Status: INT // (AC、WA、CE、RE、TLE、MLE、RE、CE、Memory Leak、System Error)
 * Score: INT
 * Time: BIGINT // unix nano
+* Time_Used: INT // ms
+* Mem_Used: INT // Byte
 * Detail: MEDIUMTEXT // may exceed 64 KB
 
 ```sql
-CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Problem_ID INT, Language INT, Status INT, Score INT, Time BIGINT, Detail MEDIUMTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Problem_ID INT, Language INT, Status INT, Score INT, Time BIGINT, Time_Used INT, Mem_Used INT, Detail MEDIUMTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 #### Contest:
@@ -100,22 +102,23 @@ CREATE TABLE Contest_Player(tempID INT NOT NULL AUTO_INCREMENT, Belong INT, User
 * Problem_ID: INT
 * Username: TINYTEXT
 * Data: TEXT
+* Time: BIGINT
 
 ```sql
-CREATE TABLE Discuss(ID INT NOT NULL AUTO_INCREMENT, Problem_ID INT, Username TINYTEXT, Data Text, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Discuss(ID INT NOT NULL AUTO_INCREMENT, Problem_ID INT, Username TINYTEXT, Data Text, Time BIGINT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 #### Judge_Server
 
 * ID: INT, auto_increment, PRIMARY KEY
+* Address: TINYTEXT
 * Secret_Key: TINYTEXT // uuid4
-* Last_Seen_Time: BIGINT
-* Busy: BOOLEAN
+* Last_Seen_Time: BIGINT 0
+* Busy: BOOLEAN 0
 * Friendly_Name: TINYTEXT
-* Provider: TINYTEXT
 * Detail: TINYTEXT
 
 ```sql
-CREATE TABLE Judge_Server(ID INT NOT NULL AUTO_INCREMENT, Secret_Key TINYTEXT, Last_Seen_Time BIGINT, Busy BOOLEAN, Friendly_Name TINYTEXT, Provider TINYTEXT, Detail TINYTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Judge_Server(ID INT NOT NULL AUTO_INCREMENT, Address TINYTEXT, Secret_Key TINYTEXT, Last_Seen_Time BIGINT DEFAULT 0, Busy BOOLEAN DEFAULT FALSE, Friendly_Name TINYTEXT, Detail TINYTEXT, PRIMARY KEY(ID))ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 

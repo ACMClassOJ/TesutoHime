@@ -99,11 +99,23 @@ class ProblemManager:
         db.close()
         return data[0]
 
+    def Get_Release_Time(self, Problem_ID: int) -> int:
+        db = DB_Connect()
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Release_Time FROM Problem WHERE ID = %s", (str(Problem_ID)))
+        ret = cursor.fetchone()
+        db.close()
+        if ret == None:
+            return 0
+        return int(ret[0])
+
     def Problem_In_Range(self, startID: int, endID: int, timeNow: int):
         db = DB_Connect()
         cursor = db.cursor()
         cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= %s and ID <= %s and Release_Time <= %s", (str(startID), str(endID), str(timeNow)))
         ret = cursor.fetchall()
+        db.close()
         return ret
 
     def Delete_Problem(self, ID: int):

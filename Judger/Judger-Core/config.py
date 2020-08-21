@@ -33,9 +33,9 @@ class JudgeTestPointResult:
                  memUsage  : int,
                  diskUsage : int
                  ):
-        self.stat   = status    # Accepted / Wrong Answer / Compile Error / Skip / ...
+        self.stat   = status    # Accepted / Wrong Anaswe / Compile Error / Skip / ...
         self.score  = score    # 
-        self.msg    = msg        # msg offered by spj
+        self.msg    = msg        # meg offered by spj
         self.time   = timeUsage # ms
         self.mem    = memUsage   # kb
         self.disk   = diskUsage # kb
@@ -47,7 +47,7 @@ class JudgeSubtaskResult:
                  score  : int
                  ):
         self.testPoints = testPoints #
-        self.stat   = status    # Accepted / Wrong Answer / Compile Error / Skipped / ...
+        self.stat   = status    # Accepted / Wrong Anaswe / Compile Error / Skipped / ...
         self.score  = score    # 
 
 class JudgeResult:

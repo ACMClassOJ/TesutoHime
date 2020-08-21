@@ -1,14 +1,21 @@
-from flask import Flask, request, session
+from flask import Flask, request, render_template, url_for
 from const import *
+from sessionManager import SessionManager
 from userManager import UserManager
 from problemManager import ProblemManager
 from contestManager import ConetstManager
 
-admin = Flask('ADMIN')
+app = Flask('app')
 
+session = SessionManager()
 user = UserManager()
 problem = ProblemManager()
 contest = ConetstManager()
+
+
+@app.route('/')
+def test():
+    return 'index'
 
 
 # TODO(Pioooooo): validate data
@@ -52,53 +59,27 @@ def _validate_contest_data(form):
     return None
 
 
-@admin.route('/')
+@app.route('/admin')
 def index():
-    return 'index'
+    return render_template('admin.html')
 
 
-@admin.route('/login', methods=['get', 'post'])
-def login():
-    if request.method == 'get':
-        return 'login page.'
-    form = request.form
-    if String.TYPE not in form:
-        return ReturnCode.ERR_BAD_DATA
-    if form[String.TYPE] == 0:
-        # TODO: validate
-        if user.Check_Login(form[String.USERNAME], form[String.PASSWORD]):
-            session[String.SESSION] = form[String.USERNAME]
-            return ReturnCode.SUC_LOGIN
-        return ReturnCode.ERR_LOGIN
-    elif form[String.TYPE] == 1:
-        if session.get(String.SESSION) is None:
-            return ReturnCode.ERR_USER_NOT_LOGGED_IN
-        session.pop(String.SESSION)
-        return ReturnCode.SUC_LOGOUT
-    else:
-        return ReturnCode.ERR_BAD_DATA
-
-
-@admin.route('/user', methods=['post'])
+@app.route('/admin/user', methods=['post'])
 def user_manager():
     form = request.form
-    if session.get(String.SESSION) is None:
-        return ReturnCode.ERR_USER_NOT_LOGGED_IN
-    if user.Get_Privilege(session[String.SESSION]) < Privilege.SUPER:
+    if session.Get_Privilege() < Privilege.SUPER:
         return ReturnCode.ERR_INSUFFICIENT_PRIVILEGE
     err = _validate_user_data(form)
     if err is not None:
         return err
     if form[String.TYPE] == 0:
         if user.Add_User(form[String.USERNAME], form[String.STUDENT_ID], form[String.FRIENDLY_NAME],
-                         form[String.PASSWORD],
-                         form[String.PRIVILEGE]):
+                         form[String.PASSWORD], form[String.PRIVILEGE]):
             return ReturnCode.SUC_ADD_USER
         return ReturnCode.ERR_ADD_USER
     elif form[String.TYPE] == 1:
         if user.Modify_User(form[String.USERNAME], form[String.STUDENT_ID], form[String.FRIENDLY_NAME],
-                            form[String.PASSWORD],
-                            form[String.PRIVILEGE]):
+                            form[String.PASSWORD], form[String.PRIVILEGE]):
             return ReturnCode.SUC_MOD_USER
         return ReturnCode.ERR_MOD_USER
     elif form[String.TYPE] == 2:
@@ -109,12 +90,10 @@ def user_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-@admin.route('/problem', methods=['post'])
+@app.route('/admin/problem', methods=['post'])
 def problem_manager():
     form = request.form
-    if session.get(String.SESSION) is None:
-        return ReturnCode.ERR_USER_NOT_LOGGED_IN
-    if user.Get_Privilege(session[String.SESSION]) < Privilege.ADMIN:
+    if session.Get_Privilege() < Privilege.ADMIN:
         return ReturnCode.ERR_INSUFFICIENT_PRIVILEGE
     err = _validate_problem_data(form)
     if err is not None:
@@ -127,9 +106,8 @@ def problem_manager():
         return ReturnCode.ERR_ADD_PROBLEM
     elif form[String.TYPE] == 1:
         if problem.Modify_Problem(form[String.PROBLEM_ID], form[String.TITLE], form[String.DESCRIPTION],
-                                  form[String.INPUT],
-                                  form[String.OUTPUT], form[String.EXAMPLE_INPUT], form[String.EXAMPLE_OUTPUT],
-                                  form[String.DATA_RANGE], form[String.RELEASE_TIME]):
+                                  form[String.INPUT], form[String.OUTPUT], form[String.EXAMPLE_INPUT],
+                                  form[String.EXAMPLE_OUTPUT], form[String.DATA_RANGE], form[String.RELEASE_TIME]):
             return ReturnCode.SUC_MOD_PROBLEM
         return ReturnCode.ERR_MOD_PROBLEM
     elif form[String.TYPE] == 2:
@@ -140,12 +118,10 @@ def problem_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-@admin.route('/contest', methods=['post'])
+@app.route('/admin/contest', methods=['post'])
 def contest_manager():
     form = request.form
-    if session.get(String.SESSION) is None:
-        return ReturnCode.ERR_USER_NOT_LOGGED_IN
-    if user.Get_Privilege(session[String.SESSION]) < Privilege.ADMIN:
+    if session.Get_Privilege() < Privilege.ADMIN:
         return ReturnCode.ERR_INSUFFICIENT_PRIVILEGE
     err = _validate_contest_data(form)
     if err is not None:
@@ -165,24 +141,36 @@ def contest_manager():
             return ReturnCode.SUC_DEL_CONTEST
         return ReturnCode.ERR_DEL_CONTEST
     elif form[String.TYPE] == 3:
-        if contest.Add_Problem_To_Contest(form[String.CONTEST_ID], form[String.CONTEST_PROBLEM_ID]):
-            return ReturnCode.SUC_ADD_PROBLEM_TO_CONTEST
-        return ReturnCode.ERR_ADD_PROBLEM_TO_CONTEST
+        ok = True
+        for problemId in form[String.CONTEST_PROBLEM_IDS]:
+            ok &= contest.Add_Problem_To_Contest(form[String.CONTEST_ID], problemId)
+        if ok:
+            return ReturnCode.SUC_ADD_PROBLEMS_TO_CONTEST
+        return ReturnCode.ERR_ADD_PROBLEMS_TO_CONTEST
     elif form[String.TYPE] == 4:
-        if contest.Delete_Problem_From_Contest(form[String.CONTEST_ID], form[String.CONTEST_PROBLEM_ID]):
-            return ReturnCode.SUC_DEL_PROBLEM_FROM_CONTEST
-        return ReturnCode.ERR_DEL_PROBLEM_FROM_CONTEST
+        ok = True
+        for problemId in form[String.CONTEST_PROBLEM_IDS]:
+            ok &= contest.Delete_Problem_From_Contest(form[String.CONTEST_ID], problemId)
+        if ok:
+            return ReturnCode.SUC_DEL_PROBLEMS_FROM_CONTEST
+        return ReturnCode.ERR_DEL_PROBLEMS_FROM_CONTEST
     elif form[String.TYPE] == 5:
-        if contest.Add_Player_To_Contest(form[String.CONTEST_ID], form[String.CONTEST_USERNAME]):
-            return ReturnCode.SUC_DEL_CONTEST
-        return ReturnCode.ERR_DEL_CONTEST
+        ok = True
+        for username in form[String.CONTEST_USERNAMES]:
+            ok &= contest.Add_Player_To_Contest(form[String.CONTEST_ID], username)
+        if ok:
+            return ReturnCode.SUC_ADD_USERS_TO_CONTEST
+        return ReturnCode.ERR_ADDS_USER_TO_CONTEST
     elif form[String.TYPE] == 6:
-        if contest.Delete_Player_From_Contest(form[String.CONTEST_ID], form[String.CONTEST_USERNAME]):
-            return ReturnCode.SUC_DEL_CONTEST
-        return ReturnCode.ERR_DEL_CONTEST
+        ok = True
+        for username in form[String.CONTEST_USERNAMES]:
+            ok &= contest.Delete_Player_From_Contest(form[String.CONTEST_ID], username)
+        if ok:
+            return ReturnCode.SUC_DEL_USERS_FROM_CONTEST
+        return ReturnCode.ERR_DEL_USERS_FROM_CONTEST
     else:
         return ReturnCode.ERR_BAD_DATA
 
 
 if __name__ == '__main__':
-    admin.run()
+    app.run()

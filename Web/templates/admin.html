@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Pioooooo">
+    <title>TesutoHime · Admin</title>
+</head>
+
+<body>
+<div>
+    <form id="formUser">
+        <label>
+            Username
+            <input type="text" id="inputUsername">
+        </label>
+        <label>
+            Student ID
+            <input type="number" id="inputStudentId">
+        </label>
+        <label>
+            Friendly Name
+            <input type="text" id="inputFriendlyName">
+        </label>
+        <label>
+            Password
+            <input type="password" id="inputPassword">
+        </label>
+        <label>
+            Privilege
+            <input type="number" id="inputPrivilege">
+        </label>
+    </form>
+</div>
+<div>
+    <form id="formProblem">
+        <label>
+            Title
+            <input type="text" id="inputTitle">
+        </label>
+        <label>
+            Description
+            <textarea id="inputDescription"></textarea>
+        </label>
+        <label>
+            Input
+            <textarea id="inputInput"></textarea>
+        </label>
+        <label>
+            Output
+            <textarea id="inputOutput"></textarea>
+        </label>
+        <label>
+            Example Input
+            <textarea id="inputExampleInput"></textarea>
+        </label>
+        <label>
+            Example Output
+            <textarea id="inputExampleOutput"></textarea>
+        </label>
+        <label>
+            Data Range
+            <textarea id="inputDataRange"></textarea>
+        </label>
+        <label>
+            Release Time
+            <input type="datetime-local" id="inputReleaseTime">
+        </label>
+    </form>
+</div>
+<div>
+    <form id="formContest">
+        <label>
+            Contest ID
+            <input type="number" id="inputContestId">
+        </label>
+        <label>
+            Contest Name
+            <input type="text" id="inputContestName">
+        </label>
+        <label>
+            Start Time
+            <input type="datetime-local" id="inputStartTime">
+        </label>
+        <label>
+            End Time
+            <input type="datetime-local" id="inputEndTime">
+        </label>
+        <label>
+            Is Homework
+            <input type="checkbox" id="inputIsHomework">
+        </label>
+        <label>
+            Problem ID
+            <input type="number" id="inputContestProblemId">
+        </label>
+        <label>
+            Student ID
+            <input type="number" id="inputContestStudentId">
+        </label>
+    </form>
+</div>
+</body>
+<script src="{{ url_for('static', filename='/js/jquery-3.5.1.min.js') }}"></script>
+</html>

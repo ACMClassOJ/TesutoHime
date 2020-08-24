@@ -32,7 +32,7 @@
         </label>
         <button type="submit" id="btnAddUser">Add User</button>
         <button type="submit" id="btnModifyUser">Modify User</button>
-        <button type="submit" id="btnDeleteUser">Delete User</button>
+        <button type="submit" id="btnRemoveUser">Remove User</button>
     </form>
 </div>
 <div>
@@ -71,39 +71,46 @@
         </label>
         <button type="submit" id="btnAddProblem">Add Problem</button>
         <button type="submit" id="btnModifyProblem">Modify Problem</button>
-        <button type="submit" id="btnDeleteProblem">Delete Problem</button>
+        <button type="submit" id="btnRemoveProblem">Remove Problem</button>
     </form>
 </div>
 <div>
     <form id="formContest">
         <label>
             Contest ID
-            <input type="number" id="iptContestId">
+            <input type="number" name="contest_id" id="iptContestId">
         </label>
         <label>
             Contest Name
-            <input type="text" id="iptContestName">
+            <input type="text" name="name" id="iptContestName">
         </label>
         <label>
             Start Time
-            <input type="datetime-local" id="iptStartTime">
+            <input type="datetime-local" name="start_time" id="iptStartTime">
         </label>
         <label>
             End Time
-            <input type="datetime-local" id="iptEndTime">
+            <input type="datetime-local" name="end_time" id="iptEndTime">
         </label>
         <label>
             Is Homework
-            <input type="checkbox" id="iptIsHomework">
+            <input type="checkbox" name="contest_type" id="iptIsHomework">
         </label>
         <label>
-            Problem ID
-            <input type="number" id="iptContestProblemId">
+            Problem ID(s)
+            <textarea name="id" id="iptContestProblemId"></textarea>
         </label>
         <label>
-            Student ID
-            <input type="number" id="iptContestStudentId">
+            Student Username(s)
+            <textarea name="username" id="iptContestStudentUsername"></textarea>
         </label>
+        <button type="submit" id="btnCreateContest">Create Contest</button>
+        <button type="submit" id="btnModifyContest">Modify Contest</button>
+        <button type="submit" id="btnRemoveContest">Remove Contest</button>
+        <button type="submit" id="btnAddProblemToContest">Add Problem To Contest</button>
+        <button type="submit" id="btnRemoveProblemFromContest">Remove Problem from Contest</button>
+        <button type="submit" id="btnAddUserToContest">Add User To Contest</button>
+        <button type="submit" id="btnRemoveUserFromContest">Remove User From Contest</button>
     </form>
 </div>
 </body>
@@ -113,7 +120,10 @@
         let data = {};
         this.serializeArray().forEach(function (e) {
             if (e["value"] !== "")
-                data[e["name"]] = e["value"];
+                if (e["name"].search("[T t]ime") !== -1)
+                    data[e["name"]] = new Date(e["value"]).getTime();
+                else
+                    data[e["name"]] = e["value"];
         });
         return data;
     }
@@ -126,18 +136,38 @@
     $("#btnModifyUser").click(function () {
         op = 1;
     });
-    $("#btnDeleteUser").click(function () {
+    $("#btnRemoveUser").click(function () {
         op = 2;
     });
-
     $("#btnAddProblem").click(function () {
         op = 0;
     });
     $("#btnModifyProblem").click(function () {
         op = 1;
     });
-    $("#btnDeleteProblem").click(function () {
+    $("#btnRemoveProblem").click(function () {
         op = 2;
+    });
+    $("#btnCreateContest").click(function () {
+        op = 0;
+    });
+    $("#btnModifyContest").click(function () {
+        op = 1;
+    });
+    $("#btnRemoveContest").click(function () {
+        op = 2;
+    });
+    $("#btnAddProblemToContest").click(function () {
+        op = 3;
+    });
+    $("#btnRemoveProblemFromContest").click(function () {
+        op = 4;
+    });
+    $("#btnAddUserToContest").click(function () {
+        op = 5;
+    });
+    $("#btnRemoveUserFromContest").click(function () {
+        op = 6;
     });
 
     $("#formUser").submit(function (e) {
@@ -156,8 +186,19 @@
         e.stopPropagation();
         let data = $(this).serializeObject();
         data["type"] = op;
-        data["time"] = new Date(data["time"]).getTime();
         $.post("/admin/problem", data, function (ret) {
+            console.log(data);
+            alert(JSON.stringify(ret));
+        });
+    });
+
+    $("#formContest").submit(function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let data = $(this).serializeObject();
+        data["contest_type"] = $("#iptIsHomework")[0].checked ? 1 : 0;
+        data["type"] = op;
+        $.post("/admin/contest", data, function (ret) {
             console.log(data);
             alert(JSON.stringify(ret));
         });

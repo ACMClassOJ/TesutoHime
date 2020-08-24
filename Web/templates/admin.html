@@ -12,94 +12,155 @@
     <form id="formUser">
         <label>
             Username
-            <input type="text" id="inputUsername">
+            <input type="text" name="username" id="iptUsername">
         </label>
         <label>
             Student ID
-            <input type="number" id="inputStudentId">
+            <input type="number" name="id" id="iptStudentId">
         </label>
         <label>
             Friendly Name
-            <input type="text" id="inputFriendlyName">
+            <input type="text" name="name" id="iptFriendlyName">
         </label>
         <label>
             Password
-            <input type="password" id="inputPassword">
+            <input type="password" name="password" id="iptPassword">
         </label>
         <label>
             Privilege
-            <input type="number" id="inputPrivilege">
+            <input type="number" name="privilege" id="iptPrivilege">
         </label>
+        <button type="submit" id="btnAddUser">Add User</button>
+        <button type="submit" id="btnModifyUser">Modify User</button>
+        <button type="submit" id="btnDeleteUser">Delete User</button>
     </form>
 </div>
 <div>
     <form id="formProblem">
         <label>
             Title
-            <input type="text" id="inputTitle">
+            <input type="text" name="title" id="iptTitle">
         </label>
         <label>
             Description
-            <textarea id="inputDescription"></textarea>
+            <textarea name="description" id="iptDescription"></textarea>
         </label>
         <label>
             Input
-            <textarea id="inputInput"></textarea>
+            <textarea name="input" id="iptInput"></textarea>
         </label>
         <label>
             Output
-            <textarea id="inputOutput"></textarea>
+            <textarea name="output" id="iptOutput"></textarea>
         </label>
         <label>
             Example Input
-            <textarea id="inputExampleInput"></textarea>
+            <textarea name="example_input" id="iptExampleInput"></textarea>
         </label>
         <label>
             Example Output
-            <textarea id="inputExampleOutput"></textarea>
+            <textarea name="example_output" id="iptExampleOutput"></textarea>
         </label>
         <label>
             Data Range
-            <textarea id="inputDataRange"></textarea>
+            <textarea name="range" id="iptDataRange"></textarea>
         </label>
         <label>
             Release Time
-            <input type="datetime-local" id="inputReleaseTime">
+            <input type="datetime-local" name="time" id="iptReleaseTime">
         </label>
+        <button type="submit" id="btnAddProblem">Add Problem</button>
+        <button type="submit" id="btnModifyProblem">Modify Problem</button>
+        <button type="submit" id="btnDeleteProblem">Delete Problem</button>
     </form>
 </div>
 <div>
     <form id="formContest">
         <label>
             Contest ID
-            <input type="number" id="inputContestId">
+            <input type="number" id="iptContestId">
         </label>
         <label>
             Contest Name
-            <input type="text" id="inputContestName">
+            <input type="text" id="iptContestName">
         </label>
         <label>
             Start Time
-            <input type="datetime-local" id="inputStartTime">
+            <input type="datetime-local" id="iptStartTime">
         </label>
         <label>
             End Time
-            <input type="datetime-local" id="inputEndTime">
+            <input type="datetime-local" id="iptEndTime">
         </label>
         <label>
             Is Homework
-            <input type="checkbox" id="inputIsHomework">
+            <input type="checkbox" id="iptIsHomework">
         </label>
         <label>
             Problem ID
-            <input type="number" id="inputContestProblemId">
+            <input type="number" id="iptContestProblemId">
         </label>
         <label>
             Student ID
-            <input type="number" id="inputContestStudentId">
+            <input type="number" id="iptContestStudentId">
         </label>
     </form>
 </div>
 </body>
 <script src="{{ url_for('static', filename='/js/jquery-3.5.1.min.js') }}"></script>
+<script>
+    $.fn.serializeObject = function () {
+        let data = {};
+        this.serializeArray().forEach(function (e) {
+            if (e["value"] !== "")
+                data[e["name"]] = e["value"];
+        });
+        return data;
+    }
+</script>
+<script>
+    let op;
+    $("#btnAddUser").click(function () {
+        op = 0;
+    });
+    $("#btnModifyUser").click(function () {
+        op = 1;
+    });
+    $("#btnDeleteUser").click(function () {
+        op = 2;
+    });
+
+    $("#btnAddProblem").click(function () {
+        op = 0;
+    });
+    $("#btnModifyProblem").click(function () {
+        op = 1;
+    });
+    $("#btnDeleteProblem").click(function () {
+        op = 2;
+    });
+
+    $("#formUser").submit(function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let data = $(this).serializeObject();
+        data["type"] = op;
+        $.post("/admin/user", data, function (ret) {
+            console.log(data);
+            alert(JSON.stringify(ret));
+        });
+    });
+
+    $("#formProblem").submit(function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let data = $(this).serializeObject();
+        data["type"] = op;
+        data["time"] = new Date(data["time"]).getTime();
+        $.post("/admin/problem", data, function (ret) {
+            console.log(data);
+            alert(JSON.stringify(ret));
+        });
+    });
+</script>
 </html>

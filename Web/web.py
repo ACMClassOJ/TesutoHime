@@ -105,7 +105,7 @@ def Submit_Problem():
         if UnixNano() < Problem_Manager.Get_Release_Time(int(Problem_ID)) and Login_Manager.Get_Privilege() <= 0:
             return '-1'
         Username = Login_Manager.Get_Username()
-        Lang = 0 if str(request.form.get('lang')) == 'cpp' else 1
+        Lang = request.form.get('lang')
         Code = request.form.get('code')
         if len(str(Code)) > ProblemConfig.Max_Code_Length:
             return '-1'

@@ -119,11 +119,11 @@
     $.fn.serializeObject = function () {
         let data = {};
         this.serializeArray().forEach(function (e) {
-            if (e["value"] !== "")
-                if (e["name"].search("[T t]ime") !== -1)
-                    data[e["name"]] = new Date(e["value"]).getTime();
-                else
-                    data[e["name"]] = e["value"];
+            if (e.value !== "")
+                if (e.name.search("[T t]ime") !== -1)
+                    data[e.name] = new Date(e.value).getTime();
+                else if ($("#" + e.name))
+                    data[e.name] = e.value;
         });
         return data;
     }
@@ -174,10 +174,17 @@
         e.preventDefault();
         e.stopPropagation();
         let data = $(this).serializeObject();
-        data["type"] = op;
-        $.post("/admin/user", data, function (ret) {
-            console.log(data);
-            alert(JSON.stringify(ret));
+        data.type = op;
+        console.log(data);
+        $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: "/admin/user",
+            dataType: "json",
+            data: JSON.stringify(data),
+            complete: function (ret) {
+                alert(JSON.stringify(ret));
+            }
         });
     });
 
@@ -185,10 +192,18 @@
         e.preventDefault();
         e.stopPropagation();
         let data = $(this).serializeObject();
-        data["type"] = op;
-        $.post("/admin/problem", data, function (ret) {
-            console.log(data);
-            alert(JSON.stringify(ret));
+        data.type = op;
+        console.log(data);
+
+        $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: "/admin/problem",
+            dataType: "json",
+            data: JSON.stringify(data),
+            complete: function (ret) {
+                alert(JSON.stringify(ret));
+            }
         });
     });
 
@@ -196,11 +211,22 @@
         e.preventDefault();
         e.stopPropagation();
         let data = $(this).serializeObject();
-        data["contest_type"] = $("#iptIsHomework")[0].checked ? 1 : 0;
-        data["type"] = op;
-        $.post("/admin/contest", data, function (ret) {
-            console.log(data);
-            alert(JSON.stringify(ret));
+        data.contest_type = $("#iptIsHomework")[0].checked ? 1 : 0;
+        if (data.hasOwnProperty("id"))
+            data.id = data.id.split(/\s+/);
+        if (data.hasOwnProperty("username"))
+            data.username = data.username.split(/\s+/);
+        data.type = op;
+        console.log(data);
+        $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: "/admin/contest",
+            dataType: "json",
+            data: JSON.stringify(data),
+            complete: function (ret) {
+                alert(ret.responseText);
+            }
         });
     });
 </script>

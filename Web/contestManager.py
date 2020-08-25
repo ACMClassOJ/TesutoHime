@@ -7,7 +7,7 @@ class ConetstManager:
         cursor = db.cursor()
         try:
             cursor.execute("INSERT INTO Contest (Name, Start_Time, End_Time, Type) VALUES (%s, %s, %s, %s)",
-                           (Name, str(Start_Time), str(End_Time), str(Type)))
+                           (Name, Start_Time, End_Time, Type))
             db.commit()
         except:
             db.rollback()
@@ -20,7 +20,7 @@ class ConetstManager:
         cursor = db.cursor()
         try:
             cursor.execute("UPDATE Contest SET Name = %s, Start_Time = %s, End_Time = %s, Type = %s WHERE ID = %s",
-                           (New_Name, str(New_Start_Time), str(New_End_Time), str(New_Type), str(ID)))
+                           (New_Name, New_Start_Time, New_End_Time, New_Type, ID))
             db.commit()
         except:
             db.rollback()

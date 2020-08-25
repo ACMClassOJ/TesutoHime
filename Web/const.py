@@ -47,7 +47,7 @@ class ReturnCode:
     ERR_LOGOUT = {'e': -11, 'msg': 'logout failed'}
 
     ERR_USER_NOT_LOGGED_IN = {'e': -100, 'msg': 'user not logged in'}
-    ERR_INSUFFICIENT_PRIVILEGE = {'e': -101, 'msg': 'insufficient privilege'}
+    ERR_PERMISSION_DENIED = {'e': -101, 'msg': 'permission denied'}
 
     ERR_INVALID_USERNAME = {'e': -200, 'msg': 'invalid username'}
 

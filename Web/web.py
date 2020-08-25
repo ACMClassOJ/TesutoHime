@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, make_response
+from flask import Flask, request, render_template, redirect, make_response, abort
 from uuid import uuid4
 import re
 from sessionManager import Login_Manager
@@ -7,13 +7,18 @@ from problemManager import Problem_Manager
 from discussManager import Discuss_Manager
 from judgeManager import Judge_Manager
 from contestManager import Conetst_Manager
+from judgeServerScheduler import JudgeServer_Scheduler
 from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
 
 web = Flask('WEB')
 
+@web.errorhandler(500)
+def Error_500():
+    return "Internal Server Error: invalid Request"
+
 @web.route('/')
-def index():
+def Index():
     return render_template('index.html', Friendly_Username = Login_Manager.Get_FriendlyName())
 
 @web.route('/login', methods=['GET', 'POST'])
@@ -26,7 +31,6 @@ def Login():
         return render_template('login.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Logged_In = False, Next = next)
     Username = request.form.get('username')
     Password = request.form.get('password')
-    Next = request.form.get('next') # return this argument to ME
     if not User_Manager.Check_Login(Username, Password): # no need to avoid sql injection
         return '-1'
     lid = str(uuid4())
@@ -102,15 +106,16 @@ def Submit_Problem():
         if not Login_Manager.Check_User_Status():
             return redirect('login')
         Problem_ID = int(request.form.get('problem_id'))
+        if Problem_ID < 1000 or Problem_ID > Problem_Manager.Get_Max_ID():
+            abort(404)
         if UnixNano() < Problem_Manager.Get_Release_Time(int(Problem_ID)) and Login_Manager.Get_Privilege() <= 0:
             return '-1'
         Username = Login_Manager.Get_Username()
-        Lang = request.form.get('lang')
+        Lang = request.form.get('lang') # cpp or git
         Code = request.form.get('code')
         if len(str(Code)) > ProblemConfig.Max_Code_Length:
             return '-1'
-        print("At TODO")
-        # todo: start Judge & Judge_Server Scheduler
+        JudgeServer_Scheduler.Start_Judge(Problem_ID, Username, Code, Lang)
         return '0'
 
 @web.route('/rank')

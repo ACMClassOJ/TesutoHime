@@ -4,7 +4,7 @@ from judgeServerManager import JudgeServer_Manager
 from judgeManager import Judge_Manager
 from config import JudgeConfig
 
-class JudgeServer_Scheduler:
+class JudgeServerScheduler:
     def Heart_Beat(self, Secret) -> bool:
         if not JudgeServer_Manager.Check_Secret(Secret):
             return False
@@ -41,3 +41,5 @@ class JudgeServer_Scheduler:
         JudgeServer_Manager.Flush_Busy(Secret, False)
         # todo: read result and store it into Judge Database
         return
+
+JudgeServer_Scheduler = JudgeServerScheduler()

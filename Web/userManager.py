@@ -9,7 +9,7 @@ def randInt():
     return random.randint(3456, 89786576)
 
 class UserManager:
-    def Add_User(self, Username:str, Student_ID:int, Friendly_Name:str, Password:str, Privilege:str): # will not check whether the argument is illegal
+    def Add_User(self, Username:str, Student_ID:int, Friendly_Name:str, Password:str, Privilege:int): # will not check whether the argument is illegal
         Salt = randInt()
         Password = hash(Password, Salt)
         db = DB_Connect()
@@ -17,7 +17,7 @@ class UserManager:
         # print("INSERT INTO User(Username, Student_ID, Friendly_Name, Password, Salt, Privilege) VALUES(%s, %s, %s, %s, %s, %s)" % (Username, Student_ID, Friendly_Name, Password, str(Salt), Privilege))
         try:
             cursor.execute("INSERT INTO User(Username, Student_ID, Friendly_Name, Password, Salt, Privilege) VALUES(%s, %s, %s, %s, %s, %s)",
-                        (Username, str(Student_ID), Friendly_Name, Password, str(Salt), Privilege))
+                        (Username, Student_ID, Friendly_Name, Password, Salt, Privilege))
             db.commit()
         except:
             db.rollback()
@@ -25,14 +25,14 @@ class UserManager:
         db.close()
         return
 
-    def Modify_User(self, Username:str, Student_ID:str, Friendly_Name:str, Password:str, Privilege:str):
+    def Modify_User(self, Username:str, Student_ID:int, Friendly_Name:str, Password:str, Privilege:int):
         db = DB_Connect()
         cursor = db.cursor()
         cursor.execute("SELECT Username, Student_ID, Friendly_Name, Password, Salt, Privilege FROM User WHERE Username = %s", (Username))
         data = cursor.fetchone()
 
         if Student_ID == '':
-            Student_ID = str(data[1])
+            Student_ID = data[1]
         if Friendly_Name == '':
             Friendly_Name = data[2]
         if Password == '':
@@ -42,12 +42,12 @@ class UserManager:
             Salt = randInt()
             Password = hash(Password, Salt)
         if Privilege == '':
-            Privilege = str(data[5])
+            Privilege = data[5]
 
         # print("UPDATE User SET Student_ID = %s, Friendly_Name = %s, Password = %s, Salt = %s, Privilege = %s where Username = %s" % (Student_ID, Friendly_Name, Password, str(Salt), Privilege, Username))
         try:
             cursor.execute("UPDATE User SET Student_ID = %s, Friendly_Name = %s, Password = %s, Salt = %s, Privilege = %s WHERE Username = %s",
-                           (Student_ID, Friendly_Name, Password, str(Salt), Privilege, Username))
+                           (Student_ID, Friendly_Name, Password, Salt, Privilege, Username))
             db.commit()
         except:
             db.rollback()

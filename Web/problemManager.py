@@ -2,7 +2,7 @@ import sys
 from utils import *
 
 class ProblemManager:
-    def Add_Problem(self, Title:str, Description:str, Input:str, Output:str, Example_Input:str, Example_Output:str, Data_Range:str, Release_Time:str):
+    def Add_Problem(self, Title:str, Description:str, Input:str, Output:str, Example_Input:str, Example_Output:str, Data_Range:str, Release_Time:int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
@@ -15,12 +15,12 @@ class ProblemManager:
             db.close()
         return
 
-    def Modify_Problem(self, ID:int, Title:str, Description:str, Input:str, Output:str, Example_Input:str, Example_Output:str, Data_Range:str, Release_Time:str):
+    def Modify_Problem(self, ID:int, Title:str, Description:str, Input:str, Output:str, Example_Input:str, Example_Output:str, Data_Range:str, Release_Time:int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
             cursor.execute("UPDATE Problem SET Title = %s, Description = %s, Input = %s, Output = %s, Example_Input = %s, Example_Output = %s, Data_Range = %s, Release_Time = %s WHERE ID = %s",
-                           (Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time, str(ID)))
+                           (Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time, ID))
             db.commit()
         except:
             db.rollback()

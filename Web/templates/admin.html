@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Pioooooo">
+    <title>TesutoHime · Admin</title>
+</head>
+
+<body>
+<div>
+    <form id="formUser">
+        <label>
+            Username
+            <input type="text" name="username" id="iptUsername">
+        </label>
+        <label>
+            Student ID
+            <input type="number" name="id" id="iptStudentId">
+        </label>
+        <label>
+            Friendly Name
+            <input type="text" name="name" id="iptFriendlyName">
+        </label>
+        <label>
+            Password
+            <input type="password" name="password" id="iptPassword">
+        </label>
+        <label>
+            Privilege
+            <input type="number" name="privilege" id="iptPrivilege">
+        </label>
+        <button type="submit" id="btnAddUser">Add User</button>
+        <button type="submit" id="btnModifyUser">Modify User</button>
+        <button type="submit" id="btnRemoveUser">Remove User</button>
+    </form>
+</div>
+<div>
+    <form id="formProblem">
+        <label>
+            Title
+            <input type="text" name="title" id="iptTitle">
+        </label>
+        <label>
+            Description
+            <textarea name="description" id="iptDescription"></textarea>
+        </label>
+        <label>
+            Input
+            <textarea name="input" id="iptInput"></textarea>
+        </label>
+        <label>
+            Output
+            <textarea name="output" id="iptOutput"></textarea>
+        </label>
+        <label>
+            Example Input
+            <textarea name="example_input" id="iptExampleInput"></textarea>
+        </label>
+        <label>
+            Example Output
+            <textarea name="example_output" id="iptExampleOutput"></textarea>
+        </label>
+        <label>
+            Data Range
+            <textarea name="range" id="iptDataRange"></textarea>
+        </label>
+        <label>
+            Release Time
+            <input type="datetime-local" name="time" id="iptReleaseTime">
+        </label>
+        <button type="submit" id="btnAddProblem">Add Problem</button>
+        <button type="submit" id="btnModifyProblem">Modify Problem</button>
+        <button type="submit" id="btnRemoveProblem">Remove Problem</button>
+    </form>
+</div>
+<div>
+    <form id="formContest">
+        <label>
+            Contest ID
+            <input type="number" name="contest_id" id="iptContestId">
+        </label>
+        <label>
+            Contest Name
+            <input type="text" name="name" id="iptContestName">
+        </label>
+        <label>
+            Start Time
+            <input type="datetime-local" name="start_time" id="iptStartTime">
+        </label>
+        <label>
+            End Time
+            <input type="datetime-local" name="end_time" id="iptEndTime">
+        </label>
+        <label>
+            Is Homework
+            <input type="checkbox" name="contest_type" id="iptIsHomework">
+        </label>
+        <label>
+            Problem ID(s)
+            <textarea name="id" id="iptContestProblemId"></textarea>
+        </label>
+        <label>
+            Student Username(s)
+            <textarea name="username" id="iptContestStudentUsername"></textarea>
+        </label>
+        <button type="submit" id="btnCreateContest">Create Contest</button>
+        <button type="submit" id="btnModifyContest">Modify Contest</button>
+        <button type="submit" id="btnRemoveContest">Remove Contest</button>
+        <button type="submit" id="btnAddProblemToContest">Add Problem To Contest</button>
+        <button type="submit" id="btnRemoveProblemFromContest">Remove Problem from Contest</button>
+        <button type="submit" id="btnAddUserToContest">Add User To Contest</button>
+        <button type="submit" id="btnRemoveUserFromContest">Remove User From Contest</button>
+    </form>
+</div>
+</body>
+<script src="{{ url_for('static', filename='/js/jquery-3.5.1.min.js') }}"></script>
+<script>
+    $.fn.serializeObject = function () {
+        let data = {};
+        this.serializeArray().forEach(function (e) {
+            if (e.value !== "")
+                if (e.name.search("[T t]ime") !== -1)
+                    data[e.name] = new Date(e.value).getTime();
+                else if ($("#" + e.name))
+                    data[e.name] = e.value;
+        });
+        return data;
+    }
+</script>
+<script>
+    let op;
+    $("#btnAddUser").click(function () {
+        op = 0;
+    });
+    $("#btnModifyUser").click(function () {
+        op = 1;
+    });
+    $("#btnRemoveUser").click(function () {
+        op = 2;
+    });
+    $("#btnAddProblem").click(function () {
+        op = 0;
+    });
+    $("#btnModifyProblem").click(function () {
+        op = 1;
+    });
+    $("#btnRemoveProblem").click(function () {
+        op = 2;
+    });
+    $("#btnCreateContest").click(function () {
+        op = 0;
+    });
+    $("#btnModifyContest").click(function () {
+        op = 1;
+    });
+    $("#btnRemoveContest").click(function () {
+        op = 2;
+    });
+    $("#btnAddProblemToContest").click(function () {
+        op = 3;
+    });
+    $("#btnRemoveProblemFromContest").click(function () {
+        op = 4;
+    });
+    $("#btnAddUserToContest").click(function () {
+        op = 5;
+    });
+    $("#btnRemoveUserFromContest").click(function () {
+        op = 6;
+    });
+
+    $("#formUser").submit(function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let data = $(this).serializeObject();
+        data.type = op;
+        console.log(data);
+        $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: "/admin/user",
+            dataType: "json",
+            data: JSON.stringify(data),
+            complete: function (ret) {
+                alert(JSON.stringify(ret));
+            }
+        });
+    });
+
+    $("#formProblem").submit(function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let data = $(this).serializeObject();
+        data.type = op;
+        console.log(data);
+
+        $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: "/admin/problem",
+            dataType: "json",
+            data: JSON.stringify(data),
+            complete: function (ret) {
+                alert(JSON.stringify(ret));
+            }
+        });
+    });
+
+    $("#formContest").submit(function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let data = $(this).serializeObject();
+        data.contest_type = $("#iptIsHomework")[0].checked ? 1 : 0;
+        if (data.hasOwnProperty("id"))
+            data.id = data.id.split(/\s+/);
+        if (data.hasOwnProperty("username"))
+            data.username = data.username.split(/\s+/);
+        data.type = op;
+        console.log(data);
+        $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: "/admin/contest",
+            dataType: "json",
+            data: JSON.stringify(data),
+            complete: function (ret) {
+                alert(ret.responseText);
+            }
+        });
+    });
+</script>
+</html>

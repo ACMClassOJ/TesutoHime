@@ -1,4 +1,5 @@
 import sys
+import random
 from utils import *
 
 class JudgeServerManager:
@@ -53,6 +54,14 @@ class JudgeServerManager:
         db.close()
         return
 
+    def Check_Secret(self, Secret: str):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT ID FROM Judge_Server WHERE Secret_Key = %s", (Secret))
+        ret = cursor.fetchall()
+        db.close()
+        return ret != None
+
     def Get_Online_Server_List(self, MinTime: int):
         db = DB_Connect()
         cursor = db.cursor()
@@ -60,5 +69,35 @@ class JudgeServerManager:
         data = cursor.fetchall()
         db.close()
         return data
+
+    def Set_Offline(self, Secret: str):
+        db = DB_Connect()
+        cursor = db.cursor()
+        try:
+            cursor.execute("UPDATE Judge_Server SET Last_Seen_Time = %s WHERE Secret_Key = %s", ('0', Secret))
+            db.commit()
+        except:
+            db.rollback()
+            sys.stderr.write("SQL Error in JudgeServerManager: Set_Offline\n")
+        db.close()
+        return
+
+    def Get_Standby_Server(self, MinTime: int):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Address, Secret_Key FROM Judge_Server WHERE Last_Seen_Time >= %s AND Busy = %s", (str(MinTime), '0'))
+        ret = cursor.fetchall()
+        db.close()
+        if ret == None:
+            return None
+        st = random.randint(0, len(ret) - 1)
+        for i in range(st, st + len(ret)):
+            if Ping(ret[i % st][0]):
+                return ret[i % st]
+            else:
+                self.Set_Offline(ret[i % st][0])
+        return None
+
+
 
 JudgeServer_Manager = JudgeServerManager()

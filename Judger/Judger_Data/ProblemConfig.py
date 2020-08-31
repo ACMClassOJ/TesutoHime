@@ -1,6 +1,5 @@
 from typing import List
 
-
 class ProblemConfig:
     class Group:
         def __init__(self,
@@ -31,8 +30,8 @@ class ProblemConfig:
             self.ValgrindTestOn = ValgrindTestOn
 
     def __init__(self,
-                 Groups: List[Group],
-                 Details: List[Detail],
+                 Groups: list, #[Group]
+                 Details: list, #[Detail]
                  CompileTimeLimit: int,  # ms
                  SPJ: int,  # 0/1 default spj, 2 custom spj
                  Scorer: int  # 0 default scorer, 1 custom scorer

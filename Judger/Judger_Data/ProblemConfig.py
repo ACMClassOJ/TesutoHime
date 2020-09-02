@@ -6,7 +6,7 @@ class ProblemConfig:
                      GroupID: int,  # id 为 1-base
                      GroupName: str,
                      GroupScore,  # int / float
-                     TestPoints: List[int]
+                     TestPoints: list # int
                      ):
             self.GroupID = GroupID
             self.GroupName = GroupName

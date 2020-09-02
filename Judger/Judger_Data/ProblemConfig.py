@@ -1,13 +1,12 @@
 from typing import List
 
-
 class ProblemConfig:
     class Group:
         def __init__(self,
                      GroupID: int,  # id 为 1-base
                      GroupName: str,
                      GroupScore,  # int / float
-                     TestPoints: List[int]
+                     TestPoints: list # int
                      ):
             self.GroupID = GroupID
             self.GroupName = GroupName
@@ -31,8 +30,8 @@ class ProblemConfig:
             self.ValgrindTestOn = ValgrindTestOn
 
     def __init__(self,
-                 Groups: List[Group],
-                 Details: List[Detail],
+                 Groups: list, #[Group]
+                 Details: list, #[Detail]
                  CompileTimeLimit: int,  # ms
                  SPJ: int,  # 0/1 default spj, 2 custom spj
                  Scorer: int  # 0 default scorer, 1 custom scorer

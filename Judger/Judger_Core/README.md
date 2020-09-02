@@ -54,3 +54,7 @@
 | problemConfig | 所需评测的题目配置以及选手代码                     |
 | judge()       | 评测选手的代码，得到评测结果，返回值为 JudgeResult |
 
+# 安装 seccomp
+```
+sudo apt install libseccomp-dev libseccomp2 seccomp
+```

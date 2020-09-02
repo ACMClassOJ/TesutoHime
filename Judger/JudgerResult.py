@@ -1,15 +1,34 @@
 from enum import Enum
-from Judger_Data import ProblemConfig
+from Judger.Judger_Data import ProblemConfig
 
 class ResultType(Enum):
-        AC = 0
-        WA = 1
-        RE = 2
-        TLE = 3
-        MLE = 4
-        CE = 5
-        MEMLEK = 6
-        SYSERR = 7
+        AC = 'Accepted'
+        WA = 'Wrong Answer'
+        RE = 'Runtime Error'
+        TLE = 'Time Limit Exceeded'
+        MLE = 'Memory Limit Exceeded'
+        CE = 'Compile Error'
+        MEMLEK = 'Memory Leak'
+        SYSERR = 'System Error'
+        SKIPED = 'Skiped'
+
+class DetailResult:
+        def __init__(self,
+                ID: int,
+                result: ResultType,
+                score: int or float,
+                time: int,
+                memory: int,
+                disk: int,
+                message: str
+        ):
+                self.ID = ID
+                self.result = result
+                self.score = score
+                self.time = time
+                self.memory = memory
+                self.disk = disk
+                self.message = message
 
 class JudgerResult:
         def __init__(self,
@@ -17,7 +36,7 @@ class JudgerResult:
                 Score, # int / float
                 TimeUsed : int, # ms
                 MemUsed : int, # Byte
-                Details, # [[ID, result: ResultType, score, time(ms), memory(Byte), disk(KB, -1 when not used), message: str]]
+                Details : list, # [Detail]
                 Config : ProblemConfig
         ):
                 self.Status = Status

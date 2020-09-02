@@ -1,4 +1,4 @@
-import os, shutil, requests, zipfile, json
+import os, shutil, requests, zipfile, json, sys
 from .ProblemConfig import *
 from collections import namedtuple
 
@@ -37,12 +37,15 @@ def get_data_from_server(config, id: int):
 
 
 def get_data(config, id: int) -> (ProblemConfig, str):
-    r = try_cache(config, id)
-    if r == 1:
-        get_data_from_server(config, id)
-    if r == -1:
-        raise Exception("Can't get data")
-    f = open(config.cache_dir + '/' + str(id) + '/config.json')
-    pconfig: ProblemConfig = json.loads(f.read(), object_hook=lambda x: namedtuple('X', x.keys())(*x.values()))
-    f.close()
-    return pconfig, config.cache_dir + '/' + str(id)
+    try:
+        r = try_cache(config, id)
+        if r == 1:
+            get_data_from_server(config, id)
+        if r == -1:
+            raise Exception("Can't get data")
+        with open(config.cache_dir + '/' + str(id) + '/config.json') as f:
+            pconfig: ProblemConfig = json.loads(f.read(), object_hook=lambda x: namedtuple('X', x.keys())(*x.values()))
+        return pconfig, config.cache_dir + '/' + str(id)
+    except Exception as e:
+        print(e, file=sys.stderr)
+        raise

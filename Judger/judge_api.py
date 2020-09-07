@@ -4,13 +4,13 @@ from Judger.config import *
 from Judger.Judger_Data import get_data
 from Judger.JudgerResult import *
 
-api = Flask('API')
+judge_api = Flask('API')
 
-@api.route('/')
+@judge_api.route('/')
 def hello():
     return 'This is API.'
 
-@api.route('/judge', methods = ['POST'])
+@judge_api.route('/judge', methods = ['POST'])
 def judge():
     Server_Secret = request.form.get['Server_Secret']
     if Web_Server_Secret != Server_Secret:
@@ -24,7 +24,3 @@ def judge():
     except:
         return '-1'
     return result
-
-@api.route('/isBusy', methods = ['POST'])
-def isBusy():
-    #to do: verify the Server_Secret

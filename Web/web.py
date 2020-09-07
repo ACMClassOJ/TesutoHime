@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect
+from flask import Flask, request, render_template, redirect, make_response, abort
 from uuid import uuid4
 import re
 from sessionManager import Login_Manager
@@ -7,13 +7,18 @@ from problemManager import Problem_Manager
 from discussManager import Discuss_Manager
 from judgeManager import Judge_Manager
 from contestManager import Conetst_Manager
-from config import LoginConfig, WebConfig, JudgeConfig
+from judgeServerScheduler import JudgeServer_Scheduler
+from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
 
 web = Flask('WEB')
 
+@web.errorhandler(500)
+def Error_500():
+    return "Internal Server Error: invalid Request"
+
 @web.route('/')
-def index():
+def Index():
     return render_template('index.html', Friendly_Username = Login_Manager.Get_FriendlyName())
 
 @web.route('/login', methods=['GET', 'POST'])
@@ -26,29 +31,28 @@ def Login():
         return render_template('login.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Logged_In = False, Next = next)
     Username = request.form.get('username')
     Password = request.form.get('password')
-    Next = request.form.get('next') # return this argument to ME
     if not User_Manager.Check_Login(Username, Password): # no need to avoid sql injection
-        return render_template('login_failure.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Next = next, Inputed_Username = Username, Inputed_Password = Password) # implement it with js.
+        return '-1'
     lid = str(uuid4())
     Login_Manager.New_Session(Username, lid)
-    ret = redirect(Next)
+    ret = make_response('0')
     ret.set_cookie(key = 'Login_ID', value = lid, max_age = LoginConfig.Login_Life_Time)
     return ret
 
-def Validate(Username: str, Password: str, Friendly_Name: str, Student_ID: str) -> bool:
+def Validate(Username: str, Password: str, Friendly_Name: str, Student_ID: str) -> int:
     Username_Reg = '([a-zA-Z][a-zA-Z0-9_]{0,19})$'
     Password_Reg = '([a-zA-Z0-9_\!\@\#\$\%\^&\*\(\)]{6,30})$'
     Friendly_Name_Reg = '([a-zA-Z0-9_]{1,60})$'
     Student_ID_Reg = '([0-9]{12})$'
     if re.match(Username_Reg, Username) == None:
-        return False
+        return -1
     if re.match(Password_Reg, Password) == None:
-        return False
+        return -1
     if re.match(Friendly_Name_Reg, Friendly_Name) == None:
-        return False
+        return -1
     if re.match(Student_ID_Reg, Student_ID) == None:
-        return False
-    return User_Manager.Validate_Username(Username)
+        return -1
+    return 0 if User_Manager.Validate_Username(Username) else -1
 
 @web.route('/register', methods=['GET', 'POST'])
 def Register():
@@ -60,10 +64,10 @@ def Register():
     Password = request.form.get('password')
     Friendly_Name = request.form.get('friendly_name')
     Student_ID = request.form.get('student_id')
-    if not Validate(Username, Password, Friendly_Name, Student_ID):
-        return render_template('register_failure.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Inputed_Username = Username, Inputed_Password = Password, Inputed_Friendly_Name = Friendly_Name, Inputed_Student_ID = Student_ID)
-    User_Manager.Add_User(Username, Student_ID, Friendly_Name, Password, '0')
-    return render_template('register_complete.html', Friendly_Username = Login_Manager.Get_FriendlyName())
+    val = Validate(Username, Password, Friendly_Name, Student_ID)
+    if val == 0:
+        User_Manager.Add_User(Username, Student_ID, Friendly_Name, Password, '0')
+    return str(val)
 
 @web.route('/problems')
 def Problem_List():
@@ -102,12 +106,17 @@ def Submit_Problem():
         if not Login_Manager.Check_User_Status():
             return redirect('login')
         Problem_ID = int(request.form.get('problem_id'))
+        if Problem_ID < 1000 or Problem_ID > Problem_Manager.Get_Max_ID():
+            abort(404)
+        if UnixNano() < Problem_Manager.Get_Release_Time(int(Problem_ID)) and Login_Manager.Get_Privilege() <= 0:
+            return '-1'
         Username = Login_Manager.Get_Username()
-        Lang = 0 if str(request.form.get('lang')) == 'cpp' else 1
+        Lang = request.form.get('lang') # cpp or git
         Code = request.form.get('code')
-        print("At TODO")
-        # todo: start Judge & Judge_Server Scheduler
-        return redirect('/status')
+        if len(str(Code)) > ProblemConfig.Max_Code_Length:
+            return '-1'
+        JudgeServer_Scheduler.Start_Judge(Problem_ID, Username, Code, Lang)
+        return '0'
 
 @web.route('/rank')
 def Problem_Rank():
@@ -134,7 +143,7 @@ def Problem_Rank():
 
 
 @web.route('/discuss', methods=['GET', 'POST'])
-def Discuss():
+def Discuss(): # todo: Debug discuss
     if request.method == 'GET':
         if not Login_Manager.Check_User_Status():
             return redirect('login?next=' + request.url)

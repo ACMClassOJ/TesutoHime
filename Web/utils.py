@@ -1,4 +1,5 @@
 import pymysql
+import requests
 import datetime
 import time
 from config import *
@@ -53,3 +54,14 @@ def Gen_Page(cur_Page: int, max_Page: int):
     else:
         ret.append(['>', cur_Page + 1, -1])
     return ret
+
+def Ping(url: str) -> bool:
+    url = url + '/ping'
+    for i in range(0, 3):
+        try:
+            ret = requests.get(url) # Fixme: trust self-signed SSL
+            if ret == '0':
+                return True
+        except:
+            pass
+    return False

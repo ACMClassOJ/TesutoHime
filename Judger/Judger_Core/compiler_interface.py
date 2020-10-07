@@ -1,5 +1,6 @@
-from Judger_Core import config as conf
+from Judger.Judger_Core import config as conf
 from abc import abstractmethod
+
 
 class CompilerInterface:
     @abstractmethod

@@ -1,11 +1,9 @@
-from Judger_Core.compiler_interface import CompilerInterface
-from Judger_Core.config import CompilationConfig, CompilationResult
+from Judger.Judger_Core.compiler_interface import CompilerInterface
+from Judger.Judger_Core.config import CompilationConfig, CompilationResult
 import subprocess
 
-
-
 class Compiler(CompilerInterface):
-    def compile_cpp(self, code, timeLimit):
+    def compile_cpp(self, code : str, timeLimit):
         codeFile = open("compiler/source_code.cpp", "w")
         codeFile.write(code)
         codeFile.close()
@@ -17,8 +15,8 @@ class Compiler(CompilerInterface):
         if process.returncode != 0:
             return CompilationResult(
                 compiled    = False,    
-                msg         = process.stderr,
-                programPath = None)
+                msg         = process.stderr.decode(),
+                programPath = "")
         
         process = subprocess.run(
             ["g++", "compiler/source_code.cpp", "-E"], 
@@ -27,7 +25,7 @@ class Compiler(CompilerInterface):
             timeout = timeLimit / 1000)
         
     def compile_git(self, url, timeLimit):
-
+        
         pass
 
     def CompileInstance(self, code_config):
@@ -35,12 +33,13 @@ class Compiler(CompilerInterface):
         language    = code_config.language
         timeLimit   = code_config.compileTimeLimit
         if language == "c++":
-            return compile_cpp(sourceCode, timeLimit)
+            return self.compile_cpp(sourceCode, timeLimit)
         elif language == "git":
-            return compile_git(sourceCode, timeLimit)
+            return self.compile_git(sourceCode, timeLimit)
         else:
             return CompilationResult(
                 compiled    = False, 
                 msg         = "暂不支持用" + language + "语言提交",
-                programPath = None
-                )
+                programPath = "")
+
+compiler = Compiler()

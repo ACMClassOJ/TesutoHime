@@ -1,14 +1,17 @@
 from Judger.Judger_Core.config import *
 from Judger.JudgerResult import *
 from Judger.Judger_Core.Compiler.Compiler import compiler
+from threading import Lock
 import subprocess
 
 class JudgeManager:
     def __init__(self):
         self.judgingFlag = False
+        self.mutex = Lock()
 
     def isJudging(self) -> bool:
-        return self.judgingFlag
+        with self.mutex:
+            return self.judgingFlag
 
     def judge(self,
               problemConfig: ProblemConfig,
@@ -16,7 +19,8 @@ class JudgeManager:
               language: str,
               sourceCode: str
               ) -> JudgerResult:
-        self.judgingFlag = True
+        with self.mutex:
+            self.judgingFlag = True
         compileResult = compiler.CompileInstance(CompilationConfig(sourceCode, language, problemConfig.CompileTimeLimit))
         if not compileResult.compiled:
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [[testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg] for testcase in problemConfig.Details], problemConfig)
@@ -63,7 +67,8 @@ class JudgeManager:
                     score = process.stdout.decode()
                     print(process.stderr.decode())
                     judgeResult = JudgerResult(status, score, totalTime, maxMem, Details, problemConfig)
-        self.judgingFlag = False
+        with self.mutex:
+            self.judgingFlag = False
         return judgeResult
 
 

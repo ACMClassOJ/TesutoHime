@@ -2,7 +2,6 @@ from flask import Flask, request
 from Judger.judgeManager import judgeManager
 from Judger.config import *
 from Judger.Judger_Data import get_data
-from Judger.JudgerResult import *
 
 judge_api = Flask('API')
 

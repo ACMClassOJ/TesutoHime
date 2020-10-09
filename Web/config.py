@@ -1,6 +1,6 @@
 class DataBaseConfig:
     mysql_Host = 'localhost'
-    mysql_User = 'root'
+    mysql_User = 'oj'
     mysql_Password = 'Progynova'
     mysql_Database = 'OJ'
 

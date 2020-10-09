@@ -11,6 +11,13 @@ CREATE DATABASE OJ;
 USE OJ;
 ```
 
+Create User:
+
+```sql
+CREATE USER 'oj'@'localhost' IDENTIFIED BY 'Progynova';
+GRANT ALL PRIVILEGES ON database_name.* TO 'oj'@'localhost';
+```
+
 ### 数据表格式：
 
 #### Problem:

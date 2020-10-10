@@ -1,0 +1,70 @@
+
+./test/test.om:     file format elf32-littleriscv
+
+
+Disassembly of section .rom:
+
+00000000 <.rom>:
+   0:	00020137          	lui	sp,0x20
+   4:	040010ef          	jal	ra,1044 <main>
+   8:	0ff00513          	li	a0,255
+   c:	000306b7          	lui	a3,0x30
+  10:	00a68223          	sb	a0,4(a3) # 30004 <__heap_start+0x2e004>
+  14:	ff9ff06f          	j	c <printInt-0xff4>
+
+Disassembly of section .text:
+
+00001000 <printInt>:
+    1000:	00001737          	lui	a4,0x1
+    1004:	06c72783          	lw	a5,108(a4) # 106c <__bss_end>
+    1008:	00f54533          	xor	a0,a0,a5
+    100c:	0ad50513          	addi	a0,a0,173
+    1010:	06a72623          	sw	a0,108(a4)
+    1014:	00008067          	ret
+
+00001018 <printStr>:
+    1018:	00054783          	lbu	a5,0(a0)
+    101c:	02078263          	beqz	a5,1040 <printStr+0x28>
+    1020:	00001737          	lui	a4,0x1
+    1024:	06c72683          	lw	a3,108(a4) # 106c <__bss_end>
+    1028:	00d7c7b3          	xor	a5,a5,a3
+    102c:	20978793          	addi	a5,a5,521
+    1030:	06f72623          	sw	a5,108(a4)
+    1034:	00150513          	addi	a0,a0,1
+    1038:	00054783          	lbu	a5,0(a0)
+    103c:	fe0794e3          	bnez	a5,1024 <printStr+0xc>
+    1040:	00008067          	ret
+
+00001044 <main>:
+    1044:	ff010113          	addi	sp,sp,-16 # 1fff0 <__heap_start+0x1dff0>
+    1048:	00112623          	sw	ra,12(sp)
+    104c:	0b100513          	li	a0,177
+    1050:	fb1ff0ef          	jal	ra,1000 <printInt>
+    1054:	000017b7          	lui	a5,0x1
+    1058:	06c7a503          	lw	a0,108(a5) # 106c <__bss_end>
+    105c:	00c12083          	lw	ra,12(sp)
+    1060:	01010113          	addi	sp,sp,16
+    1064:	00008067          	ret
+
+Disassembly of section .srodata:
+
+00001068 <Mod>:
+    1068:	00fd                	addi	ra,ra,31
+	...
+
+Disassembly of section .sbss:
+
+0000106c <judgeResult>:
+    106c:	0000                	unimp
+	...
+
+Disassembly of section .comment:
+
+00000000 <.comment>:
+   0:	3a434347          	fmsub.d	ft6,ft6,ft4,ft7,rmm
+   4:	2820                	fld	fs0,80(s0)
+   6:	29554e47          	fmsub.s	ft8,fa0,fs5,ft5,rmm
+   a:	3820                	fld	fs0,112(s0)
+   c:	332e                	fld	ft6,232(sp)
+   e:	302e                	fld	ft0,232(sp)
+	...

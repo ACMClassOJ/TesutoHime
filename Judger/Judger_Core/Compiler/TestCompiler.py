@@ -1,10 +1,17 @@
-from Judger.Judger_Core.Compiler.Compiler import compiler
-from Judger.Judger_Core.config import CompilationConfig
+from .Compiler import compiler
+from ..config import CompilationConfig
 class TestCompiler:
-    def test(self):
-        compiler.CompilerInstance(CompilationConfig(
-            sourceCode=open(),
+    def test_cpp(self):
+        print(compiler.CompileInstance(CompilationConfig(
+            sourceCode=open("./Judger/Judger_Core/Compiler/test/test.cpp").read(),
             language="c++",
-
-
-        ))
+            compileTimeLimit=100)).msg)
+    def test_git(self):
+        result = compiler.CompileInstance(CompilationConfig(
+            sourceCode="https://github.com/Anoxiacxy/RISC-V.git",
+            language="git",
+            compileTimeLimit=10000))
+        #print(result.compiled)
+        #print(result.msg)
+        #print(result.programPath)
+TestCompiler().test_git()

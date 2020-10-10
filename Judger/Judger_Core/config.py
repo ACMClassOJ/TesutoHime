@@ -56,9 +56,3 @@ class JudgeTestPointResult:
         self.mem    = memUsage   # kb
         self.disk   = diskUsage # kb
 
-class JudgerCore:
-    def __init__(self, problemConfig):
-        self.problemConfig = problemConfig
-    
-    def judge(self) -> JudgeResult:
-        pass

@@ -1,7 +1,8 @@
 from ..compiler_interface import CompilerInterface
 from ..config import CompilationConfig, CompilationResult
+from .cutil import readonly_handler
 import subprocess
-import os, sys, stat
+import os
 import shutil
 import random
 import string
@@ -15,13 +16,13 @@ class Compiler(CompilerInterface):
         program = "".join(random.sample(string.ascii_letters, 10))
         source = program + ".cpp"
 
-        codeFile = open(path + source, "w")
+        codeFile = open(os.path.join(path, source), "w")
         codeFile.write(code)
         codeFile.close()
 
         try:
             process = subprocess.run(
-                ["g++", path + source, "-o", path + program, "-fmax-errors=10"],
+                ["g++", os.path.join(path, source), "-o", os.path.join(path, program), "-fmax-errors=10"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 timeout=timeLimit / 1000)
@@ -86,9 +87,6 @@ class Compiler(CompilerInterface):
                 msg="Compile Success!",
                 programPath=os.path.join(path, project, program))
 
-    def readonly_handler(self, func, path, execinfo):
-        os.chmod(path, stat.S_IWRITE)
-        func(path)
 
     def CompileInstance(self, code_config : CompilationConfig):
         sourceCode  = code_config.sourceCode
@@ -96,7 +94,7 @@ class Compiler(CompilerInterface):
         timeLimit   = code_config.compileTimeLimit
         path="compiler"
         if os.path.exists(path):
-            shutil.rmtree(path, onerror=self.readonly_handler)
+            shutil.rmtree(path, onerror=readonly_handler)
         os.mkdir(path)
         if language == "c++":
             return self.compile_cpp(sourceCode, timeLimit)
@@ -105,7 +103,7 @@ class Compiler(CompilerInterface):
         else:
             return CompilationResult(
                 compiled    = False, 
-                msg         = "暂不支持用" + language + "语言提交",
+                msg         = "The language '" + language + "' is not supported now!",
                 programPath = "")
 
 compiler = Compiler()

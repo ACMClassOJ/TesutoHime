@@ -1,7 +1,7 @@
 from ..compiler_interface import CompilerInterface
 from ..config import CompilationConfig, CompilationResult
 import subprocess
-import os
+import os, sys, stat
 import shutil
 import random
 import string
@@ -11,8 +11,8 @@ class Compiler(CompilerInterface):
         pass
 
     def compile_cpp(self, code : str, timeLimit):
-        path = "compiler/"
-        program = "".join(random.sample(string.ascii_letters))
+        path = "compiler"
+        program = "".join(random.sample(string.ascii_letters, 10))
         source = program + ".cpp"
 
         codeFile = open(path + source, "w")
@@ -21,7 +21,7 @@ class Compiler(CompilerInterface):
 
         try:
             process = subprocess.run(
-                ["g++", path + source, "-o", path + program, "-fmax-error=10"],
+                ["g++", path + source, "-o", path + program, "-fmax-errors=10"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 timeout=timeLimit / 1000)
@@ -40,10 +40,12 @@ class Compiler(CompilerInterface):
             return CompilationResult(
                 compiled=True,
                 msg="Compile Success!",
-                programPath=path + program)
+                programPath=os.path.join(path, program))
 
     def compile_git(self, url : str, timeLimit):
         path = "compiler"
+        program = "code"
+        print("Loading...")
         try:
             process = subprocess.run(
                 ["git", "clone", url],
@@ -63,8 +65,30 @@ class Compiler(CompilerInterface):
                 msg=process.stderr.decode() if process else "",
                 programPath="")
 
-        project = process.stderr.decode()
+        project = process.stderr.decode()[14:-5]
 
+        process = None
+        print("Compiling...")
+        try:
+            process = subprocess.run(
+                ["make"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=os.path.join(path, project))
+        except subprocess.TimeoutExpired:
+            return CompilationResult(
+                compiled=False,
+                msg=process.stderr.decode() if process else "",
+                programPath="")
+
+        return CompilationResult(
+                compiled=True,
+                msg="Compile Success!",
+                programPath=os.path.join(path, project, program))
+
+    def readonly_handler(self, func, path, execinfo):
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
 
     def CompileInstance(self, code_config : CompilationConfig):
         sourceCode  = code_config.sourceCode
@@ -72,7 +96,7 @@ class Compiler(CompilerInterface):
         timeLimit   = code_config.compileTimeLimit
         path="compiler"
         if os.path.exists(path):
-            shutil.rmtree(path)
+            shutil.rmtree(path, onerror=self.readonly_handler)
         os.mkdir(path)
         if language == "c++":
             return self.compile_cpp(sourceCode, timeLimit)

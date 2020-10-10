@@ -5,13 +5,14 @@ class TestCompiler:
         print(compiler.CompileInstance(CompilationConfig(
             sourceCode=open("./Judger/Judger_Core/Compiler/test/test.cpp").read(),
             language="c++",
-            compileTimeLimit=100)).msg)
+            compileTimeLimit=2000)).msg)
     def test_git(self):
         result = compiler.CompileInstance(CompilationConfig(
             sourceCode="https://github.com/Anoxiacxy/RISC-V.git",
             language="git",
-            compileTimeLimit=10000))
+            compileTimeLimit=30000))
         #print(result.compiled)
-        #print(result.msg)
+        print(result.msg)
         #print(result.programPath)
+TestCompiler().test_cpp()
 TestCompiler().test_git()

@@ -98,6 +98,8 @@ def Submit_Problem():
     if request.method == 'GET':
         if not Login_Manager.Check_User_Status():
             return redirect('login?next=' + request.url)
+        if request.args.get('problem_id') == None:
+            return redirect('/')
         Problem_ID = int(request.args.get('problem_id'))
         Title = Problem_Manager.Get_Title(Problem_ID)
         Username = Login_Manager.Get_Username()
@@ -254,7 +256,18 @@ def Status():
 
 @web.route('/code')
 def Code(): # todo: View Judge Detail
-    return 'Todo'
+    if not Login_Manager.Check_User_Status(): # not login
+        return redirect('login?next=' + request.url)
+    if request.args.get('run_id') == None: # bad argument
+        return redirect('/')
+    run_id = int(request.args.get('run_id'))
+    judge = Judge_Manager.Search_Judge(run_id)
+    if judge == {}: # bad argument
+        return redirect('/')
+    if Login_Manager.Get_Username() != judge['User']:
+        return render_template('code.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Blocked = True)
+    else:
+        return 'Todo'
 
 @web.route('/contest')
 def Contest(): # todo: debug Contest and homework

@@ -1,8 +1,8 @@
 from flask import Flask, request
+import json
 from Judger.judgeManager import judgeManager
 from Judger.config import *
 from Judger.Judger_Data import get_data
-from Judger.JudgerResult import *
 
 judge_api = Flask('API')
 
@@ -23,4 +23,4 @@ def judge():
         result = judgeManager.judge(problemConfig, dataPath, request.form.get['Lang'], request.form.get['Code'])
     except:
         return '-1'
-    return result
+    return json.loads(json.dumps(result, default=lambda o: getattr(o, '__dict__', str(o))))

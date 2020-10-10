@@ -14,5 +14,5 @@ class TestCompiler:
         #print(result.compiled)
         print(result.msg)
         #print(result.programPath)
-#TestCompiler().test_cpp()
-TestCompiler().test_git()
+TestCompiler().test_cpp()
+#TestCompiler().test_git()

@@ -8,7 +8,7 @@ class TestCompiler:
             compileTimeLimit=10000)).msg)
     def test_git(self):
         result = compiler.CompileInstance(CompilationConfig(
-            sourceCode="https://github.com/Anoxiacxy/RISC-V.git",
+            sourceCode="https://github.com/acrazyczy/RISC-V-Simulator.git",
             language="git",
             compileTimeLimit=30000))
         #print(result.compiled)

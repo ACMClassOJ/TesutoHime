@@ -1,10 +1,65 @@
-Current User: {{Friendly_Username}}<br>
-<form action="submit" method="post">
-	<select id="lang">
-		<option value ="cpp">cpp</option>
-		<option value ="git">git</option>
-	</select>
-	<textarea id="code"></textarea>
-	<input type="hidden" name="problem_id" value="{{Problem_ID}}">
-	<input type="submit" value="Submit">
-</form>
+<!DOCTYPE html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Problem Submit</title>
+        <link rel="shortcut icon" href="favicon.ico">
+        <link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
+        <link href="{{ url_for('static', filename = 'css/style.css')}}" rel="stylesheet">
+    </head>
+    
+    <body style="background-color: rgba(193,220,248,0.1);">
+        <nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
+            <div class="container">
+                <a class="navbar-brand" href="index.html">ACM Class OnineJudge 2020</a>
+                <div class="navbar-collapse collapse" id="navbar_global">
+                    <ul class="navbar-nav navbar-nav-hover align-items-lg-center">
+                        <li class="nav-item">
+                            <a href="/problems" class="nav-link" role="button">题库</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/contest" class="nav-link" role="button">比赛</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/homework" class="nav-link" role="button">作业</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/status" class="nav-link" role="button">评测状态</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/about" class="nav-link" role="button">关于</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="navbar-collapse collapse justify-content-end" id="navbar_right">
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="card card-body">
+                <div class="page-header">
+                    <h1 class="text-center"> {{Problem_ID}} </h1>
+                </div>
+                <form action="submit" method="post" role="form">
+					<select id="lang" class="form-control input-default">
+						<option value ="cpp">cpp</option>
+						<option value ="git">git</option>
+					</select>
+                    <br>
+					<textarea id="code" class="form-control input-default" rows="18"></textarea>
+					<input type="hidden" name="problem_id" value="{{Problem_ID}}">
+                    <br>
+					<input type="submit" class="btn btn-primary btn-block" value="提交评测">
+				</form>
+            </div>
+            <footer>
+                <div class="container text-center">TesutoHime·ACM Class OnlineJudge 2020</div>
+            </footer>
+        </div>
+    </body>
+<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
+<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
+<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
+<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
+</html>

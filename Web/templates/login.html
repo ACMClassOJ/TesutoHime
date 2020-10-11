@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<head>
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,6 +8,7 @@
 		<link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
         <link href="{{ url_for('static', filename = 'css/style.css')}}" rel="stylesheet">
 	</head>
+	
 	<body style="background-color: rgba(193,220,248,0.1);">
 		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
 			<div class="container">
@@ -36,21 +36,21 @@
 	  			</div>
 	  		</div>
     	</nav>
-    	<div class="container m-auto">
-    		<div class="row">
-	    		<div class="col-lg-2"></div>
-				<div class="card card-body col-lg-8">
+    	<div class="container">
+    		<div class="row justify-content-center">
+				<div class="card card-body col-lg-5">
 					<div class="page-header">
 						<h1 class="text-center">登录</h1>
 					</div>
 					{% if Logged_In %}
 						Please Logout First
 					{% else %}
-					<form action="/login" method="post">
+					<form action="/login" method="post" id="login">
 						用户名：<input class="form-control input-default" type="text" name="username" id="username" required="required">
 			            密码：<input class="form-control input-default" type="password" name="password" id="password" required="required">
 						<input type="hidden" name="next" value="{{Next}}">
-						<input type="submit" class="btn btn-primary" value="Submit">	
+						<br>
+						<input type="submit" class="btn btn-primary btn-block" value="Submit">	
 					</form>
 					{% endif %}
 				</div>

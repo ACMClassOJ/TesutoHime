@@ -33,7 +33,7 @@ class ProblemConfig:
                  Groups: list, #[Group]
                  Details: list, #[Detail]
                  CompileTimeLimit: int,  # ms
-                 SPJ: int,  # 0/1 default spj, 2 custom spj
+                 SPJ: int,  # 0 default spj, 1 custom spj
                  Scorer: int  # 0 default scorer, 1 custom scorer
                  ):
         self.Groups = Groups

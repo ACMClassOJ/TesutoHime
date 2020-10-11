@@ -6,7 +6,7 @@ from userManager import User_Manager
 from problemManager import Problem_Manager
 from discussManager import Discuss_Manager
 from judgeManager import Judge_Manager
-from contestManager import Conetst_Manager
+from contestManager import Contest_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
 from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
@@ -19,7 +19,11 @@ def Error_500():
 
 @web.route('/')
 def Index():
-    return render_template('index.html', Friendly_Username = Login_Manager.Get_FriendlyName())
+    return render_template('index.html')
+
+@web.route('/get_username', methods=['POST'])
+def Get_Username():
+    return Login_Manager.Get_FriendlyName()
 
 @web.route('/login', methods=['GET', 'POST'])
 def Login():
@@ -27,8 +31,8 @@ def Login():
         next = request.args.get('next')
         next = '/' if next == None else next
         if Login_Manager.Check_User_Status():
-            return render_template('login.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Logged_In = True, Next = next) # display 'Plsease Logout First'
-        return render_template('login.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Logged_In = False, Next = next)
+            return render_template('login.html', Logged_In = True, Next = next) # display 'Plsease Logout First'
+        return render_template('login.html', Logged_In = False, Next = next)
     Username = request.form.get('username')
     Password = request.form.get('password')
     if not User_Manager.Check_Login(Username, Password): # no need to avoid sql injection
@@ -44,6 +48,8 @@ def Validate(Username: str, Password: str, Friendly_Name: str, Student_ID: str) 
     Password_Reg = '([a-zA-Z0-9_\!\@\#\$\%\^&\*\(\)]{6,30})$'
     Friendly_Name_Reg = '([a-zA-Z0-9_]{1,60})$'
     Student_ID_Reg = '([0-9]{12})$'
+    if Username == 'Nobody' or Friendly_Name == 'Nobody':
+        return -1
     if re.match(Username_Reg, Username) == None:
         return -1
     if re.match(Password_Reg, Password) == None:
@@ -58,8 +64,8 @@ def Validate(Username: str, Password: str, Friendly_Name: str, Student_ID: str) 
 def Register():
     if request.method == 'GET':
         if Login_Manager.Check_User_Status():
-            return render_template('register.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Logged_In = True, Next = next) # display 'Plsease Logout First'
-        return render_template('register.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Logged_In = False, Next = next)
+            return render_template('register.html', Logged_In = True, Next = next) # display 'Plsease Logout First'
+        return render_template('register.html', Logged_In = False, Next = next)
     Username = request.form.get('username')
     Password = request.form.get('password')
     Friendly_Name = request.form.get('friendly_name')
@@ -80,7 +86,7 @@ def Problem_List():
     startID = (Page - 1) * WebConfig.Problems_Each_Page + 1 + 999
     endID = Page * WebConfig.Problems_Each_Page + 999
     Problems = Problem_Manager.Problem_In_Range(startID, endID, UnixNano())
-    return render_template('problem_list.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problems = Problems, Pages = Gen_Page(Page, max_Page))
+    return render_template('problem_list.html', Problems = Problems, Pages = Gen_Page(Page, max_Page))
 
 @web.route('/problem')
 def Problem_Detail():
@@ -91,17 +97,19 @@ def Problem_Detail():
         return redirect('/') # No argument fed
     Detail = Problem_Manager.Get_Problem(id)
     In_Contest = Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0
-    return render_template('problem_details.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Detial = Detail, In_Contest = In_Contest)
+    return render_template('problem_details.html', Detial = Detail, In_Contest = In_Contest)
 
 @web.route('/submit', methods=['GET', 'POST'])
 def Submit_Problem():
     if request.method == 'GET':
         if not Login_Manager.Check_User_Status():
             return redirect('login?next=' + request.url)
+        if request.args.get('problem_id') == None:
+            return redirect('/')
         Problem_ID = int(request.args.get('problem_id'))
         Title = Problem_Manager.Get_Title(Problem_ID)
         Username = Login_Manager.Get_Username()
-        return render_template('problem_submit.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problem_ID = Problem_ID, Title = Title)
+        return render_template('problem_submit.html', Problem_ID = Problem_ID, Title = Title)
     else:
         if not Login_Manager.Check_User_Status():
             return redirect('login')
@@ -139,7 +147,7 @@ def Problem_Rank():
         Record = sorted(Record, key = lambda x, y: x[3] < y[3])
     elif Sort_Parameter == 'memory':
         Record = sorted(Record, key = lambda x, y: x[5] < y[5])
-    return render_template('problem_rank.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problem_ID = Problem_ID, Title = Problem_Manager.Get_Title(Problem_ID), Data = Record)
+    return render_template('problem_rank.html', Problem_ID = Problem_ID, Title = Problem_Manager.Get_Title(Problem_ID), Data = Record)
 
 
 @web.route('/discuss', methods=['GET', 'POST'])
@@ -151,7 +159,7 @@ def Discuss(): # todo: Debug discuss
         if Problem_ID == None:
             return redirect('/')
         if Problem_Manager.In_Contest(Problem_ID) and Login_Manager.Get_Privilege() <= 0: # Problem in Contest or Homework and Current User is NOT administrator
-            return render_template('problem_discussion.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Problem_ID = Problem_ID, Title = Problem_Manager.Get_Title(Problem_ID), Blocked = True) # Discussion Closed
+            return render_template('problem_discussion.html', Problem_ID = Problem_ID, Title = Problem_Manager.Get_Title(Problem_ID), Blocked = True) # Discussion Closed
         Username = Login_Manager.Get_Username() # for whether to display edit or delete
         Privilge = Login_Manager.Get_Privilege()
         Data = Discuss_Manager.Get_Discuss_For_Problem(Problem_ID)
@@ -163,7 +171,7 @@ def Discuss(): # todo: Debug discuss
             else:
                 tmp.append(False)
             Discuss.append(tmp)
-        return render_template('problem_discussion.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Title = Problem_Manager.Get_Title(Problem_ID), Discuss = Discuss)
+        return render_template('problem_discussion.html', Title = Problem_Manager.Get_Title(Problem_ID), Discuss = Discuss)
     else:
         if not Login_Manager.Check_User_Status():
             return redirect('login')
@@ -226,7 +234,7 @@ def Status():
             cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
             cur['Time'] = Readable_Time(ele['Time'])
             Data.append(cur)
-        return render_template('status.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data, Pages = Gen_Page(Page, max_Page))
+        return render_template('status.html', Data = Data, Pages = Gen_Page(Page, max_Page))
     else:
         Record = Judge_Manager.Search_Judge(Arg_Submitter, Arg_Problem_ID)
         max_Page = int((len(Record) + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
@@ -248,13 +256,25 @@ def Status():
             cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
             cur['Time'] = Readable_Time(ele['Time'])
             Data.append(cur)
-        return render_template('status.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data, Pages = Gen_Page(Page, max_Page), Submitter = Arg_Submitter, Problem_ID = Arg_Problem_ID)
+        return render_template('status.html', Data = Data, Pages = Gen_Page(Page, max_Page), Submitter = Arg_Submitter, Problem_ID = Arg_Problem_ID)
 
 
 
 @web.route('/code')
 def Code(): # todo: View Judge Detail
-    return 'Todo'
+    if not Login_Manager.Check_User_Status(): # not login
+        return redirect('login?next=' + request.url)
+    if request.args.get('run_id') == None: # bad argument
+        return redirect('/')
+    run_id = int(request.args.get('run_id'))
+    judge = Judge_Manager.Search_Judge(run_id)
+    if judge == {}: # bad argument
+        return redirect('/')
+    if Login_Manager.Get_Username() != judge['User']:
+        return render_template('code.html', Blocked = True)
+    else:
+        return 'Hua Q'
+
 
 @web.route('/contest')
 def Contest(): # todo: debug Contest and homework
@@ -262,28 +282,28 @@ def Contest(): # todo: debug Contest and homework
         return redirect('login?next=' + request.url)
     Contest_ID = request.args.get('contest_id')
     if Contest_ID == None: # display contest list
-        List = Conetst_Manager.List_Contest(0)
+        List = Contest_Manager.List_Contest(0)
         Data = []
         curTime = UnixNano()
         for ele in List:
             cur = {}
             cur['ID'] = int(ele[0])
             cur['Title'] = str(ele[1])
-            cur['Start_Time'] = Readable_Time(int(ele['Start_Time']))
-            cur['End_Time'] = Readable_Time(int(ele['End_Time']))
-            if curTime < int(ele['Start_Time']):
+            cur['Start_Time'] = Readable_Time(int(ele[2]))
+            cur['End_Time'] = Readable_Time(int(ele[3]))
+            if curTime < int(ele[2]):
                 cur['Status'] = 'Pending'
-            elif curTime > int(ele['End_Time']):
+            elif curTime > int(ele[3]):
                 cur['Status'] = 'Finished'
             else:
                 cur['Status'] = 'Going On'
             Data.append(cur)
-        return render_template('contest_list.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data)
+        return render_template('contest_list.html', Data = Data)
     else:
         Contest_ID = int(Contest_ID)
-        StartTime, Endtime = Conetst_Manager.Get_Time(Contest_ID)
-        Problems = Conetst_Manager.List_Player_For_Contest(Contest_ID)
-        Players = Conetst_Manager.List_Player_For_Contest(Contest_ID)
+        StartTime, Endtime = Contest_Manager.Get_Time(Contest_ID)
+        Problems = Contest_Manager.List_Player_For_Contest(Contest_ID)
+        Players = Contest_Manager.List_Player_For_Contest(Contest_ID)
         Data = []
         for Player in Players:
             tmp = [0, 0, ]
@@ -302,7 +322,7 @@ def Contest(): # todo: debug Contest and homework
                 tmp.append([isAC, Submit_Time]) # AC try time or failed times
             Data.append(tmp)
         Data = sorted(Data, key = lambda x, y: x[1] < y[1] if x[0] == y[0] else x[0] > y[0])
-        return render_template('contest.html', Friendly_Username = Login_Manager.Get_FriendlyName(), StartTime = StartTime, Endtime = Endtime, Problems = Problems, Players = Players, Data = Data)
+        return render_template('contest.html', StartTime = StartTime, Endtime = Endtime, Problems = Problems, Players = Players, Data = Data)
 
 @web.route('/homework')
 def Homework():
@@ -310,7 +330,7 @@ def Homework():
         return redirect('login?next=' + request.url)
     Contest_ID = request.args.get('contest_id')
     if Contest_ID == None: # display contest list
-        List = Conetst_Manager.List_Contest(1)
+        List = Contest_Manager.List_Contest(1)
         Data = []
         curTime = UnixNano()
         for ele in List:
@@ -326,12 +346,12 @@ def Homework():
             else:
                 cur['Status'] = 'Going On'
             Data.append(cur)
-        return render_template('homework_list.html', Friendly_Username = Login_Manager.Get_FriendlyName(), Data = Data)
+        return render_template('homework_list.html', Data = Data)
     else:
         Contest_ID = int(Contest_ID)
-        StartTime, Endtime = Conetst_Manager.Get_Time(Contest_ID)
-        Problems = Conetst_Manager.List_Player_For_Contest(Contest_ID)
-        Players = Conetst_Manager.List_Player_For_Contest(Contest_ID)
+        StartTime, Endtime = Contest_Manager.Get_Time(Contest_ID)
+        Problems = Contest_Manager.List_Problem_For_Contest(Contest_ID)
+        Players = Contest_Manager.List_Player_For_Contest(Contest_ID)
         Data = []
         for Player in Players:
             tmp = [0, ]
@@ -345,7 +365,7 @@ def Homework():
                     tmp[0] += 1
                 tmp.append([isAC]) # AC try time or failed times
             Data.append(tmp)
-        return render_template('homework.html', Friendly_Username = Login_Manager.Get_FriendlyName(), StartTime = StartTime, Endtime = Endtime, Problems = Problems, Players = Players, Data = Data)
+        return render_template('homework.html', StartTime = StartTime, Endtime = Endtime, Problems = Problems, Players = Players, Data = Data)
 
 @web.route('/about')
 def About():

@@ -54,8 +54,8 @@ class JudgeManager:
 
     def Query_Judge(self, ID: int)->dict: # for details
         db = DB_Connect()
-        cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used FROM Judge WHERE ID = %s", (str(ID)))
+        cursor = db.cursor()Problem_ID, Detail, Time, Time_Used, Mem_Used FROM Judge WHERE
+        cursor.execute("SELECT ID, User,  ID = %s", (str(ID)))
         data = cursor.fetchone()
         db.close()
         if data == None:

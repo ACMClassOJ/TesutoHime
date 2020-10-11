@@ -273,6 +273,7 @@ def Code(): # todo: View Judge Detail
     if Login_Manager.Get_Username() != judge['User']:
         return render_template('code.html', Blocked = True)
     else:
+        return 'Hua Q'
 
 
 @web.route('/contest')
@@ -288,11 +289,11 @@ def Contest(): # todo: debug Contest and homework
             cur = {}
             cur['ID'] = int(ele[0])
             cur['Title'] = str(ele[1])
-            cur['Start_Time'] = Readable_Time(int(ele['Start_Time']))
-            cur['End_Time'] = Readable_Time(int(ele['End_Time']))
-            if curTime < int(ele['Start_Time']):
+            cur['Start_Time'] = Readable_Time(int(ele[2]))
+            cur['End_Time'] = Readable_Time(int(ele[3]))
+            if curTime < int(ele[2]):
                 cur['Status'] = 'Pending'
-            elif curTime > int(ele['End_Time']):
+            elif curTime > int(ele[3]):
                 cur['Status'] = 'Finished'
             else:
                 cur['Status'] = 'Going On'

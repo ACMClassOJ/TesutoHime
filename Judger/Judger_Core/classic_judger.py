@@ -1,8 +1,6 @@
 from Judger.Judger_Core import judger_interface as interface
-from Judger.Judger_Core.judger_interface import ResultConst
+import Judger.JudgerResult as jr
 from Judger.Judger_Core import config as conf
-from Judger.Judger_Core import classic_interaction as inter
-from Judger import JudgerResult as jr
 import random
 import os
 import time
@@ -12,41 +10,34 @@ import resource
 
 chroot_path='/tmp/chroot'
 workspace_path='/work/'
+output_file='/work/output.txt'
 class ClassicJudger(interface.JudgerInterface):
-    def __init__(self, exec_path: str, executable_name: str):
-        self.exec_path = exec_path
-        self.run = self.exec_path + ('/' if self.exec_path[-1] != '/' else '') + executable_name
+    def __init__(self):
+        pass
 
-    @staticmethod
-    def GetResult(stat: ResultConst, out, std, time, mem, disk,
-                  SPJ: interface.SPJInterface) -> conf.JudgeTestPointResult:
-        score = 0.0
-        msg = ''
-        if stat == ResultConst.UNSURE:
-            score, msg = SPJ.Compare(out, std)
-            stat = ResultConst.SUCCESS if score >= 1 else ResultConst.WA
-        return conf.JudgeTestPointResult(str(stat), score, msg, time, mem, disk)
+    def JudgeInstance(self, sub_config: conf.TestPointConfig,) -> (jr.DetailResult, str):
 
-    def JudgeInstance(self, sub_config: conf.TestPointConfig,) -> jr.DetailResult:
+        if not os.path.exists(workspace_path):
+            os.mkdir(chroot_path)
+
         running_time = -time.time()
         try:
-            inter.create_environment()
             user_id=str(random.randint(99000,99999))
             group_id=str(random.randint(99000,99999))
-            command = '/testdata/nsjail -Mo --chroot /tmp/chroot --max_cpus 1 -t '+sub_config.timeLimit+' --user '+user_id+' --group '+group_id+' -R /lib64 -R /lib  -R '+executable_path+' '+exec_name+' <'+input_path+' >'+output_path
+            command = '/bin/nsjail -Mo --chroot /tmp/chroot --max_cpus 1 -t '+str(sub_config.timeLimit)+' --user '+user_id+' --group '+group_id+' -R /lib64 -R /lib  -R '+sub_config.programPath+' <'+sub_config.inputFile+' >'+output_file
             child=sp.Popen(command,shell=True)
             child.communicate() # wait until stop
             # child = sp.run(executable=self.run, stdin=sub_config.inputFiles, stdout=sp.PIPE, cwd=self.exec_path,
                         #    timeout=sub_config.timeLimit, universal_newlines=True)
             running_time += time.time()
-            stat = ResultConst.UNSURE if child.returncode == 0 else ResultConst.RE
+            stat = jr.ResultType.UNKNOWN if child.returncode == 0 else jr.ResultType.RE
             mem = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss  # may work or not
             if mem > sub_config.memoryLimit:
-                return jr.DetailResult(0,jr.UNKNOWN,0,running_time,mem,0,'')
+                return jr.DetailResult(0,jr.ResultType.UNKNOWN,0,running_time,mem,0,''),output_file
             disk = 0  # Not implemented
-            return jr.DetailResult(0,jr.MEMLEK,0,running_time,mem,0,'')
+            return jr.DetailResult(0,jr.ResultType.MEMLEK,0,running_time,mem,0,''),output_file
 
         except sp.TimeoutExpired as e:
-            return jr.DetailResult(0,jr.TLE,0,0,mem,0,'')
+            return jr.DetailResult(0,jr.ResultType.TLE,0,0,mem,0,''),output_file
         except sp.CalledProcessError as e:
-            return jr.DetailResult(0,jr.RE,0,0,mem,0,'')
+            return jr.DetailResult(0,jr.ResultType.RE,0,0,mem,0,''),output_file

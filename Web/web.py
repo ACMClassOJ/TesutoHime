@@ -21,7 +21,7 @@ def Error_500():
 def Index():
     return render_template('index.html')
 
-@web.route('/get_username')
+@web.route('/get_username', methods=['POST'])
 def Get_Username():
     return Login_Manager.Get_FriendlyName()
 

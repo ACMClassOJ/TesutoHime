@@ -1,9 +1,8 @@
 $(function(){
 	$.ajax({
         type: "POST",
-        dataType: "json",
-        url: "/get_username", 
-        data: {"type" : 1},
+        dataType: "text",
+        url: "/get_username",
         success: function (response_text)
         {
 			if(response_text == "Nobody")

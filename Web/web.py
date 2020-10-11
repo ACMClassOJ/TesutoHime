@@ -233,7 +233,11 @@ def Status():
     Arg_Submitter = request.args.get('submitter')
     Arg_Problem_ID = request.args.get('problem_id')
     Arg_Status = request.args.get('status')
+    if Arg_Status == '-1':
+        Arg_Status = None
     Arg_Lang = request.args.get('lang')
+    if Arg_Lang == '-1':
+        Arg_Lang = None
     Username = Login_Manager.Get_Username()
     Privilege = Login_Manager.Get_Privilege()
 

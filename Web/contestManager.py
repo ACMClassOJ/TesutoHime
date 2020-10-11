@@ -1,7 +1,7 @@
 import sys
 from utils import *
 
-class ConetstManager:
+class ContestManager:
     def Create_Contest(self, Name: str, Start_Time: int, End_Time: int, Type: int):
         db = DB_Connect()
         cursor = db.cursor()
@@ -133,4 +133,4 @@ class ConetstManager:
         db.close()
         return ret
 
-Conetst_Manager = ConetstManager()
+Contest_Manager = ContestManager()

@@ -1,11 +1,11 @@
-from flask import Flask, request, render_template, url_for
+from flask import Flask, request, render_template, Blueprint
 from const import *
 from sessionManager import Login_Manager
 from userManager import User_Manager
 from problemManager import Problem_Manager
 from contestManager import Contest_Manager
-from web import web
 
+admin=Blueprint('admin', __name__, static_folder='static')
 
 # TODO(Pioooooo): validate data
 def _validate_user_data(form):
@@ -51,12 +51,12 @@ def _validate_contest_data(form):
     return None
 
 
-@web.route('/admin')
+@admin.route('/admin')
 def index():
     return render_template('admin.html')
 
 
-@web.route('/admin/user', methods=['post'])
+@admin.route('/admin/user', methods=['post'])
 def user_manager():
     form = request.json
     # if Login_Manager.Get_Privilege() < Privilege.SUPER:
@@ -80,7 +80,7 @@ def user_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-@web.route('/admin/problem', methods=['post'])
+@admin.route('/admin/problem', methods=['post'])
 def problem_manager():
     form = request.json
     # if Login_Manager.Get_Privilege() < Privilege.ADMIN:
@@ -107,7 +107,7 @@ def problem_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-@web.route('/admin/contest', methods=['post'])
+@admin.route('/admin/contest', methods=['post'])
 def contest_manager():
     form = request.json
     # if Login_Manager.Get_Privilege() < Privilege.ADMIN:
@@ -151,4 +151,4 @@ def contest_manager():
 
 
 if __name__ == '__main__':
-    web.run(host="0.0.0.0", port=8000)
+    admin.run(host="0.0.0.0", port=8000)

@@ -7,7 +7,7 @@
 		<title>Register</title>
 		<link rel="shortcut icon" href="favicon.ico">
 		<link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-		<link href="../assets/css/style.css" rel="stylesheet">
+        <link href="{{ url_for('static', filename = 'css/style.css')}}" rel="stylesheet">
 	</head>
 	<body style="background-color: rgba(193,220,248,0.1);">
 		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
@@ -60,6 +60,6 @@
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
-<script src="{{ url_for('assets', filename = 'js/login.js')}}"></script> 
-<script src="{{ url_for('assets', filename = 'js/user-avatar.js')}}"></script> 
+<script src="{{ url_for('static', filename = 'js/login.js')}}"></script>
+<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 </html>

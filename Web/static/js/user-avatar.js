@@ -19,7 +19,7 @@ $(function(){
 	              				<span class="nav-link-inner--text">注册</span>\
 	            			</a>\
 	            		</li>\
-	    			</ul>;'
+	    			</ul>'
 			}
 			else
 			{

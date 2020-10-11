@@ -34,13 +34,15 @@
                                     <th>状态</th>
                                 </tr>
                             </thead>
-                            <tr>
-                                <th> 1 </th>
-                                <th>作业名称1</th>
-                                <th>time1</th>
-                                <th>time2</th>
-                                <th>pending</th>
-                            </tr>
+                            {% for cur in  Data %}
+                                <tr>
+                                    <td>{{ cur['ID'] }}</td>
+                                    <td><a href="homework?homework_id={{ cur['ID'] }}">{{ cur['Title'] }}</a></td>
+                                    <td>{{ cur['Start_Time'] }}</td>
+                                    <td>{{ cur['End_Time'] }}</td>
+                                    <td>{{ cur['Status'] }}</td>
+                                </tr>
+                            {% endfor %}
                         </table>
                     </div>
                 </div>

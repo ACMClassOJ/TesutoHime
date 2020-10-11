@@ -24,7 +24,7 @@ class JudgeManager:
             Details = []
             for testcase in problemConfig.Details:
                 if testcase.Dependency == 0 or Details[testcase.Dependency - 1].result == ResultType.AC:
-                    relatedFile = dataPath + str(testcase.ID)
+                    relatedFile = dataPath + '/' + str(testcase.ID)
                     testPointDetail, userOutput = JudgerInterface().JudgeInstance(
                         TestPointConfig(
                             compileResult.programPath,
@@ -40,14 +40,14 @@ class JudgeManager:
                     testPointDetail.ID = testcase.ID
                     if testPointDetail.result == ResultType.UNKNOWN:
                         if problemConfig.SPJ == 1:
-                            subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], text = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
+                            subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
                             with open('score.log') as f:
                                 testPointDetail.score = float("\n".join(f.readline().splitlines()))
                             testPointDetail.result = ResultType.WA if testPointDetail.score == 0 else ResultType.AC
                             with open('message.log') as f:
                                 testPointDetail.message += f.readline().splitlines()
                         else:
-                            runDiff = subprocess.run('diff -Z -B ' + relatedFile + '.out' + relatedFile + '.ans', text = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
+                            runDiff = subprocess.run(['diff', '-Z', '-B', userOutput , relatedFile + '.ans'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
                             if runDiff.returncode == 0:
                                 testPointDetail.score, testPointDetail.result = 1.0, ResultType.AC
                             else:
@@ -64,13 +64,14 @@ class JudgeManager:
                         else:
                             testPointDetail.message = "Memory Leak\n"
                     testPointDetail.ID = testcase.ID
+                    Details.append(testPointDetail)
                 else:
-                    Details.append(DetailResult(testcase.ID, ResultType.SKIPED, 0, 0, 0, -1, 'Skipped.'))
+                    Details.append(DetailResult(testcase.ID, ResultType.SKIPPED, 0, 0, 0, -1, 'Skipped.'))
             status = ResultType.AC
             totalTime = 0
             maxMem = 0
             for detail in Details:
-                if detail.result != ResultType.AC and status != ResultType.AC:
+                if detail.result != ResultType.AC and status == ResultType.AC:
                     status = detail.result
                 totalTime += detail.time
                 maxMem = max(maxMem, detail.memory)

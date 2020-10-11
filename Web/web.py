@@ -10,8 +10,10 @@ from contestManager import Contest_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
 from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
+from admin import admin
 
 web = Flask('WEB')
+web.register_blueprint(admin)
 
 @web.errorhandler(500)
 def Error_500():

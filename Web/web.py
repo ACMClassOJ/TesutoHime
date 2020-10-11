@@ -218,6 +218,12 @@ def Discuss(): # todo: Debug discuss
         else: # what happened?
             return redirect('/discuss?problem_id=' + Problem_ID)
 
+def fix_Status_Cur(cur):
+    ls = ['Pending', 'Running', 'AC', 'WA', 'CE', 'RE', 'TLE', 'MLE', 'MLK', 'SE', 'DLE']
+    cur['Status'] = ls[int(cur['Status'])]
+    cur['Lang'] = 'C++' if cur['Lang'] == 0 else 'Git'
+    return cur
+
 @web.route('/status')
 def Status():
     if not Login_Manager.Check_User_Status():
@@ -226,10 +232,16 @@ def Status():
     Page = request.args.get('page')
     Arg_Submitter = request.args.get('submitter')
     Arg_Problem_ID = request.args.get('problem_id')
+    Arg_Status = request.args.get('status')
+    if Arg_Status == '-1':
+        Arg_Status = None
+    Arg_Lang = request.args.get('lang')
+    if Arg_Lang == '-1':
+        Arg_Lang = None
     Username = Login_Manager.Get_Username()
     Privilege = Login_Manager.Get_Privilege()
 
-    if Arg_Submitter == None and Arg_Problem_ID == None:
+    if Arg_Submitter == None and Arg_Problem_ID == None and Arg_Status == None and Arg_Lang == None:
         Page = int(Page) if Page != None else 1
         max_Page = int((Judge_Manager.Max_ID() + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
         Page = max(min(max_Page, Page), 1)
@@ -249,32 +261,32 @@ def Status():
             cur['Lang'] = ele['Lang']
             cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
             cur['Time'] = Readable_Time(ele['Time'])
-            Data.append(cur)
+            Data.append(fix_Status_Cur(cur))
         return render_template('status.html', Data = Data, Pages = Gen_Page(Page, max_Page))
     else:
-        Record = Judge_Manager.Search_Judge(Arg_Submitter, Arg_Problem_ID)
+        Record = Judge_Manager.Search_Judge(Arg_Submitter, Arg_Problem_ID, Arg_Status, Arg_Lang)
         max_Page = int((len(Record) + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
+        Page = int(Page) if Page != None else 1
         Page = max(min(max_Page, Page), 1)
         endID = len(Record) - (Page - 1) * JudgeConfig.Judge_Each_Page
         startID = max(endID - JudgeConfig.Judge_Each_Page + 1, 1)
-        Record = Record[startID - 1: endID - 1]
+        Record = Record[startID - 1: endID]
         Data = []
-        for ele in Record:
+        for ele in Record: # ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language
+            print(ele)
             cur = {}
-            cur['ID'] = ele['ID']
-            cur['Friendly_Name'] = User_Manager.Get_Friendly_Name(ele['Username'])
-            cur['Problem_ID'] = ele['Problem_ID']
-            cur['Problem_Title'] = Problem_Manager.Get_Title(ele['Problem_ID'])
-            cur['Status'] = ele['Status']
-            cur['Time_Used'] = ele['Time_Used']
-            cur['Mem_Used'] = ele['Mem_Used']
-            cur['Lang'] = ele['Lang']
-            cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
-            cur['Time'] = Readable_Time(ele['Time'])
-            Data.append(cur)
+            cur['ID'] = ele[0]
+            cur['Friendly_Name'] = User_Manager.Get_Friendly_Name(ele[1])
+            cur['Problem_ID'] = ele[2]
+            cur['Problem_Title'] = Problem_Manager.Get_Title(ele[2])
+            cur['Status'] = ele[6]
+            cur['Time_Used'] = ele[4]
+            cur['Mem_Used'] = ele[5]
+            cur['Lang'] = ele[7]
+            cur['Visible'] = Username == ele[1] or Privilege == 2 # Same User or login as Super Admin
+            cur['Time'] = Readable_Time(ele[3])
+            Data.append(fix_Status_Cur(cur))
         return render_template('status.html', Data = Data, Pages = Gen_Page(Page, max_Page), Submitter = Arg_Submitter, Problem_ID = Arg_Problem_ID)
-
-
 
 @web.route('/code')
 def Code(): # todo: View Judge Detail

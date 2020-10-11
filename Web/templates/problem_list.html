@@ -12,7 +12,7 @@
 	<body style="background-color: rgba(193,220,248,0.1);">
 		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
 			<div class="container">
-				<a class="navbar-brand" href="/">ACM Class OnineJudge 2020</a>
+				<a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
 				<div class="navbar-collapse collapse" id="navbar_global"></div>
 				<div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
 			</div>
@@ -39,22 +39,22 @@
                             {% endfor %}
 						</table>
 
-                    <div class="btn-group">
-                        {% for x in Pages %}
-                            {% if x[2] == -1%}
-                                <a href="problems?page={{x[1]}}" class="btn btn-light disabled"> {{ x[0] }} </a>
-                            {% elif x[2] == 1 %}
-                                <a href="problems?page={{x[1]}}" class="btn btn-primary"> {{ x[0] }} </a>
-                            {% else %}
-                                <a href="problems?page={{x[1]}}" class="btn btn-light"> {{ x[0] }} </a>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
+                        <div class="btn-group">
+                            {% for x in Pages %}
+                                {% if x[2] == -1%}
+                                    <a href="problems?page={{x[1]}}" class="btn btn-light disabled"> {{ x[0] }} </a>
+                                {% elif x[2] == 1 %}
+                                    <a href="problems?page={{x[1]}}" class="btn btn-primary"> {{ x[0] }} </a>
+                                {% else %}
+                                    <a href="problems?page={{x[1]}}" class="btn btn-light"> {{ x[0] }} </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
 					</div>
 				</div>
 			</div>
 			<footer>
-				<div class="container text-center">TesutoHime·ACM Class OnlineJudge 2020</div>
+				<div class="container text-center" id="footer"></div>
 			</footer>
 		</div>
 	</body>

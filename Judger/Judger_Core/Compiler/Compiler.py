@@ -55,7 +55,7 @@ public:
                 ["g++", os.path.join(path, source), "-o", os.path.join(path, program), "-fmax-errors=10", "-lseccomp"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                timeout=timeLimit / 1000)
+                timeout=timeLimit)
         except subprocess.TimeoutExpired:
             return CompilationResult(
                 compiled=False,
@@ -85,7 +85,7 @@ public:
                 ["git", "clone", url],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                timeout=max(20, timeLimit / 1000),
+                timeout=timeLimit / 1000,
                 cwd=path)
         except subprocess.TimeoutExpired:
             return CompilationResult(
@@ -113,7 +113,8 @@ public:
                     ["cmake", "CMakeLists.txt"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    cwd=os.path.join(path, project))
+                    cwd=os.path.join(path, project),
+                    timeout=timeLimit)
             except subprocess.TimeoutExpired:
                 pass
             if process:
@@ -125,7 +126,8 @@ public:
                 ["make"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                cwd=os.path.join(path, project))
+                cwd=os.path.join(path, project),
+                timeout=timeLimit)
         except subprocess.TimeoutExpired:
             return CompilationResult(
                 compiled=False,
@@ -155,9 +157,9 @@ public:
     def CompileInstance(self, code_config : CompilationConfig):
         sourceCode  = code_config.sourceCode
         language    = code_config.language
-        timeLimit   = code_config.compileTimeLimit
+        timeLimit   = code_config.compileTimeLimit / 1000.0
         self.clear()
-        if language == "c++":
+        if language == "c++" or language == "cpp":
             return self.compile_cpp(sourceCode, timeLimit)
         elif language == "git":
             return self.compile_git(sourceCode, timeLimit)

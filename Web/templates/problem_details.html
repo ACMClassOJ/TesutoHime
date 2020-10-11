@@ -13,37 +13,9 @@
 	<body style="background-color: rgba(193,220,248,0.1);">
 		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
 			<div class="container">
-				<a class="navbar-brand" href="index.html">ACM Class OnineJudge 2020</a>
-				<div class="navbar-collapse collapse" id="navbar_global">
-					<ul class="navbar-nav navbar-nav-hover align-items-lg-center">
-						<li class="nav-item">
-							<a href="#" class="nav-link" role="button">题库</a>
-						</li>
-						<li class="nav-item">
-							<a href="#" class="nav-link" role="button">比赛</a>
-						</li>
-						<li class="nav-item">
-							<a href="#" class="nav-link" role="button">作业</a>
-						</li>
-						<li class="nav-item">
-							<a href="#" class="nav-link" role="button">评测状态</a>
-						</li>
-					</ul>
-				</div>
-				<div class="navbar-collapse collapse justify-content-end" id="navbar_global">
-					<ul class="navbar-nav navbar-nav-hover align-items-lg-right">
-						<li class="nav-item d-none d-lg-block ml-lg-4">
-							<a class="btn btn-neutral btn-icon">
-								<span class="nav-link-inner--text">登录</span>
-							</a>
-						</li>
-						<li class="nav-item d-none d-lg-block ml-lg-4">
-							<a class="btn btn-neutral btn-icon">
-								<span class="nav-link-inner--text">注册</span>
-							</a>
-						</li>
-					</ul>
-				</div>
+				<a class="navbar-brand" href="/">ACM Class OnineJudge 2020</a>
+				<div class="navbar-collapse collapse" id="navbar_global"></div>
+				<div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
 			</div>
 		</nav>
 		<div class="container m-auto">
@@ -67,17 +39,17 @@
 				</div>
 			</div>
 			<br>
-            <div class="row justify-content-center">
-                <div class="btn-group">
-                    <a href="submit?problem_id={{Detial['ID']}}" class="btn btn-primary"> 提交 </a>
-                    <a href="status?problem_id={{Detial['ID']}}" class="btn btn-info"> 评测状态 </a>
-                    {% if not In_Contest %}
-                    <a href="discuss?problem_id={{Detial['ID']}}" class="btn btn-success"> 讨论 </a>
-                    <a href="rank?problem_id={{Detial['ID']}}" class="btn btn-light"> 排行榜 </a>
-                    {% endif %}
-                </div>
-            </div>
-            <br>
+			<div class="row justify-content-center">
+				<div class="btn-group">
+					<a href="submit?problem_id={{Detial['ID']}}" class="btn btn-primary"> 提交 </a>
+					<a href="status?problem_id={{Detial['ID']}}" class="btn btn-info"> 评测状态 </a>
+					{% if not In_Contest %}
+					<a href="discuss?problem_id={{Detial['ID']}}" class="btn btn-success"> 讨论 </a>
+					<a href="rank?problem_id={{Detial['ID']}}" class="btn btn-light"> 排行榜 </a>
+					{% endif %}
+				</div>
+			</div>
+			<br>
 			<!--
 			<div class="card card-body">
 				<h3>提交</h3>
@@ -105,4 +77,6 @@
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
+<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
+<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 </html>

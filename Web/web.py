@@ -6,7 +6,7 @@ from userManager import User_Manager
 from problemManager import Problem_Manager
 from discussManager import Discuss_Manager
 from judgeManager import Judge_Manager
-from contestManager import Conetst_Manager
+from contestManager import Contest_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
 from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
@@ -48,6 +48,8 @@ def Validate(Username: str, Password: str, Friendly_Name: str, Student_ID: str) 
     Password_Reg = '([a-zA-Z0-9_\!\@\#\$\%\^&\*\(\)]{6,30})$'
     Friendly_Name_Reg = '([a-zA-Z0-9_]{1,60})$'
     Student_ID_Reg = '([0-9]{12})$'
+    if Username == 'Nobody' or Friendly_Name == 'Nobody':
+        return -1
     if re.match(Username_Reg, Username) == None:
         return -1
     if re.match(Password_Reg, Password) == None:
@@ -271,7 +273,8 @@ def Code(): # todo: View Judge Detail
     if Login_Manager.Get_Username() != judge['User']:
         return render_template('code.html', Blocked = True)
     else:
-        return 'Todo'
+        return 'Hua Q'
+
 
 @web.route('/contest')
 def Contest(): # todo: debug Contest and homework
@@ -279,18 +282,18 @@ def Contest(): # todo: debug Contest and homework
         return redirect('login?next=' + request.url)
     Contest_ID = request.args.get('contest_id')
     if Contest_ID == None: # display contest list
-        List = Conetst_Manager.List_Contest(0)
+        List = Contest_Manager.List_Contest(0)
         Data = []
         curTime = UnixNano()
         for ele in List:
             cur = {}
             cur['ID'] = int(ele[0])
             cur['Title'] = str(ele[1])
-            cur['Start_Time'] = Readable_Time(int(ele['Start_Time']))
-            cur['End_Time'] = Readable_Time(int(ele['End_Time']))
-            if curTime < int(ele['Start_Time']):
+            cur['Start_Time'] = Readable_Time(int(ele[2]))
+            cur['End_Time'] = Readable_Time(int(ele[3]))
+            if curTime < int(ele[2]):
                 cur['Status'] = 'Pending'
-            elif curTime > int(ele['End_Time']):
+            elif curTime > int(ele[3]):
                 cur['Status'] = 'Finished'
             else:
                 cur['Status'] = 'Going On'
@@ -298,9 +301,9 @@ def Contest(): # todo: debug Contest and homework
         return render_template('contest_list.html', Data = Data)
     else:
         Contest_ID = int(Contest_ID)
-        StartTime, Endtime = Conetst_Manager.Get_Time(Contest_ID)
-        Problems = Conetst_Manager.List_Player_For_Contest(Contest_ID)
-        Players = Conetst_Manager.List_Player_For_Contest(Contest_ID)
+        StartTime, Endtime = Contest_Manager.Get_Time(Contest_ID)
+        Problems = Contest_Manager.List_Player_For_Contest(Contest_ID)
+        Players = Contest_Manager.List_Player_For_Contest(Contest_ID)
         Data = []
         for Player in Players:
             tmp = [0, 0, ]
@@ -327,7 +330,7 @@ def Homework():
         return redirect('login?next=' + request.url)
     Contest_ID = request.args.get('contest_id')
     if Contest_ID == None: # display contest list
-        List = Conetst_Manager.List_Contest(1)
+        List = Contest_Manager.List_Contest(1)
         Data = []
         curTime = UnixNano()
         for ele in List:
@@ -346,9 +349,9 @@ def Homework():
         return render_template('homework_list.html', Data = Data)
     else:
         Contest_ID = int(Contest_ID)
-        StartTime, Endtime = Conetst_Manager.Get_Time(Contest_ID)
-        Problems = Conetst_Manager.List_Player_For_Contest(Contest_ID)
-        Players = Conetst_Manager.List_Player_For_Contest(Contest_ID)
+        StartTime, Endtime = Contest_Manager.Get_Time(Contest_ID)
+        Problems = Contest_Manager.List_Problem_For_Contest(Contest_ID)
+        Players = Contest_Manager.List_Player_For_Contest(Contest_ID)
         Data = []
         for Player in Players:
             tmp = [0, ]

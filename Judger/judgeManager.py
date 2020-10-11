@@ -21,11 +21,9 @@ class JudgeManager:
         if not compileResult.compiled:
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [[testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg] for testcase in problemConfig.Details], problemConfig)
         else:
-            print('hahaha')
             Details = []
             for testcase in problemConfig.Details:
                 if testcase.Dependency == 0 or Details[testcase.Dependency - 1].result == ResultType.AC:
-                    print('run: ', testcase.ID)
                     relatedFile = dataPath + '/' + str(testcase.ID)
                     testPointDetail, userOutput = ClassicJudger().JudgeInstance(
                         TestPointConfig(
@@ -39,7 +37,6 @@ class JudgeManager:
                             testcase.ValgrindTestOn
                         )
                     )
-                    print('run done')
                     testPointDetail.ID = testcase.ID
                     if testPointDetail.result == ResultType.UNKNOWN:
                         if problemConfig.SPJ == 1:

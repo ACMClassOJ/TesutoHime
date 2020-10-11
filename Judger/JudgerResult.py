@@ -10,8 +10,9 @@ class ResultType(Enum):
         MLE = 7
         MEMLEK = 8
         SYSERR = 9
-        SKIPPED = 10
-        UNKNOWN = 11
+        DLE = 10
+        SKIPPED = 11
+        UNKNOWN = 12
 
 class DetailResult:
         def __init__(self,

@@ -23,7 +23,7 @@ def run(executable_path,input_path,output_path)->(int,int):
     create_environment()
     user_id=str(random.randint(99000,99999))
     group_id=str(random.randint(99000,99999))
-    command = '/testdata/nsjail -Mo --chroot /tmp/chroot --user '+user_id+' --group '+group_id+' -R /lib64 -R /lib  -R '+executable_path+' '+executable_path+exec_name+' <'+input_path+' >'+output_path
+    command = '/testdata/nsjail -Mo --chroot /tmp/chroot --max_cpus 1 --time_limit 1 --user '+user_id+' --group '+group_id+' -R /lib64 -R /lib  -R '+executable_path+' '+executable_path+exec_name+' <'+input_path+' >'+output_path
     p=sp.Popen(command,shell=True)
     max_mem=0
     start_time=time.time()

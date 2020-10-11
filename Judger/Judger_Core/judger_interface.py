@@ -1,18 +1,7 @@
 import subprocess as sp
 from abc import abstractmethod
 from Judger.Judger_Core import config as conf
-from enum import Enum
-
-
-class ResultConst(Enum):
-    # can change them to specify json
-    UNSURE='MAY BUG'
-    SUCCESS = 'Success'
-    TLE = 'TLE'
-    RE = 'RE'
-    WA = 'WA'
-    MEM='MEM'
-
+from Judger.JudgerResult import DetailResult
 
 class SPJInterface:
     @abstractmethod
@@ -22,4 +11,5 @@ class SPJInterface:
 class JudgerInterface:
 
     @abstractmethod
-    def JudgeInstance(self, sub_config: conf.ProblemSubtaskConfig, SPJ: SPJInterface) -> conf.JudgeTestPointResult: pass
+    def JudgeInstance(self, testConfig: conf.TestPointConfig) -> (DetailResult, str): pass
+

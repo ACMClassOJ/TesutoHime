@@ -232,10 +232,12 @@ def Status():
     Page = request.args.get('page')
     Arg_Submitter = request.args.get('submitter')
     Arg_Problem_ID = request.args.get('problem_id')
+    Arg_Status = request.args.get('status')
+    Arg_Lang = request.args.get('lang')
     Username = Login_Manager.Get_Username()
     Privilege = Login_Manager.Get_Privilege()
 
-    if Arg_Submitter == None and Arg_Problem_ID == None:
+    if Arg_Submitter == None and Arg_Problem_ID == None and Arg_Status == None and Arg_Lang == None:
         Page = int(Page) if Page != None else 1
         max_Page = int((Judge_Manager.Max_ID() + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
         Page = max(min(max_Page, Page), 1)
@@ -258,7 +260,7 @@ def Status():
             Data.append(fix_Status_Cur(cur))
         return render_template('status.html', Data = Data, Pages = Gen_Page(Page, max_Page))
     else:
-        Record = Judge_Manager.Search_Judge(Arg_Submitter, Arg_Problem_ID)
+        Record = Judge_Manager.Search_Judge(Arg_Submitter, Arg_Problem_ID, Arg_Status, Arg_Lang)
         max_Page = int((len(Record) + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
         Page = int(Page) if Page != None else 1
         Page = max(min(max_Page, Page), 1)

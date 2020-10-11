@@ -105,15 +105,35 @@ class JudgeManager:
         db.close()
         return ret
 
-    def Search_Judge(self, Arg_Submitter, Arg_Problem_ID):
+    def Search_Judge(self, Arg_Submitter, Arg_Problem_ID, Arg_Status, Arg_Lang, Arg_Param = None):
         db = DB_Connect()
         cursor = db.cursor()
-        if Arg_Problem_ID == None:
-            cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE User = %s", (Arg_Submitter))
-        elif Arg_Submitter == None:
-            cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE Problem_ID = %s", (str(Arg_Problem_ID)))
+        com = 'SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE '
+        pre = []
+
+        if Arg_Problem_ID != None:
+            com = com + 'Problem_ID = %s'
+            pre.append(str(Arg_Problem_ID))
+        if Arg_Submitter != None:
+            if len(pre):
+                com = com + ' AND '
+            com = com + 'User = %s'
+            pre.append(str(Arg_Submitter))
+        if Arg_Status != None:
+            if len(pre):
+                com = com + ' AND '
+            com = com + 'Status = %s'
+            pre.append(str(Arg_Status))
+        if Arg_Lang != None:
+            if len(pre):
+                com = com + ' AND '
+            com = com + 'Language = %s'
+            pre.append(str(Arg_Lang))
+        if Arg_Param == None:
+            com = com + ' ORDER BY ID desc'
         else:
-            cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE User = %s and Problem_ID = %s", (Arg_Submitter, str(Arg_Problem_ID)))
+            com = com + ' ORDER BY Time_Used asc'
+        cursor.execute(com, tuple(pre))
         ret = cursor.fetchall()
         db.close
         return ret

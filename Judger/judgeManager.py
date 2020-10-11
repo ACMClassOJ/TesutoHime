@@ -1,7 +1,7 @@
 from Judger.Judger_Core.config import *
 from Judger.JudgerResult import *
 from Judger.Judger_Core.Compiler.Compiler import compiler
-from Judger.Judger_Core.judger_interface import JudgerInterface
+from Judger.Judger_Core.classic_judger import ClassicJudger
 import subprocess
 
 class JudgeManager:
@@ -21,15 +21,17 @@ class JudgeManager:
         if not compileResult.compiled:
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [[testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg] for testcase in problemConfig.Details], problemConfig)
         else:
+            print('hahaha')
             Details = []
             for testcase in problemConfig.Details:
                 if testcase.Dependency == 0 or Details[testcase.Dependency - 1].result == ResultType.AC:
+                    print('run: ', testcase.ID)
                     relatedFile = dataPath + '/' + str(testcase.ID)
-                    testPointDetail, userOutput = JudgerInterface().JudgeInstance(
+                    testPointDetail, userOutput = ClassicJudger().JudgeInstance(
                         TestPointConfig(
                             compileResult.programPath,
                             None,
-                            relatedFile + str(testcase.ID) + '.in',
+                            relatedFile + '.in',
                             testcase.TimeLimit,
                             testcase.MemoryLimit,
                             testcase.DiskLimit,
@@ -37,6 +39,7 @@ class JudgeManager:
                             testcase.ValgrindTestOn
                         )
                     )
+                    print('run done')
                     testPointDetail.ID = testcase.ID
                     if testPointDetail.result == ResultType.UNKNOWN:
                         if problemConfig.SPJ == 1:

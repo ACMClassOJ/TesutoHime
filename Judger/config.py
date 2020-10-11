@@ -5,4 +5,5 @@ class DataConfig:
 
 Web_Server_Secret = "justfortest"
 Web_Server = "http://localhost:8080"
-Heart_Beat_Period = 10000
+Heart_Beat_Period = 600000
+Judge_Result_Resend_Period = 1000

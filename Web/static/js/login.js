@@ -16,7 +16,10 @@ $(function(){
 		{
 			swal("Success","登录成功","success");
 			setTimeout(function(){
-				window.location.replace(result['next']);
+				if(result['next'])
+					window.location.replace(result['next']);
+				else
+					window.location.replace('/');
 			},500);
 		}
 		else

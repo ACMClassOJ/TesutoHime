@@ -91,6 +91,14 @@ class ContestManager:
         db.close()
         return
 
+    def Check_Player_In_Contest(self, Contest_ID: int, Username: str):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT tempID FROM Contest_Player WHERE Belong = %s AND Username = %s", (Contest_ID, Username))
+        ret = cursor.fetchall()
+        db.close()
+        return len(ret) != 0
+
     def Delete_Player_From_Contest(self, Contest_ID: int, Username: str):
         db = DB_Connect()
         cursor = db.cursor()
@@ -108,6 +116,7 @@ class ContestManager:
         cursor = db.cursor()
         cursor.execute("SELECT ID, Name, Start_Time, End_Time FROM Contest WHERE Type = %s", (Type))
         ret = cursor.fetchall()
+        db.close()
         return ret
 
     def Get_Time(self, ID: int):
@@ -115,6 +124,7 @@ class ContestManager:
         cursor = db.cursor()
         cursor.execute("SELECT Start_Time, End_Time FROM Contest WHERE ID = %s", (str(ID)))
         ret = cursor.fetchone()
+        db.close()
         return int(ret[0]), int(ret[1])
 
     def List_Problem_For_Contest(self, Contest_ID: int):

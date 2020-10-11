@@ -45,7 +45,7 @@
 					{% if Logged_In %}
 						Please Logout First
 					{% else %}
-					<form action="/login" method="post" id="login">
+					<form method="post" id="login">
 						用户名：<input class="form-control input-default" type="text" name="username" id="username" required="required">
 			            密码：<input class="form-control input-default" type="password" name="password" id="password" required="required">
 						<input type="hidden" name="next" value="{{Next}}">

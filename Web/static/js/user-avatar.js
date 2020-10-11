@@ -7,7 +7,7 @@ $(function(){
         {
 			if(response_text == "Nobody")
 			{
-				document.getElementById('navbar_left').innerHTML = '\
+				document.getElementById('navbar_right').innerHTML = '\
 					<ul class="navbar-nav navbar-nav-hover align-items-lg-right">\
 			        	<li class="nav-item d-none d-lg-block ml-lg-4">\
 				        	<a class="btn btn-neutral btn-icon">\
@@ -23,7 +23,7 @@ $(function(){
 			}
 			else
 			{
-				document.getElementById('navbar_left').innerHTML = '<div>欢迎您，' + response_text + '</div>';
+				document.getElementById('navbar_right').innerHTML = '<div>欢迎您，' + response_text + '</div>';
 			}
 			
         },

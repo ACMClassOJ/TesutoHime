@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<head>
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Register</title>
+		<title>About</title>
 		<link rel="shortcut icon" href="favicon.ico">
 		<link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
 		<link href="{{ url_for('static', filename = 'css/style.css')}}" rel="stylesheet">
 	</head>
+
 	<body style="background-color: rgba(193,220,248,0.1);">
 		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
 			<div class="container">
@@ -18,19 +18,18 @@
 			</div>
 		</nav>
 		<div class="container">
-			<div class="row justify-content-center">
-				<div class="card card-body col-lg-5">
-					<div class="page-header">
-						<h1 class="text-center">注册</h1>
-					</div>
-					<form method="post" id="register">
-						用户名：<input class="form-control input-default" type="text" name="username" id="username" required="required">
-						密码：<input class="form-control input-default" type="password" name="password" id="password" required="required">
-						昵称：<input class="form-control input-default" type="text" name="friendly_name" id="friendly_name" required="required">
-						学号：<input class="form-control input-default" type="text" name="student_id" id="student_id" required="required">
-						<br>
-						<input type="submit" class="btn btn-primary btn-block" value="注册">
-					</form>
+			<div class="card card-body col-lg-12 m-auto">
+				<div class="page-header">
+					<h1 class="text-center"> 关于 </h1>
+				</div>
+				<div id="content">
+					<p>评测状态缩写解释：</p>
+					<p>AC(Accepted):通过</p>
+					<p>...</p>
+				</div>
+				<div id="content2">
+					<p>Contributor：</p>
+					<p>...</p>
 				</div>
 			</div>
 			<footer>
@@ -38,10 +37,10 @@
 			</footer>
 		</div>
 	</body>
+
+
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
-<script src="{{ url_for('static', filename = 'js/register.js')}}"></script>
+<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script> 
 <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
 <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
-</html>

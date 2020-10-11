@@ -10,8 +10,10 @@ from contestManager import Contest_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
 from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
+from admin import admin
 
 web = Flask('WEB')
+web.register_blueprint(admin)
 
 @web.errorhandler(500)
 def Error_500():
@@ -21,7 +23,7 @@ def Error_500():
 def Index():
     return render_template('index.html')
 
-@web.route('/get_username')
+@web.route('/get_username', methods=['POST'])
 def Get_Username():
     return Login_Manager.Get_FriendlyName()
 

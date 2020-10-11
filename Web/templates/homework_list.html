@@ -32,6 +32,7 @@
                                     <th>开始时间</th>
                                     <th>结束时间</th>
                                     <th>状态</th>
+                                    <th>报名</th>
                                 </tr>
                             </thead>
                             {% for cur in  Data %}
@@ -41,6 +42,13 @@
                                     <td>{{ cur['Start_Time'] }}</td>
                                     <td>{{ cur['End_Time'] }}</td>
                                     <td>{{ cur['Status'] }}</td>
+                                    <td>
+                                        {% if cur['Joined'] %}
+                                            <button disabled class="btn btn-primary">已报名参赛</button>
+                                        {% else %}
+                                            <button onclick="post_join({{ cur['ID'] }})" class="btn btn-primary">报名参赛</button>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </table>
@@ -57,4 +65,5 @@
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
 <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
 <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
+<script src="{{ url_for('static', filename = 'js/post_join.js')}}"></script>
 </html>

@@ -125,7 +125,6 @@ def Submit_Problem():
             return redirect('/')
         Problem_ID = int(request.args.get('problem_id'))
         Title = Problem_Manager.Get_Title(Problem_ID)
-        Username = Login_Manager.Get_Username()
         return render_template('problem_submit.html', Problem_ID = Problem_ID, Title = Title)
     else:
         if not Login_Manager.Check_User_Status():
@@ -292,12 +291,24 @@ def Code(): # todo: View Judge Detail
     else:
         return 'Hua Q'
 
+@web.route('/join', methods=['POST'])
+def Join_Contest():
+    if not Login_Manager.Check_User_Status():
+        return '-1'
+    arg = request.form.get('contest_id')
+    if arg == None:
+        return '-1'
+    username = Login_Manager.Get_Username()
+    if not Contest_Manager.Check_Player_In_Contest(arg, username):
+        Contest_Manager.Add_Player_To_Contest(arg, username)
+    return '0'
 
 @web.route('/contest')
 def Contest():
     if not Login_Manager.Check_User_Status():
         return redirect('login?next=' + request.url)
     Contest_ID = request.args.get('contest_id')
+    username = Login_Manager.Get_Username()
     if Contest_ID == None: # display contest list
         List = Contest_Manager.List_Contest(0)
         Data = []
@@ -314,6 +325,7 @@ def Contest():
                 cur['Status'] = 'Finished'
             else:
                 cur['Status'] = 'Going On'
+            cur['Joined'] = Contest_Manager.Check_Player_In_Contest(ele[0], username)
             Data.append(cur)
         return render_template('contest_list.html', Data = Data)
     else:
@@ -361,6 +373,7 @@ def Homework():
     if not Login_Manager.Check_User_Status():
         return redirect('login?next=' + request.url)
     Contest_ID = request.args.get('homework_id')
+    username = Login_Manager.Get_Username()
     if Contest_ID == None: # display contest list
         List = Contest_Manager.List_Contest(1)
         Data = []
@@ -377,6 +390,7 @@ def Homework():
                 cur['Status'] = 'Finished'
             else:
                 cur['Status'] = 'Going On'
+            cur['Joined'] = Contest_Manager.Check_Player_In_Contest(ele[0], username)
             Data.append(cur)
         return render_template('homework_list.html', Data = Data)
     else:

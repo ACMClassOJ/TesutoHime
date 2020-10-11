@@ -46,6 +46,14 @@ def Login():
     ret.set_cookie(key = 'Login_ID', value = lid, max_age = LoginConfig.Login_Life_Time)
     return ret
 
+@web.route('/logout')
+def Logout():
+    if not Login_Manager.Check_User_Status():
+        return redirect('/')
+    ret = make_response(redirect('/'))
+    ret.delete_cookie('Login_ID')
+    return ret
+
 def Validate(Username: str, Password: str, Friendly_Name: str, Student_ID: str) -> int:
     Username_Reg = '([a-zA-Z][a-zA-Z0-9_]{0,19})$'
     Password_Reg = '([a-zA-Z0-9_\!\@\#\$\%\^&\*\(\)]{6,30})$'

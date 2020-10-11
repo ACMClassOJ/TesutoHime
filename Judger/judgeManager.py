@@ -1,6 +1,7 @@
 from Judger.Judger_Core.config import *
 from Judger.JudgerResult import *
 from Judger.Judger_Core.Compiler.Compiler import compiler
+from Judger.Judger_Core.judger_interface import JudgerInterface
 from threading import Lock
 import subprocess
 
@@ -28,15 +29,35 @@ class JudgeManager:
             Details = []
             for testcase in problemConfig.Details:
                 if testcase.Dependency == 0 or Details[testcase.Dependency - 1].result == ResultType.AC:
-                    pass
-                    #to do: judge
+                    relatedFile = dataPath + str(testcase.ID)
+                    testPointDetail = JudgerInterface.JudgeInstance(
+                        TestPointConfig(
+                            compileResult.programPath,
+                            None,
+                            relatedFile + str(testcase.ID) + '.in',
+                            testcase.TimeLimit,
+                            testcase.MemoryLimit,
+                            testcase.DiskLimit,
+                            testcase.Dependency == 0,
+                            testcase.ValgrindTestOn
+                        )
+                    )
+                    if testPointDetail.result != None
+                        pass
+                    else:
+                        if problemConfig.SPJ == 1:
+                            subprocess.run(dataPath + '/spj ' + relatedFile + '.in ' + '' + relatedFile + '.ans score.log message.log', text=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
+                            testPointDetail.result =
+                        else:
+
+                    testPointDetail.ID = testcase.ID
                 else:
                     Details.append(DetailResult(testcase.ID, ResultType.SKIPED, 0, 0, 0, -1, 'Skipped.'))
             status = ResultType.AC
             totalTime = 0
             maxMem = 0
             for detail in Details:
-                if detail.result != ResultType.AC && status != ResultType.AC:
+                if detail.result != ResultType.AC and status != ResultType.AC:
                     status = detail.result
                 totalTime += detail.time
                 maxMem = max(maxMem, detail.memory)
@@ -60,7 +81,7 @@ class JudgeManager:
                         inputString += str(len(group.TestPoints)) + ' ' + str(group.GroupScore) + ' '
                         for testPoint in group.TestPoints:
                             inputString += str(testPoint) + ' '
-                    process = subprocess.run(dataPath + '/scorer.py', text = True, stdin = inputString, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10000)
+                    process = subprocess.run(dataPath + '/scorer.py', text = True, stdin = inputString, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
                 except subprocess.TimeoutExpired:
                     judgeResult = JudgerResult(ResultType.SYSERR, 0, 0, 0, [[testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'Scorer timeout.\n'] for testcase in problemConfig.Details], problemConfig)
                 else:

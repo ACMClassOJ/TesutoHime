@@ -28,7 +28,7 @@
 						<option value ="git">git</option>
 					</select>
 					<br>
-					<textarea id="code" class="form-control input-default" rows="18"></textarea>
+					<textarea id="problem_submit_code" class="form-control input-default" rows="18"></textarea>
 					<input type="hidden" name="problem_id" value="{{Problem_ID}}">
 					<br>
 					<input type="submit" class="btn btn-primary btn-block" value="提交评测">
@@ -44,4 +44,5 @@
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
 <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
 <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
+<script src="{{ url_for('static', filename = 'js/problem_submit.js')}}"></script>
 </html>

@@ -12,28 +12,9 @@
     <body style="background-color: rgba(193,220,248,0.1);">
         <nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
             <div class="container">
-                <a class="navbar-brand" href="index.html">ACM Class OnineJudge 2020</a>
-                <div class="navbar-collapse collapse" id="navbar_global">
-                    <ul class="navbar-nav navbar-nav-hover align-items-lg-center">
-                        <li class="nav-item">
-                            <a href="/problems" class="nav-link" role="button">题库</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/contest" class="nav-link" role="button">比赛</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/homework" class="nav-link" role="button">作业</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/status" class="nav-link" role="button">评测状态</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/about" class="nav-link" role="button">关于</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="navbar-collapse collapse justify-content-end" id="navbar_right">
-                </div>
+                <a class="navbar-brand" href="/">ACM Class OnineJudge 2020</a>
+                <div class="navbar-collapse collapse" id="navbar_global"></div>
+                <div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
             </div>
         </nav>
         <div class="container">
@@ -72,5 +53,6 @@
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
+<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
 <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 </html>

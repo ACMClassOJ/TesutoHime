@@ -10,12 +10,12 @@ $(function(){
 				document.getElementById('navbar_right').innerHTML = '\
 					<ul class="navbar-nav navbar-nav-hover align-items-lg-right">\
 			        	<li class="nav-item d-none d-lg-block ml-lg-4">\
-				        	<a class="btn btn-neutral btn-icon">\
+				        	<a class="btn btn-neutral btn-icon" href="/login">\
 	              				<span class="nav-link-inner--text">登录</span>\
 	            			</a>\
 	            		</li>\
 			          	<li class="nav-item d-none d-lg-block ml-lg-4">\
-				        	<a class="btn btn-neutral btn-icon">\
+				        	<a class="btn btn-neutral btn-icon" href="/register">\
 	              				<span class="nav-link-inner--text">注册</span>\
 	            			</a>\
 	            		</li>\

@@ -24,6 +24,10 @@ def Error_500():
 def Index():
     return render_template('index.html')
 
+@web.route('/index.html')
+def Index2():
+    return redirect('/')
+
 @web.route('/get_username', methods=['POST'])
 def Get_Username():
     return Login_Manager.Get_FriendlyName()
@@ -290,7 +294,7 @@ def Code(): # todo: View Judge Detail
 
 
 @web.route('/contest')
-def Contest(): # todo: debug Contest and homework
+def Contest():
     if not Login_Manager.Check_User_Status():
         return redirect('login?next=' + request.url)
     Contest_ID = request.args.get('contest_id')
@@ -321,7 +325,7 @@ def Contest(): # todo: debug Contest and homework
         for Player in Players:
             tmp = [0, 0, ]
             for Problem in Problems:
-                Submits = Judge_Manager.Get_Contest_Judge(int(Problem[0]), Player, StartTime, Endtime)
+                Submits = Judge_Manager.Get_Contest_Judge(int(Problem[0]), Player[0], StartTime, Endtime)
                 maxScore = 0
                 isAC = False
                 Submit_Time = 0
@@ -332,6 +336,7 @@ def Contest(): # todo: debug Contest and homework
                         if Submit[1] == 'AC':
                             isAC = True
                             tmp[1] += int(Submit[3]) - StartTime + (Submit_Time - 1) * 1200
+                            break
                 tmp[0] += maxScore
                 tmp.append([maxScore, Submit_Time, isAC]) # AC try time or failed times
             tmp[1] //= 60
@@ -348,14 +353,14 @@ def Contest(): # todo: debug Contest and homework
         Data = sorted(Data, key = cmp_to_key(lambda x, y: x[1] < y[1] if x[0] == y[0] else x[0] > y[0]))
         Title = Contest_Manager.Get_Title(Contest_ID)[0][0]
         return render_template('contest.html', id = Contest_ID, Title = Title, Status = Status,
-                               StartTime = Readable_Time(StartTime), Endtime = Readable_Time(Endtime), Problems = Problems, Players = Players,
+                               StartTime = Readable_Time(StartTime), EndTime = Readable_Time(Endtime), Problems = Problems, Players = Players,
                                Data = Data, len = len(Players), len2 = len(Problems))
 
 @web.route('/homework')
 def Homework():
     if not Login_Manager.Check_User_Status():
         return redirect('login?next=' + request.url)
-    Contest_ID = request.args.get('contest_id')
+    Contest_ID = request.args.get('homework_id')
     if Contest_ID == None: # display contest list
         List = Contest_Manager.List_Contest(1)
         Data = []
@@ -364,11 +369,11 @@ def Homework():
             cur = {}
             cur['ID'] = int(ele[0])
             cur['Title'] = str(ele[1])
-            cur['Start_Time'] = Readable_Time(int(ele['Start_Time']))
-            cur['End_Time'] = Readable_Time(int(ele['End_Time']))
-            if curTime < int(ele['Start_Time']):
+            cur['Start_Time'] = Readable_Time(int(ele[2]))
+            cur['End_Time'] = Readable_Time(int(ele[3]))
+            if curTime < int(ele[2]):
                 cur['Status'] = 'Pending'
-            elif curTime > int(ele['End_Time']):
+            elif curTime > int(ele[3]):
                 cur['Status'] = 'Finished'
             else:
                 cur['Status'] = 'Going On'
@@ -383,17 +388,33 @@ def Homework():
         for Player in Players:
             tmp = [0, ]
             for Problem in Problems:
-                Submits = Judge_Manager.Get_Contest_Judge(int(Problem), Player, StartTime, Endtime)
+                Submits = Judge_Manager.Get_Contest_Judge(int(Problem[0]), Player[0], StartTime, Endtime)
                 isAC = False
-                for Submit in Submits:
-                    if Submit[1] == 'AC':
-                        isAC = True
+                Try_Time = 0
+                if Submits != None:
+                    for Submit in Submits:
+                        Try_Time += 1
+                        if Submit[1] == 'AC':
+                            isAC = True
+                            break
                 if isAC:
                     tmp[0] += 1
-                tmp.append([isAC]) # AC try time or failed times
+                tmp.append([isAC, Try_Time]) # AC try time or failed times
             Data.append(tmp)
-        return render_template('homework.html', StartTime = StartTime, Endtime = Endtime, Problems = Problems, Players = Players, Data = Data)
 
+        curTime = UnixNano()
+        Status = -1
+        if curTime < StartTime:
+            Status = 'Pending'
+        elif curTime > Endtime:
+            Status = 'Finished'
+        else:
+            Status = 'Going On'
+        Title = Contest_Manager.Get_Title(Contest_ID)[0][0]
+
+        return render_template('homework.html', id = Contest_ID, Title = Title, Status = Status,
+                               StartTime = Readable_Time(StartTime), EndTime = Readable_Time(Endtime), Problems = Problems, Players = Players,
+                               Data = Data, len = len(Players), len2 = len(Problems))
 @web.route('/about')
 def About():
     return 'Hua Q~'

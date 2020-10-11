@@ -345,7 +345,7 @@ def Contest():
                     for Submit in Submits:
                         maxScore = max(maxScore, int(Submit[2]))
                         Submit_Time += 1
-                        if Submit[1] == 'AC':
+                        if int(Submit[1]) == 2:
                             isAC = True
                             tmp[1] += int(Submit[3]) - StartTime + (Submit_Time - 1) * 1200
                             break
@@ -362,7 +362,7 @@ def Contest():
             Status = 'Finished'
         else:
             Status = 'Going On'
-        Data = sorted(Data, key = cmp_to_key(lambda x, y: x[1] < y[1] if x[0] == y[0] else x[0] > y[0]))
+        Data = sorted(Data, key = cmp_to_key(lambda x, y: y[0] - x[0] if x[0] != y[0] else x[1] - y[1]))
         Title = Contest_Manager.Get_Title(Contest_ID)[0][0]
         return render_template('contest.html', id = Contest_ID, Title = Title, Status = Status,
                                StartTime = Readable_Time(StartTime), EndTime = Readable_Time(Endtime), Problems = Problems, Players = Players,

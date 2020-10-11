@@ -1,7 +1,7 @@
 from Judger.Judger_Core.config import *
 from Judger.JudgerResult import *
 from Judger.Judger_Core.Compiler.Compiler import compiler
-from Judger.Judger_Core.judger_interface import JudgerInterface
+from Judger.Judger_Core.classic_judger import ClassicJudger
 import subprocess
 
 class JudgeManager:
@@ -25,11 +25,11 @@ class JudgeManager:
             for testcase in problemConfig.Details:
                 if testcase.Dependency == 0 or Details[testcase.Dependency - 1].result == ResultType.AC:
                     relatedFile = dataPath + '/' + str(testcase.ID)
-                    testPointDetail, userOutput = JudgerInterface().JudgeInstance(
+                    testPointDetail, userOutput = ClassicJudger().JudgeInstance(
                         TestPointConfig(
                             compileResult.programPath,
                             None,
-                            relatedFile + str(testcase.ID) + '.in',
+                            relatedFile + '.in',
                             testcase.TimeLimit,
                             testcase.MemoryLimit,
                             testcase.DiskLimit,

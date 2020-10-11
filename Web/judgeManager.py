@@ -101,7 +101,7 @@ class JudgeManager:
         db = DB_Connect()
         cursor = db.cursor()
         cursor.execute("SELECT ID, Status, Score, Time FROM Judge WHERE Problem_ID = %s AND User = %s AND Time >= %s AND Time <= %s", (str(Problem_ID), Username, str(Start_Time), str(End_Time)))
-        ret = cursor.fetchone()
+        ret = cursor.fetchall()
         db.close()
         return ret
 

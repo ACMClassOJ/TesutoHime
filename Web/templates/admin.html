@@ -121,7 +121,7 @@
         this.serializeArray().forEach(function (e) {
             if (e.value !== "")
                 if (e.name.search("[T t]ime") !== -1)
-                    data[e.name] = new Date(e.value).getTime();
+                    data[e.name] = new Date(e.value).getTime()/1000;
                 else if ($("#" + e.name))
                     data[e.name] = e.value;
         });

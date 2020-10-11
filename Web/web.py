@@ -11,6 +11,7 @@ from judgeServerScheduler import JudgeServer_Scheduler
 from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
 from admin import admin
+from functools import cmp_to_key
 
 web = Flask('WEB')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -65,6 +66,7 @@ def Validate(Username: str, Password: str, Friendly_Name: str, Student_ID: str) 
 @web.route('/register', methods=['GET', 'POST'])
 def Register():
     if request.method == 'GET':
+        next = request.args.get('next')
         if Login_Manager.Check_User_Status():
             return render_template('register.html', Logged_In = True, Next = next) # display 'Plsease Logout First'
         return render_template('register.html', Logged_In = False, Next = next)
@@ -93,6 +95,7 @@ def Problem_List():
 @web.route('/problem')
 def Problem_Detail():
     if not Login_Manager.Check_User_Status():
+        print(request.path)
         return redirect('login?next=' + request.url)
     id = request.args.get('problem_id')
     if id == None:
@@ -304,27 +307,41 @@ def Contest(): # todo: debug Contest and homework
     else:
         Contest_ID = int(Contest_ID)
         StartTime, Endtime = Contest_Manager.Get_Time(Contest_ID)
-        Problems = Contest_Manager.List_Player_For_Contest(Contest_ID)
+        Problems = Contest_Manager.List_Problem_For_Contest(Contest_ID)
         Players = Contest_Manager.List_Player_For_Contest(Contest_ID)
         Data = []
         for Player in Players:
             tmp = [0, 0, ]
             for Problem in Problems:
-                Submits = Judge_Manager.Get_Contest_Judge(int(Problem), Player, StartTime, Endtime)
+                Submits = Judge_Manager.Get_Contest_Judge(int(Problem[0]), Player, StartTime, Endtime)
                 maxScore = 0
                 isAC = False
                 Submit_Time = 0
-                for Submit in Submits:
-                    maxScore = max(maxScore, int(Submit[2]))
-                    Submit_Time += 1
-                    if Submit[1] == 'AC':
-                        isAC = True
-                        tmp[1] += int(Submit[3]) - StartTime + (Submit_Time - 1) * 1200
+                if Submits != None:
+                    for Submit in Submits:
+                        maxScore = max(maxScore, int(Submit[2]))
+                        Submit_Time += 1
+                        if Submit[1] == 'AC':
+                            isAC = True
+                            tmp[1] += int(Submit[3]) - StartTime + (Submit_Time - 1) * 1200
                 tmp[0] += maxScore
-                tmp.append([isAC, Submit_Time]) # AC try time or failed times
+                tmp.append([maxScore, Submit_Time, isAC]) # AC try time or failed times
+            tmp[1] //= 60
             Data.append(tmp)
-        Data = sorted(Data, key = lambda x, y: x[1] < y[1] if x[0] == y[0] else x[0] > y[0])
-        return render_template('contest.html', StartTime = StartTime, Endtime = Endtime, Problems = Problems, Players = Players, Data = Data)
+
+        curTime = UnixNano()
+        Status = -1
+        if curTime < StartTime:
+            Status = 'Pending'
+        elif curTime > Endtime:
+            Status = 'Finished'
+        else:
+            Status = 'Going On'
+        Data = sorted(Data, key = cmp_to_key(lambda x, y: x[1] < y[1] if x[0] == y[0] else x[0] > y[0]))
+        Title = Contest_Manager.Get_Title(Contest_ID)[0][0]
+        return render_template('contest.html', id = Contest_ID, Title = Title, Status = Status,
+                               StartTime = Readable_Time(StartTime), Endtime = Readable_Time(Endtime), Problems = Problems, Players = Players,
+                               Data = Data, len = len(Players), len2 = len(Problems))
 
 @web.route('/homework')
 def Homework():

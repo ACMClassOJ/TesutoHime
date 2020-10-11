@@ -22,6 +22,32 @@
                 <div class="page-header">
                     <h1 class="text-center"> 评测状态 </h1>
                 </div>
+                <div>
+                    <form class="form-group input-group" method="post" id="status_serach">
+                        <input class="form-control input-group" type="text" name="submitter" id="submitter" required="required" placeholder="用户名">
+                        <input class="form-control input-group" type="number" name="problem_id" id="problem_id" required="required" placeholder="题目编号">
+                        <select class="form-control input-group" name="status" id="status">
+                            <option value = "-1">All</option>
+                            <option value = "0">Pending</option>
+                            <option value = "1">Running</option>
+                            <option value = "2">AC</option>
+                            <option value = "3">WA</option>
+                            <option value = "4">CE</option>
+                            <option value = "5">RE</option>
+                            <option value = "6">TLE</option>
+                            <option value = "7">MLE</option>
+                            <option value = "8">MLK</option>
+                            <option value = "9">SE</option>
+                            <option value = "10">DLE</option>
+                        </select>
+                        <select class="form-control input-group" name="lang" id="lang">
+                            <option value = "-1">All</option>
+                            <option value = "0">C++</option>
+                            <option value = "1">Git</option>
+                        </select>
+                        <input type="submit" class="btn btn-primary btn-right" value="&nbsp&nbsp&nbsp搜索&nbsp&nbsp&nbsp">  
+                    </form>
+                </div>
                 <div class="bootstrap-data-table-panel">
                     <div class="table-responsive">
                         <table class="table table-striped table-bordered table-hover" id="problem_list">

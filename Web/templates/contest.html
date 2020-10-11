@@ -23,7 +23,7 @@
                     <h1 class="text-center"> {{id}}.{{Title}} </h1>
                 </div>
                 <div class="m-auto">
-                    <h5> {{Start_time}} ~ {{End_time}} {{Status}}</h5>
+                    <h5> {{StartTime}} ~ {{EndTime}} {{Status}}</h5>
                 </div>
                 <div class="bootstrap-data-table-panel">
                     <div class="table-responsive">
@@ -33,7 +33,7 @@
                                     <th>排名</th>
                                     <th>用户</th>
                                     {% for problem in Problems %}
-                                        <th>{{ problem[0] }}</th>
+                                        <th><a href="problem?problem_id={{problem[0]}}" target="_blank">{{problem[0]}}</a></th>
                                     {% endfor %}
                                     <th>总得分</th>
                                     <th>罚时</th>
@@ -44,8 +44,7 @@
                                     <td>{{ i + 1 }}</td>
                                     <td>{{Players[i][0]}}</td>
                                     {% for j in range(0, len2) %}
-                                        <td>{{Data[i][j + 2][0]}}({{Data[i][j + 2][1]}}{% if Data[i][j+2][2] %}Y{% else %}N{% endif %})
-                                        </td>
+                                        <td>{% if Data[i][j + 2][0] %}{{Data[i][j + 2][0]}}({{Data[i][j + 2][1]}}{% if Data[i][j+2][2] %}Y{% else %}N{% endif %}){% endif %}</td>
                                     {% endfor %}
                                     <td>{{ Data[i][0] }}</td>
                                     <td>{{ Data[i][1] }}</td>

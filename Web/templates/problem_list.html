@@ -29,22 +29,27 @@
 								<tr>
 									<th>编号</th>
 									<th>题目名称</th>
-									<th>？？？</th>
 								</tr>
 							</thead>
-							<tr>
-								<th>1000</th>
-								<td>a+b</td>
-								<td>占位符</td>
-							</tr>
+                            {% for Problem in Problems %}
+                                <tr>
+                                    <th>{{ Problem[0] }}</th>
+                                    <td><a href="problem?problem_id={{Problem[0]}}" target="_blank">{{Problem[1]}}</a></td>
+                                </tr>
+                            {% endfor %}
 						</table>
-						
-{% for Problem in Problems %}
-	<a href="problem?problem_id={{Problem[0]}}" target="_blank" rel="noopener noreferrer">{{Problem[0]}} {{Problem[1]}}</a><br>
-{% endfor %}
-{% for x in Pages %}
-	{{x}} todo: build as link. x[3](-1, 0, 1) for disable, normal, highlight(current page)
-{% endfor %}
+
+                    <div class="btn-group">
+                        {% for x in Pages %}
+                            {% if x[2] == -1%}
+                                <a href="problems?page={{x[1]}}" class="btn btn-light disabled"> {{ x[0] }} </a>
+                            {% elif x[2] == 1 %}
+                                <a href="problems?page={{x[1]}}" class="btn btn-primary"> {{ x[0] }} </a>
+                            {% else %}
+                                <a href="problems?page={{x[1]}}" class="btn btn-light"> {{ x[0] }} </a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
 					</div>
 				</div>
 			</div>

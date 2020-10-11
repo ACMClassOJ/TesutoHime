@@ -24,6 +24,10 @@ def Error_500():
 def Index():
     return render_template('index.html')
 
+@web.route('/index.html')
+def Index2():
+    return redirect('/')
+
 @web.route('/get_username', methods=['POST'])
 def Get_Username():
     return Login_Manager.Get_FriendlyName()
@@ -348,7 +352,7 @@ def Contest(): # todo: debug Contest and homework
         Data = sorted(Data, key = cmp_to_key(lambda x, y: x[1] < y[1] if x[0] == y[0] else x[0] > y[0]))
         Title = Contest_Manager.Get_Title(Contest_ID)[0][0]
         return render_template('contest.html', id = Contest_ID, Title = Title, Status = Status,
-                               StartTime = Readable_Time(StartTime), Endtime = Readable_Time(Endtime), Problems = Problems, Players = Players,
+                               StartTime = Readable_Time(StartTime), EndTime = Readable_Time(Endtime), Problems = Problems, Players = Players,
                                Data = Data, len = len(Players), len2 = len(Problems))
 
 @web.route('/homework')

@@ -43,8 +43,8 @@
                                     <td>{{cur['Friendly_Name']}}</td>
                                     <td><a href="/problem?problem_id={{cur['Problem_ID']}}">{{cur['Problem_ID']}}.{{cur['Problem_Title']}}</a></td>
                                     <td>{{cur['Status']}}</td>
-                                    <td>{{cur['Time_Used']}}</td>
-                                    <td>{{cur['Mem_Used']}}</td>
+                                    <td>{{cur['Time_Used']}}ms</td>
+                                    <td>{{cur['Mem_Used']}}KiB</td>
                                     {% if cur['Visible'] %}
                                     <td><a href="/code?submit_id={{cur['ID']}}">{{cur['Lang']}}</a></td>
                                     {%else%}
@@ -55,6 +55,17 @@
                             {% endfor%}
                         </table>
                     </div>
+                    <div class="btn-group">
+                        {% for x in Pages %}
+                            {% if x[2] == -1%}
+                                <a href="status?page={{x[1]}}" class="btn btn-light disabled"> {{ x[0] }} </a>
+                            {% elif x[2] == 1 %}
+                                <a href="status?page={{x[1]}}" class="btn btn-primary"> {{ x[0] }} </a>
+                            {% else %}
+                                <a href="status?page={{x[1]}}" class="btn btn-light"> {{ x[0] }} </a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             <footer>
@@ -62,11 +73,11 @@
             </footer>
         </div>
     </body>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
-<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
+    <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
+    <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
+    <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
+    <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
+    <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 </html>
 build a search box
 
@@ -80,7 +91,3 @@ build a search box
     hold it with js, and build it into bottom link<br>
 {% endif %}
 
-
-{% for x in Pages %}
-    {{x}} todo: build as link. x[3](-1, 0, 1) for disable, normal, highlight(current page)<br>
-{% endfor %}

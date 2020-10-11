@@ -80,7 +80,7 @@ class JudgeManager:
     def Judge_In_Range(self, startID: int, endID: int): # [{}], for page display.
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE ID >= %s and ID <= %s", (str(startID), str(endID)))
+        cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE ID >= %s and ID <= %s ORDER BY ID desc", (str(startID), str(endID)))
         data = cursor.fetchall()
         ret = []
         for d in data:

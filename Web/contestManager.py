@@ -106,7 +106,7 @@ class ContestManager:
     def List_Contest(self, Type: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, Name, Start_Time, End_Time FROM Contest")
+        cursor.execute("SELECT ID, Name, Start_Time, End_Time FROM Contest WHERE Type = %s", (Type))
         ret = cursor.fetchall()
         return ret
 

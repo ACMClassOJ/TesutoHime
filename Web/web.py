@@ -218,6 +218,12 @@ def Discuss(): # todo: Debug discuss
         else: # what happened?
             return redirect('/discuss?problem_id=' + Problem_ID)
 
+def fix_Status_Cur(cur):
+    ls = ['Pending', 'Running', 'AC', 'WA', 'CE', 'RE', 'TLE', 'MLE', 'MLK', 'SE', 'DLE']
+    cur['Status'] = ls[int(cur['Status'])]
+    cur['Lang'] = 'C++' if cur['Lang'] == 0 else 'Git'
+    return cur
+
 @web.route('/status')
 def Status():
     if not Login_Manager.Check_User_Status():
@@ -249,7 +255,7 @@ def Status():
             cur['Lang'] = ele['Lang']
             cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
             cur['Time'] = Readable_Time(ele['Time'])
-            Data.append(cur)
+            Data.append(fix_Status_Cur(cur))
         return render_template('status.html', Data = Data, Pages = Gen_Page(Page, max_Page))
     else:
         Record = Judge_Manager.Search_Judge(Arg_Submitter, Arg_Problem_ID)
@@ -271,10 +277,8 @@ def Status():
             cur['Lang'] = ele['Lang']
             cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
             cur['Time'] = Readable_Time(ele['Time'])
-            Data.append(cur)
+            Data.append(fix_Status_Cur(cur))
         return render_template('status.html', Data = Data, Pages = Gen_Page(Page, max_Page), Submitter = Arg_Submitter, Problem_ID = Arg_Problem_ID)
-
-
 
 @web.route('/code')
 def Code(): # todo: View Judge Detail

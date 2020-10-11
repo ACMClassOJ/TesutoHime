@@ -11,6 +11,7 @@ class ResultType(Enum):
         MEMLEK = 8
         SYSERR = 9
         SKIPPED = 10
+        UNKNOWN = 11
 
 class DetailResult:
         def __init__(self,

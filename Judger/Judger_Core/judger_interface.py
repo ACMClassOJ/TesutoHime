@@ -2,7 +2,6 @@ import subprocess as sp
 from abc import abstractmethod
 from Judger.Judger_Core import config as conf
 from Judger.JudgerResult import DetailResult
-from enum import Enum
 
 class SPJInterface:
     @abstractmethod
@@ -12,5 +11,5 @@ class SPJInterface:
 class JudgerInterface:
 
     @abstractmethod
-    def JudgeInstance(self, testConfig: conf.TestPointConfig) -> DetailResult:
+    def JudgeInstance(self, testConfig: conf.TestPointConfig) -> DetailResult: pass
 

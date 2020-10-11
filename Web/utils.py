@@ -16,7 +16,7 @@ def UnixNanoFloat() -> float: # float point time in Second
 
 
 def Readable_Time(nano) -> str:
-    return time.strftime("%b-%d-%Y %H:%M:%S", datetime.datetime.fromtimestamp(nano).timetuple())
+    return str(time.strftime("%b-%d-%Y %H:%M:%S", datetime.datetime.fromtimestamp(nano).timetuple()))
 
 def Gen_Page(cur_Page: int, max_Page: int):
     ret = []

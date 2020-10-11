@@ -5,7 +5,7 @@ class DataBaseConfig:
     mysql_Database = 'OJ'
 
 class LoginConfig:
-    Login_Life_Time = 24 * 60 * 60 # s
+    Login_Life_Time = 24 * 60 * 60 * 60 # s
 
 class WebConfig:
     Problems_Each_Page = 10

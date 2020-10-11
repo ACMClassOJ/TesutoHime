@@ -133,4 +133,12 @@ class ContestManager:
         db.close()
         return ret
 
+    def Get_Title(self, Contest_ID: int):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Name FROM Contest WHERE ID = %s", (str(Contest_ID)))
+        ret = cursor.fetchall()
+        db.close()
+        return ret
+
 Contest_Manager = ContestManager()

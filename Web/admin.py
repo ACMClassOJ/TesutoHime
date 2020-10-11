@@ -51,12 +51,12 @@ def _validate_contest_data(form):
     return None
 
 
-@admin.route('/admin')
+@admin.route('/')
 def index():
     return render_template('admin.html')
 
 
-@admin.route('/admin/user', methods=['post'])
+@admin.route('/user', methods=['post'])
 def user_manager():
     form = request.json
     # if Login_Manager.Get_Privilege() < Privilege.SUPER:
@@ -80,7 +80,7 @@ def user_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-@admin.route('/admin/problem', methods=['post'])
+@admin.route('/problem', methods=['post'])
 def problem_manager():
     form = request.json
     # if Login_Manager.Get_Privilege() < Privilege.ADMIN:
@@ -107,7 +107,7 @@ def problem_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-@admin.route('/admin/contest', methods=['post'])
+@admin.route('/contest', methods=['post'])
 def contest_manager():
     form = request.json
     # if Login_Manager.Get_Privilege() < Privilege.ADMIN:

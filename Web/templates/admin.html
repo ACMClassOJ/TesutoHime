@@ -66,7 +66,7 @@
             <textarea name="range" id="iptDataRange"></textarea>
         </label>
         <label>
-            Release Time
+            Release Time (YYYY-MM-DDThh:mm:ss)
             <input type="datetime-local" name="time" id="iptReleaseTime">
         </label>
         <button type="submit" id="btnAddProblem">Add Problem</button>
@@ -114,14 +114,14 @@
     </form>
 </div>
 </body>
-<script src="{{ url_for('static', filename='/js/jquery-3.5.1.min.js') }}"></script>
+<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
 <script>
     $.fn.serializeObject = function () {
         let data = {};
         this.serializeArray().forEach(function (e) {
             if (e.value !== "")
                 if (e.name.search("[T t]ime") !== -1)
-                    data[e.name] = new Date(e.value).getTime();
+                    data[e.name] = new Date(e.value).getTime()/1000;
                 else if ($("#" + e.name))
                     data[e.name] = e.value;
         });

@@ -23,7 +23,7 @@ $(function(){
 			}
 			else
 			{
-				document.getElementById('navbar_right').innerHTML = '<div>当前用户：<b>' + response_text + '</b> <a class="btn btn-link" href="/logout">注销</a></div>';
+				document.getElementById('navbar_right').innerHTML = '<div>当前用户：<b>' + response_text + '</b><b><a href="/logout"> &nbsp&nbsp注销</a></b></div>';
 			}
 			
         },

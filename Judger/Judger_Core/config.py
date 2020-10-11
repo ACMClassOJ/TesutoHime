@@ -12,7 +12,7 @@ class TestPointConfig:
     def __init__(self,
                  programPath: str, # when traditional problem
                  userOutputFile, # when uploading problem
-                 inputFile,
+                 inputFile: str,
                  timeLimit: int,
                  memoryLimit: int,
                  diskLimit: int, # -1 if not need

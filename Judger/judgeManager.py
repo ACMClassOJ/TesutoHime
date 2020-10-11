@@ -2,17 +2,14 @@ from Judger.Judger_Core.config import *
 from Judger.JudgerResult import *
 from Judger.Judger_Core.Compiler.Compiler import compiler
 from Judger.Judger_Core.judger_interface import JudgerInterface
-from threading import Lock
 import subprocess
 
 class JudgeManager:
     def __init__(self):
         self.judgingFlag = False
-        self.mutex = Lock()
 
     def isJudging(self) -> bool:
-        with self.mutex:
-            return self.judgingFlag
+        return self.judgingFlag
 
     def judge(self,
               problemConfig: ProblemConfig,
@@ -20,8 +17,6 @@ class JudgeManager:
               language: str,
               sourceCode: str
               ) -> JudgerResult:
-        with self.mutex:
-            self.judgingFlag = True
         compileResult = compiler.CompileInstance(CompilationConfig(sourceCode, language, problemConfig.CompileTimeLimit))
         if not compileResult.compiled:
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [[testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg] for testcase in problemConfig.Details], problemConfig)
@@ -30,7 +25,7 @@ class JudgeManager:
             for testcase in problemConfig.Details:
                 if testcase.Dependency == 0 or Details[testcase.Dependency - 1].result == ResultType.AC:
                     relatedFile = dataPath + str(testcase.ID)
-                    testPointDetail = JudgerInterface().JudgeInstance(
+                    testPointDetail, userOutput = JudgerInterface().JudgeInstance(
                         TestPointConfig(
                             compileResult.programPath,
                             None,
@@ -45,7 +40,7 @@ class JudgeManager:
                     testPointDetail.ID = testcase.ID
                     if testPointDetail.result == ResultType.UNKNOWN:
                         if problemConfig.SPJ == 1:
-                            subprocess.run(dataPath + '/spj ' + relatedFile + '.in ' + relatedFile + '.ans score.log message.log', text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
+                            subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], text = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
                             with open('score.log') as f:
                                 testPointDetail.score = float("\n".join(f.readline().splitlines()))
                             testPointDetail.result = ResultType.WA if testPointDetail.score == 0 else ResultType.AC
@@ -106,8 +101,6 @@ class JudgeManager:
                     score = process.stdout.decode()
                     print(process.stderr.decode())
                     judgeResult = JudgerResult(status, score, totalTime, maxMem, Details, problemConfig)
-        with self.mutex:
-            self.judgingFlag = False
         return judgeResult
 
 

@@ -11,5 +11,5 @@ class SPJInterface:
 class JudgerInterface:
 
     @abstractmethod
-    def JudgeInstance(self, testConfig: conf.TestPointConfig) -> DetailResult: pass
+    def JudgeInstance(self, testConfig: conf.TestPointConfig) -> (DetailResult, str): pass
 

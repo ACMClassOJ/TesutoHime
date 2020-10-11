@@ -13,7 +13,7 @@ from utils import *
 from admin import admin
 
 web = Flask('WEB')
-web.register_blueprint(admin)
+web.register_blueprint(admin, url_prefix='/admin')
 
 @web.errorhandler(500)
 def Error_500():

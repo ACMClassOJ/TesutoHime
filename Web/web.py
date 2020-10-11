@@ -48,6 +48,8 @@ def Validate(Username: str, Password: str, Friendly_Name: str, Student_ID: str) 
     Password_Reg = '([a-zA-Z0-9_\!\@\#\$\%\^&\*\(\)]{6,30})$'
     Friendly_Name_Reg = '([a-zA-Z0-9_]{1,60})$'
     Student_ID_Reg = '([0-9]{12})$'
+    if Username == 'Nobody' or Friendly_Name == 'Nobody':
+        return -1
     if re.match(Username_Reg, Username) == None:
         return -1
     if re.match(Password_Reg, Password) == None:

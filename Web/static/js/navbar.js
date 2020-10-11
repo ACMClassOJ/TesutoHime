@@ -16,3 +16,7 @@ document.getElementById('navbar_global').innerHTML = '\
 		<a href="/about" class="nav-link" role="button">关于</a>\
 	</li>\
 </ul>';
+
+$(function(){
+	$("#footer").val("my footer");
+});

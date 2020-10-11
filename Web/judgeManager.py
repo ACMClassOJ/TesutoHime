@@ -40,11 +40,11 @@ class JudgeManager:
         db.close()
         return
 
-    def Update_After_Judge(self, ID: int, NewStatus: int, Score: int, Detail: str):
+    def Update_After_Judge(self, ID: int, NewStatus: int, Score: int, Detail: str, Time_Used: str, Mem_Used: str):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Judge SET Status = %s, Score = %s, Detail = %s WHERE ID = %s", (str(NewStatus), str(ID), str(Score), Detail))
+            cursor.execute("UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s", (str(NewStatus), str(ID), str(Score), Detail, Time_Used, Mem_Used))
             db.commit()
         except:
             db.rollback()
@@ -54,8 +54,8 @@ class JudgeManager:
 
     def Query_Judge(self, ID: int)->dict: # for details
         db = DB_Connect()
-        cursor = db.cursor()Problem_ID, Detail, Time, Time_Used, Mem_Used FROM Judge WHERE
-        cursor.execute("SELECT ID, User,  ID = %s", (str(ID)))
+        cur = db.cursor()
+        cursor.execute("SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used FROM Judge WHERE ID = %s", (str(ID)))
         data = cursor.fetchone()
         db.close()
         if data == None:
@@ -121,7 +121,7 @@ class JudgeManager:
     def Search_AC(self, Problem_ID):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Time_Used, Mem_Used, Language, Time FROM Judge WHERE Problem_ID = %s and Status = 0", (str(Problem_ID)))
+        cursor.execute("SELECT ID, User, Time_Used, Mem_Used, Language, Time FROM Judge WHERE Problem_ID = %s and Status = 2", (str(Problem_ID)))
         ret = cursor.fetchall()
         db.close()
         return ret

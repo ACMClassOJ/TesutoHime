@@ -52,7 +52,7 @@ class JudgeManager:
                                 testPointDetail.score, testPointDetail.result = 1.0, ResultType.AC
                             else:
                                 testPointDetail.score, testPointDetail.result = 0.0, ResultType.WA
-                                testPointDetail.message += runDiff.stdout.decode() + runDiff.stderr.decode()
+                                #testPointDetail.message += runDiff.stdout.decode() + runDiff.stderr.decode()
                     else:
                         testPointDetail.score = 0.
                         if testPointDetail.result == ResultType.TLE :
@@ -102,6 +102,9 @@ class JudgeManager:
                     score = process.stdout.decode()
                     print(process.stderr.decode())
                     judgeResult = JudgerResult(status, score, totalTime, maxMem, Details, problemConfig)
+        #print("One",judgeResult.Status,judgeResult.TimeUsed,judgeResult.MemUsed)
+        #for i in judgeResult.Details:
+        #    print(i.ID,i.result,i.score,i.time,i.memory,i.disk,i.message)
         return judgeResult
 
 

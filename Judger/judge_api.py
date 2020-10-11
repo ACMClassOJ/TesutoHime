@@ -5,6 +5,7 @@ from Judger.judgeManager import judgeManager
 from Judger.JudgerResult import *
 from Judger.config import *
 from Judger.Judger_Data import get_data
+from types import SimpleNamespace
 from time import sleep
 import os
 
@@ -16,7 +17,7 @@ def hello():
 
 @judge_api.route('/judge', methods = ['POST'])
 def judge():
-    Server_Secret = request.form.get('Server_Secret')
+    Server_Secret, Judge_ID = request.form.get('Server_Secret'), request.form.get('Judge_ID')
     if Web_Server_Secret != Server_Secret:
         return '-1'
     else:
@@ -28,9 +29,12 @@ def judge():
         result = judgeManager.judge(problemConfig, dataPath, request.form.get('Lang'), request.form.get('Code'))
     except:
         result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [[testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during fetching data."] for testcase in problemConfig.Details], problemConfig)
+    msg = {'Server_Secret': Server_Secret, 'Judge_ID': Judge_ID}
+    msg['Result'] = json.loads(json.dumps(result, default=lambda o: getattr(o, '__dict__', str(o))))
+    #print(msg['Result'])
     while True:
         try:
-            re = requests.post(Web_Server, json.loads(json.dumps(result, default=lambda o: getattr(o, '__dict__', str(o)))))
+            re = requests.post(Web_Server + '/pushResult', data = msg).content.decode()
         except:
             re = '-1'
         if re == '0':

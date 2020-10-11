@@ -10,6 +10,7 @@ import resource
 
 chroot_path='/tmp/chroot'
 workspace_path='/work/'
+exe_path='/exe/'
 output_file='/work/output.txt'
 class ClassicJudger(interface.JudgerInterface):
     def __init__(self):
@@ -24,20 +25,36 @@ class ClassicJudger(interface.JudgerInterface):
         try:
             user_id=str(random.randint(99000,99999))
             group_id=str(random.randint(99000,99999))
-            command = '/bin/nsjail -Mo --chroot /tmp/chroot --max_cpus 1 -t '+str(sub_config.timeLimit)+' --user '+user_id+' --group '+group_id+' -R /lib64 -R /lib  -R '+sub_config.programPath+' <'+sub_config.inputFile+' >'+output_file
+            os.system('cp '+sub_config.programPath+' /exe')
+            # command = '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1 -t '+str(sub_config.timeLimit/1000)+' --user '+user_id+' --group '+group_id+' -R /lib64 -R /lib  -R /exe /exe/'+sub_config.programPath.split('/')[-1]+' <'+sub_config.inputFile+' >'+output_file
+            command = '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1 -t '+str(sub_config.timeLimit/1000)+' --cgroup_mem_mount '+str(sub_config.memoryLimit)+' --user '+user_id+' --group '+group_id+' -R /lib64 -R /lib  -R /exe /exe/'+sub_config.programPath.split('/')[-1]+' <'+sub_config.inputFile+' >'+output_file
+            # print('aaaaaa:'+str(sub_config.timeLimit))
+
             child=sp.Popen(command,shell=True)
-            child.communicate() # wait until stop
+            # print('fu')
+            # child.wait(timeout=sub_config.timeLimit/1000) # wait until stop
+            # child.wait(timeout=1) # wait until stop
+            child.wait()
+            # print('ck')
             # child = sp.run(executable=self.run, stdin=sub_config.inputFiles, stdout=sp.PIPE, cwd=self.exec_path,
                         #    timeout=sub_config.timeLimit, universal_newlines=True)
             running_time += time.time()
-            stat = jr.ResultType.UNKNOWN if child.returncode == 0 else jr.ResultType.RE
-            mem = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss  # may work or not
-            if mem > sub_config.memoryLimit:
-                return jr.DetailResult(0,jr.ResultType.UNKNOWN,0,running_time,mem,0,''),output_file
+            mem = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss*1024  # may work or not
             disk = 0  # Not implemented
-            return jr.DetailResult(0,jr.ResultType.MEMLEK,0,running_time,mem,0,''),output_file
+
+            if running_time > sub_config.timeLimit/1000:
+                return jr.DetailResult(0,jr.ResultType.TLE,0,0,mem,0,''),output_file
+
+            if mem > sub_config.memoryLimit:
+                return jr.DetailResult(0,jr.ResultType.MLE,0,running_time,mem,0,''),output_file
+
+            return jr.DetailResult(0,jr.ResultType.UNKNOWN if child.returncode==0 else jr.ResultType.RE,0,running_time,mem,0,''),output_file
 
         except sp.TimeoutExpired as e:
+            child.kill()
             return jr.DetailResult(0,jr.ResultType.TLE,0,0,mem,0,''),output_file
         except sp.CalledProcessError as e:
             return jr.DetailResult(0,jr.ResultType.RE,0,0,mem,0,''),output_file
+        except Exception as e:
+            print('!!! Unknown error',e)
+            raise e

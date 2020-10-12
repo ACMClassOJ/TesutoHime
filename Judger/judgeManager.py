@@ -19,7 +19,7 @@ class JudgeManager:
               ) -> JudgerResult:
         compileResult = compiler.CompileInstance(CompilationConfig(sourceCode, language, problemConfig.CompileTimeLimit))
         if not compileResult.compiled:
-            judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [[testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg] for testcase in problemConfig.Details], problemConfig)
+            judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg) for testcase in problemConfig.Details], problemConfig)
         else:
             Details = []
             for testcase in problemConfig.Details:
@@ -95,7 +95,7 @@ class JudgeManager:
                         inputString += str(len(group.TestPoints)) + ' ' + str(group.GroupScore) + ' '
                         for testPoint in group.TestPoints:
                             inputString += str(testPoint) + ' '
-                    process = subprocess.run(dataPath + '/scorer.py', text = True, stdin = inputString, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
+                    process = subprocess.run(dataPath + '/scorer.py', stdin = inputString, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
                 except subprocess.TimeoutExpired:
                     judgeResult = JudgerResult(ResultType.SYSERR, 0, 0, 0, [[testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'Scorer timeout.\n'] for testcase in problemConfig.Details], problemConfig)
                 else:

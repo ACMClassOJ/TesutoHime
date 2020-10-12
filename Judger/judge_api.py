@@ -30,7 +30,7 @@ def judge():
     except:
         result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [[testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during fetching data."] for testcase in problemConfig.Details], problemConfig)
     msg = {'Server_Secret': Server_Secret, 'Judge_ID': Judge_ID}
-    msg['Result'] = json.loads(json.dumps(result, default=lambda o: getattr(o, '__dict__', str(o))))
+    msg['Result'] = json.dumps(result, default=lambda o: getattr(o, '__dict__', str(o)))
     #print(msg['Result'])
     while True:
         try:

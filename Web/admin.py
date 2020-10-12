@@ -1,11 +1,12 @@
-from flask import Flask, request, render_template, Blueprint
+from flask import request, render_template, Blueprint, abort
 from const import *
 from sessionManager import Login_Manager
 from userManager import User_Manager
 from problemManager import Problem_Manager
 from contestManager import Contest_Manager
 
-admin=Blueprint('admin', __name__, static_folder='static')
+admin = Blueprint('admin', __name__, static_folder='static')
+
 
 # TODO(Pioooooo): validate data
 def _validate_user_data(form):
@@ -53,6 +54,8 @@ def _validate_contest_data(form):
 
 @admin.route('/')
 def index():
+    if Login_Manager.Get_Privilege() < Privilege.ADMIN:
+        abort(404)
     return render_template('admin.html')
 
 

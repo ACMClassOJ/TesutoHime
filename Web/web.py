@@ -116,7 +116,7 @@ def Problem_Detail():
         print(request.path)
         return redirect('login?next=' + request.url)
     id = request.args.get('problem_id')
-    if id == None or id < 1000 or id > Problem_Manager.Get_Max_ID():
+    if id == None or int(id) < 1000 or int(id) > Problem_Manager.Get_Max_ID():
         return redirect('/') # No argument fed
     In_Contest = Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0
     return render_template('problem_details.html', ID = id, Title = Problem_Manager.Get_Title(id), In_Contest = In_Contest)

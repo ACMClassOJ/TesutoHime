@@ -18,7 +18,7 @@
 * [x] Judge Status Colorize & Contest_List/Homework_List Colorize
 * [ ] Problem Detail Markdown Support
 * [ ] System Integration
-* [ ] Judge Status Beautify
+* [ ] Judge Status Beautify(By Agron dropdown)
 * [ ] Discuss Board
 * [x] Contest_List/Homework_List Reversal Display
 

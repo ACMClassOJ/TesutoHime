@@ -12,6 +12,7 @@ from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
 from admin import admin
 from functools import cmp_to_key
+import json
 
 web = Flask('WEB')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -31,6 +32,11 @@ def Index2():
 @web.route('/get_username', methods=['POST'])
 def Get_Username():
     return Login_Manager.Get_FriendlyName()
+
+@web.route('/get_detail', methods=['POST'])
+def get_detail():
+    id = request.form.get('problem_id')
+    return json.dumps(Problem_Manager.Get_Problem(id))
 
 @web.route('/login', methods=['GET', 'POST'])
 def Login():
@@ -110,11 +116,10 @@ def Problem_Detail():
         print(request.path)
         return redirect('login?next=' + request.url)
     id = request.args.get('problem_id')
-    if id == None:
+    if id == None or id < 1000 or id > Problem_Manager.Get_Max_ID():
         return redirect('/') # No argument fed
-    Detail = Problem_Manager.Get_Problem(id)
     In_Contest = Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0
-    return render_template('problem_details.html', Detial = Detail, In_Contest = In_Contest)
+    return render_template('problem_details.html', ID = id, Title = Problem_Manager.Get_Title(id), In_Contest = In_Contest)
 
 @web.route('/submit', methods=['GET', 'POST'])
 def Submit_Problem():

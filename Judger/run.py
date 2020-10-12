@@ -11,8 +11,8 @@ global judge_api
 t1 = threading.Thread(target=RunFlask, args=(judge_api.run, 5000,))
 global isBusy_api
 t2 = threading.Thread(target=RunFlask, args=(isBusy_api.run, 5001,))
-'''global HeartBeat
-t3 = threading.Thread(target=HeartBeat.sendHeartBeat)'''
+global HeartBeat
+t3 = threading.Thread(target=HeartBeat.sendHeartBeat)
 t1.start()
 t2.start()
-#t3.start()
+t3.start()

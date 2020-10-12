@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <seccomp.h>
-class zZiqGVtEYe {
+class vShamQUGNs {
 public:
-    zZiqGVtEYe() {
+    vShamQUGNs() {
         scmp_filter_ctx ctx;
         ctx = seccomp_init(SCMP_ACT_KILL);
         int syscalls_whitelist[] = {SCMP_SYS(read), SCMP_SYS(fstat),
@@ -20,7 +20,15 @@ public:
             seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscalls_whitelist[i], 0);
         seccomp_load(ctx);        
     }
-} _zZiqGVtEYe;             
+} _vShamQUGNs;             
 #include <iostream>
 int a, b;
-int main(){std::cin >> a >> b;std::cout << a + b << std::endl;return 0;}
+int main()
+{
+    int arr[3];
+    std::cin >> a >> arr[0];
+    std::cout<<arr[121212121];
+    std::cout << arr[1] + b << std::endl;
+    return 1;
+}
+    

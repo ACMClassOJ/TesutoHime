@@ -19,7 +19,7 @@ class JudgeManager:
               ) -> JudgerResult:
         compileResult = compiler.CompileInstance(CompilationConfig(sourceCode, language, problemConfig.CompileTimeLimit))
         if not compileResult.compiled:
-            judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [[testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg] for testcase in problemConfig.Details], problemConfig)
+            judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg) for testcase in problemConfig.Details], problemConfig)
         else:
             Details = []
             for testcase in problemConfig.Details:
@@ -52,7 +52,7 @@ class JudgeManager:
                                 testPointDetail.score, testPointDetail.result = 1.0, ResultType.AC
                             else:
                                 testPointDetail.score, testPointDetail.result = 0.0, ResultType.WA
-                                testPointDetail.message += runDiff.stdout.decode() + runDiff.stderr.decode()
+                                #testPointDetail.message += runDiff.stdout.decode() + runDiff.stderr.decode()
                     else:
                         testPointDetail.score = 0.
                         if testPointDetail.result == ResultType.TLE :
@@ -95,13 +95,16 @@ class JudgeManager:
                         inputString += str(len(group.TestPoints)) + ' ' + str(group.GroupScore) + ' '
                         for testPoint in group.TestPoints:
                             inputString += str(testPoint) + ' '
-                    process = subprocess.run(dataPath + '/scorer.py', text = True, stdin = inputString, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
+                    process = subprocess.run(dataPath + '/scorer.py', stdin = inputString, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
                 except subprocess.TimeoutExpired:
                     judgeResult = JudgerResult(ResultType.SYSERR, 0, 0, 0, [[testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'Scorer timeout.\n'] for testcase in problemConfig.Details], problemConfig)
                 else:
                     score = process.stdout.decode()
                     print(process.stderr.decode())
                     judgeResult = JudgerResult(status, score, totalTime, maxMem, Details, problemConfig)
+        #print("One",judgeResult.Status,judgeResult.TimeUsed,judgeResult.MemUsed)
+        #for i in judgeResult.Details:
+        #    print(i.ID,i.result,i.score,i.time,i.memory,i.disk,i.message)
         return judgeResult
 
 

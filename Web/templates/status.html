@@ -3,10 +3,10 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Status</title>
+        <title>评测状态</title>
         <link rel="shortcut icon" href="favicon.ico">
         <link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-        <link href="{{ url_for('static', filename = 'css/style.css')}}" rel="stylesheet">
+        <link href="../static/css/style.css" rel="stylesheet">
     </head>
     
     <body style="background-color: rgba(193,220,248,0.1);">
@@ -45,8 +45,10 @@
                             <option value = "0">C++</option>
                             <option value = "1">Git</option>
                         </select>
-                        <input type="submit" class="btn btn-primary btn-right" value="&nbsp&nbsp&nbsp搜索&nbsp&nbsp&nbsp">  
-                    </form>
+                        <div class="input-group-append">
+                            <button class="btn btn-primary">搜索</button>  
+                        </div>
+                        </form>
                 </div>
                 <div class="bootstrap-data-table-panel">
                     <div class="table-responsive">

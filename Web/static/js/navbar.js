@@ -18,5 +18,5 @@ document.getElementById('navbar_global').innerHTML = '\
 </ul>';
 
 $(function(){
-	$("#footer").val("my footer");
+	$("#footer").text("my footer");
 });

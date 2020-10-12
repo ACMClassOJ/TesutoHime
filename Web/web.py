@@ -230,7 +230,11 @@ def Status():
 
     Page = request.args.get('page')
     Arg_Submitter = request.args.get('submitter')
+    if Arg_Submitter == '':
+        Arg_Submitter = None
     Arg_Problem_ID = request.args.get('problem_id')
+    if Arg_Problem_ID == '':
+        Arg_Problem_ID = None
     Arg_Status = request.args.get('status')
     if Arg_Status == '-1':
         Arg_Status = None

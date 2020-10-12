@@ -7,7 +7,7 @@
 		<title>{{ID}}. {{Title}}</title>
 		<link rel="shortcut icon" href="favicon.ico">
 		<link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-        <link href="{{ url_for('static', filename = 'css/style.css')}}" rel="stylesheet">
+		<link href="{{ url_for('static', filename = 'css/style.css')}}" rel="stylesheet">
 	</head>
 	
 	<body style="background-color: rgba(193,220,248,0.1);">
@@ -21,19 +21,19 @@
 		<div class="container m-auto">
 			<div class="card card-body">
 				<div class="page-header">
-                    <h1 class="text-center"><span id="problem_id">{{ ID }}</span><span>. {{ Title }}</span></h1>
+					<h1 class="text-center"><span id="problem_id">{{ ID }}</span><span>. {{ Title }}</span></h1>
 				</div>
 				<div id="content">
 					<h4>题目描述</h4>
 					<p id="problem_details_description"></p>
 					<h3>输入格式</h3>
-					<code id="problem_details_input"></code>
+					<p id="problem_details_input"></p>
 					<h3>输出格式</h3>
-					<code id="problem_details_output"></code>
+					<p id="problem_details_output"></p>
 					<h3>样例输入</h3>
-					<code id="problem_details_example_input"></code>
+					<p id="problem_details_example_input"></p>
 					<h3>样例输出</h3>
-					<code id="problem_details_example_output"></code>
+					<p id="problem_details_example_output"></p>
 					<h3>数据范围</h3>
 					<p id="problem_details_data_range"></p>
 					<p id="md"></p>
@@ -57,17 +57,19 @@
 		</div>
 	</body>	
 
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/marked.min.js"></script>
-<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
-<script type="text/x-mathjax-config">
-MathJax.Hub.Config({
-  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
-});
-</script>
-<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-<script src="{{ url_for('static', filename = 'js/problem_details.js')}}"></script>
+	<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
+	<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
+	<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
+	<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/marked.min.js"></script>
+	<script>
+		MathJax = {
+			tex: {
+				inlineMath: [['$', '$'], ['\\(', '\\)']]
+			}
+		};
+	</script>
+	<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
+	<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
+	<script src="{{ url_for('static', filename = 'js/problem_details.js')}}"></script>
 </html>

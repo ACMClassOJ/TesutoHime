@@ -59,11 +59,11 @@ def index():
 @admin.route('/user', methods=['post'])
 def user_manager():
     form = request.json
-    # if Login_Manager.Get_Privilege() < Privilege.SUPER:
-    #     return ReturnCode.ERR_PERMISSION_DENIED
-    err = _validate_user_data(form)
-    if err is not None:
-        return err
+    if Login_Manager.Get_Privilege() < Privilege.SUPER:
+        return ReturnCode.ERR_PERMISSION_DENIED
+    # err = _validate_user_data(form)
+    # if err is not None:
+    #     return err
     op = int(form[String.TYPE])
     if op == 0:
         User_Manager.Add_User(form[String.USERNAME], int(form[String.STUDENT_ID]), form[String.FRIENDLY_NAME],
@@ -83,11 +83,11 @@ def user_manager():
 @admin.route('/problem', methods=['post'])
 def problem_manager():
     form = request.json
-    # if Login_Manager.Get_Privilege() < Privilege.ADMIN:
-    #     return ReturnCode.ERR_PERMISSION_DENIED
-    err = _validate_problem_data(form)
-    if err is not None:
-        return err
+    if Login_Manager.Get_Privilege() < Privilege.ADMIN:
+        return ReturnCode.ERR_PERMISSION_DENIED
+    # err = _validate_problem_data(form)
+    # if err is not None:
+    #     return err
     op = int(form[String.TYPE])
     if op == 0:
         Problem_Manager.Add_Problem(form[String.TITLE], form[String.DESCRIPTION], form[String.INPUT],
@@ -110,11 +110,11 @@ def problem_manager():
 @admin.route('/contest', methods=['post'])
 def contest_manager():
     form = request.json
-    # if Login_Manager.Get_Privilege() < Privilege.ADMIN:
-    #     return ReturnCode.ERR_PERMISSION_DENIED
-    err = _validate_contest_data(form)
-    if err is not None:
-        return err
+    if Login_Manager.Get_Privilege() < Privilege.ADMIN:
+        return ReturnCode.ERR_PERMISSION_DENIED
+    # err = _validate_contest_data(form)
+    # if err is not None:
+    #     return err
     op = int(form[String.TYPE])
     print(form)
     if op == 0:

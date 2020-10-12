@@ -453,4 +453,4 @@ def Homework():
                                Data = Data, len = len(Players), len2 = len(Problems))
 @web.route('/about')
 def About():
-    return 'Hua Q~'
+    return render_template('about.html')

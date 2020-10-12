@@ -23,7 +23,7 @@
                     <h1 class="text-center"> 评测状态 </h1>
                 </div>
                 <div>
-                    <form class="form-group input-group" method="post" id="status_serach">
+                    <form class="form-group input-group" method="get" id="status_serach">
                         <input class="form-control input-group" type="text" name="submitter" id="submitter" required="required" placeholder="用户名">
                         <input class="form-control input-group" type="number" name="problem_id" id="problem_id" required="required" placeholder="题目编号">
                         <select class="form-control input-group" name="status" id="status" style="height: 43px">
@@ -67,8 +67,32 @@
                                 <tr>
                                     <td>{{cur['ID']}}</td>
                                     <td>{{cur['Friendly_Name']}}</td>
-                                    <td><a href="/problem?problem_id={{cur['Problem_ID']}}">{{cur['Problem_ID']}}.{{cur['Problem_Title']}}</a></td>
-                                    <td>{{cur['Status']}}</td>
+                                    <td><a href="/problem?problem_id={{cur['Problem_ID']}}">{{cur['Problem_ID']}}. {{cur['Problem_Title']}}</a></td>
+                                    <td>
+                                        {% if cur['Status'] == '0' %}
+                                            <span class="text-gray">Pending</span>
+                                        {% elif cur['Status'] == '1' %}
+                                            <span class="text-blue">Running & Judging</span>
+                                        {% elif cur['Status'] == '2' %}
+                                            <span class="text-green">Accepted</span>
+                                        {% elif cur['Status'] == '3' %}
+                                            <span class="text-red">Wrong Answer</span>
+                                        {% elif cur['Status'] == '5' %}
+                                            <span class="text-red">Runtime Error</span>
+                                        {% elif cur['Status'] == '4' %}
+                                            <span class="text-cyan">Compile Error</span>
+                                        {% elif cur['Status'] == '6' %}
+                                            <span class="text-orange">Time Limit Exceed</span>
+                                        {% elif cur['Status'] == '7' %}
+                                            <span class="text-orange">Memory Limit Exceed</span>
+                                        {% elif cur['Status'] == '10' %}
+                                            <span class="text-purple">Disk Limit Exceed</span>
+                                        {% elif cur['Status'] == '8' %}
+                                            <span class="text-purple">Memory Leak</span>
+                                        {% elif cur['Status'] == '9' %}
+                                            <span class="text-gray-dark">System Error</span>
+                                        {% endif %}
+                                    </td>
                                     <td>{{cur['Time_Used']}}ms</td>
                                     <td>{{cur['Mem_Used']}}KiB</td>
                                     {% if cur['Visible'] %}
@@ -105,15 +129,4 @@
     <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
     <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 </html>
-build a search box
-
-{% if Submitter %}
-    {{Submitter}}<br>
-    hold it with js, and build it into bottom link<br>
-{% endif %}
-
-{% if Problem_ID %}
-    {{Problem_ID}}<br>
-    hold it with js, and build it into bottom link<br>
-{% endif %}
 

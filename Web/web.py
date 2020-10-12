@@ -219,9 +219,8 @@ def Discuss(): # todo: Debug discuss
             return redirect('/discuss?problem_id=' + Problem_ID)
 
 def fix_Status_Cur(cur):
-    ls = ['Pending', 'Running', 'AC', 'WA', 'CE', 'RE', 'TLE', 'MLE', 'MLK', 'SE', 'DLE']
-    cur['Status'] = ls[int(cur['Status'])]
-    cur['Lang'] = 'C++' if cur['Lang'] == 0 else 'Git'
+    cur['Status'] = str(cur['Status'])
+    cur['Lang'] = 'C++' if int(cur['Lang']) == 0 else 'Git'
     return cur
 
 @web.route('/status')
@@ -420,7 +419,7 @@ def Homework():
                 if Submits != None:
                     for Submit in Submits:
                         Try_Time += 1
-                        if Submit[1] == 'AC':
+                        if int(Submit[1]) == 2:
                             isAC = True
                             break
                 if isAC:

@@ -2,7 +2,7 @@ $(function(){
 	$.ajax({
         type: "POST",
         dataType: "text",
-        url: "/get_username",
+        url: "/api/get_username",
         success: function (response_text)
         {
 			if(response_text == "Nobody")

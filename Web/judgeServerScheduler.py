@@ -27,9 +27,9 @@ class JudgeServerScheduler:
         data['Lang'] = 'C++' if Record[3] == 'cpp' else 'git'
         data['Code'] = Record[2]
         for i in range(0, 3):
-            re = requests.post(Server[0], data = data) # Fixme: check self-signed SSL
+            re = requests.post(Server[0], data = data).content.decode() # Fixme: check self-signed SSL
             if re == '0':
-                Judge_Manager.Update_Status(int(Record[0]), 'JU')
+                Judge_Manager.Update_Status(int(Record[0]), 1)
                 JudgeServer_Manager.Flush_Busy(Server[1], True)
                 break
         return

@@ -59,7 +59,7 @@ def Ping(url: str) -> bool:
     url = url + '/ping'
     for i in range(0, 3):
         try:
-            ret = requests.get(url) # Fixme: trust self-signed SSL
+            ret = requests.get(url).content.decode() # Fixme: trust self-signed SSL
             if ret == '0':
                 return True
         except:

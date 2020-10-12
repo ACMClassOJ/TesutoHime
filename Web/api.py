@@ -1,10 +1,9 @@
-from flask import Flask, request
+from flask import Flask, request, Blueprint
 from judgeServerManager import JudgeServer_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
 from utils import *
 
-
-api = Flask('API')
+api = Blueprint('api', __name__, static_folder='static')
 
 @api.route('/')
 def Hello():

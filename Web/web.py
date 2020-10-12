@@ -11,11 +11,13 @@ from judgeServerScheduler import JudgeServer_Scheduler
 from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
 from admin import admin
+from api import api
 from functools import cmp_to_key
 import json
 
 web = Flask('WEB')
 web.register_blueprint(admin, url_prefix='/admin')
+web.register_blueprint(api, url_prefix='/api')
 
 @web.errorhandler(500)
 def Error_500():
@@ -29,14 +31,26 @@ def Index():
 def Index2():
     return redirect('/')
 
-@web.route('/get_username', methods=['POST'])
+@web.route('/api/get_username', methods=['POST'])
 def Get_Username():
     return Login_Manager.Get_FriendlyName()
 
-@web.route('/get_detail', methods=['POST'])
+@web.route('/api/get_detail', methods=['POST'])
 def get_detail():
     id = request.form.get('problem_id')
     return json.dumps(Problem_Manager.Get_Problem(id))
+
+@web.route('/api/join', methods=['POST'])
+def Join_Contest():
+    if not Login_Manager.Check_User_Status():
+        return '-1'
+    arg = request.form.get('contest_id')
+    if arg == None:
+        return '-1'
+    username = Login_Manager.Get_Username()
+    if not Contest_Manager.Check_Player_In_Contest(arg, username):
+        Contest_Manager.Add_Player_To_Contest(arg, username)
+    return '0'
 
 @web.route('/login', methods=['GET', 'POST'])
 def Login():
@@ -310,18 +324,6 @@ def Code(): # todo: View Judge Detail
         return render_template('code.html', Blocked = True)
     else:
         return 'Hua Q'
-
-@web.route('/join', methods=['POST'])
-def Join_Contest():
-    if not Login_Manager.Check_User_Status():
-        return '-1'
-    arg = request.form.get('contest_id')
-    if arg == None:
-        return '-1'
-    username = Login_Manager.Get_Username()
-    if not Contest_Manager.Check_Player_In_Contest(arg, username):
-        Contest_Manager.Add_Player_To_Contest(arg, username)
-    return '0'
 
 @web.route('/contest')
 def Contest():

@@ -49,26 +49,26 @@ class ProblemManager:
         ret['Flag_Count'] = int(data[9])
         return ret
 
-    def Add_Count(self, ID:int):
+    def Lock_Problem(self, ID:int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Problem SET Flag_Count = Flag_Count + 1 WHERE ID = %s", (str(ID)))
+            cursor.execute("UPDATE Problem SET Flag_Count = 1 WHERE ID = %s", (str(ID)))
             db.commit()
         except:
             db.rollback()
-            sys.stderr.write("SQL Error in ProblemManager: Add_Count\n")
+            sys.stderr.write("SQL Error in ProblemManager: Lock_Problem\n")
         db.close()
 
-    def Sub_Count(self, ID:int):
+    def Unlock_Problem(self, ID:int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Problem SET Flag_Count = Flag_Count - 1 WHERE ID = %s", (str(ID)))
+            cursor.execute("UPDATE Problem SET Flag_Count = 0 WHERE ID = %s", (str(ID)))
             db.commit()
         except:
             db.rollback()
-            sys.stderr.write("SQL Error in ProblemManager: Sub_Count\n")
+            sys.stderr.write("SQL Error in ProblemManager: Unlock_Problem\n")
         db.close()
 
     def Get_Title(self, ID:int) -> str:

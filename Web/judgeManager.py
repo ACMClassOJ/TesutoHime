@@ -55,7 +55,7 @@ class JudgeManager:
     def Query_Judge(self, ID: int)->dict: # for details
         db = DB_Connect()
         cur = db.cursor()
-        cursor.execute("SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used FROM Judge WHERE ID = %s", (str(ID)))
+        cur.execute("SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used, Share FROM Judge WHERE ID = %s", (str(ID)))
         data = cursor.fetchone()
         db.close()
         if data == None:
@@ -63,10 +63,12 @@ class JudgeManager:
         ret = {}
         ret['ID'] = int(data[0])
         ret['User'] = str(data[1])
-        ret['Time'] = int(data[3])
-        ret['Detail'] = str(data[2])
-        ret['Time_Used'] = int(data[4])
-        ret['Mem_Used'] = int(data[5])
+        ret['Problem_ID'] = int(data[2])
+        ret['Detail'] = str(data[3])
+        ret['Time'] = int(data[4])
+        ret['Time_Used'] = int(data[5])
+        ret['Mem_Used'] = int(data[6])
+        ret['Share'] = bool(data[7])
         return ret
 
     def Max_ID(self):
@@ -80,7 +82,7 @@ class JudgeManager:
     def Judge_In_Range(self, startID: int, endID: int): # [{}], for page display.
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE ID >= %s and ID <= %s ORDER BY ID desc", (str(startID), str(endID)))
+        cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language, Share FROM Judge WHERE ID >= %s and ID <= %s ORDER BY ID desc", (str(startID), str(endID)))
         data = cursor.fetchall()
         ret = []
         for d in data:
@@ -93,6 +95,7 @@ class JudgeManager:
             cur['Mem_Used'] = int(d[5])
             cur['Status'] = str(d[6])
             cur['Lang'] = str(d[7])
+            cur['Share'] = bool(d[8])
             ret.append(cur)
         db.close()
         return ret
@@ -108,7 +111,7 @@ class JudgeManager:
     def Search_Judge(self, Arg_Submitter, Arg_Problem_ID, Arg_Status, Arg_Lang, Arg_Param = None):
         db = DB_Connect()
         cursor = db.cursor()
-        com = 'SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE '
+        com = 'SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language, Share FROM Judge WHERE '
         pre = []
 
         if Arg_Problem_ID != None:

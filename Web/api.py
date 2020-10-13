@@ -10,7 +10,7 @@ api = Blueprint('api', __name__, static_folder='static')
 def Hello():
     return 'This is API For Judge Server, DO NOT VISIT THIS PAGE IN YOUR WEB BROWSER!'
 
-@api.route('/heartBeat')
+@api.route('/heartBeat', methods=['POST'])
 def heartBeat():
     Secret = request.form.get("Server_Secret")
     if Secret == None:
@@ -20,7 +20,7 @@ def heartBeat():
     JudgeServer_Manager.Flush_Heartbeat(Secret, UnixNano())
     return '0'
 
-@api.route('/pushResult')
+@api.route('/pushResult', methods=['POST'])
 def pushResult():
     Secret = request.form.get("Server_Secret")
     if Secret == None:

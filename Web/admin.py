@@ -4,6 +4,7 @@ from sessionManager import Login_Manager
 from userManager import User_Manager
 from problemManager import Problem_Manager
 from contestManager import Contest_Manager
+from requests import post
 
 admin = Blueprint('admin', __name__, static_folder='static')
 
@@ -61,9 +62,9 @@ def index():
 
 @admin.route('/user', methods=['post'])
 def user_manager():
-    form = request.json
     if Login_Manager.Get_Privilege() < Privilege.SUPER:
-        return ReturnCode.ERR_PERMISSION_DENIED
+        abort(404)
+    form = request.json
     # err = _validate_user_data(form)
     # if err is not None:
     #     return err
@@ -85,9 +86,9 @@ def user_manager():
 
 @admin.route('/problem', methods=['post'])
 def problem_manager():
-    form = request.json
     if Login_Manager.Get_Privilege() < Privilege.ADMIN:
-        return ReturnCode.ERR_PERMISSION_DENIED
+        abort(404)
+    form = request.json
     # err = _validate_problem_data(form)
     # if err is not None:
     #     return err
@@ -112,14 +113,13 @@ def problem_manager():
 
 @admin.route('/contest', methods=['post'])
 def contest_manager():
-    form = request.json
     if Login_Manager.Get_Privilege() < Privilege.ADMIN:
-        return ReturnCode.ERR_PERMISSION_DENIED
+        abort(404)
+    form = request.json
     # err = _validate_contest_data(form)
     # if err is not None:
     #     return err
     op = int(form[String.TYPE])
-    print(form)
     if op == 0:
         Contest_Manager.Create_Contest(form[String.CONTEST_NAME], int(form[String.START_TIME]),
                                        int(form[String.END_TIME]),
@@ -153,5 +153,13 @@ def contest_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-if __name__ == '__main__':
-    admin.run(host="0.0.0.0", port=8000)
+@admin.route('/data', methods=['POST'])
+def data_upload():
+    if Login_Manager.Get_Privilege() < Privilege.ADMIN:
+        abort(404)
+    if 'file' in request.files:
+        f = request.files['file']
+        r = post('',
+                 files={'file': (f.filename, f)})
+        return {'e': r.content}
+    return {'e': -1}

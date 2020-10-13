@@ -54,8 +54,8 @@ class JudgeManager:
 
     def Query_Judge(self, ID: int)->dict: # for details
         db = DB_Connect()
-        cur = db.cursor()
-        cur.execute("SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used, Share FROM Judge WHERE ID = %s", (str(ID)))
+        cursor = db.cursor()
+        cursor.execute("SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used, Share, Status, Language, Code  FROM Judge WHERE ID = %s", (str(ID)))
         data = cursor.fetchone()
         db.close()
         if data == None:
@@ -69,6 +69,9 @@ class JudgeManager:
         ret['Time_Used'] = int(data[5])
         ret['Mem_Used'] = int(data[6])
         ret['Share'] = bool(data[7])
+        ret['Status'] = str(data[8])
+        ret['Lang'] = int(data[9])
+        ret['Code'] = str(data[10])
         return ret
 
     def Max_ID(self):

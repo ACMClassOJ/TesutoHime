@@ -318,16 +318,21 @@ def Status():
 def Code(): # todo: View Judge Detail
     if not Login_Manager.Check_User_Status(): # not login
         return redirect('login?next=' + request.url)
-    if request.args.get('run_id') == None: # bad argument
-        return redirect('/')
-    run_id = int(request.args.get('run_id'))
-    judge = Judge_Manager.Search_Judge(run_id)
-    if judge == {}: # bad argument
-        return redirect('/')
-    if Login_Manager.Get_Username() != judge['User']:
-        return render_template('code.html', Blocked = True)
+    if not str(request.args.get('submit_id')).isdigit(): # bad argument
+        abort(404)
+    run_id = int(request.args.get('submit_id'))
+    if run_id < 0 or run_id > Judge_Manager.Max_ID():
+        abort(404)
+    Detail = Judge_Manager.Query_Judge(run_id)
+    if Detail['User'] != Login_Manager.Get_Username() and Login_Manager.Get_Privilege() != 2 and (
+            not Detail['Share'] or Problem_Manager.In_Contest(Detail['Problem_ID'])):
+        return render_template('judge_detail.html', Blocked = True)
     else:
-        return 'Hua Q'
+        Detail['Friendly_Name'] = User_Manager.Get_Friendly_Name(Detail['User'])
+        Detail['Problem_Title'] = Problem_Manager.Get_Title(Detail['Problem_ID'])
+        Detail['Lang'] = 'C++' if Detail['Lang'] == 0 else 'Git'
+        Detail['Time'] = Readable_Time(int(Detail['Time']))
+        return render_template('judge_detail.html', Detail = Detail)
 
 @web.route('/contest')
 def Contest():

@@ -20,7 +20,7 @@
         <div class="container">
             <div class="card card-body">
                 <div class="page-header">
-                    <h1 class="text-center">评测详情 {{cur['ID']}}</h1>
+                    <h1 class="text-center">评测详情 {{Detail['ID']}}</h1>
                 </div>
                 <div class="bootstrap-data-table-panel">
                     <div class="table-responsive">
@@ -38,55 +38,79 @@
                                 </tr>
                             </thead>
                             <tr>
-                                <td>{{cur['ID']}}</td>
-                                <td>{{cur['Friendly_Name']}}</td>
-                                <td><a href="/problem?problem_id={{cur['Problem_ID']}}">{{cur['Problem_ID']}}. {{cur['Problem_Title']}}</a></td>
+                                <td>{{Detail['ID']}}</td>
+                                <td>{{Detail['Friendly_Name']}}</td>
+                                <td><a href="/problem?problem_id={{Detail['Problem_ID']}}">{{Detail['Problem_ID']}}. {{Detail['Problem_Title']}}</a></td>
                                 <td>
-                                    {% if cur['Status'] == '0' %}
+                                    {% if Detail['Status'] == '0' %}
                                         <span class="text-gray">Pending</span>
-                                    {% elif cur['Status'] == '1' %}
+                                    {% elif Detail['Status'] == '1' %}
                                         <span class="text-blue">Running & Judging</span>
-                                    {% elif cur['Status'] == '2' %}
+                                    {% elif Detail['Status'] == '2' %}
                                         <span class="text-green">Accepted</span>
-                                    {% elif cur['Status'] == '3' %}
+                                    {% elif Detail['Status'] == '3' %}
                                         <span class="text-red">Wrong Answer</span>
-                                    {% elif cur['Status'] == '5' %}
+                                    {% elif Detail['Status'] == '5' %}
                                         <span class="text-red">Runtime Error</span>
-                                    {% elif cur['Status'] == '4' %}
+                                    {% elif Detail['Status'] == '4' %}
                                         <span class="text-cyan">Compile Error</span>
-                                    {% elif cur['Status'] == '6' %}
+                                    {% elif Detail['Status'] == '6' %}
                                         <span class="text-orange">Time Limit Exceed</span>
-                                    {% elif cur['Status'] == '7' %}
+                                    {% elif Detail['Status'] == '7' %}
                                         <span class="text-orange">Memory Limit Exceed</span>
-                                    {% elif cur['Status'] == '10' %}
+                                    {% elif Detail['Status'] == '10' %}
                                         <span class="text-purple">Disk Limit Exceed</span>
-                                    {% elif cur['Status'] == '8' %}
+                                    {% elif Detail['Status'] == '8' %}
                                         <span class="text-purple">Memory Leak</span>
-                                    {% elif cur['Status'] == '9' %}
+                                    {% elif Detail['Status'] == '9' %}
                                         <span class="text-gray-dark">System Error</span>
                                     {% endif %}
                                 </td>
-                                <td>{{cur['Time_Used']}}ms</td>
-                                <td>{{cur['Mem_Used']}}KiB</td>
-                                {% if cur['Visible'] %}
-                                <td><a href="/code?submit_id={{cur['ID']}}">{{cur['Lang']}}</a></td>
+                                <td>{{Detail['Time_Used']}}ms</td>
+                                <td>{{Detail['Mem_Used']}}KiB</td>
+                                {% if Detail['Visible'] %}
+                                <td><a href="/code?submit_id={{Detail['ID']}}">{{Detail['Lang']}}</a></td>
                                 {%else%}
-                                <td>{{cur['Lang']}}</td>
+                                <td>{{Detail['Lang']}}</td>
                                 {%endif%}
-                                <td>{{cur['Time']}}</td>
+                                <td>{{Detail['Time']}}</td>
                             </tr>
                         </table>
                     </div>
                 </div>
                 <hr>
-                <div>
-                    <h5>评测状态详情：</h5>
-                    <code> {{ 在这里显示评测状态详情 }}</code>
-                </div>
                 <br>
                 <div>
                     <h5>代码：</h5>
-                    <code> {{ 在这里显示代码 }}</code>
+                    <code> {{ Detail['Code'] }}</code>
+                </div>
+                <div>
+                    <h5>测试点详情：</h5>
+                    <code> {{ Detail }}</code>
+                    <div class="bootstrap-data-table-panel">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <tr><th>测试组</th></tr>
+                                <tr><td>
+                                    <table class="table table-striped table-bordered table-hover">
+                                        <tr><th>测试组1：分数 0</th><tr>
+                                        <tr>
+                                            <td>
+                                                测试点1：Wrong Answer<br>
+                                                Detial 1
+                                            </td>
+                                        <tr>
+                                        <tr>
+                                            <td>
+                                                测试点2：Wrong Answer<br>
+                                                Detial 2
+                                            </td>
+                                        <tr>
+                                    </table>
+                                </td></tr>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
             <footer>

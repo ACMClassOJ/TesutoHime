@@ -17,4 +17,4 @@ class HeartBeat:
                     requests.post(Web_Server + '/heartBeat', data = data)
                 except:
                     pass
-                sleep(Heart_Beat_Period / 1000)
+            sleep(Heart_Beat_Period / 1000)

@@ -38,6 +38,7 @@ def Get_Username():
 @web.route('/api/get_detail', methods=['POST'])
 def get_detail():
     id = request.form.get('problem_id')
+    print(json.dumps(Problem_Manager.Get_Problem(id)))
     return json.dumps(Problem_Manager.Get_Problem(id))
 
 @web.route('/api/join', methods=['POST'])

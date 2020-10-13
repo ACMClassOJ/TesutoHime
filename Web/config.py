@@ -12,6 +12,7 @@ class WebConfig:
 
 class JudgeConfig:
     Judge_Each_Page = 15
+    Max_Duration = 120
 
 class ProblemConfig:
     Max_Code_Length = 16384

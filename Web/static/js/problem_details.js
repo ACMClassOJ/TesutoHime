@@ -15,7 +15,8 @@ $(function(){
 			$("#problem_details_example_input").html(marked(main_json['Example_Input']));
 			$("#problem_details_example_output").html(marked(main_json['Example_Output']));
 			$("#problem_details_data_range").html(marked(main_json['Data_Range']));
-			MathJax.typeset();		
+			// MathJax.typeset();		
+			renderMathInElement(document.body);
 		},
 	});
 });

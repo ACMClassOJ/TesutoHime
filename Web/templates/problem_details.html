@@ -61,14 +61,16 @@
 	<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
 	<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
 	<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/marked.min.js"></script>
-	<script>
+	<!-- <script>
 		MathJax = {
 			tex: {
 				inlineMath: [['$', '$'], ['\\(', '\\)']]
 			}
 		};
 	</script>
-	<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script> -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+	<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
 	<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
 	<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 	<script src="{{ url_for('static', filename = 'js/problem_details.js')}}"></script>

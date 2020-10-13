@@ -163,4 +163,13 @@ class JudgeManager:
             sys.stderr.write("SQL Error in JudgeManager: Erase_Judge\n")
         return
 
+    def Get_Pending_Judge(self):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT ID, Problem_ID, Code, Language FROM Judge WHERE Status = 0")
+        ls = cursor.fetchall()
+        if ls == None or len(ls) == 0:
+            return None
+        return ls[0]
+
 Judge_Manager = JudgeManager()

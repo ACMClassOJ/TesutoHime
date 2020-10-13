@@ -92,10 +92,10 @@ class JudgeServerManager:
             return None
         st = random.randint(0, len(ret) - 1)
         for i in range(st, st + len(ret)):
-            if Ping(ret[i % st][0]):
-                return ret[i % st]
+            if Ping(ret[i % len(ret)][0]):
+                return ret[i % len(ret)]
             else:
-                self.Set_Offline(ret[i % st][0])
+                self.Set_Offline(ret[i % len(ret)][0])
         return None
 
     def Get_Failure_Task(self):

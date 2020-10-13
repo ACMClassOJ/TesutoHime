@@ -69,6 +69,7 @@ class JudgeServerScheduler:
 
         JudgeServer_Manager.Flush_Busy(Secret, False)
         x = json.loads(Result)
+        print(x[0])
         Judge_Manager.Update_After_Judge(Judge_ID, int(x[0]), x[1], Result, x[3], x[2])
         JudgeServer_Manager.Flush_Busy(Secret, False)
         self.Check_Queue()

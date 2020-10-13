@@ -18,6 +18,7 @@ def heartBeat():
     if not JudgeServer_Manager.Check_Secret(Secret):
         return '-1'
     JudgeServer_Manager.Flush_Heartbeat(Secret, UnixNano())
+    JudgeServer_Scheduler.Check_Queue()
     return '0'
 
 @api.route('/pushResult', methods=['POST'])
@@ -26,7 +27,9 @@ def pushResult():
     if Secret == None:
         return '-1'
     Judge_ID = request.form.get("Judge_ID")
-    Result = json.loads(request.form.get("Result"))
+    print(Judge_ID)
+    Result = request.form.get("Result")
+    print('Arg = ', Judge_ID, 'Result = ', Result)
     JudgeServer_Scheduler.Receive_Judge_Result(Secret, Judge_ID, Result)
     return '0'
 

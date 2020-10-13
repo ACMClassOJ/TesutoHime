@@ -44,8 +44,9 @@ class JudgeManager:
     def Update_After_Judge(self, ID: int, NewStatus: int, Score: int, Detail: str, Time_Used: str, Mem_Used: str):
         db = DB_Connect()
         cursor = db.cursor()
+        print("UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s" % (str(NewStatus), str(Score), Detail, Time_Used, Mem_Used, str(ID)))
         try:
-            cursor.execute("UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s", (str(NewStatus), str(ID), str(Score), Detail, Time_Used, Mem_Used))
+            cursor.execute("UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s", (str(NewStatus), str(Score), Detail, Time_Used, Mem_Used, str(ID)))
             db.commit()
         except:
             db.rollback()

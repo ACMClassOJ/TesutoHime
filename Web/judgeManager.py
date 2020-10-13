@@ -15,15 +15,16 @@ class JudgeManager:
     * Mem_Used: INT // Byte
     * Detail: MEDIUMTEXT // may exceed 64 KB
     '''
-    def Add_Judge(self, Code: str, User: str, Problem_ID: int, Language: int, Time: int):
+    def Add_Judge(self, Code: str, User: str, Problem_ID: int, Language: int, Time: int, Share:bool):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status) VALUES(%s, %s, %s, %s, %s, '0')",
-                           (Code, User, str(Problem_ID), str(Language), str(Time)))
+            cursor.execute("INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status, Share) VALUES(%s, %s, %s, %s, %s, '0', %s)",
+                           (Code, User, str(Problem_ID), str(Language), str(Time), int(Share)))
             db.commit()
         except:
             db.rollback()
+            print("INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status) VALUES(%s, %s, %s, %s, %s, '0')" % (Code, User, str(Problem_ID), str(Language), str(Time)))
             sys.stderr.write("SQL Error in JudgeManager: Add_Judge\n")
         db.close()
         return

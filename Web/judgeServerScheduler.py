@@ -38,10 +38,10 @@ class JudgeServerScheduler:
                 break
         return
 
-    def Start_Judge(self, Problem_ID, User, Code, Lang):
+    def Start_Judge(self, Problem_ID, User, Code, Lang, Share):
         self.Check_System_Error()
 
-        Judge_Manager.Add_Judge(Code, User, Problem_ID, Lang, UnixNano())
+        Judge_Manager.Add_Judge(Code, User, Problem_ID, Lang, UnixNano(), Share)
         self.Check_Queue()
         return
 

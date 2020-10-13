@@ -88,7 +88,7 @@ class JudgeServerManager:
         cursor.execute("SELECT Address, Secret_Key FROM Judge_Server WHERE Last_Seen_Time >= %s AND Busy = %s", (str(MinTime), '0'))
         ret = cursor.fetchall()
         db.close()
-        if ret == None:
+        if ret == None or len(ret) == 0:
             return None
         st = random.randint(0, len(ret) - 1)
         for i in range(st, st + len(ret)):
@@ -102,11 +102,11 @@ class JudgeServerManager:
         db = DB_Connect()
         cursor = db.cursor()
         minTime = UnixNano() - JudgeConfig.Max_Duration
-        cursor.execute("SELECT Current_Time FROM Judge_Server WHERE Last_Seen_Time < %s", (str(minTime), ))
+        cursor.execute("SELECT Current_Task FROM Judge_Server WHERE Last_Seen_Time < %s", (str(minTime), ))
         ret = cursor.fetchall()
         db.close()
         if ret == None or len(ret) == 0:
-            return 0
+            return None
         return ret
 
     def Get_Server_List(self):

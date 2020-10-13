@@ -88,7 +88,7 @@ class JudgeServerManager:
         cursor.execute("SELECT Address, Secret_Key FROM Judge_Server WHERE Last_Seen_Time >= %s AND Busy = %s", (str(MinTime), '0'))
         ret = cursor.fetchall()
         db.close()
-        if ret == None:
+        if ret == None or len(ret) == 0:
             return None
         st = random.randint(0, len(ret) - 1)
         for i in range(st, st + len(ret)):
@@ -98,6 +98,33 @@ class JudgeServerManager:
                 self.Set_Offline(ret[i % st][0])
         return None
 
+    def Get_Failure_Task(self):
+        db = DB_Connect()
+        cursor = db.cursor()
+        minTime = UnixNano() - JudgeConfig.Max_Duration
+        cursor.execute("SELECT Current_Task FROM Judge_Server WHERE Last_Seen_Time < %s", (str(minTime), ))
+        ret = cursor.fetchall()
+        db.close()
+        if ret == None or len(ret) == 0:
+            return None
+        return ret
 
+    def Get_Server_List(self):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Last_Seen_Time, Busy, Friendly_Name, Detail FROM Judge_Server")
+        ls = cursor.fetchall()
+        db.close()
+        ret = []
+        for x in ls:
+            temp = {}
+            temp['Status'] = bool(int(x[0]) > UnixNano() - JudgeConfig.Max_Duration)
+            temp['Name'] = x[2]
+            temp['System'] = x[3].split('\n')[0]
+            temp['Last_Seen_Time'] = Readable_Time(UnixNano())
+            temp['Busy'] = x[1]
+            temp['Provider'] = x[3].split('\n')[1]
+            ret.append(temp)
+        return ret
 
 JudgeServer_Manager = JudgeServerManager()

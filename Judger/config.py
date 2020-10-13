@@ -3,7 +3,8 @@ class DataConfig:
     key = '233'
     cache_dir = '/home/ubuntu/test/cache'
 
-Web_Server_Secret = "justfortest"
+My_Web_Server_Secret = "crazy_cloud"
+Master_Server_Secret = "Progynova"
 Web_Server = "http://localhost:5005"
 Heart_Beat_Period = 600000
 Judge_Result_Resend_Period = 1000

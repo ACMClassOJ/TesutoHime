@@ -23,12 +23,12 @@
 					<h1 class="text-center"> {{Problem_ID}} 代码提交</h1>
 				</div>
 				<form action="submit" method="post" role="form">
-					<select id="lang" class="form-control input-default">
+					<select id="lang" name="lang" class="form-control input-default">
 						<option value ="cpp">cpp</option>
 						<option value ="git">git</option>
 					</select>
 					<input type="checkbox" name="shared" id="shared" value="shared">代码对他人可见
-					<textarea id="problem_submit_code" class="form-control input-default" rows="18"></textarea>
+					<textarea id="code" name="code" class="form-control input-default" rows="18"></textarea>
 					<input type="hidden" name="problem_id" value="{{Problem_ID}}">
 					<br>
 					<input type="submit" class="btn btn-primary btn-block" value="提交评测">

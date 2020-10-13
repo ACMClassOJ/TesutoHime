@@ -16,7 +16,7 @@ def UnixNanoFloat() -> float: # float point time in Second
 
 
 def Readable_Time(nano) -> str:
-    return time.strftime("%b-%d-%Y %H:%M:%S", datetime.datetime.fromtimestamp(nano).timetuple())
+    return str(time.strftime("%b-%d-%Y %H:%M:%S", datetime.datetime.fromtimestamp(nano).timetuple()))
 
 def Gen_Page(cur_Page: int, max_Page: int):
     ret = []
@@ -59,7 +59,7 @@ def Ping(url: str) -> bool:
     url = url + '/ping'
     for i in range(0, 3):
         try:
-            ret = requests.get(url) # Fixme: trust self-signed SSL
+            ret = requests.get(url).content.decode() # Fixme: trust self-signed SSL
             if ret == '0':
                 return True
         except:

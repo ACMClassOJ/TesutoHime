@@ -4,6 +4,27 @@
 
 新一代多线程分布式评测系统
 
+## Todo
+
+* [x] Problem & Problem_List
+* [x] Contest & Homework
+* [x] Contest_List & Homework_List
+* [x] Participate in Contest/Homework
+* [x] Judge Status
+* [ ] Judge Detail
+* [x] Judge Server
+* [x] Problem Details Markdown
+* [x] Optimize Judge Status Search Behave
+* [x] Judge Status Colorize & Contest_List/Homework_List Colorize
+* [x] Problem Detail Markdown Support
+* [ ] System Integration
+* [ ] Judge Status Beautify (By Agron dropdown)
+* [ ] Discuss Board
+* [x] Contest_List/Homework_List Reversal Display
+* [x] Code Sharing System Backend
+* [ ] Code Sharing System Frontend
+* [ ] System Error Checker
+
 #### 人员分工(对接结构)
 
 ```mermaid

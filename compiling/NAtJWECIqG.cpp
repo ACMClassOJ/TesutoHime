@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <seccomp.h>
-class fLwytFXICg {
+class cSLyxaRitY {
 public:
-    fLwytFXICg() {
+    cSLyxaRitY() {
         scmp_filter_ctx ctx;
         ctx = seccomp_init(SCMP_ACT_KILL);
         int syscalls_whitelist[] = {SCMP_SYS(read), SCMP_SYS(fstat),
@@ -20,11 +20,9 @@ public:
             seccomp_rule_add(ctx, SCMP_ACT_ALLOW, syscalls_whitelist[i], 0);
         seccomp_load(ctx);        
     }
-} _fLwytFXICg;             
-#include <iostream>
+} _cSLyxaRitY;             
+#include <cstdio>
 
 int main() {
-    int a, b;
-    std::cin >> a >> b;
-    std::cout << a + b << std::endl;
+puts("hua Q");
 }

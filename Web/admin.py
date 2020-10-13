@@ -1,21 +1,11 @@
-from flask import Flask, request, render_template, url_for
+from flask import request, render_template, Blueprint, abort
 from const import *
-from sessionManager import SessionManager
-from userManager import UserManager
-from problemManager import ProblemManager
-from contestManager import ConetstManager
+from sessionManager import Login_Manager
+from userManager import User_Manager
+from problemManager import Problem_Manager
+from contestManager import Contest_Manager
 
-app = Flask('app')
-
-session = SessionManager()
-user = UserManager()
-problem = ProblemManager()
-contest = ConetstManager()
-
-
-@app.route('/')
-def test():
-    return 'index'
+admin = Blueprint('admin', __name__, static_folder='static')
 
 
 # TODO(Pioooooo): validate data
@@ -62,101 +52,106 @@ def _validate_contest_data(form):
     return None
 
 
-@app.route('/admin')
+@admin.route('/')
 def index():
+    if Login_Manager.Get_Privilege() < Privilege.ADMIN:
+        abort(404)
     return render_template('admin.html')
 
 
-@app.route('/admin/user', methods=['post'])
+@admin.route('/user', methods=['post'])
 def user_manager():
     form = request.json
-    # if session.Get_Privilege() < Privilege.SUPER:
-    #     return ReturnCode.ERR_PERMISSION_DENIED
-    err = _validate_user_data(form)
-    if err is not None:
-        return err
+    if Login_Manager.Get_Privilege() < Privilege.SUPER:
+        return ReturnCode.ERR_PERMISSION_DENIED
+    # err = _validate_user_data(form)
+    # if err is not None:
+    #     return err
     op = int(form[String.TYPE])
     if op == 0:
-        user.Add_User(form[String.USERNAME], int(form[String.STUDENT_ID]), form[String.FRIENDLY_NAME],
-                      form[String.PASSWORD], form[String.PRIVILEGE])
+        User_Manager.Add_User(form[String.USERNAME], int(form[String.STUDENT_ID]), form[String.FRIENDLY_NAME],
+                              form[String.PASSWORD], form[String.PRIVILEGE])
         return ReturnCode.SUC_ADD_USER
     elif op == 1:
-        user.Modify_User(form[String.USERNAME], form[String.STUDENT_ID], form[String.FRIENDLY_NAME],
-                         form[String.PASSWORD], form[String.PRIVILEGE])
+        User_Manager.Modify_User(form[String.USERNAME], form[String.STUDENT_ID], form[String.FRIENDLY_NAME],
+                                 form[String.PASSWORD], form[String.PRIVILEGE])
         return ReturnCode.SUC_MOD_USER
     elif op == 2:
-        user.Delete_User(form[String.USERNAME])
+        User_Manager.Delete_User(form[String.USERNAME])
         return ReturnCode.SUC_DEL_USER
     else:
         return ReturnCode.ERR_BAD_DATA
 
 
-@app.route('/admin/problem', methods=['post'])
+@admin.route('/problem', methods=['post'])
 def problem_manager():
     form = request.json
-    # if session.Get_Privilege() < Privilege.ADMIN:
-    #     return ReturnCode.ERR_PERMISSION_DENIED
-    err = _validate_problem_data(form)
-    if err is not None:
-        return err
+    if Login_Manager.Get_Privilege() < Privilege.ADMIN:
+        return ReturnCode.ERR_PERMISSION_DENIED
+    # err = _validate_problem_data(form)
+    # if err is not None:
+    #     return err
     op = int(form[String.TYPE])
     if op == 0:
-        problem.Add_Problem(form[String.TITLE], form[String.DESCRIPTION], form[String.INPUT], form[String.OUTPUT],
-                            form[String.EXAMPLE_INPUT], form[String.EXAMPLE_OUTPUT], form[String.DATA_RANGE],
-                            form[String.RELEASE_TIME])
+        Problem_Manager.Add_Problem(form[String.TITLE], form[String.DESCRIPTION], form[String.INPUT],
+                                    form[String.OUTPUT],
+                                    form[String.EXAMPLE_INPUT], form[String.EXAMPLE_OUTPUT], form[String.DATA_RANGE],
+                                    form[String.RELEASE_TIME])
         return ReturnCode.SUC_ADD_PROBLEM
     elif op == 1:
-        problem.Modify_Problem(int(form[String.PROBLEM_ID]), form[String.TITLE], form[String.DESCRIPTION],
-                               form[String.INPUT], form[String.OUTPUT], form[String.EXAMPLE_INPUT],
-                               form[String.EXAMPLE_OUTPUT], form[String.DATA_RANGE], form[String.RELEASE_TIME])
+        Problem_Manager.Modify_Problem(int(form[String.PROBLEM_ID]), form[String.TITLE], form[String.DESCRIPTION],
+                                       form[String.INPUT], form[String.OUTPUT], form[String.EXAMPLE_INPUT],
+                                       form[String.EXAMPLE_OUTPUT], form[String.DATA_RANGE], form[String.RELEASE_TIME])
         return ReturnCode.SUC_MOD_PROBLEM
     elif op == 2:
-        problem.Delete_Problem(form[String.PROBLEM_ID])
+        Problem_Manager.Delete_Problem(form[String.PROBLEM_ID])
         return ReturnCode.SUC_DEL_PROBLEM
     else:
         return ReturnCode.ERR_BAD_DATA
 
 
-@app.route('/admin/contest', methods=['post'])
+@admin.route('/contest', methods=['post'])
 def contest_manager():
     form = request.json
-    # if session.Get_Privilege() < Privilege.ADMIN:
-    #     return ReturnCode.ERR_PERMISSION_DENIED
-    err = _validate_contest_data(form)
-    if err is not None:
-        return err
+    if Login_Manager.Get_Privilege() < Privilege.ADMIN:
+        return ReturnCode.ERR_PERMISSION_DENIED
+    # err = _validate_contest_data(form)
+    # if err is not None:
+    #     return err
     op = int(form[String.TYPE])
     print(form)
     if op == 0:
-        contest.Create_Contest(form[String.CONTEST_NAME], int(form[String.START_TIME]), int(form[String.END_TIME]),
-                               int(form[String.CONTEST_TYPE]))
+        Contest_Manager.Create_Contest(form[String.CONTEST_NAME], int(form[String.START_TIME]),
+                                       int(form[String.END_TIME]),
+                                       int(form[String.CONTEST_TYPE]))
         return ReturnCode.SUC_ADD_CONTEST
     elif op == 1:
-        contest.Modify_Contest(int(form[String.CONTEST_ID]), form[String.CONTEST_NAME], int(form[String.START_TIME]),
-                               int(form[String.END_TIME]), int(form[String.CONTEST_TYPE]))
+        Contest_Manager.Modify_Contest(int(form[String.CONTEST_ID]), form[String.CONTEST_NAME],
+                                       int(form[String.START_TIME]),
+                                       int(form[String.END_TIME]), int(form[String.CONTEST_TYPE]))
         return ReturnCode.SUC_MOD_CONTEST
     elif op == 2:
-        contest.Delete_Contest(int(form[String.CONTEST_ID]))
+        Contest_Manager.Delete_Contest(int(form[String.CONTEST_ID]))
         return ReturnCode.SUC_DEL_CONTEST
     elif op == 3:
         for problemId in form[String.CONTEST_PROBLEM_IDS]:
-            contest.Add_Problem_To_Contest(int(form[String.CONTEST_ID]), int(problemId))
+            Contest_Manager.Add_Problem_To_Contest(int(form[String.CONTEST_ID]), int(problemId))
         return ReturnCode.SUC_ADD_PROBLEMS_TO_CONTEST
     elif op == 4:
         for problemId in form[String.CONTEST_PROBLEM_IDS]:
-            contest.Delete_Problem_From_Contest(int(form[String.CONTEST_ID]), int(problemId))
+            Contest_Manager.Delete_Problem_From_Contest(int(form[String.CONTEST_ID]), int(problemId))
         return ReturnCode.SUC_DEL_PROBLEMS_FROM_CONTEST
     elif op == 5:
         for username in form[String.CONTEST_USERNAMES]:
-            contest.Add_Player_To_Contest(int(form[String.CONTEST_ID]), username)
+            Contest_Manager.Add_Player_To_Contest(int(form[String.CONTEST_ID]), username)
         return ReturnCode.SUC_ADD_USERS_TO_CONTEST
     elif op == 6:
         for username in form[String.CONTEST_USERNAMES]:
-            contest.Delete_Player_From_Contest(int(form[String.CONTEST_ID]), username)
+            Contest_Manager.Delete_Player_From_Contest(int(form[String.CONTEST_ID]), username)
         return ReturnCode.SUC_DEL_USERS_FROM_CONTEST
     else:
         return ReturnCode.ERR_BAD_DATA
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000)
+    admin.run(host="0.0.0.0", port=8000)

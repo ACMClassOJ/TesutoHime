@@ -40,11 +40,11 @@ class JudgeManager:
         db.close()
         return
 
-    def Update_After_Judge(self, ID: int, NewStatus: int, Score: int, Detail: str):
+    def Update_After_Judge(self, ID: int, NewStatus: int, Score: int, Detail: str, Time_Used: str, Mem_Used: str):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Judge SET Status = %s, Score = %s, Detail = %s WHERE ID = %s", (str(NewStatus), str(ID), str(Score), Detail))
+            cursor.execute("UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s", (str(NewStatus), str(ID), str(Score), Detail, Time_Used, Mem_Used))
             db.commit()
         except:
             db.rollback()
@@ -54,8 +54,8 @@ class JudgeManager:
 
     def Query_Judge(self, ID: int)->dict: # for details
         db = DB_Connect()
-        cursor = db.cursor()Problem_ID, Detail, Time, Time_Used, Mem_Used FROM Judge WHERE
-        cursor.execute("SELECT ID, User,  ID = %s", (str(ID)))
+        cursor = db.cursor()
+        cursor.execute("SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used, Share, Status, Language, Code  FROM Judge WHERE ID = %s", (str(ID)))
         data = cursor.fetchone()
         db.close()
         if data == None:
@@ -63,10 +63,15 @@ class JudgeManager:
         ret = {}
         ret['ID'] = int(data[0])
         ret['User'] = str(data[1])
-        ret['Time'] = int(data[3])
-        ret['Detail'] = str(data[2])
-        ret['Time_Used'] = int(data[4])
-        ret['Mem_Used'] = int(data[5])
+        ret['Problem_ID'] = int(data[2])
+        ret['Detail'] = str(data[3])
+        ret['Time'] = int(data[4])
+        ret['Time_Used'] = int(data[5])
+        ret['Mem_Used'] = int(data[6])
+        ret['Share'] = bool(data[7])
+        ret['Status'] = str(data[8])
+        ret['Lang'] = int(data[9])
+        ret['Code'] = str(data[10])
         return ret
 
     def Max_ID(self):
@@ -80,7 +85,7 @@ class JudgeManager:
     def Judge_In_Range(self, startID: int, endID: int): # [{}], for page display.
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE ID >= %s and ID <= %s", (str(startID), str(endID)))
+        cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language, Share FROM Judge WHERE ID >= %s and ID <= %s ORDER BY ID desc", (str(startID), str(endID)))
         data = cursor.fetchall()
         ret = []
         for d in data:
@@ -93,6 +98,7 @@ class JudgeManager:
             cur['Mem_Used'] = int(d[5])
             cur['Status'] = str(d[6])
             cur['Lang'] = str(d[7])
+            cur['Share'] = bool(d[8])
             ret.append(cur)
         db.close()
         return ret
@@ -101,19 +107,39 @@ class JudgeManager:
         db = DB_Connect()
         cursor = db.cursor()
         cursor.execute("SELECT ID, Status, Score, Time FROM Judge WHERE Problem_ID = %s AND User = %s AND Time >= %s AND Time <= %s", (str(Problem_ID), Username, str(Start_Time), str(End_Time)))
-        ret = cursor.fetchone()
+        ret = cursor.fetchall()
         db.close()
         return ret
 
-    def Search_Judge(self, Arg_Submitter, Arg_Problem_ID):
+    def Search_Judge(self, Arg_Submitter, Arg_Problem_ID, Arg_Status, Arg_Lang, Arg_Param = None):
         db = DB_Connect()
         cursor = db.cursor()
-        if Arg_Problem_ID == None:
-            cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE User = %s", (Arg_Submitter))
-        elif Arg_Submitter == None:
-            cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE Problem_ID = %s", (str(Arg_Problem_ID)))
+        com = 'SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language, Share FROM Judge WHERE '
+        pre = []
+
+        if Arg_Problem_ID != None:
+            com = com + 'Problem_ID = %s'
+            pre.append(str(Arg_Problem_ID))
+        if Arg_Submitter != None:
+            if len(pre):
+                com = com + ' AND '
+            com = com + 'User = %s'
+            pre.append(str(Arg_Submitter))
+        if Arg_Status != None:
+            if len(pre):
+                com = com + ' AND '
+            com = com + 'Status = %s'
+            pre.append(str(Arg_Status))
+        if Arg_Lang != None:
+            if len(pre):
+                com = com + ' AND '
+            com = com + 'Language = %s'
+            pre.append(str(Arg_Lang))
+        if Arg_Param == None:
+            com = com + ' ORDER BY ID desc'
         else:
-            cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language FROM Judge WHERE User = %s and Problem_ID = %s", (Arg_Submitter, str(Arg_Problem_ID)))
+            com = com + ' ORDER BY Time_Used asc'
+        cursor.execute(com, tuple(pre))
         ret = cursor.fetchall()
         db.close
         return ret
@@ -121,7 +147,7 @@ class JudgeManager:
     def Search_AC(self, Problem_ID):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Time_Used, Mem_Used, Language, Time FROM Judge WHERE Problem_ID = %s and Status = 0", (str(Problem_ID)))
+        cursor.execute("SELECT ID, User, Time_Used, Mem_Used, Language, Time FROM Judge WHERE Problem_ID = %s and Status = 2", (str(Problem_ID)))
         ret = cursor.fetchall()
         db.close()
         return ret

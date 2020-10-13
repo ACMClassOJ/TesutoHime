@@ -30,11 +30,11 @@ class JudgeServerManager:
         db.close()
         return
 
-    def Flush_Busy(self, Secret: str, New_State: bool):
+    def Flush_Busy(self, Secret: str, New_State: bool, Current_Task: int = -1):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Judge_Server SET Busy = %s WHERE Secret_Key = %s", (str(int(New_State)), Secret))
+            cursor.execute("UPDATE Judge_Server SET Busy = %s, Current_Task = %s WHERE Secret_Key = %s", (str(int(New_State)), Current_Task, Secret))
             db.commit()
         except:
             db.rollback()

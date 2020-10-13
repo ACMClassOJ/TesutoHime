@@ -1,7 +1,7 @@
 import sys
 from utils import *
 
-class ConetstManager:
+class ContestManager:
     def Create_Contest(self, Name: str, Start_Time: int, End_Time: int, Type: int):
         db = DB_Connect()
         cursor = db.cursor()
@@ -91,6 +91,14 @@ class ConetstManager:
         db.close()
         return
 
+    def Check_Player_In_Contest(self, Contest_ID: int, Username: str):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT tempID FROM Contest_Player WHERE Belong = %s AND Username = %s", (Contest_ID, Username))
+        ret = cursor.fetchall()
+        db.close()
+        return len(ret) != 0
+
     def Delete_Player_From_Contest(self, Contest_ID: int, Username: str):
         db = DB_Connect()
         cursor = db.cursor()
@@ -106,8 +114,9 @@ class ConetstManager:
     def List_Contest(self, Type: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, Name, Start_Time, End_Time FROM Contest")
+        cursor.execute("SELECT ID, Name, Start_Time, End_Time FROM Contest WHERE Type = %s ORDER BY ID DESC", (Type))
         ret = cursor.fetchall()
+        db.close()
         return ret
 
     def Get_Time(self, ID: int):
@@ -115,6 +124,7 @@ class ConetstManager:
         cursor = db.cursor()
         cursor.execute("SELECT Start_Time, End_Time FROM Contest WHERE ID = %s", (str(ID)))
         ret = cursor.fetchone()
+        db.close()
         return int(ret[0]), int(ret[1])
 
     def List_Problem_For_Contest(self, Contest_ID: int):
@@ -133,4 +143,12 @@ class ConetstManager:
         db.close()
         return ret
 
-Conetst_Manager = ConetstManager()
+    def Get_Title(self, Contest_ID: int):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Name FROM Contest WHERE ID = %s", (str(Contest_ID)))
+        ret = cursor.fetchall()
+        db.close()
+        return ret
+
+Contest_Manager = ContestManager()

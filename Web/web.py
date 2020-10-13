@@ -38,6 +38,7 @@ def Get_Username():
 @web.route('/api/get_detail', methods=['POST'])
 def get_detail():
     id = request.form.get('problem_id')
+    print(json.dumps(Problem_Manager.Get_Problem(id)))
     return json.dumps(Problem_Manager.Get_Problem(id))
 
 @web.route('/api/join', methods=['POST'])
@@ -144,11 +145,15 @@ def Submit_Problem():
             return redirect('/')
         Problem_ID = int(request.args.get('problem_id'))
         Title = Problem_Manager.Get_Title(Problem_ID)
-        return render_template('problem_submit.html', Problem_ID = Problem_ID, Title = Title)
+        In_Contest = Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0
+        return render_template('problem_submit.html', Problem_ID = Problem_ID, Title = Title, In_Contest = In_Contest)
     else:
         if not Login_Manager.Check_User_Status():
             return redirect('login')
         Problem_ID = int(request.form.get('problem_id'))
+        Share = bool(request.form.get('Share')) # 0 or 1
+        if Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0 and Share: # invalid sharing
+            return '-1'
         if Problem_ID < 1000 or Problem_ID > Problem_Manager.Get_Max_ID():
             abort(404)
         if UnixNano() < Problem_Manager.Get_Release_Time(int(Problem_ID)) and Login_Manager.Get_Privilege() <= 0:
@@ -281,7 +286,7 @@ def Status():
             cur['Time_Used'] = ele['Time_Used']
             cur['Mem_Used'] = ele['Mem_Used']
             cur['Lang'] = ele['Lang']
-            cur['Visible'] = Username == ele['Username'] or Privilege == 2 # Same User or login as Super Admin
+            cur['Visible'] = Username == ele['Username'] or Privilege == 2 or (bool(ele['Share']) and not Problem_Manager.In_Contest(ele['Problem_ID'])) # Same User or login as Super Admin
             cur['Time'] = Readable_Time(ele['Time'])
             Data.append(fix_Status_Cur(cur))
         return render_template('status.html', Data = Data, Pages = Gen_Page(Page, max_Page))
@@ -295,7 +300,6 @@ def Status():
         Record = Record[startID - 1: endID]
         Data = []
         for ele in Record: # ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language
-            print(ele)
             cur = {}
             cur['ID'] = ele[0]
             cur['Friendly_Name'] = User_Manager.Get_Friendly_Name(ele[1])
@@ -305,7 +309,7 @@ def Status():
             cur['Time_Used'] = ele[4]
             cur['Mem_Used'] = ele[5]
             cur['Lang'] = ele[7]
-            cur['Visible'] = Username == ele[1] or Privilege == 2 # Same User or login as Super Admin
+            cur['Visible'] = Username == ele[1] or Privilege == 2 or (bool(ele[8]) and not Problem_Manager.In_Contest(ele[2]))# Same User or login as Super Admin
             cur['Time'] = Readable_Time(ele[3])
             Data.append(fix_Status_Cur(cur))
         return render_template('status.html', Data = Data, Pages = Gen_Page(Page, max_Page), Submitter = Arg_Submitter, Problem_ID = Arg_Problem_ID)
@@ -314,16 +318,21 @@ def Status():
 def Code(): # todo: View Judge Detail
     if not Login_Manager.Check_User_Status(): # not login
         return redirect('login?next=' + request.url)
-    if request.args.get('run_id') == None: # bad argument
-        return redirect('/')
-    run_id = int(request.args.get('run_id'))
-    judge = Judge_Manager.Search_Judge(run_id)
-    if judge == {}: # bad argument
-        return redirect('/')
-    if Login_Manager.Get_Username() != judge['User']:
-        return render_template('code.html', Blocked = True)
+    if not str(request.args.get('submit_id')).isdigit(): # bad argument
+        abort(404)
+    run_id = int(request.args.get('submit_id'))
+    if run_id < 0 or run_id > Judge_Manager.Max_ID():
+        abort(404)
+    Detail = Judge_Manager.Query_Judge(run_id)
+    if Detail['User'] != Login_Manager.Get_Username() and Login_Manager.Get_Privilege() != 2 and (
+            not Detail['Share'] or Problem_Manager.In_Contest(Detail['Problem_ID'])):
+        return render_template('judge_detail.html', Blocked = True)
     else:
-        return 'Hua Q'
+        Detail['Friendly_Name'] = User_Manager.Get_Friendly_Name(Detail['User'])
+        Detail['Problem_Title'] = Problem_Manager.Get_Title(Detail['Problem_ID'])
+        Detail['Lang'] = 'C++' if Detail['Lang'] == 0 else 'Git'
+        Detail['Time'] = Readable_Time(int(Detail['Time']))
+        return render_template('judge_detail.html', Detail = Detail)
 
 @web.route('/contest')
 def Contest():

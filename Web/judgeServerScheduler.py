@@ -14,11 +14,11 @@ class JudgeServerScheduler:
         return True
 
     def Check_Queue(self):
-        Server = JudgeServer_Manager.Get_Standby_Server()
-        if Server == None:
+        Server = JudgeServer_Manager.Get_Standby_Server(UnixNano() - JudgeConfig.Max_Duration)
+        if Server == None or len(Server) == 0: # no avaliable server
             return
-        Record = Judge_Manager.Get_Pending_Judge() # ID, Problem_ID, Code, Language
-        if Record == None:
+        Record = Judge_Manager.Get_Pending_Judge() # ID, Problem_ID, Code, Language, todo
+        if Record == None or len(Record) == 0:
             return
         data = {}
         data['Server_Secret'] = JudgeConfig.Web_Server_Secret

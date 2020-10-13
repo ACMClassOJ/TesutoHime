@@ -16,11 +16,14 @@
 * [x] Problem Details Markdown
 * [x] Optimize Judge Status Search Behave
 * [x] Judge Status Colorize & Contest_List/Homework_List Colorize
-* [ ] Problem Detail Markdown Support
+* [x] Problem Detail Markdown Support
 * [ ] System Integration
-* [ ] Judge Status Beautify(By Agron dropdown)
+* [ ] Judge Status Beautify (By Agron dropdown)
 * [ ] Discuss Board
 * [x] Contest_List/Homework_List Reversal Display
+* [x] Code Sharing System Backend
+* [ ] Code Sharing System Frontend
+* [ ] System Error Checker
 
 #### 人员分工(对接结构)
 

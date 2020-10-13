@@ -2,6 +2,7 @@ from flask import Flask, request, Blueprint
 from judgeServerManager import JudgeServer_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
 from utils import *
+import json
 
 api = Blueprint('api', __name__, static_folder='static')
 
@@ -25,7 +26,7 @@ def pushResult():
     if Secret == None:
         return '-1'
     Judge_ID = request.form.get("Judge_ID")
-    Result = request.form.get("Result")
+    Result = json.loads(request.form.get("Result"))
     JudgeServer_Scheduler.Receive_Judge_Result(Secret, Judge_ID, Result)
     return '0'
 

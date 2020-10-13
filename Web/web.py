@@ -333,7 +333,10 @@ def Code(): # todo: View Judge Detail
         Detail['Problem_Title'] = Problem_Manager.Get_Title(Detail['Problem_ID'])
         Detail['Lang'] = 'C++' if Detail['Lang'] == 0 else 'Git'
         Detail['Time'] = Readable_Time(int(Detail['Time']))
-        return render_template('judge_detail.html', Detail = Detail)
+        Data = None
+        if Detail['Detail'] != 'None':
+            Data = json.loads(Detail['Detail'])[5:]
+        return render_template('judge_detail.html', Detail = Detail, Data = Data)
 
 @web.route('/contest')
 def Contest():

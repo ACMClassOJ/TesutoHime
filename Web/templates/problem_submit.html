@@ -9,7 +9,7 @@
 		<link href="{{ url_for('static', filename = 'css/style.css')}}" rel="stylesheet">
 	</head>
 	
-	<body style="background-color: rgba(193,220,248,0.1);">
+	<body style="background-color: rgba(193,220,248,0.1);" onload="shared_checkbox_hide({{In_Contest}})">
 		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
 			<div class="container">
 				<a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
@@ -27,7 +27,7 @@
 						<option value ="cpp">cpp</option>
 						<option value ="git">git</option>
 					</select>
-					<br>
+					<input type="checkbox" name="shared" id="shared" value="shared">代码对他人可见
 					<textarea id="problem_submit_code" class="form-control input-default" rows="18"></textarea>
 					<input type="hidden" name="problem_id" value="{{Problem_ID}}">
 					<br>

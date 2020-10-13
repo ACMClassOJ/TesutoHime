@@ -8,3 +8,51 @@ $(function(){
 		}
 	});
 });
+function getCookie(cname)
+{
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i = 0; i<ca.length; i++) 
+	{
+		var c = ca[i].trim();
+		if (c.indexOf(name)==0)
+			return c.substring(name.length,c.length);
+	}
+	return "";
+}
+function shared_checkbox_hide(x)
+{
+	if(x == 1)
+	{
+		$("#shared").attr("disabled", "disabled");
+		$("#shared").attr("checked", "0");
+	}
+	else
+	{
+		if(getCookie("share_status") == "")
+		{
+			var exdate = new Date();
+    		exdate.setTime(exdate.getTime() + 100*24*60*60*1000);
+			document.cookie="share_status = 1; expires=" + exdate.toGMTString();
+			$("#shared").attr("checked", "checked");
+		}
+		else if(getCookie("share_status") == 1)
+			$("#shared").attr("checked", "checked");
+	}
+}
+$(function(){
+	$("#shared").change(function(){
+		if($("#shared").attr("checked") == "checked")
+		{
+			var exdate = new Date();
+    		exdate.setTime(exdate.getTime() + 100*24*60*60*1000);
+			document.cookie="share_status = 0; expires=" + exdate.toGMTString();
+		}
+		else
+		{
+			var exdate = new Date();
+    		exdate.setTime(exdate.getTime() + 100*24*60*60*1000);
+			document.cookie="share_status = 1; expires=" + exdate.toGMTString();
+		}
+	});	
+});

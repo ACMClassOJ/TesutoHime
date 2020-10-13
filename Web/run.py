@@ -1,15 +1,6 @@
 import threading
 from web import web
-from api import api
 
 
-def RunFlask(f, port):
-    f(host='0.0.0.0', port=port)
-
-
-global web
-t1 = threading.Thread(target=RunFlask, args=(web.run, 5000,))
-global api
-t2 = threading.Thread(target=RunFlask, args=(api.run, 5001,))
-t1.start()
-t2.start()
+if __name__ == '__main__':
+    web.run(host="0.0.0.0", port=5000)

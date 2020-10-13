@@ -3,7 +3,7 @@
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>About</title>
+		<title>关于</title>
 		<link rel="shortcut icon" href="favicon.ico">
 		<link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
 		<link href="{{ url_for('static', filename = 'css/style.css')}}" rel="stylesheet">
@@ -18,19 +18,101 @@
 			</div>
 		</nav>
 		<div class="container">
-			<div class="card card-body col-lg-12 m-auto">
+			<div class="card card-body col-lg-11 m-auto">
 				<div class="page-header">
 					<h1 class="text-center"> 关于 </h1>
 				</div>
-				<div id="content">
-					<p>评测状态缩写解释：</p>
-					<p>AC(Accepted):通过</p>
-					<p>...</p>
-				</div>
-				<div id="content2">
-					<p>Contributor：</p>
-					<p>...</p>
-				</div>
+                <p>评测状态解释：</p>
+                <p><span class="text-gray">Pending：等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</span></p>
+                <p><span class="text-blue">Running & Judging：正在测试。你的程序正在被评测机运行以检查正确性。</span></p>
+                <p><span class="text-green">Accepted：通过。你的程序正确通过全部测试点。</span></p>
+                <p><span class="text-red">Wrong Answer：答案错误。你的程序在某个测试点输出了错误的答案。</span></p>
+                <p><span class="text-cyan">Compile Error：编译错误。你的程序没有通过编译。</span></p>
+                <p><span class="text-red">Runtime Error：运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、除以0等。</span></p>
+                <p><span class="text-orange">Time Limit Exceed：时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</span></p>
+                <p><span class="text-orange">Memory Limit Exceed：内存超限。你的程序请求了过多的内存。</span></p>
+                <p><span class="text-purple">Memory Leak：内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</span></p>
+                <p><span class="text-purple">Disk Limit Exceed：磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</span></p>
+                <p><span class="text-gray-dark">System Error：系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</span></p>
+                <hr>
+                <p>Contributor(排名不分先后)：</p>
+                <p>项目主管 & 数据库结构：<a href="https://github.com/cmd2001" target="_blank">Amagi_Yukisaki</a></p>
+                <p>前端美化：<a href="https://github.com/cong258258" target="_blank">cong258258</a></p>
+                <p>管理界面 & 前端：<a href="https://github.com/Pioooooo" target="_blank">Pioooooo</a></p>
+                <p>评测端主管 & 接口：<a href="https://github.com/acrazyczy" target="_blank">acrazyczy</a></p>
+                <p>编译沙箱：<a href="https://github.com/Anoxiacxy" target="_blank">Anoxiacxy</a></p>
+                <p>评测沙箱：<a href="https://github.com/XOR-op" target="_blank">XOR-op</a></p>
+                <p>数据服务：<a href="https://github.com/stneng" target="_blank">stneng</a></p>
+                <hr>
+                <p>评测机状态</p>
+                <table class="table table-striped table-bordered table-hover" id="judge_server_list">
+                    <thead>
+                        <tr>
+                            <th>状态</th>
+                            <th>代号</th>
+                            <th>配置</th>
+                            <th>上次响应时间</th>
+                            <th>运行状态</th>
+                            <th>贡献者<del>(评测姬的主人)</del></th>
+                        </tr>
+                    </thead>
+                    <tr>
+                        <td><span class="text-green">Online</span></td>
+                        <td>Shirone</td>
+                        <td>Intel i3 4360T @ 3.20Ghz</td>
+                        <td>Oct-11-2020 13:40:15</td>
+                        <td><span class="text-orange">Busy</span></td>
+                        <td>Amagi_Yukisaki</td>
+                    </tr>
+                    <tr>
+                        <td><span class="text-red">Offline</span></td>
+                        <td>Atori</td>
+                        <td>Intel i3 4360T @ 3.20Ghz</td>
+                        <td>Oct-11-2020 13:40:15</td>
+                        <td><span class="text-black-50">Invalid</span></td>
+                        <td>Amagi_Yukisaki</td>
+                    </tr>
+                    <tr>
+                        <td><span class="text-green">Online</span></td>
+                        <td>Aira</td>
+                        <td>AMD Athlon 3000G @ 3.50Ghz</td>
+                        <td>Oct-11-2020 13:40:15</td>
+                        <td><span class="text-blue">Idle</span></td>
+                        <td>Amagi_Yukisaki</td>
+                    </tr>
+                    <tr>
+                        <td><span class="text-red">Offline</span></td>
+                        <td>Tsukuyomi</td>
+                        <td>AMD Athlon 3000G @ 3.50Ghz</td>
+                        <td>Oct-11-2020 13:40:15</td>
+                        <td><span class="text-black-50">Invalid</span></td>
+                        <td>Amagi_Yukisaki</td>
+                    </tr>
+                    <tr>
+                        <td><span class="text-green">Online</span></td>
+                        <td>Progynova I</td>
+                        <td>Intel Xeon E5 2696 v2 @ 2.50Ghz</td>
+                        <td>Oct-11-2020 08:00:00</td>
+                        <td><span class="text-orange">Busy</span></td>
+                        <td>Zion</td>
+                    </tr>
+                    <tr>
+                        <td><span class="text-green">Online</span></td>
+                        <td>Progynova II</td>
+                        <td>Intel Xeon E5 2696 v2 @ 2.50Ghz</td>
+                        <td>Oct-11-2020 08:00:00</td>
+                        <td><span class="text-blue">Idle</span></td>
+                        <td>Zion</td>
+                    </tr>
+                    <tr>
+                        <td><span class="text-green">Online</span></td>
+                        <td>Progynova III</td>
+                        <td>Intel Xeon E5 2696 v2 @ 2.50Ghz</td>
+                        <td>Oct-11-2020 08:00:00</td>
+                        <td><span class="text-orange">Busy</span></td>
+                        <td>Zion</td>
+                    </tr>
+                </table>
 			</div>
 			<footer>
 				<div class="container text-center" id="footer"></div>

@@ -1,13 +1,13 @@
-from flask import Flask, request
+from flask import Flask, request, Blueprint
 from judgeServerManager import JudgeServer_Manager
+from judgeServerScheduler import JudgeServer_Scheduler
 from utils import *
 
-
-api = Flask('API')
+api = Blueprint('api', __name__, static_folder='static')
 
 @api.route('/')
 def Hello():
-    return 'This is API'
+    return 'This is API For Judge Server, DO NOT VISIT THIS PAGE IN YOUR WEB BROWSER!'
 
 @api.route('/heartBeat')
 def heartBeat():
@@ -26,7 +26,7 @@ def pushResult():
         return '-1'
     Judge_ID = request.form.get("Judge_ID")
     Result = request.form.get("Result")
-    # todo: save result
+    JudgeServer_Scheduler.Receive_Judge_Result(Secret, Judge_ID, Result)
     return '0'
 
 

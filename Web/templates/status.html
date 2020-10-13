@@ -3,10 +3,10 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Status</title>
+        <title>评测状态</title>
         <link rel="shortcut icon" href="favicon.ico">
         <link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-        <link href="{{ url_for('static', filename = 'css/style.css')}}" rel="stylesheet">
+        <link href="../static/css/style.css" rel="stylesheet">
     </head>
     
     <body style="background-color: rgba(193,220,248,0.1);">
@@ -23,30 +23,32 @@
                     <h1 class="text-center"> 评测状态 </h1>
                 </div>
                 <div>
-                    <form class="form-group input-group" method="post" id="status_serach">
-                        <input class="form-control input-group" type="text" name="submitter" id="submitter" required="required" placeholder="用户名">
-                        <input class="form-control input-group" type="number" name="problem_id" id="problem_id" required="required" placeholder="题目编号">
+                    <form class="form-group input-group" method="get" id="status_serach">
+                        <input class="form-control input-group" type="text" name="submitter" id="submitter" placeholder="用户名">
+                        <input class="form-control input-group" type="number" name="problem_id" id="problem_id" placeholder="题目编号">
                         <select class="form-control input-group" name="status" id="status" style="height: 43px">
                             <option value = "-1">All</option>
                             <option value = "0">Pending</option>
                             <option value = "1">Running</option>
-                            <option value = "2">AC</option>
-                            <option value = "3">WA</option>
-                            <option value = "4">CE</option>
-                            <option value = "5">RE</option>
-                            <option value = "6">TLE</option>
-                            <option value = "7">MLE</option>
-                            <option value = "8">MLK</option>
-                            <option value = "9">SE</option>
-                            <option value = "10">DLE</option>
+                            <option value = "2">Accepted</option>
+                            <option value = "3">Wrong Answer</option>
+                            <option value = "4">Compile Error</option>
+                            <option value = "5">Runtime Error</option>
+                            <option value = "6">Time Exceed Exceed</option>
+                            <option value = "7">Memory Limit Exceed</option>
+                            <option value = "8">Memory Leak</option>
+                            <option value = "10">Disk Limit Exceed</option>
+                            <option value = "9">System Error</option>
                         </select>
                         <select class="form-control input-group" name="lang" id="lang" style="height: 43px">
                             <option value = "-1">All</option>
                             <option value = "0">C++</option>
                             <option value = "1">Git</option>
                         </select>
-                        <input type="submit" class="btn btn-primary btn-right" value="&nbsp&nbsp&nbsp搜索&nbsp&nbsp&nbsp">  
-                    </form>
+                        <div class="input-group-append">
+                            <button class="btn btn-primary">搜索</button>  
+                        </div>
+                        </form>
                 </div>
                 <div class="bootstrap-data-table-panel">
                     <div class="table-responsive">
@@ -67,8 +69,32 @@
                                 <tr>
                                     <td>{{cur['ID']}}</td>
                                     <td>{{cur['Friendly_Name']}}</td>
-                                    <td><a href="/problem?problem_id={{cur['Problem_ID']}}">{{cur['Problem_ID']}}.{{cur['Problem_Title']}}</a></td>
-                                    <td>{{cur['Status']}}</td>
+                                    <td><a href="/problem?problem_id={{cur['Problem_ID']}}">{{cur['Problem_ID']}}. {{cur['Problem_Title']}}</a></td>
+                                    <td>
+                                        {% if cur['Status'] == '0' %}
+                                            <span class="text-gray">Pending</span>
+                                        {% elif cur['Status'] == '1' %}
+                                            <span class="text-blue">Running & Judging</span>
+                                        {% elif cur['Status'] == '2' %}
+                                            <span class="text-green">Accepted</span>
+                                        {% elif cur['Status'] == '3' %}
+                                            <span class="text-red">Wrong Answer</span>
+                                        {% elif cur['Status'] == '5' %}
+                                            <span class="text-red">Runtime Error</span>
+                                        {% elif cur['Status'] == '4' %}
+                                            <span class="text-cyan">Compile Error</span>
+                                        {% elif cur['Status'] == '6' %}
+                                            <span class="text-orange">Time Limit Exceed</span>
+                                        {% elif cur['Status'] == '7' %}
+                                            <span class="text-orange">Memory Limit Exceed</span>
+                                        {% elif cur['Status'] == '10' %}
+                                            <span class="text-purple">Disk Limit Exceed</span>
+                                        {% elif cur['Status'] == '8' %}
+                                            <span class="text-purple">Memory Leak</span>
+                                        {% elif cur['Status'] == '9' %}
+                                            <span class="text-gray-dark">System Error</span>
+                                        {% endif %}
+                                    </td>
                                     <td>{{cur['Time_Used']}}ms</td>
                                     <td>{{cur['Mem_Used']}}KiB</td>
                                     {% if cur['Visible'] %}
@@ -105,15 +131,4 @@
     <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
     <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 </html>
-build a search box
-
-{% if Submitter %}
-    {{Submitter}}<br>
-    hold it with js, and build it into bottom link<br>
-{% endif %}
-
-{% if Problem_ID %}
-    {{Problem_ID}}<br>
-    hold it with js, and build it into bottom link<br>
-{% endif %}
 

@@ -11,10 +11,13 @@ from judgeServerScheduler import JudgeServer_Scheduler
 from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
 from admin import admin
+from api import api
 from functools import cmp_to_key
+import json
 
 web = Flask('WEB')
 web.register_blueprint(admin, url_prefix='/admin')
+web.register_blueprint(api, url_prefix='/api')
 
 @web.errorhandler(500)
 def Error_500():
@@ -28,9 +31,26 @@ def Index():
 def Index2():
     return redirect('/')
 
-@web.route('/get_username', methods=['POST'])
+@web.route('/api/get_username', methods=['POST'])
 def Get_Username():
     return Login_Manager.Get_FriendlyName()
+
+@web.route('/api/get_detail', methods=['POST'])
+def get_detail():
+    id = request.form.get('problem_id')
+    return json.dumps(Problem_Manager.Get_Problem(id))
+
+@web.route('/api/join', methods=['POST'])
+def Join_Contest():
+    if not Login_Manager.Check_User_Status():
+        return '-1'
+    arg = request.form.get('contest_id')
+    if arg == None:
+        return '-1'
+    username = Login_Manager.Get_Username()
+    if not Contest_Manager.Check_Player_In_Contest(arg, username):
+        Contest_Manager.Add_Player_To_Contest(arg, username)
+    return '0'
 
 @web.route('/login', methods=['GET', 'POST'])
 def Login():
@@ -110,11 +130,10 @@ def Problem_Detail():
         print(request.path)
         return redirect('login?next=' + request.url)
     id = request.args.get('problem_id')
-    if id == None:
+    if id == None or int(id) < 1000 or int(id) > Problem_Manager.Get_Max_ID():
         return redirect('/') # No argument fed
-    Detail = Problem_Manager.Get_Problem(id)
     In_Contest = Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0
-    return render_template('problem_details.html', Detial = Detail, In_Contest = In_Contest)
+    return render_template('problem_details.html', ID = id, Title = Problem_Manager.Get_Title(id), In_Contest = In_Contest)
 
 @web.route('/submit', methods=['GET', 'POST'])
 def Submit_Problem():
@@ -219,9 +238,8 @@ def Discuss(): # todo: Debug discuss
             return redirect('/discuss?problem_id=' + Problem_ID)
 
 def fix_Status_Cur(cur):
-    ls = ['Pending', 'Running', 'AC', 'WA', 'CE', 'RE', 'TLE', 'MLE', 'MLK', 'SE', 'DLE']
-    cur['Status'] = ls[int(cur['Status'])]
-    cur['Lang'] = 'C++' if cur['Lang'] == 0 else 'Git'
+    cur['Status'] = str(cur['Status'])
+    cur['Lang'] = 'C++' if int(cur['Lang']) == 0 else 'Git'
     return cur
 
 @web.route('/status')
@@ -231,7 +249,11 @@ def Status():
 
     Page = request.args.get('page')
     Arg_Submitter = request.args.get('submitter')
+    if Arg_Submitter == '':
+        Arg_Submitter = None
     Arg_Problem_ID = request.args.get('problem_id')
+    if Arg_Problem_ID == '':
+        Arg_Problem_ID = None
     Arg_Status = request.args.get('status')
     if Arg_Status == '-1':
         Arg_Status = None
@@ -302,18 +324,6 @@ def Code(): # todo: View Judge Detail
         return render_template('code.html', Blocked = True)
     else:
         return 'Hua Q'
-
-@web.route('/join', methods=['POST'])
-def Join_Contest():
-    if not Login_Manager.Check_User_Status():
-        return '-1'
-    arg = request.form.get('contest_id')
-    if arg == None:
-        return '-1'
-    username = Login_Manager.Get_Username()
-    if not Contest_Manager.Check_Player_In_Contest(arg, username):
-        Contest_Manager.Add_Player_To_Contest(arg, username)
-    return '0'
 
 @web.route('/contest')
 def Contest():
@@ -420,7 +430,7 @@ def Homework():
                 if Submits != None:
                     for Submit in Submits:
                         Try_Time += 1
-                        if Submit[1] == 'AC':
+                        if int(Submit[1]) == 2:
                             isAC = True
                             break
                 if isAC:
@@ -443,4 +453,4 @@ def Homework():
                                Data = Data, len = len(Players), len2 = len(Problems))
 @web.route('/about')
 def About():
-    return 'Hua Q~'
+    return render_template('about.html')

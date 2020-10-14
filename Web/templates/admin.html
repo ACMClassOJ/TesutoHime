@@ -1,318 +1,462 @@
-<!doctype html>
-<html lang="zh-cn">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="author" content="Pioooooo">
-    <title>TesutoHime · Admin</title>
-    <link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet">
-</head>
+{% extends "base.html" %}
 
-<body>
-<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
-    <div class="container">
-        <a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
-        <div class="navbar-collapse collapse" id="navbar_global"></div>
-        <div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
+{% set page="Admin" %}
+
+{% block content %}
+    <div class="card card-body">
+        <div class="page-header">
+            <h1 class="text-center"> Management </h1>
+        </div>
+        {% if privilege>=Privilege.SUPER %}
+            <div>
+                <h3> User Management </h3>
+                <form id="formUser">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="iptUsername"> Username </label>
+                            <input class="form-control" type="text" name="username" id="iptUsername">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptStudentId"> Student ID </label>
+                            <input class="form-control" type="number" name="id" id="iptStudentId">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptFriendlyName"> Friendly Name </label>
+                            <input class="form-control" type="text" name="name" id="iptFriendlyName">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptPassword"> Password </label>
+                            <input class="form-control" type="password" name="password" id="iptPassword">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptPrivilege"> Privilege </label>
+                            <input class="form-control" type="number" name="privilege" id="iptPrivilege">
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUser"> Add User
+                            </button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyUser"> Modify
+                                User
+                            </button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUser"> Remove
+                                User
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+        <div class="mt-2">
+            <h3>Problem Management</h3>
+            <form id="formProblem">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="iptTitle"> Title </label>
+                        <input class="form-control" type="text" name="title" id="iptTitle">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptReleaseTime"> Release Time (YYYY-MM-DDThh:mm:ss) </label>
+                        <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="iptDescription"> Description </label>
+                        <textarea class="form-control" name="description" id="iptDescription"></textarea>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptInput"> Input </label>
+                        <textarea class="form-control" name="input" id="iptInput"></textarea>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptOutput"> Output </label>
+                        <textarea class="form-control" name="output" id="iptOutput"></textarea>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptExampleInput"> Example Input </label>
+                        <textarea class="form-control" name="example_input" id="iptExampleInput"></textarea>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptExampleOutput"> Example Output </label>
+                        <textarea class="form-control" name="example_output" id="iptExampleOutput"></textarea>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptDataRange"> Data Range </label>
+                        <textarea class="form-control" name="range" id="iptDataRange"></textarea>
+                    </div>
+                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblem">Add Problem
+                        </button>
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyProblem">Modify
+                            Problem
+                        </button>
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblem">Remove
+                            Problem
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="mt-2">
+            <h3> Contest Management </h3>
+            <form id="formContest">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="iptContestId"> Contest ID </label>
+                        <input class="form-control" type="number" name="contest_id" id="iptContestId">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptContestName"> Contest Name </label>
+                        <input class="form-control" type="text" name="name" id="iptContestName">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptStartTime"> Start Time </label>
+                        <input class="form-control" type="datetime-local" name="start_time" id="iptStartTime">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptEndTime"> End Time </label>
+                        <input class="form-control" type="datetime-local" name="end_time" id="iptEndTime">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptContestProblemId"> Problem ID(s) </label>
+                        <textarea class="form-control" name="id" id="iptContestProblemId"></textarea>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptContestStudentUsername"> Student Username(s) </label>
+                        <textarea class="form-control" name="username" id="iptContestStudentUsername"></textarea>
+                    </div>
+                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnCreateContest"> Create
+                            Contest
+                        </button>
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyContest"> Modify
+                            Contest
+                        </button>
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveContest"> Remove
+                            Contest
+                        </button>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="custom-control custom-checkbox col-md-3">
+                        <input class="custom-control-input" type="checkbox" name="contest_type" id="iptIsHomework">
+                        <label class="custom-control-label" for="iptIsHomework"> Is Homework </label>
+                    </div>
+                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemToContest"> Add
+                            Problem
+                        </button>
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblemFromContest">
+                            Remove Problem
+                        </button>
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUserToContest"> Add
+                            User
+                        </button>
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUserFromContest">
+                            Remove User
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="mt-2">
+            <h3>Data Management</h3>
+            <form id="formData">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="iptDataProblemID"> Problem ID </label>
+                        <input class="form-control" type="number" name="id" id="iptDataProblemID">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptCompileTime"> Compile Time Limit </label>
+                        <input class="form-control" type="number" name="time" id="iptCompileTime">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-3 custom-file">
+                        <label class="custom-file-label ml-1 mr-1" for="iptData"> Test Data </label>
+                        <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans"
+                               multiple>
+                    </div>
+                    <div class="form-group col-md-3 custom-file">
+                        <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge </label>
+                        <input class="custom-file-input" type="file" name="data" id="iptSpj" accept=".spj">
+                    </div>
+                    <div class="form-group col-md-3 custom-file">
+                        <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
+                        <input class="custom-file-input" type="file" name="data" id="iptScorer" accept=".py">
+                    </div>
+                </div>
+                <h5>Data Configuration</h5>
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th scope="col">GroupID</th>
+                            <th scope="col">GroupName</th>
+                            <th scope="col">GroupScore</th>
+                            <th scope="col">TestPoints</th>
+                        </tr>
+                        </thead>
+                        <tbody contenteditable="true" id="tableGroups">
+                        <tr>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>100</td>
+                            <td>10</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="float-right">
+                        <button class="btn btn-outline-primary" type="button" id="btnAddGroupsRow">Add Row</button>
+                        <button class="btn btn-outline-primary" type="button" id="btnRemoveGroupsRow">Remove Row
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Dependency</th>
+                            <th scope="col">Time Limit</th>
+                            <th scope="col">Memory Limit</th>
+                            <th scope="col">Disk Limit</th>
+                            <th scope="col">ValgrindTestOn</th>
+                        </tr>
+                        </thead>
+                        <tbody contenteditable="true" id="tableDetails">
+                        <tr>
+                            <td>1</td>
+                            <td>0</td>
+                            <td></td>
+                            <td></td>
+                            <td>0</td>
+                            <td contenteditable="false">
+                                <div class="custom-checkbox ml-3">
+                                    <input class="form-check-input" type="checkbox" id="iptValgrind1">
+                                    <label class="form-check-label" for="iptValgrind1"></label>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="float-right">
+                        <button class="btn btn-outline-primary" type="button" id="btnAddDetailsRow">Add Row</button>
+                        <button class="btn btn-outline-primary" type="button" id="btnRemoveDetailsRow">Remove Row
+                        </button>
+                    </div>
+                </div>
+                <div class="float-right">
+                    <button class="btn btn-outline-primary" type="button" id="btnClearSpj">Clear Spj</button>
+                    <button class="btn btn-outline-primary" type="button" id="btnClearScorer">Clear Scorer</button>
+                    <button class="btn btn-outline-primary" type="submit" id="btnAddProblemData">Add Problem Data
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</nav>
-<!--<div>
-    <form id="formUser">
-        <label>
-            Username
-            <input type="text" name="username" id="iptUsername">
-        </label>
-        <label>
-            Student ID
-            <input type="number" name="id" id="iptStudentId">
-        </label>
-        <label>
-            Friendly Name
-            <input type="text" name="name" id="iptFriendlyName">
-        </label>
-        <label>
-            Password
-            <input type="password" name="password" id="iptPassword">
-        </label>
-        <label>
-            Privilege
-            <input type="number" name="privilege" id="iptPrivilege">
-        </label>
-        <button type="submit" id="btnAddUser">Add User</button>
-        <button type="submit" id="btnModifyUser">Modify User</button>
-        <button type="submit" id="btnRemoveUser">Remove User</button>
-    </form>
-</div>
-<div>
-    <form id="formProblem">
-        <label>
-            Title
-            <input type="text" name="title" id="iptTitle">
-        </label>
-        <label>
-            Description
-            <textarea name="description" id="iptDescription"></textarea>
-        </label>
-        <label>
-            Input
-            <textarea name="input" id="iptInput"></textarea>
-        </label>
-        <label>
-            Output
-            <textarea name="output" id="iptOutput"></textarea>
-        </label>
-        <label>
-            Example Input
-            <textarea name="example_input" id="iptExampleInput"></textarea>
-        </label>
-        <label>
-            Example Output
-            <textarea name="example_output" id="iptExampleOutput"></textarea>
-        </label>
-        <label>
-            Data Range
-            <textarea name="range" id="iptDataRange"></textarea>
-        </label>
-        <label>
-            Release Time (YYYY-MM-DDThh:mm:ss)
-            <input type="datetime-local" name="time" id="iptReleaseTime">
-        </label>
-        <button type="submit" id="btnAddProblem">Add Problem</button>
-        <button type="submit" id="btnModifyProblem">Modify Problem</button>
-        <button type="submit" id="btnRemoveProblem">Remove Problem</button>
-    </form>
-</div>
-<div>
-    <form id="formContest">
-        <label>
-            Contest ID
-            <input type="number" name="contest_id" id="iptContestId">
-        </label>
-        <label>
-            Contest Name
-            <input type="text" name="name" id="iptContestName">
-        </label>
-        <label>
-            Start Time
-            <input type="datetime-local" name="start_time" id="iptStartTime">
-        </label>
-        <label>
-            End Time
-            <input type="datetime-local" name="end_time" id="iptEndTime">
-        </label>
-        <label>
-            Is Homework
-            <input type="checkbox" name="contest_type" id="iptIsHomework">
-        </label>
-        <label>
-            Problem ID(s)
-            <textarea name="id" id="iptContestProblemId"></textarea>
-        </label>
-        <label>
-            Student Username(s)
-            <textarea name="username" id="iptContestStudentUsername"></textarea>
-        </label>
-        <button type="submit" id="btnCreateContest">Create Contest</button>
-        <button type="submit" id="btnModifyContest">Modify Contest</button>
-        <button type="submit" id="btnRemoveContest">Remove Contest</button>
-        <button type="submit" id="btnAddProblemToContest">Add Problem To Contest</button>
-        <button type="submit" id="btnRemoveProblemFromContest">Remove Problem from Contest</button>
-        <button type="submit" id="btnAddUserToContest">Add User To Contest</button>
-        <button type="submit" id="btnRemoveUserFromContest">Remove User From Contest</button>
-    </form>
-</div>-->
-<div>
-    <form id="formData">
-        <label>
-            Problem ID
-            <input type="number" name="id" id="iptDataProblemID">
-        </label>
-        <label>
-            Config
-            <textarea name="config" id="iptConfig"></textarea>
-        </label>
-        <label>
-            Test Data (multiple files supported)
-            <input type="file" name="data" id="iptData" accept=".in,.ans" multiple>
-        </label>
-        <div>
-            <label>
-                Special Judge
-                <input type="file" name="data" id="iptSpj" accept=".spj">
-            </label>
-            <button type="button" id="btnClearSpj">Clear</button>
-        </div>
-        <div>
-            <label>
-                Scorer
-                <input type="file" name="data" id="iptScorer" accept=".py">
-            </label>
-            <button type="button" id="btnClearScorer">Clear</button>
-        </div>
-        <button type="submit" id="btnAddProblemData">Add Problem Data</button>
-    </form>
-</div>
-</body>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-<script src="{{ url_for('static', filename='js/jszip.min.js') }}"></script>
-<script>
-    $.fn.serializeObject = function () {
-        let data = {};
-        this.serializeArray().forEach(function (e) {
-            if (e.value !== "")
-                if (e.name.search("[T t]ime") !== -1)
-                    data[e.name] = new Date(e.value).getTime() / 1000;
-                else if ($("#" + e.name))
-                    data[e.name] = e.value;
-        });
-        return data;
-    }
-</script>
-<script>
-    let op;
-    $(function () {
-        $("#btnAddUser").click(function () {
-            op = 0;
-        });
-        $("#btnModifyUser").click(function () {
-            op = 1;
-        });
-        $("#btnRemoveUser").click(function () {
-            op = 2;
-        });
-        $("#btnAddProblem").click(function () {
-            op = 0;
-        });
-        $("#btnModifyProblem").click(function () {
-            op = 1;
-        });
-        $("#btnRemoveProblem").click(function () {
-            op = 2;
-        });
-        $("#btnCreateContest").click(function () {
-            op = 0;
-        });
-        $("#btnModifyContest").click(function () {
-            op = 1;
-        });
-        $("#btnRemoveContest").click(function () {
-            op = 2;
-        });
-        $("#btnAddProblemToContest").click(function () {
-            op = 3;
-        });
-        $("#btnRemoveProblemFromContest").click(function () {
-            op = 4;
-        });
-        $("#btnAddUserToContest").click(function () {
-            op = 5;
-        });
-        $("#btnRemoveUserFromContest").click(function () {
-            op = 6;
-        });
-        $("#btnClearSpj").click(function () {
-            $("#iptSpj").val("");
-        });
-        $("#btnClearScorer").click(function () {
-            $("#iptScorer").val("");
-        });
-
-        $("#formUser").submit(function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            let data = $(this).serializeObject();
-            data.type = op;
-            console.log(data);
-            $.ajax({
-                type: "POST",
-                contentType: "application/json",
-                url: "/admin/user",
-                dataType: "json",
-                data: JSON.stringify(data),
-                complete: function (ret) {
-                    alert(JSON.stringify(ret));
-                }
+{% endblock %}
+{% block script %}
+    <script src="{{ url_for('static', filename = 'js/jszip.min.js') }}"></script>
+    <script>
+        $.fn.serializeObject = function () {
+            let data = {};
+            this.serializeArray().forEach(function (e) {
+                if (e.value !== "")
+                    if (e.name.search("[T t]ime") !== -1)
+                        data[e.name] = new Date(e.value).getTime() / 1000;
+                    else if ($("#" + e.name))
+                        data[e.name] = e.value;
             });
-        });
+            return data;
+        }
+    </script>
+    <script>
+        let op;
+        $(function () {
 
-        $("#formProblem").submit(function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            let data = $(this).serializeObject();
-            data.type = op;
-            console.log(data);
-
-            $.ajax({
-                type: "POST",
-                contentType: "application/json",
-                url: "/admin/problem",
-                dataType: "json",
-                data: JSON.stringify(data),
-                complete: function (ret) {
-                    alert(JSON.stringify(ret));
-                }
+            $("#btnAddUser").click(function () {
+                op = 0;
             });
-        });
-
-        $("#formContest").submit(function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            let data = $(this).serializeObject();
-            data.contest_type = $("#iptIsHomework")[0].checked ? 1 : 0;
-            if (data.hasOwnProperty("id"))
-                data.id = data.id.split(/\s+/);
-            if (data.hasOwnProperty("username"))
-                data.username = data.username.split(/\s+/);
-            data.type = op;
-            console.log(data);
-            $.ajax({
-                type: "POST",
-                contentType: "application/json",
-                url: "/admin/contest",
-                dataType: "json",
-                data: JSON.stringify(data),
-                complete: function (ret) {
-                    alert(ret.responseText);
-                }
+            $("#btnModifyUser").click(function () {
+                op = 1;
             });
-        });
-
-        $("#formData").submit(function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            let zip = new JSZip(), folder = zip.folder($("#iptDataProblemID").val()), files = $("#iptData")[0].files;
-            $(files).each(function (index, file) {
-                folder.file(file.name, file);
+            $("#btnRemoveUser").click(function () {
+                op = 2;
             });
-            let spj = $("#iptSpj"), scorer = $("#iptScorer");
-            if (spj.val() !== null && spj.val() !== "") {
-                spj = spj[0].files[0];
-                folder.file(spj.name, spj);
-            }
-            if (scorer.val() !== null && scorer.val() !== "") {
-                scorer = scorer[0].files[0];
-                folder.file(scorer.name, scorer);
-            }
-            folder.file("config.json", $("#iptConfig").val());
-            zip.generateAsync({
-                type: "blob"
-            }).then(function (blob) {
-                let data = new FormData();
-                data.append("file",blob,$("#iptDataProblemID").val()+".zip");
+            $("#formUser").submit(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                let data = $(this).serializeObject();
+                data.type = op;
                 console.log(data);
                 $.ajax({
-                    url: "/admin/data",
                     type: "POST",
-                    processData: false,
-                    contentType: false,
-                    data: data,
+                    contentType: "application/json",
+                    url: "/admin/user",
                     dataType: "json",
+                    data: JSON.stringify(data),
+                    complete: function (ret) {
+                        alert(JSON.stringify(ret));
+                    }
+                });
+            });
+
+
+            $("#btnAddProblem").click(function () {
+                op = 0;
+            });
+            $("#btnModifyProblem").click(function () {
+                op = 1;
+            });
+            $("#btnRemoveProblem").click(function () {
+                op = 2;
+            });
+            $("#formProblem").submit(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                let data = $(this).serializeObject();
+                data.type = op;
+                console.log(data);
+
+                $.ajax({
+                    type: "POST",
+                    contentType: "application/json",
+                    url: "/admin/problem",
+                    dataType: "json",
+                    data: JSON.stringify(data),
+                    complete: function (ret) {
+                        alert(JSON.stringify(ret));
+                    }
+                });
+            });
+
+            $("#btnCreateContest").click(function () {
+                op = 0;
+            });
+            $("#btnModifyContest").click(function () {
+                op = 1;
+            });
+            $("#btnRemoveContest").click(function () {
+                op = 2;
+            });
+            $("#btnAddProblemToContest").click(function () {
+                op = 3;
+            });
+            $("#btnRemoveProblemFromContest").click(function () {
+                op = 4;
+            });
+            $("#btnAddUserToContest").click(function () {
+                op = 5;
+            });
+            $("#btnRemoveUserFromContest").click(function () {
+                op = 6;
+            });
+            $("#formContest").submit(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                let data = $(this).serializeObject();
+                data.contest_type = $("#iptIsHomework")[0].checked ? 1 : 0;
+                if (data.hasOwnProperty("id"))
+                    data.id = data.id.split(/\s+/);
+                if (data.hasOwnProperty("username"))
+                    data.username = data.username.split(/\s+/);
+                data.type = op;
+                console.log(data);
+                $.ajax({
+                    type: "POST",
+                    contentType: "application/json",
+                    url: "/admin/contest",
+                    dataType: "json",
+                    data: JSON.stringify(data),
                     complete: function (ret) {
                         alert(ret.responseText);
                     }
                 });
             });
+
+            $("#btnAddGroupsRow").click(function () {
+                let t = $("#tableGroups");
+                t.append($(`<tr><td>${t.children().length + 1}</td><td>${t.children().length + 1}</td><td></td><td></td></tr>`));
+            });
+            $("#btnRemoveGroupsRow").click(function () {
+                $("#tableGroups").children().last().remove();
+            });
+            $("#btnAddDetailsRow").click(function () {
+                let t = $("#tableDetails");
+                t.append($(`<tr><td>${t.children().length + 1}</td><td>0</td><td></td><td></td><td>0</td><td contenteditable="false">` +
+                    `<div class="custom-checkbox ml-3"><input class="form-check-input" type="checkbox" id="iptValgrind1">` +
+                    `<label class="form-check-label" for="iptValgrind1"></label></div></td></tr>`))
+            });
+            $("#btnRemoveDetailsRow").click(function () {
+                $("#tableDetails").children().last().remove();
+            });
+            $("#btnClearSpj").click(function () {
+                $("#iptSpj").val("");
+            });
+            $("#btnClearScorer").click(function () {
+                $("#iptScorer").val("");
+            });
+
+            function generateConfig() {
+                let tableGroups = $("#tableGroups"), tableDetails = $("#tableDetails"), config = "";
+                config += `{"Groups":[`;
+                tableGroups.children().each(function (i, e) {
+                    let d = e.children;
+                    config += `${i ? "," : ""}{"GroupID":${d[0].innerHTML.replace("<br>", "")},"GroupName":"${d[1].innerHTML.replace("<br>", "")}",` +
+                        `"GroupScore":${d[2].innerHTML.replace("<br>", "")},"TestPoints":[${d[3].innerHTML.replace("<br>", "")}]}`;
+                });
+                config += `],"Details":[`;
+                tableDetails.children().each(function (i, e) {
+                    let d = e.children;
+                    config += `${i ? "," : ""}{"ID":${d[0].innerHTML.replace("<br>", "")},"Dependency":${d[1].innerHTML.replace("<br>", "")},` +
+                        `"TimeLimit":${d[2].innerHTML.replace("<br>", "")},"MemoryLimit":${d[3].innerHTML.replace("<br>", "")},` +
+                        `"DiskLimit":${d[4].innerHTML.replace("<br>", "")},"ValgrindTestOn":${$(d[5]).find("input").is(":checked") ? "true" : "false"}}`;
+                });
+                let spj = $("#iptSpj"), scorer = $("#iptScorer");
+                config += `],"CompileTimeLimit":${$("#iptCompileTime").val()},"SPJ":${spj.val() !== null && spj.val() !== "" ? 1 : 0},` +
+                    `"Scorer":${scorer.val() !== null && scorer.val() !== "" ? 1 : 0}}`;
+                return config;
+            }
+
+            $("#formData").submit(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                let zip = new JSZip(), folder = zip.folder($("#iptDataProblemID").val()),
+                    files = $("#iptData")[0].files;
+                $(files).each(function (index, file) {
+                    folder.file(file.name, file);
+                });
+                let spj = $("#iptSpj"), scorer = $("#iptScorer");
+                if (spj.val() !== null && spj.val() !== "") {
+                    spj = spj[0].files[0];
+                    folder.file(spj.name, spj);
+                }
+                if (scorer.val() !== null && scorer.val() !== "") {
+                    scorer = scorer[0].files[0];
+                    folder.file(scorer.name, scorer);
+                }
+                folder.file("config.json", generateConfig());
+                zip.generateAsync({
+                    type: "blob"
+                }).then(function (blob) {
+                    let data = new FormData(), id = $("#iptDataProblemID").val();
+                    data.append("file", blob, id + ".zip");
+                    console.log(data);
+                    $.ajax({
+                        url: "/admin/data",
+                        type: "POST",
+                        processData: false,
+                        contentType: false,
+                        data: data,
+                        dataType: "json",
+                        complete: function (ret) {
+                            alert(ret.responseText);
+                        }
+                    });
+                });
+            });
         });
-    });
-</script>
-</html>
+    </script>
+{% endblock %}

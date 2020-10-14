@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="author" content="Pioooooo">
     <title>TesutoHime · Admin</title>
-    <link href="{{ url_for('static', filename = 'css/style.css')}}" rel="stylesheet">
+    <link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet">
 </head>
 
 <body>
-        <nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
-            <div class="container">
-                <a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
-                <div class="navbar-collapse collapse" id="navbar_global"></div>
-                <div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
-            </div>
-        </nav>
-<div>
+<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
+    <div class="container">
+        <a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
+        <div class="navbar-collapse collapse" id="navbar_global"></div>
+        <div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
+    </div>
+</nav>
+<!--<div>
     <form id="formUser">
         <label>
             Username
@@ -120,16 +120,48 @@
         <button type="submit" id="btnAddUserToContest">Add User To Contest</button>
         <button type="submit" id="btnRemoveUserFromContest">Remove User From Contest</button>
     </form>
+</div>-->
+<div>
+    <form id="formData">
+        <label>
+            Problem ID
+            <input type="number" name="id" id="iptDataProblemID">
+        </label>
+        <label>
+            Config
+            <textarea name="config" id="iptConfig"></textarea>
+        </label>
+        <label>
+            Test Data (multiple files supported)
+            <input type="file" name="data" id="iptData" accept=".in,.ans" multiple>
+        </label>
+        <div>
+            <label>
+                Special Judge
+                <input type="file" name="data" id="iptSpj" accept=".spj">
+            </label>
+            <button type="button" id="btnClearSpj">Clear</button>
+        </div>
+        <div>
+            <label>
+                Scorer
+                <input type="file" name="data" id="iptScorer" accept=".py">
+            </label>
+            <button type="button" id="btnClearScorer">Clear</button>
+        </div>
+        <button type="submit" id="btnAddProblemData">Add Problem Data</button>
+    </form>
 </div>
 </body>
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
+<script src="{{ url_for('static', filename='js/jszip.min.js') }}"></script>
 <script>
     $.fn.serializeObject = function () {
         let data = {};
         this.serializeArray().forEach(function (e) {
             if (e.value !== "")
                 if (e.name.search("[T t]ime") !== -1)
-                    data[e.name] = new Date(e.value).getTime()/1000;
+                    data[e.name] = new Date(e.value).getTime() / 1000;
                 else if ($("#" + e.name))
                     data[e.name] = e.value;
         });
@@ -138,103 +170,148 @@
 </script>
 <script>
     let op;
-    $("#btnAddUser").click(function () {
-        op = 0;
-    });
-    $("#btnModifyUser").click(function () {
-        op = 1;
-    });
-    $("#btnRemoveUser").click(function () {
-        op = 2;
-    });
-    $("#btnAddProblem").click(function () {
-        op = 0;
-    });
-    $("#btnModifyProblem").click(function () {
-        op = 1;
-    });
-    $("#btnRemoveProblem").click(function () {
-        op = 2;
-    });
-    $("#btnCreateContest").click(function () {
-        op = 0;
-    });
-    $("#btnModifyContest").click(function () {
-        op = 1;
-    });
-    $("#btnRemoveContest").click(function () {
-        op = 2;
-    });
-    $("#btnAddProblemToContest").click(function () {
-        op = 3;
-    });
-    $("#btnRemoveProblemFromContest").click(function () {
-        op = 4;
-    });
-    $("#btnAddUserToContest").click(function () {
-        op = 5;
-    });
-    $("#btnRemoveUserFromContest").click(function () {
-        op = 6;
-    });
-
-    $("#formUser").submit(function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        let data = $(this).serializeObject();
-        data.type = op;
-        console.log(data);
-        $.ajax({
-            type: "POST",
-            contentType: "application/json",
-            url: "/admin/user",
-            dataType: "json",
-            data: JSON.stringify(data),
-            complete: function (ret) {
-                alert(JSON.stringify(ret));
-            }
+    $(function () {
+        $("#btnAddUser").click(function () {
+            op = 0;
         });
-    });
-
-    $("#formProblem").submit(function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        let data = $(this).serializeObject();
-        data.type = op;
-        console.log(data);
-
-        $.ajax({
-            type: "POST",
-            contentType: "application/json",
-            url: "/admin/problem",
-            dataType: "json",
-            data: JSON.stringify(data),
-            complete: function (ret) {
-                alert(JSON.stringify(ret));
-            }
+        $("#btnModifyUser").click(function () {
+            op = 1;
         });
-    });
+        $("#btnRemoveUser").click(function () {
+            op = 2;
+        });
+        $("#btnAddProblem").click(function () {
+            op = 0;
+        });
+        $("#btnModifyProblem").click(function () {
+            op = 1;
+        });
+        $("#btnRemoveProblem").click(function () {
+            op = 2;
+        });
+        $("#btnCreateContest").click(function () {
+            op = 0;
+        });
+        $("#btnModifyContest").click(function () {
+            op = 1;
+        });
+        $("#btnRemoveContest").click(function () {
+            op = 2;
+        });
+        $("#btnAddProblemToContest").click(function () {
+            op = 3;
+        });
+        $("#btnRemoveProblemFromContest").click(function () {
+            op = 4;
+        });
+        $("#btnAddUserToContest").click(function () {
+            op = 5;
+        });
+        $("#btnRemoveUserFromContest").click(function () {
+            op = 6;
+        });
+        $("#btnClearSpj").click(function () {
+            $("#iptSpj").val("");
+        });
+        $("#btnClearScorer").click(function () {
+            $("#iptScorer").val("");
+        });
 
-    $("#formContest").submit(function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        let data = $(this).serializeObject();
-        data.contest_type = $("#iptIsHomework")[0].checked ? 1 : 0;
-        if (data.hasOwnProperty("id"))
-            data.id = data.id.split(/\s+/);
-        if (data.hasOwnProperty("username"))
-            data.username = data.username.split(/\s+/);
-        data.type = op;
-        console.log(data);
-        $.ajax({
-            type: "POST",
-            contentType: "application/json",
-            url: "/admin/contest",
-            dataType: "json",
-            data: JSON.stringify(data),
-            complete: function (ret) {
-                alert(ret.responseText);
+        $("#formUser").submit(function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            let data = $(this).serializeObject();
+            data.type = op;
+            console.log(data);
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "/admin/user",
+                dataType: "json",
+                data: JSON.stringify(data),
+                complete: function (ret) {
+                    alert(JSON.stringify(ret));
+                }
+            });
+        });
+
+        $("#formProblem").submit(function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            let data = $(this).serializeObject();
+            data.type = op;
+            console.log(data);
+
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "/admin/problem",
+                dataType: "json",
+                data: JSON.stringify(data),
+                complete: function (ret) {
+                    alert(JSON.stringify(ret));
+                }
+            });
+        });
+
+        $("#formContest").submit(function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            let data = $(this).serializeObject();
+            data.contest_type = $("#iptIsHomework")[0].checked ? 1 : 0;
+            if (data.hasOwnProperty("id"))
+                data.id = data.id.split(/\s+/);
+            if (data.hasOwnProperty("username"))
+                data.username = data.username.split(/\s+/);
+            data.type = op;
+            console.log(data);
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "/admin/contest",
+                dataType: "json",
+                data: JSON.stringify(data),
+                complete: function (ret) {
+                    alert(ret.responseText);
+                }
+            });
+        });
+
+        $("#formData").submit(function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            let zip = new JSZip(), folder = zip.folder($("#iptDataProblemID").val()), files = $("#iptData")[0].files;
+            $(files).each(function (index, file) {
+                folder.file(file.name, file);
+            });
+            let spj = $("#iptSpj"), scorer = $("#iptScorer");
+            if (spj.val() !== null && spj.val() !== "") {
+                spj = spj[0].files[0];
+                folder.file(spj.name, spj);
             }
+            if (scorer.val() !== null && scorer.val() !== "") {
+                scorer = scorer[0].files[0];
+                folder.file(scorer.name, scorer);
+            }
+            folder.file("config.json", $("#iptConfig").val());
+            zip.generateAsync({
+                type: "blob"
+            }).then(function (blob) {
+                let data = new FormData();
+                data.append("file",blob,$("#iptDataProblemID").val()+".zip");
+                console.log(data);
+                $.ajax({
+                    url: "/admin/data",
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    dataType: "json",
+                    complete: function (ret) {
+                        alert(ret.responseText);
+                    }
+                });
+            });
         });
     });
 </script>

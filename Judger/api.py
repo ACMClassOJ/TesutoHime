@@ -50,11 +50,13 @@ def judge():
     judgeManager.judgingFlag = True
     try:
         problemConfig, dataPath = get_data(DataConfig, request.form.get('Problem_ID'))
-    except:
-        result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during fetching data.") for testcase in problemConfig.Details], problemConfig)
+    except Exception as e:
+        print('Error occurred during fetching data:', e)
+        os._exit(0)
     try:
         result = judgeManager.judge(problemConfig, dataPath, request.form.get('Lang'), request.form.get('Code'))
-    except:
+    except Exception as e:
+        print(e)
         result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during judging.") for testcase in problemConfig.Details], problemConfig)
     resultlist = make_result_list(result)
     msg = {'Server_Secret': My_Web_Server_Secret, 'Judge_ID': Judge_ID}

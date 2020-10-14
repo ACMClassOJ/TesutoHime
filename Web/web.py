@@ -8,6 +8,7 @@ from discussManager import Discuss_Manager
 from judgeManager import Judge_Manager
 from contestManager import Contest_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
+from judgeServerManager import JudgeServer_Manager
 from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
 from admin import admin
@@ -492,4 +493,5 @@ def Homework():
                                Data = Data, len = len(Players), len2 = len(Problems))
 @web.route('/about')
 def About():
-    return render_template('about.html')
+    Server_List = JudgeServer_Manager.Get_Server_List()
+    return render_template('about.html', Server_List = Server_List)

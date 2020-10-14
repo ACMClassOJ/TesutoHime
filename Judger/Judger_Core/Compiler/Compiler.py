@@ -42,15 +42,24 @@ public:
         program = "".join(random.sample(string.ascii_letters, 10))
         source  = program + ".cpp"
 
-        codeFile = open(os.path.join(path, source), "w")
         className = "".join(random.sample(string.ascii_letters, 10))
-        
-        code = self.cpp_header.format(a = className) + code
+        code = code + self.cpp_header.format(a=className)
 
-        codeFile.write(code)
-        codeFile.close()
-        print("Compiling...")
         try:
+            codeFile = open(os.path.join(path, source), "w")
+            codeFile.write(code)
+            codeFile.close()
+        except IOError:
+            print("Compiler:", "faild to open the file")
+        except Exception as e:
+            print(e)
+            return CompilationResult(
+                compiled=False,
+                msg="Unknown Error!",
+                programPath="")
+
+        try:
+            print("Compiling...", end="")
             process = subprocess.run(
                 ["g++", os.path.join(path, source), "-o", os.path.join(path, program), "-fmax-errors=10", "-lseccomp"],
                 stdout=subprocess.PIPE,
@@ -61,9 +70,20 @@ public:
                 compiled=False,
                 msg="Compile Time Out!",
                 programPath="")
+        except Exception as e:
+            print(e)
+            return CompilationResult(
+                compiled=False,
+                msg="Unknown Error!",
+                programPath="")
+        else:
+            print("Done.")
+
         if process:
             msg += process.stderr.decode() + "\n"
             msg += process.stdout.decode() + "\n"
+
+        msg = msg.replace(program, "main");
         if not process or process.returncode != 0:
             return CompilationResult(
                 compiled=False,
@@ -79,8 +99,9 @@ public:
         path    = self.path
         program = self.program
         msg     = ""
-        print("Loading...")
+
         try:
+            print("Cloning...", end="")
             process = subprocess.run(
                 ["git", "clone", url],
                 stdout=subprocess.PIPE,
@@ -92,6 +113,14 @@ public:
                 compiled=False,
                 msg="Download Time Out!",
                 programPath="")
+        except Exception as e:
+            print(e)
+            return CompilationResult(
+                compiled=False,
+                msg="Unknown Error!",
+                programPath="")
+        else:
+            print("Done.")
 
         if process:
             msg += process.stderr.decode() + "\n"
@@ -106,7 +135,7 @@ public:
         project = process.stderr.decode()[14:-5]
 
         process = None
-        print("Compiling...")
+        print("Compiling...", end="")
         if "CMakeLists.txt" in os.listdir(os.path.join(path, project)):
             try:
                 process = subprocess.run(
@@ -133,6 +162,14 @@ public:
                 compiled=False,
                 msg=msg,
                 programPath="")
+        except Exception as e:
+            print(e)
+            return CompilationResult(
+                compiled=False,
+                msg="Unknown Error!",
+                programPath="")
+        else:
+            print("Done.")
         if process:
             msg += process.stderr.decode() + "\n"
             msg += process.stdout.decode() + "\n"
@@ -150,8 +187,11 @@ public:
 
     def clear(self):
         path = self.path
-        if os.path.exists(path):
-            shutil.rmtree(path, onerror=readonly_handler)
+        try:
+            if os.path.exists(path):
+                shutil.rmtree(path, onerror=readonly_handler)
+        except Exception as e:
+            print(e)
         os.mkdir(path)
 
     def CompileInstance(self, code_config : CompilationConfig):

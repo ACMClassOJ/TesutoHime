@@ -62,7 +62,7 @@ public:
         try:
             print("Compiling...", end="")
             process = subprocess.run(
-                ["g++", os.path.join(path, source), "-o", os.path.join(path, program), "-fmax-errors=10", "-lseccomp", "-O2"],
+                ["g++", os.path.join(path, source), "-o", os.path.join(path, program), "-fmax-errors=10", "-lseccomp", "-O2", "-DONLINE_JUDGE", "-lm"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 timeout=timeLimit)

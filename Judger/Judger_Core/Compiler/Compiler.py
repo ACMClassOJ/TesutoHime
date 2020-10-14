@@ -62,7 +62,7 @@ public:
         try:
             print("Compiling...", end="")
             process = subprocess.run(
-                ["g++", os.path.join(path, source), "-o", os.path.join(path, program), "-fmax-errors=10", "-lseccomp"],
+                ["g++", os.path.join(path, source), "-o", os.path.join(path, program), "-fmax-errors=10", "-lseccomp", "-O2"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 timeout=timeLimit)
@@ -84,7 +84,7 @@ public:
             msg += process.stderr.decode() + "\n"
             msg += process.stdout.decode() + "\n"
 
-        msg = msg.replace(program, "main");
+        msg = msg.replace(program, "main")
         if not process or process.returncode != 0:
             return CompilationResult(
                 compiled=False,

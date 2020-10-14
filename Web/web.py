@@ -62,9 +62,9 @@ def get_code():
         return '-1'
     if not Login_Manager.Check_User_Status():
         return ''
-    if not str(request.args.get('submit_id')).isdigit(): # bad argument
+    if not str(request.form.get('submit_id')).isdigit(): # bad argument
         return ''
-    run_id = int(request.args.get('submit_id'))
+    run_id = int(request.form.get('submit_id'))
     if run_id < 0 or run_id > Judge_Manager.Max_ID():
         return ''
     Detail = Judge_Manager.Query_Judge(run_id)

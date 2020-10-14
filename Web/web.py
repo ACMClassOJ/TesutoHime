@@ -316,7 +316,7 @@ def Status():
         return render_template('status.html', Data = Data, Pages = Gen_Page(Page, max_Page), Submitter = Arg_Submitter, Problem_ID = Arg_Problem_ID)
 
 @web.route('/code')
-def Code(): # todo: View Judge Detail
+def Code():
     if not Login_Manager.Check_User_Status(): # not login
         return redirect('login?next=' + request.url)
     if not str(request.args.get('submit_id')).isdigit(): # bad argument
@@ -335,7 +335,7 @@ def Code(): # todo: View Judge Detail
         Detail['Time'] = Readable_Time(int(Detail['Time']))
         Data = None
         if Detail['Detail'] != 'None':
-            Data = json.loads(Detail['Detail'])[5:]
+            Data = json.loads(Detail['Detail'])[4:]
         return render_template('judge_detail.html', Detail = Detail, Data = Data)
 
 @web.route('/contest')

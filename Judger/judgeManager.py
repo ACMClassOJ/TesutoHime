@@ -2,7 +2,9 @@ from Judger.Judger_Core.config import *
 from Judger.JudgerResult import *
 from Judger.Judger_Core.Compiler.Compiler import compiler
 from Judger.Judger_Core.classic_judger import ClassicJudger
+from Judger.Judger_Data import ProblemConfig, Group
 import subprocess
+import os.path
 
 class JudgeManager:
     def __init__(self):
@@ -20,7 +22,7 @@ class JudgeManager:
         compileResult = compiler.CompileInstance(CompilationConfig(sourceCode, language, problemConfig.CompileTimeLimit))
         if not compileResult.compiled:
             print('Compilation Error')
-            judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg) for testcase in problemConfig.Details], problemConfig)
+            judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(1, ResultType.CE, 0, 0, 0, -1, compileResult.msg)], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
         else:
             print('Compilation Done')
             Details = []
@@ -49,7 +51,11 @@ class JudgeManager:
                             with open('message.log') as f:
                                 testPointDetail.message += f.readline().splitlines()
                         else:
-                            runDiff = subprocess.run(['diff', '-Z', '-B', userOutput , relatedFile + '.ans'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
+                            if os.path.isfile(relatedFile + '.ans'):
+                                runDiff = subprocess.run(['diff', '-Z', '-B', userOutput , relatedFile + '.ans'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
+                            else:
+                                runDiff = subprocess.run(['diff', '-Z', '-B', userOutput , relatedFile + '.out'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
+                            #print(runDiff.stderr.decode() + runDiff.stdout.decode())
                             if runDiff.returncode == 0:
                                 testPointDetail.score, testPointDetail.result = 1.0, ResultType.AC
                             else:
@@ -106,7 +112,7 @@ class JudgeManager:
                     judgeResult = JudgerResult(status, score, totalTime, maxMem, Details, problemConfig)
         #print("One",judgeResult.Status,judgeResult.TimeUsed,judgeResult.MemUsed)
         #for i in judgeResult.Details:
-        #    print(i.ID,i.result,i.score,i.time,i.memory,i.disk,i.message)
+            #print(i.ID,i.result,i.score,i.time,i.memory,i.disk,i.message)
         return judgeResult
 
 

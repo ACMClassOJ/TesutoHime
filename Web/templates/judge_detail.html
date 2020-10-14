@@ -9,7 +9,7 @@
         <link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet"> 
     </head>
     
-    <body style="background-color: rgba(193,220,248,0.1);">
+    <body style="background-color: rgba(193,220,248,0.1);" onload="code_highlight({{Detail['ID']}})">
         <nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
             <div class="container">
                 <a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
@@ -82,7 +82,7 @@
                 <br>
                 <div>
                     <h5>代码：</h5>
-                    <code> {{ Detail['Code'] }}</code>
+                    <pre><code id="judge_detail_code_highlighted">Waiting for code</code></pre>
                 </div>
             {% if Data != None %}
                 <hr>
@@ -149,7 +149,10 @@
     <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
     <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
     <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/styles/github.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/highlight.min.js"></script>
     <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
     <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
+    <script src="{{ url_for('static', filename = 'js/judge_detail.js')}}"></script>
 </html>
 

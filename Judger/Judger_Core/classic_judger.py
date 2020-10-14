@@ -18,7 +18,7 @@ class ClassicJudger(interface.JudgerInterface):
 
     def JudgeInstance(self, sub_config: conf.TestPointConfig,) -> (jr.DetailResult, str):
 
-        if not os.path.exists(workspace_path):
+        if not os.path.exists(chroot_path):
             os.mkdir(chroot_path)
 
         running_time = -time.time()

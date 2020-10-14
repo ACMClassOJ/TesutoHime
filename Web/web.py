@@ -53,6 +53,26 @@ def Join_Contest():
         Contest_Manager.Add_Player_To_Contest(arg, username)
     return '0'
 
+@web.route('/api/code', methods=['POST'])
+def get_code():
+    if not Login_Manager.Check_User_Status():
+        return '-1'
+    arg = request.form.get('submit_id')
+    if arg == None:
+        return '-1'
+    if not Login_Manager.Check_User_Status():
+        return ''
+    if not str(request.args.get('submit_id')).isdigit(): # bad argument
+        return ''
+    run_id = int(request.args.get('submit_id'))
+    if run_id < 0 or run_id > Judge_Manager.Max_ID():
+        return ''
+    Detail = Judge_Manager.Query_Judge(run_id)
+    if Detail['User'] != Login_Manager.Get_Username() and Login_Manager.Get_Privilege() != 2 and (
+            not Detail['Share'] or Problem_Manager.In_Contest(Detail['Problem_ID'])):
+        return ''
+    return Detail['Code']
+
 @web.route('/login', methods=['GET', 'POST'])
 def Login():
     if request.method == 'GET':
@@ -316,7 +336,7 @@ def Status():
         return render_template('status.html', Data = Data, Pages = Gen_Page(Page, max_Page), Submitter = Arg_Submitter, Problem_ID = Arg_Problem_ID)
 
 @web.route('/code')
-def Code(): # todo: View Judge Detail
+def Code():
     if not Login_Manager.Check_User_Status(): # not login
         return redirect('login?next=' + request.url)
     if not str(request.args.get('submit_id')).isdigit(): # bad argument
@@ -327,13 +347,16 @@ def Code(): # todo: View Judge Detail
     Detail = Judge_Manager.Query_Judge(run_id)
     if Detail['User'] != Login_Manager.Get_Username() and Login_Manager.Get_Privilege() != 2 and (
             not Detail['Share'] or Problem_Manager.In_Contest(Detail['Problem_ID'])):
-        return render_template('judge_detail.html', Blocked = True)
+        return abort(403)
     else:
         Detail['Friendly_Name'] = User_Manager.Get_Friendly_Name(Detail['User'])
         Detail['Problem_Title'] = Problem_Manager.Get_Title(Detail['Problem_ID'])
         Detail['Lang'] = 'C++' if Detail['Lang'] == 0 else 'Git'
         Detail['Time'] = Readable_Time(int(Detail['Time']))
-        return render_template('judge_detail.html', Detail = Detail)
+        Data = None
+        if Detail['Detail'] != 'None':
+            Data = json.loads(Detail['Detail'])[4:]
+        return render_template('judge_detail.html', Detail = Detail, Data = Data)
 
 @web.route('/contest')
 def Contest():

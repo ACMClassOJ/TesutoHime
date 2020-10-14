@@ -54,6 +54,22 @@ class JudgeServerManager:
         db.close()
         return
 
+    def Get_Last_Heartbeat(self, Secret: str):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Last_Seen_Time FROM Judge_Server WHERE Secret_Key = %s", (Secret, ))
+        ret = cursor.fetchone()
+        db.close()
+        return ret[0]
+
+    def Get_URL(self, Secret: str):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Address FROM Judge_Server WHERE Secret_Key = %s", (Secret, ))
+        ret = cursor.fetchone()
+        db.close()
+        return ret[0]
+
     def Check_Secret(self, Secret: str):
         db = DB_Connect()
         cursor = db.cursor()
@@ -92,10 +108,10 @@ class JudgeServerManager:
             return None
         st = random.randint(0, len(ret) - 1)
         for i in range(st, st + len(ret)):
-            if Ping(ret[i % st][0]):
-                return ret[i % st]
+            if Ping(ret[i % len(ret)][0]):
+                return ret[i % len(ret)]
             else:
-                self.Set_Offline(ret[i % st][0])
+                self.Set_Offline(ret[i % len(ret)][0])
         return None
 
     def Get_Failure_Task(self):

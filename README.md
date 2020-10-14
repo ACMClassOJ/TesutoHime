@@ -11,7 +11,7 @@
 * [x] Contest_List & Homework_List
 * [x] Participate in Contest/Homework
 * [x] Judge Status
-* [ ] Judge Detail
+* [x] Judge Detail
 * [x] Judge Server
 * [x] Problem Details Markdown
 * [x] Optimize Judge Status Search Behave
@@ -22,8 +22,8 @@
 * [ ] Discuss Board
 * [x] Contest_List/Homework_List Reversal Display
 * [x] Code Sharing System Backend
-* [ ] Code Sharing System Frontend
-* [ ] System Error Checker
+* [x] Code Sharing System Frontend
+* [x] System Error Checker
 
 #### 人员分工(对接结构)
 

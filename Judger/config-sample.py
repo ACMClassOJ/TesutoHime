@@ -1,6 +1,6 @@
 class DataConfig:
-    server = ''
-    key = ''
+    server = 'http://localhost:8000'
+    key = '233'
     cache_dir = '/home/rbq/cache'
 
 My_Web_Server_Secret = "crazy_cloud"

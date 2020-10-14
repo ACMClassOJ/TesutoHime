@@ -26,7 +26,9 @@ class ClassicJudger(interface.JudgerInterface):
             group_id=str(random.randint(99000,99999))
             os.system('cp '+sub_config.programPath+' /exe')
             # command = '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1 -t '+str(sub_config.timeLimit/1000)+' --user '+user_id+' --group '+group_id+' -R /lib64 -R /lib  -R /exe /exe/'+sub_config.programPath.split('/')[-1]+' <'+sub_config.inputFile+' >'+output_file
-            command = '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1 -t '+str(int(sub_config.timeLimit/1000 * Performance_Rate * 1.2 + 1))+' --cgroup_mem_mount '+str(sub_config.memoryLimit)+' --user '+user_id+' --group '+group_id+' -R /lib64 -R /lib  -R /exe /exe/'+sub_config.programPath.split('/')[-1]+' <'+sub_config.inputFile+' >'+output_file
+            command = '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1 -t '+str(int(sub_config.timeLimit/1000 * Performance_Rate * 1.2 + 1))+' --cgroup_mem_mount '+str(sub_config.memoryLimit)+' --user '+user_id+' --group '+group_id+' -R /lib64 -R /lib  -R /exe /exe/'+sub_config.programPath.split('/')[-1]+' <'+sub_config.inputFile+' >'+output_file+' 2>/dev/null'
+            # command = '/bin/nsjail -Mo --chroot /tmp/chroot --verbose --max_cpus 1 -t '+str(int(sub_config.timeLimit/1000 * Performance_Rate * 1.2 + 1))+' --cgroup_mem_mount '+str(sub_config.memoryLimit)+' --user '+user_id+' --group '+group_id+' -R /lib64 -R /lib  -R /exe /exe/'+sub_config.programPath.split('/')[-1]+' <'+sub_config.inputFile+' >'+output_file
+            # command = ' /exe/'+sub_config.programPath.split('/')[-1]+' <'+sub_config.inputFile+' >'+output_file
             # print(command)
             # print('aaaaaa:'+str(sub_config.timeLimit))
 

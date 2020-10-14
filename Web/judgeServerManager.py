@@ -138,7 +138,7 @@ class JudgeServerManager:
             temp['Name'] = x[2]
             temp['System'] = x[3].split('\n')[0]
             temp['Last_Seen_Time'] = Readable_Time(UnixNano())
-            temp['Busy'] = x[1]
+            temp['Busy'] = bool(x[1])
             temp['Provider'] = x[3].split('\n')[1]
             ret.append(temp)
         return ret

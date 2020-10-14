@@ -1,1 +1,1 @@
-from .data import get_data, ProblemConfig
+from .data import get_data, ProblemConfig, Group

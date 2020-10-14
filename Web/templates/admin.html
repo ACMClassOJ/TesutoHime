@@ -167,16 +167,22 @@
                         <label for="iptDataProblemID"> Problem ID </label>
                         <input class="form-control" type="number" name="id" id="iptDataProblemID">
                     </div>
-                    <div class="form-group col-md-3 custom-file" style="margin-top: 31px">
+                    <div class="form-group col-md-3">
+                        <label for="iptCompileTime"> Compile Time Limit </label>
+                        <input class="form-control" type="number" name="time" id="iptCompileTime">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-3 custom-file">
                         <label class="custom-file-label ml-1 mr-1" for="iptData"> Test Data </label>
                         <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans"
                                multiple>
                     </div>
-                    <div class="form-group col-md-3 custom-file" style="margin-top: 31px">
+                    <div class="form-group col-md-3 custom-file">
                         <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge </label>
                         <input class="custom-file-input" type="file" name="data" id="iptSpj" accept=".spj">
                     </div>
-                    <div class="form-group col-md-3 custom-file" style="margin-top: 31px">
+                    <div class="form-group col-md-3 custom-file">
                         <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
                         <input class="custom-file-input" type="file" name="data" id="iptScorer" accept=".py">
                     </div>
@@ -194,10 +200,10 @@
                         </thead>
                         <tbody contenteditable="true" id="tableGroups">
                         <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>100</td>
+                            <td>10</td>
                         </tr>
                         </tbody>
                     </table>
@@ -221,11 +227,11 @@
                         </thead>
                         <tbody contenteditable="true" id="tableDetails">
                         <tr>
+                            <td>1</td>
+                            <td>0</td>
                             <td></td>
                             <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <td>0</td>
                             <td contenteditable="false">
                                 <div class="custom-checkbox ml-3">
                                     <input class="form-check-input" type="checkbox" id="iptValgrind1">
@@ -244,7 +250,7 @@
                 <div class="float-right">
                     <button class="btn btn-outline-primary" type="button" id="btnClearSpj">Clear Spj</button>
                     <button class="btn btn-outline-primary" type="button" id="btnClearScorer">Clear Scorer</button>
-                    <button class="btn btn-outline-primary" type="button" id="btnAddProblemData">Add Problem Data
+                    <button class="btn btn-outline-primary" type="submit" id="btnAddProblemData">Add Problem Data
                     </button>
                 </div>
             </form>
@@ -370,15 +376,16 @@
                 });
             });
 
-
             $("#btnAddGroupsRow").click(function () {
-                $("#tableGroups").append($(`<tr style="height:57px;"><<td></td></td><td></td><td></td><td></td></tr>`));
+                let t = $("#tableGroups");
+                t.append($(`<tr><td>${t.children().length + 1}</td><td>${t.children().length + 1}</td><td></td><td></td></tr>`));
             });
             $("#btnRemoveGroupsRow").click(function () {
                 $("#tableGroups").children().last().remove();
             });
             $("#btnAddDetailsRow").click(function () {
-                $("#tableDetails").append($(`<tr><td></td><td></td><td></td><td></td><td></td><td contenteditable="false">` +
+                let t = $("#tableDetails");
+                t.append($(`<tr><td>${t.children().length + 1}</td><td>0</td><td></td><td></td><td>0</td><td contenteditable="false">` +
                     `<div class="custom-checkbox ml-3"><input class="form-check-input" type="checkbox" id="iptValgrind1">` +
                     `<label class="form-check-label" for="iptValgrind1"></label></div></td></tr>`))
             });
@@ -391,20 +398,28 @@
             $("#btnClearScorer").click(function () {
                 $("#iptScorer").val("");
             });
-            let generateConfig = function () {
+
+            function generateConfig() {
                 let tableGroups = $("#tableGroups"), tableDetails = $("#tableDetails"), config = "";
                 config += `{"Groups":[`;
                 tableGroups.children().each(function (i, e) {
-                    let d = e.children();
-                    config += `{"GroupID":${d[0].innerHTML},"GroupName":"${d[1].innerHTML}","GroupScore":${d[2].innerHTML},"TestPoints":[${d[3].innerHTML}]},`;
+                    let d = e.children;
+                    config += `${i ? "," : ""}{"GroupID":${d[0].innerHTML.replace("<br>", "")},"GroupName":"${d[1].innerHTML.replace("<br>", "")}",` +
+                        `"GroupScore":${d[2].innerHTML.replace("<br>", "")},"TestPoints":[${d[3].innerHTML.replace("<br>", "")}]}`;
                 });
-                config += `,"Details":[`;
+                config += `],"Details":[`;
                 tableDetails.children().each(function (i, e) {
-                    let d = e.children();
-                    config += `"ID":${d[0].innerHTML},"Dependency":${d[1].innerHTML},"TimeLimit":${d[2].innerHTML},` +
-                        `"MemoryLimit":${d[3].innerHTML},"DiskLimit":${d[4].innerHTML},"ValgrindTestOn":${d[5].find("input").is(":checked") ? "true" : "false"}`;
+                    let d = e.children;
+                    config += `${i ? "," : ""}{"ID":${d[0].innerHTML.replace("<br>", "")},"Dependency":${d[1].innerHTML.replace("<br>", "")},` +
+                        `"TimeLimit":${d[2].innerHTML.replace("<br>", "")},"MemoryLimit":${d[3].innerHTML.replace("<br>", "")},` +
+                        `"DiskLimit":${d[4].innerHTML.replace("<br>", "")},"ValgrindTestOn":${$(d[5]).find("input").is(":checked") ? "true" : "false"}}`;
                 });
-            };
+                let spj = $("#iptSpj"), scorer = $("#iptScorer");
+                config += `],"CompileTimeLimit":${$("#iptCompileTime").val()},"SPJ":${spj.val() !== null && spj.val() !== "" ? 1 : 0},` +
+                    `"Scorer":${scorer.val() !== null && scorer.val() !== "" ? 1 : 0}}`;
+                return config;
+            }
+
             $("#formData").submit(function (e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -426,8 +441,8 @@
                 zip.generateAsync({
                     type: "blob"
                 }).then(function (blob) {
-                    let data = new FormData();
-                    data.append("file", blob, $("#iptDataProblemID").val() + ".zip");
+                    let data = new FormData(), id = $("#iptDataProblemID").val();
+                    data.append("file", blob, id + ".zip");
                     console.log(data);
                     $.ajax({
                         url: "/admin/data",

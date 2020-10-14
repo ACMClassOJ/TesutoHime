@@ -110,10 +110,13 @@ class ProblemManager:
             return 0
         return int(ret[0])
 
-    def Problem_In_Range(self, startID: int, endID: int, timeNow: int):
+    def Problem_In_Range(self, startID: int, endID: int, timeNow: int, is_Admin: bool):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= %s and ID <= %s and Release_Time <= %s", (str(startID), str(endID), str(timeNow)))
+        if not is_Admin:
+            cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= %s and ID <= %s and Release_Time <= %s", (str(startID), str(endID), str(timeNow)))
+        else:
+            cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= %s and ID <= %s", (str(startID), str(endID)))
         ret = cursor.fetchall()
         db.close()
         return ret

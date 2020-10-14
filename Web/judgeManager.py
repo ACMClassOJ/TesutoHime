@@ -15,15 +15,16 @@ class JudgeManager:
     * Mem_Used: INT // Byte
     * Detail: MEDIUMTEXT // may exceed 64 KB
     '''
-    def Add_Judge(self, Code: str, User: str, Problem_ID: int, Language: int, Time: int):
+    def Add_Judge(self, Code: str, User: str, Problem_ID: int, Language: int, Time: int, Share:bool):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status) VALUES(%s, %s, %s, %s, %s, '0')",
-                           (Code, User, str(Problem_ID), str(Language), str(Time)))
+            cursor.execute("INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status, Share) VALUES(%s, %s, %s, %s, %s, '0', %s)",
+                           (Code, User, str(Problem_ID), str(Language), str(Time), int(Share)))
             db.commit()
         except:
             db.rollback()
+            print("INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status) VALUES(%s, %s, %s, %s, %s, '0')" % (Code, User, str(Problem_ID), str(Language), str(Time)))
             sys.stderr.write("SQL Error in JudgeManager: Add_Judge\n")
         db.close()
         return
@@ -43,8 +44,9 @@ class JudgeManager:
     def Update_After_Judge(self, ID: int, NewStatus: int, Score: int, Detail: str, Time_Used: str, Mem_Used: str):
         db = DB_Connect()
         cursor = db.cursor()
+        print("UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s" % (str(NewStatus), str(Score), Detail, Time_Used, Mem_Used, str(ID)))
         try:
-            cursor.execute("UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s", (str(NewStatus), str(ID), str(Score), Detail, Time_Used, Mem_Used))
+            cursor.execute("UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s", (str(NewStatus), str(Score), Detail, Time_Used, Mem_Used, str(ID)))
             db.commit()
         except:
             db.rollback()
@@ -162,5 +164,14 @@ class JudgeManager:
             db.rollback()
             sys.stderr.write("SQL Error in JudgeManager: Erase_Judge\n")
         return
+
+    def Get_Pending_Judge(self):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT ID, Problem_ID, Code, Language FROM Judge WHERE Status = 0")
+        ls = cursor.fetchall()
+        if ls == None or len(ls) == 0:
+            return None
+        return ls[0]
 
 Judge_Manager = JudgeManager()

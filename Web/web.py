@@ -146,12 +146,12 @@ def Submit_Problem():
         Problem_ID = int(request.args.get('problem_id'))
         Title = Problem_Manager.Get_Title(Problem_ID)
         In_Contest = Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0
-        return render_template('problem_submit.html', Problem_ID = Problem_ID, Title = Title, In_Contest = In_Contest)
+        return render_template('problem_submit.html', Problem_ID = Problem_ID, Title = Title, In_Contest = int(In_Contest))
     else:
         if not Login_Manager.Check_User_Status():
             return redirect('login')
         Problem_ID = int(request.form.get('problem_id'))
-        Share = bool(request.form.get('Share')) # 0 or 1
+        Share = bool(request.form.get('shared')) # 0 or 1
         if Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0 and Share: # invalid sharing
             return '-1'
         if Problem_ID < 1000 or Problem_ID > Problem_Manager.Get_Max_ID():
@@ -159,11 +159,12 @@ def Submit_Problem():
         if UnixNano() < Problem_Manager.Get_Release_Time(int(Problem_ID)) and Login_Manager.Get_Privilege() <= 0:
             return '-1'
         Username = Login_Manager.Get_Username()
-        Lang = request.form.get('lang') # cpp or git
+        Lang = 0 if str(request.form.get('lang')) == 'cpp' else 1 # cpp or git
+        print(Lang)
         Code = request.form.get('code')
         if len(str(Code)) > ProblemConfig.Max_Code_Length:
             return '-1'
-        JudgeServer_Scheduler.Start_Judge(Problem_ID, Username, Code, Lang)
+        JudgeServer_Scheduler.Start_Judge(Problem_ID, Username, Code, Lang, Share)
         return '0'
 
 @web.route('/rank')
@@ -332,7 +333,10 @@ def Code(): # todo: View Judge Detail
         Detail['Problem_Title'] = Problem_Manager.Get_Title(Detail['Problem_ID'])
         Detail['Lang'] = 'C++' if Detail['Lang'] == 0 else 'Git'
         Detail['Time'] = Readable_Time(int(Detail['Time']))
-        return render_template('judge_detail.html', Detail = Detail)
+        Data = None
+        if Detail['Detail'] != 'None':
+            Data = json.loads(Detail['Detail'])[5:]
+        return render_template('judge_detail.html', Detail = Detail, Data = Data)
 
 @web.route('/contest')
 def Contest():

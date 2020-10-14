@@ -11,7 +11,8 @@ class Compiler(CompilerInterface):
     def __init__(self):
         self.path = "compiling"
         self.program = "code"
-        self.cpp_header = '''#include <stdio.h>
+        self.cpp_header = '''
+#include <stdio.h>
 #include <seccomp.h>
 class {a} {{
 public:

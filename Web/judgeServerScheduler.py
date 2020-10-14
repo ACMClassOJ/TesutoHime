@@ -14,10 +14,11 @@ class JudgeServerScheduler:
         JudgeServer_Manager.Flush_Heartbeat(Secret, UnixNano())
         return True
 
-    def Check_Queue(self): # todo: debug
+    def Check_Queue(self):
         self.Check_System_Error()
 
         Server = JudgeServer_Manager.Get_Standby_Server(UnixNano() - JudgeConfig.Max_Duration)
+        print(Server)
         if Server == None or len(Server) == 0: # no avaliable server
             return
         Record = Judge_Manager.Get_Pending_Judge() # ID, Problem_ID, Code, Language

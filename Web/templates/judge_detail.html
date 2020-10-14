@@ -96,7 +96,7 @@
                                     {% for group in Data %}
                                         <table class="table table-striped table-bordered table-hover">
                                             <tr><th>Subtask{{ group[0] }}: {{ group[1] }}&nbsp;&nbsp;&nbsp;Score:{{ group[2] }}</th><tr>
-                                            {% for j in range(3, group|length) %}
+                                            {% for j in range(4, group|length) %}
                                                 <tr>
                                                     <td>
                                                         Testpoint {{ group[j][0] }}:

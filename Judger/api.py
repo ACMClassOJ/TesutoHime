@@ -21,13 +21,13 @@ def ping():
 
 def make_result_list(result: JudgerResult):
     total_result = ResultType.AC
-    result_list = [0, int(result.Score), result.MemUsed, result.TimeUsed]
+    result_list = [0, int(result.Score), result.MemUsed / 1024, result.TimeUsed]
     for i in range(0, len(result.Config.Groups)):
         group_list = [result.Config.Groups[i].GroupID, result.Config.Groups[i].GroupName, 0, int(result.Config.Groups[i].GroupScore)]
         group_result = ResultType.AC
         for j in range(0, len(result.Config.Groups[i].TestPoints)):
             testcase = result.Details[result.Config.Groups[i].TestPoints[j] - 1]
-            group_list.append([testcase.ID, testcase.result._value_, testcase.memory, testcase.time, testcase.disk, testcase.message])
+            group_list.append([testcase.ID, testcase.result._value_, testcase.memory / 1024, testcase.time, testcase.disk, testcase.message])
             if group_result == ResultType.AC and testcase.result != ResultType.AC:
                 group_result = testcase.result
         group_list[2] = group_result._value_
@@ -50,11 +50,13 @@ def judge():
     judgeManager.judgingFlag = True
     try:
         problemConfig, dataPath = get_data(DataConfig, request.form.get('Problem_ID'))
-    except:
-        result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during fetching data.") for testcase in problemConfig.Details], problemConfig)
+    except Exception as e:
+        print('Error occurred during fetching data:', e)
+        os._exit(0)
     try:
         result = judgeManager.judge(problemConfig, dataPath, request.form.get('Lang'), request.form.get('Code'))
-    except:
+    except Exception as e:
+        print(e)
         result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during judging.") for testcase in problemConfig.Details], problemConfig)
     resultlist = make_result_list(result)
     msg = {'Server_Secret': My_Web_Server_Secret, 'Judge_ID': Judge_ID}
@@ -72,7 +74,7 @@ def judge():
 
 @api.route('/isBusy', methods = ['POST'])
 def isBusy():
-    if request.form.get['Server_Secret'] != Web_Server_Secret:
+    if request.form.get('Server_Secret') != Master_Server_Secret:
         return '-1'
     elif judgeManager.isJudging():
         return '1'

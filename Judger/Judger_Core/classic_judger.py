@@ -44,16 +44,16 @@ class ClassicJudger(interface.JudgerInterface):
             disk = 0  # Not implemented
 
             if running_time > sub_config.timeLimit/1000 * Performance_Rate:
-                return jr.DetailResult(0,jr.ResultType.TLE,0,running_time / Performance_Rate,mem,0,''),output_file
+                return jr.DetailResult(0,jr.ResultType.TLE,0,running_time * 1000 / Performance_Rate,mem,0,''),output_file
 
             if mem > sub_config.memoryLimit:
-                return jr.DetailResult(0,jr.ResultType.MLE,0,running_time / Performance_Rate,mem,0,''),output_file
+                return jr.DetailResult(0,jr.ResultType.MLE,0,running_time * 1000 / Performance_Rate,mem,0,''),output_file
 
-            return jr.DetailResult(0,jr.ResultType.UNKNOWN if child.returncode==0 else jr.ResultType.RE,0,running_time / Performance_Rate,mem,0,''),output_file
+            return jr.DetailResult(0,jr.ResultType.UNKNOWN if child.returncode==0 else jr.ResultType.RE,0,running_time * 1000 / Performance_Rate,mem,0,''),output_file
 
         except sp.TimeoutExpired as e:
             child.kill()
-            return jr.DetailResult(0,jr.ResultType.TLE,0,sub_config.timeLimit/1000 * 1.2,mem,0,''),output_file
+            return jr.DetailResult(0,jr.ResultType.TLE,0,sub_config.timeLimit * 1.2,mem,0,''),output_file
         except sp.CalledProcessError as e:
             return jr.DetailResult(0,jr.ResultType.RE,0,0,mem,0,''),output_file
         except Exception as e:

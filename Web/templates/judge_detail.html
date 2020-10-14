@@ -9,7 +9,7 @@
         <link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet"> 
     </head>
     
-    <body style="background-color: rgba(193,220,248,0.1);">
+    <body style="background-color: rgba(193,220,248,0.1);" onload="code_highlight({{Detail['ID']}})">
         <nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
             <div class="container">
                 <a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
@@ -42,7 +42,7 @@
                                 <td>{{Detail['Friendly_Name']}}</td>
                                 <td><a href="/problem?problem_id={{Detail['Problem_ID']}}">{{Detail['Problem_ID']}}. {{Detail['Problem_Title']}}</a></td>
                                 <td>
-                                    {% if Detail['Status'] == '0' %}
+                                    <b>{% if Detail['Status'] == '0' %}
                                         <span class="text-gray">Pending</span>
                                     {% elif Detail['Status'] == '1' %}
                                         <span class="text-blue">Running & Judging</span>
@@ -53,7 +53,7 @@
                                     {% elif Detail['Status'] == '5' %}
                                         <span class="text-red">Runtime Error</span>
                                     {% elif Detail['Status'] == '4' %}
-                                        <span class="text-cyan">Compile Error</span>
+                                        <span class="text-yellow">Compile Error</span>
                                     {% elif Detail['Status'] == '6' %}
                                         <span class="text-orange">Time Limit Exceed</span>
                                     {% elif Detail['Status'] == '7' %}
@@ -64,7 +64,7 @@
                                         <span class="text-purple">Memory Leak</span>
                                     {% elif Detail['Status'] == '9' %}
                                         <span class="text-gray-dark">System Error</span>
-                                    {% endif %}
+                                    {% endif %}</b>
                                 </td>
                                 <td>{{Detail['Time_Used']}}ms</td>
                                 <td>{{Detail['Mem_Used']}}KiB</td>
@@ -82,7 +82,7 @@
                 <br>
                 <div>
                     <h5>代码：</h5>
-                    <code> {{ Detail['Code'] }}</code>
+                    <pre><code id="judge_detail_code_highlighted">Waiting for code</code></pre>
                 </div>
             {% if Data != None %}
                 <hr>
@@ -99,7 +99,7 @@
                                             {% for j in range(4, group|length) %}
                                                 <tr>
                                                     <td>
-                                                        Testpoint {{ group[j][0] }}:
+                                                        Testpoint {{ group[j][0] }}:<b>
                                                         {% if group[j][1] == 0 %}
                                                             <span class="text-gray">Pending</span>
                                                         {% elif group[j][1] == 1 %}
@@ -111,7 +111,7 @@
                                                         {% elif group[j][1] == 5 %}
                                                             <span class="text-red">Runtime Error</span>
                                                         {% elif group[j][1] == 4 %}
-                                                            <span class="text-cyan">Compile Error</span>
+                                                            <span class="text-yellow">Compile Error</span>
                                                         {% elif group[j][1] == 6 %}
                                                             <span class="text-orange">Time Limit Exceed</span>
                                                         {% elif group[j][1] == 7 %}
@@ -122,7 +122,9 @@
                                                             <span class="text-purple">Memory Leak</span>
                                                         {% elif group[j][1] == 9 %}
                                                             <span class="text-gray-dark">System Error</span>
-                                                        {% endif %}
+                                                        {% elif group[j][1] == 11 %}
+                                                            <span class="text-black">Skipped</span>
+                                                        {% endif %}</b>
                                                         <br>
                                                         Time Used: {{ group[j][3] }}ms  Mem Used:{{ group[j][2] }}KiB<br>
                                                         {% if group[j][4] != -1 %}
@@ -149,7 +151,10 @@
     <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
     <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
     <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/styles/github.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/highlight.min.js"></script>
     <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
     <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
+    <script src="{{ url_for('static', filename = 'js/judge_detail.js')}}"></script>
 </html>
 

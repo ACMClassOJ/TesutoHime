@@ -8,6 +8,7 @@ from discussManager import Discuss_Manager
 from judgeManager import Judge_Manager
 from contestManager import Contest_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
+from judgeServerManager import JudgeServer_Manager
 from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
 from admin import admin
@@ -62,9 +63,9 @@ def get_code():
         return '-1'
     if not Login_Manager.Check_User_Status():
         return ''
-    if not str(request.args.get('submit_id')).isdigit(): # bad argument
+    if not str(request.form.get('submit_id')).isdigit(): # bad argument
         return ''
-    run_id = int(request.args.get('submit_id'))
+    run_id = int(request.form.get('submit_id'))
     if run_id < 0 or run_id > Judge_Manager.Max_ID():
         return ''
     Detail = Judge_Manager.Query_Judge(run_id)
@@ -142,7 +143,7 @@ def Problem_List():
     Page = max(min(max_Page, Page), 1)
     startID = (Page - 1) * WebConfig.Problems_Each_Page + 1 + 999
     endID = Page * WebConfig.Problems_Each_Page + 999
-    Problems = Problem_Manager.Problem_In_Range(startID, endID, UnixNano())
+    Problems = Problem_Manager.Problem_In_Range(startID, endID, UnixNano(), Login_Manager.Get_Privilege() > 0)
     return render_template('problem_list.html', Problems = Problems, Pages = Gen_Page(Page, max_Page))
 
 @web.route('/problem')
@@ -153,6 +154,8 @@ def Problem_Detail():
     id = request.args.get('problem_id')
     if id == None or int(id) < 1000 or int(id) > Problem_Manager.Get_Max_ID():
         return redirect('/') # No argument fed
+    if Problem_Manager.Get_Release_Time(id) > UnixNano() and Login_Manager.Get_Privilege() <= 0:
+        return abort(404)
     In_Contest = Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0
     return render_template('problem_details.html', ID = id, Title = Problem_Manager.Get_Title(id), In_Contest = In_Contest)
 
@@ -162,8 +165,10 @@ def Submit_Problem():
         if not Login_Manager.Check_User_Status():
             return redirect('login?next=' + request.url)
         if request.args.get('problem_id') == None:
-            return redirect('/')
+            return abort(404)
         Problem_ID = int(request.args.get('problem_id'))
+        if Problem_Manager.Get_Release_Time(Problem_ID) > UnixNano() and Login_Manager.Get_Privilege() <= 0:
+            return abort(404)
         Title = Problem_Manager.Get_Title(Problem_ID)
         In_Contest = Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0
         return render_template('problem_submit.html', Problem_ID = Problem_ID, Title = Title, In_Contest = int(In_Contest))
@@ -171,6 +176,8 @@ def Submit_Problem():
         if not Login_Manager.Check_User_Status():
             return redirect('login')
         Problem_ID = int(request.form.get('problem_id'))
+        if Problem_Manager.Get_Release_Time(Problem_ID) > UnixNano() and Login_Manager.Get_Privilege() <= 0:
+            return '-1'
         Share = bool(request.form.get('shared')) # 0 or 1
         if Problem_Manager.In_Contest(id) and Login_Manager.Get_Privilege() <= 0 and Share: # invalid sharing
             return '-1'
@@ -486,4 +493,5 @@ def Homework():
                                Data = Data, len = len(Players), len2 = len(Problems))
 @web.route('/about')
 def About():
-    return render_template('about.html')
+    Server_List = JudgeServer_Manager.Get_Server_List()
+    return render_template('about.html', Server_List = Server_List)

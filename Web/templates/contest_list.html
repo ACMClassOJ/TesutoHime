@@ -42,10 +42,18 @@
                                     <td>{{ cur['End_Time'] }}</td>
                                     <td>{{ cur['Status'] }}</td>
                                     <td>
-                                        {% if cur['Joined'] %}
-                                            <button disabled class="btn btn-primary">已报名参赛</button>
+                                        {% if cur['Blocked'] %}
+                                            {% if cur['Joined'] %}
+                                                <button disabled class="btn btn-primary">已报名参赛</button>
+                                            {% else %}
+                                                <button disabled class="btn btn-primary">报名参赛</button>
+                                            {% endif %}
                                         {% else %}
-                                            <button onclick="post_join({{ cur['ID'] }})" class="btn btn-primary">报名参赛</button>
+                                            {% if cur['Joined'] %}
+                                                <button disabled class="btn btn-primary">已报名参赛</button>
+                                            {% else %}
+                                                <button onclick="post_join({{ cur['ID'] }})" class="btn btn-primary">报名参赛</button>
+                                            {% endif %}
                                         {% endif %}
                                     </td>
                                 </tr>

@@ -52,6 +52,9 @@ def Join_Contest():
     arg = request.form.get('contest_id')
     if arg == None:
         return '-1'
+    st, ed = Contest_Manager.Get_Time(arg)
+    if UnixNano() > ed:
+        return '-1'
     username = Login_Manager.Get_Username()
     if not Contest_Manager.Check_Player_In_Contest(arg, username):
         Contest_Manager.Add_Player_To_Contest(arg, username)
@@ -395,6 +398,7 @@ def Contest():
             else:
                 cur['Status'] = 'Going On'
             cur['Joined'] = Contest_Manager.Check_Player_In_Contest(ele[0], username)
+            cur['Blocked'] = UnixNano() > int(ele[3])
             Data.append(cur)
         return render_template('contest_list.html', Data = Data)
     else:
@@ -461,6 +465,7 @@ def Homework():
             else:
                 cur['Status'] = 'Going On'
             cur['Joined'] = Contest_Manager.Check_Player_In_Contest(ele[0], username)
+            cur['Blocked'] = UnixNano() > int(ele[3])
             Data.append(cur)
         return render_template('homework_list.html', Data = Data)
     else:

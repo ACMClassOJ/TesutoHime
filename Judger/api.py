@@ -4,7 +4,7 @@ import json
 from Judger.judgeManager import judgeManager
 from Judger.JudgerResult import *
 from Judger.config import *
-from Judger.Judger_Data import get_data
+from Judger.Judger_Data import get_data, ProblemConfig
 from types import SimpleNamespace
 from time import sleep
 import os
@@ -20,8 +20,7 @@ def ping():
     return '0'
 
 def make_result_list(result: JudgerResult):
-    total_result = ResultType.AC
-    result_list = [0, int(result.Score), result.MemUsed / 1024, result.TimeUsed]
+    result_list = [result.Status._value_, int(result.Score), result.MemUsed / 1024, result.TimeUsed]
     for i in range(0, len(result.Config.Groups)):
         group_list = [result.Config.Groups[i].GroupID, result.Config.Groups[i].GroupName, 0, int(result.Config.Groups[i].GroupScore)]
         group_result = ResultType.AC
@@ -32,9 +31,6 @@ def make_result_list(result: JudgerResult):
                 group_result = testcase.result
         group_list[2] = group_result._value_
         result_list.append(group_list)
-        if total_result == ResultType.AC and group_result != ResultType.AC:
-            total_result = group_result
-    result_list[0] = total_result._value_
     return result_list
 
 # guaranteed that only single judge will be invoked at the same time
@@ -52,12 +48,14 @@ def judge():
         problemConfig, dataPath = get_data(DataConfig, request.form.get('Problem_ID'))
     except Exception as e:
         print('Error occurred during fetching data:', e)
-        os._exit(0)
-    try:
-        result = judgeManager.judge(problemConfig, dataPath, request.form.get('Lang'), request.form.get('Code'))
-    except Exception as e:
-        print(e)
-        result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during judging.") for testcase in problemConfig.Details], problemConfig)
+        result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [], ProblemConfig([], [], 0, 0, 0))
+    else:
+        try:
+            result = judgeManager.judge(problemConfig, dataPath, request.form.get('Lang'), request.form.get('Code'))
+        except Exception as e:
+            print(e)
+            result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during judging.") for testcase in problemConfig.Details], problemConfig)
+    #print(result.Status)
     resultlist = make_result_list(result)
     msg = {'Server_Secret': My_Web_Server_Secret, 'Judge_ID': Judge_ID}
     msg['Result'] = json.dumps(resultlist)

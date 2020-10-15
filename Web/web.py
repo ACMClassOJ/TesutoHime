@@ -15,6 +15,9 @@ from admin import admin
 from api import api
 from functools import cmp_to_key
 import json
+import os
+from flask import send_from_directory
+
 
 web = Flask('WEB')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -136,7 +139,7 @@ def Register():
 @web.route('/problems')
 def Problem_List():
     if not Login_Manager.Check_User_Status():
-        return redirect('login?next=' + request.url)
+        return redirect('login?next=' + request.url.split('/')[-1])
     Page = request.args.get('page')
     Page = int(Page) if Page != None else 1
     max_Page = int((Problem_Manager.Get_Max_ID() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
@@ -150,7 +153,7 @@ def Problem_List():
 def Problem_Detail():
     if not Login_Manager.Check_User_Status():
         print(request.path)
-        return redirect('login?next=' + request.url)
+        return redirect('login?next=' + request.url.split('/')[-1])
     id = request.args.get('problem_id')
     if id == None or int(id) < 1000 or int(id) > Problem_Manager.Get_Max_ID():
         return redirect('/') # No argument fed
@@ -163,7 +166,7 @@ def Problem_Detail():
 def Submit_Problem():
     if request.method == 'GET':
         if not Login_Manager.Check_User_Status():
-            return redirect('login?next=' + request.url)
+            return redirect('login?next=' + request.url.split('/')[-1])
         if request.args.get('problem_id') == None:
             return abort(404)
         Problem_ID = int(request.args.get('problem_id'))
@@ -197,7 +200,7 @@ def Submit_Problem():
 @web.route('/rank')
 def Problem_Rank():
     if not Login_Manager.Check_User_Status():
-        return redirect('login?next=' + request.url)
+        return redirect('login?next=' + request.url.split('/')[-1])
     Problem_ID = request.args.get('problem_id')
     if Problem_ID == None:
         return redirect('/')
@@ -222,7 +225,7 @@ def Problem_Rank():
 def Discuss(): # todo: Debug discuss
     if request.method == 'GET':
         if not Login_Manager.Check_User_Status():
-            return redirect('login?next=' + request.url)
+            return redirect('login?next=' + request.url.split('/')[-1])
         Problem_ID = int(request.args.get('problem_id'))
         if Problem_ID == None:
             return redirect('/')
@@ -278,7 +281,7 @@ def fix_Status_Cur(cur):
 @web.route('/status')
 def Status():
     if not Login_Manager.Check_User_Status():
-        return redirect('login?next=' + request.url)
+        return redirect('login?next=' + request.url.split('/')[-1])
 
     Page = request.args.get('page')
     Arg_Submitter = request.args.get('submitter')
@@ -345,7 +348,7 @@ def Status():
 @web.route('/code')
 def Code():
     if not Login_Manager.Check_User_Status(): # not login
-        return redirect('login?next=' + request.url)
+        return redirect('login?next=' + request.url.split('/')[-1])
     if not str(request.args.get('submit_id')).isdigit(): # bad argument
         abort(404)
     run_id = int(request.args.get('submit_id'))
@@ -362,13 +365,17 @@ def Code():
         Detail['Time'] = Readable_Time(int(Detail['Time']))
         Data = None
         if Detail['Detail'] != 'None':
-            Data = json.loads(Detail['Detail'])[4:]
+            temp = json.loads(Detail['Detail'])
+            Detail['Score'] = int(temp[1])
+            Data = temp[4:]
+        else:
+            Detail['Score'] = 0
         return render_template('judge_detail.html', Detail = Detail, Data = Data)
 
 @web.route('/contest')
 def Contest():
     if not Login_Manager.Check_User_Status():
-        return redirect('login?next=' + request.url)
+        return redirect('login?next=' + request.url.split('/')[-1])
     Contest_ID = request.args.get('contest_id')
     username = Login_Manager.Get_Username()
     if Contest_ID == None: # display contest list
@@ -433,7 +440,7 @@ def Contest():
 @web.route('/homework')
 def Homework():
     if not Login_Manager.Check_User_Status():
-        return redirect('login?next=' + request.url)
+        return redirect('login?next=' + request.url.split('/')[-1])
     Contest_ID = request.args.get('homework_id')
     username = Login_Manager.Get_Username()
     if Contest_ID == None: # display contest list
@@ -495,3 +502,11 @@ def Homework():
 def About():
     Server_List = JudgeServer_Manager.Get_Server_List()
     return render_template('about.html', Server_List = Server_List)
+
+@web.route('/feed')
+def Feed():
+    return render_template('feed.html')
+
+@web.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(web.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')

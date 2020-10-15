@@ -13,11 +13,10 @@ class WebConfig:
 class JudgeConfig:
     Judge_Each_Page = 15
     Max_Duration = 120
-    Web_Server_Secret = 'Progynova'
+    Web_Server_Secret = 'eccd04e4-858d-4022-aa95-baa8f76e17e6'
 
 class ProblemConfig:
     Max_Code_Length = 16384
-
 class DataConfig:
     server = 'http://localhost:8000'
     key = '233'

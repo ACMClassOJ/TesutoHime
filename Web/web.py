@@ -499,3 +499,7 @@ def Homework():
 def About():
     Server_List = JudgeServer_Manager.Get_Server_List()
     return render_template('about.html', Server_List = Server_List)
+
+@web.route('/feed')
+def Feed():
+    return render_template('feed.html')

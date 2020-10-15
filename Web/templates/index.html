@@ -8,7 +8,6 @@
 		<link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
 		<link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet"> 
 	</head>
-
 	<body style="background-color: rgba(193,220,248,0.1);">
 		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
 			<div class="container">
@@ -19,14 +18,31 @@
 		</nav>
 		<div class="container">
 			<div class="card card-body col-lg-12 m-auto">
-				<div class="page-header">
-					<h1 class="text-center"> Welcome to TesutoHime. </h1>
-					<h4 class="text-center"> ACM Class OnlineJudge 2020. </h4>
-				</div>
-				<div id="content">
-					<p>Compiler environment:</p>
-					<code>g++ code.cpp -o code -lm -O2 -DONLINE_JUDGE</code>
-				</div>
+                <div class="page-header">
+                    <h1 class="text-center"> Welcome to TesutoHime. </h1>
+                    <h4 class="text-center"> ACM Class OnlineJudge 2020. </h4>
+                </div>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>
+                            <h4>Everything in the world is designed to END.</h4>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div id="content">
+                                <h4>Compiler Options:</h4>
+                                <p style="color: black">C++：<code>g++ code.cpp -o code -lm -O2 -DONLINE_JUDGE</code></p>
+                                <p style="color: black">Git：<code>cmake . && make</code></p>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <span>
+                    <a href="/problems" class="btn" style="color: white;background: dodgerblue">Challenge</a>
+                    <a href="/about" class="btn" style="color: white;background: rebeccapurple">About</a>
+                    <a href="/feed" target="_blank" class="btn" style="color: white;background: darkorange">Feed</a>
+                </span>
 			</div>
 			<footer>
 				<div class="container text-center" id="footer"></div>

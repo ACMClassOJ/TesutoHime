@@ -33,6 +33,7 @@
                                     <th>评测状态</th>
                                     <th>运行时间</th>
                                     <th>内存</th>
+                                    <th>分数</th>
                                     <th>语言</th>
                                     <th>提交时间</th>
                                 </tr>
@@ -42,7 +43,7 @@
                                 <td>{{Detail['Friendly_Name']}}</td>
                                 <td><a href="/problem?problem_id={{Detail['Problem_ID']}}">{{Detail['Problem_ID']}}. {{Detail['Problem_Title']}}</a></td>
                                 <td>
-                                    {% if Detail['Status'] == '0' %}
+                                    <b>{% if Detail['Status'] == '0' %}
                                         <span class="text-gray">Pending</span>
                                     {% elif Detail['Status'] == '1' %}
                                         <span class="text-blue">Running & Judging</span>
@@ -53,7 +54,7 @@
                                     {% elif Detail['Status'] == '5' %}
                                         <span class="text-red">Runtime Error</span>
                                     {% elif Detail['Status'] == '4' %}
-                                        <span class="text-cyan">Compile Error</span>
+                                        <span class="text-yellow">Compile Error</span>
                                     {% elif Detail['Status'] == '6' %}
                                         <span class="text-orange">Time Limit Exceed</span>
                                     {% elif Detail['Status'] == '7' %}
@@ -64,15 +65,12 @@
                                         <span class="text-purple">Memory Leak</span>
                                     {% elif Detail['Status'] == '9' %}
                                         <span class="text-gray-dark">System Error</span>
-                                    {% endif %}
+                                    {% endif %}</b>
                                 </td>
                                 <td>{{Detail['Time_Used']}}ms</td>
                                 <td>{{Detail['Mem_Used']}}KiB</td>
-                                {% if Detail['Visible'] %}
-                                <td><a href="/code?submit_id={{Detail['ID']}}">{{Detail['Lang']}}</a></td>
-                                {%else%}
+                                <td>{{Detail['Score']}}</td>
                                 <td>{{Detail['Lang']}}</td>
-                                {%endif%}
                                 <td>{{Detail['Time']}}</td>
                             </tr>
                         </table>
@@ -95,11 +93,11 @@
                                 <tr><td>
                                     {% for group in Data %}
                                         <table class="table table-striped table-bordered table-hover">
-                                            <tr><th>Subtask{{ group[0] }}: {{ group[1] }}&nbsp;&nbsp;&nbsp;Score:{{ group[2] }}</th><tr>
+                                            <tr><th>Subtask{{ group[0] }}: {{ group[1] }}&nbsp;&nbsp;&nbsp;Score:{{ group[3] }}</th><tr>
                                             {% for j in range(4, group|length) %}
                                                 <tr>
                                                     <td>
-                                                        Testpoint {{ group[j][0] }}:
+                                                        Testpoint {{ group[j][0] }}:<b>
                                                         {% if group[j][1] == 0 %}
                                                             <span class="text-gray">Pending</span>
                                                         {% elif group[j][1] == 1 %}
@@ -111,7 +109,7 @@
                                                         {% elif group[j][1] == 5 %}
                                                             <span class="text-red">Runtime Error</span>
                                                         {% elif group[j][1] == 4 %}
-                                                            <span class="text-cyan">Compile Error</span>
+                                                            <span class="text-yellow">Compile Error</span>
                                                         {% elif group[j][1] == 6 %}
                                                             <span class="text-orange">Time Limit Exceed</span>
                                                         {% elif group[j][1] == 7 %}
@@ -122,9 +120,11 @@
                                                             <span class="text-purple">Memory Leak</span>
                                                         {% elif group[j][1] == 9 %}
                                                             <span class="text-gray-dark">System Error</span>
-                                                        {% endif %}
+                                                        {% elif group[j][1] == 11 %}
+                                                            <span class="text-black">Skipped</span>
+                                                        {% endif %}</b>
                                                         <br>
-                                                        Time Used: {{ group[j][3] }}ms  Mem Used:{{ group[j][2] }}KiB<br>
+                                                        Time Used: {{ group[j][3]|int }}ms  Mem Used:{{ group[j][2]|int }}KiB<br>
                                                         {% if group[j][4] != -1 %}
                                                             Disk Usage: {{ group[j][4] / 1024 }}KiB<br>
                                                         {% endif %}

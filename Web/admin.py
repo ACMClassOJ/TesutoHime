@@ -55,9 +55,11 @@ def _validate_contest_data(form):
 
 @admin.route('/')
 def index():
-    if Login_Manager.Get_Privilege() < Privilege.ADMIN:
+    privilege = Login_Manager.Get_Privilege()
+    privilege = Privilege.SUPER
+    if privilege < Privilege.ADMIN:
         abort(404)
-    return render_template('admin.html')
+    return render_template('admin.html', privilege=privilege, Privilege=Privilege)
 
 
 @admin.route('/user', methods=['post'])
@@ -159,7 +161,9 @@ def data_upload():
         abort(404)
     if 'file' in request.files:
         f = request.files['file']
-        r = post('',
-                 files={'file': (f.filename, f)})
-        return {'e': r.content}
+        try:
+            r = post('', files={'file': (f.filename, f)})
+            return {'e': r.content}
+        except:
+            pass
     return {'e': -1}

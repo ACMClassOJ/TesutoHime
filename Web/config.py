@@ -17,3 +17,7 @@ class JudgeConfig:
 
 class ProblemConfig:
     Max_Code_Length = 16384
+
+class DataConfig:
+    server = 'http://localhost:8000'
+    key = '233'

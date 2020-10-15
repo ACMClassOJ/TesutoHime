@@ -22,7 +22,7 @@ def ping():
 def make_result_list(result: JudgerResult):
     result_list = [result.Status._value_, int(result.Score), result.MemUsed / 1024, result.TimeUsed]
     for i in range(0, len(result.Config.Groups)):
-        group = result.Config.Groups[i]
+        group, minScore = result.Config.Groups[i], 0
         if len(group.TestPoints) != 0:
             minScore = result.Details[group.TestPoints[0] - 1].score
             for testPoint in group.TestPoints:

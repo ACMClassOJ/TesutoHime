@@ -56,7 +56,6 @@ def _validate_contest_data(form):
 @admin.route('/')
 def index():
     privilege = Login_Manager.Get_Privilege()
-    privilege = Privilege.SUPER
     if privilege < Privilege.ADMIN:
         abort(404)
     return render_template('admin.html', privilege=privilege, Privilege=Privilege)

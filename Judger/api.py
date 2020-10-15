@@ -22,12 +22,12 @@ def ping():
 def make_result_list(result: JudgerResult):
     result_list = [result.Status._value_, int(result.Score), result.MemUsed / 1024, result.TimeUsed]
     for i in range(0, len(result.Config.Groups)):
-        group_score, group = 0, result.Config.Groups[i]
+        group = result.Config.Groups[i]
         if len(group.TestPoints) != 0:
             minScore = result.Details[group.TestPoints[0] - 1].score
             for testPoint in group.TestPoints:
                 minScore = min(minScore, result.Details[testPoint - 1].score)
-        group_list = [result.Config.Groups[i].GroupID, result.Config.Groups[i].GroupName, 0, int(result.Config.Groups[i].GroupScore * group_score)]
+        group_list = [result.Config.Groups[i].GroupID, result.Config.Groups[i].GroupName, 0, int(result.Config.Groups[i].GroupScore * minScore)]
         group_result = ResultType.AC
         for j in range(0, len(result.Config.Groups[i].TestPoints)):
             testcase = result.Details[result.Config.Groups[i].TestPoints[j] - 1]

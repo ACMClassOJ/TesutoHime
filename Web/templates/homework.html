@@ -39,10 +39,10 @@
                     </thead>
                     {% for i in range(0, len) %}
                         <tr>
-                            <td>{{Players[i][0]}}</td>
+                            <td>{{Data[i][1]}}</td>
                             {% for j in range(0, len2) %}
                                 <td>
-                                    {% if Data[i][j + 1][1] %}{% if not Data[i][j+1][0] %}<span class="text-red">(-{{Data[i][j + 1][1]}})</span>{% else %}<span class="text-green">({{Data[i][j + 1][1]}}Y)</span>{% endif %}{% endif %}
+                                    {% if Data[i][j + 2][1] %}{% if not Data[i][j+2][0] %}<span class="text-red">(-{{Data[i][j + 2][1]}})</span>{% else %}<span class="text-green">({{Data[i][j + 2][1]}}Y)</span>{% endif %}{% endif %}
                                 </td>
                             {% endfor %}
                             <td>{{ Data[i][0] }}</td>

@@ -362,7 +362,11 @@ def Code():
         Detail['Time'] = Readable_Time(int(Detail['Time']))
         Data = None
         if Detail['Detail'] != 'None':
-            Data = json.loads(Detail['Detail'])[4:]
+            temp = json.loads(Detail['Detail'])
+            Detail['Score'] = int(temp[1])
+            Data = temp[4:]
+        else:
+            Detail['Score'] = 0
         return render_template('judge_detail.html', Detail = Detail, Data = Data)
 
 @web.route('/contest')

@@ -18,5 +18,5 @@ document.getElementById('navbar_global').innerHTML = '\
 </ul>';
 
 $(function(){
-	$("#footer").text("my footer");
+	$("#footer").html("<br><a href='https://github.com/cmd2001/Open-TesutoHime/' target='_blank'>TesutoHime</a>·ACM Class OnlineJudge 2020<br><br>");
 });

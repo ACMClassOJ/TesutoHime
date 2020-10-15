@@ -15,6 +15,9 @@ from admin import admin
 from api import api
 from functools import cmp_to_key
 import json
+import os
+from flask import send_from_directory
+
 
 web = Flask('WEB')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -503,3 +506,7 @@ def About():
 @web.route('/feed')
 def Feed():
     return render_template('feed.html')
+
+@web.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(web.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')

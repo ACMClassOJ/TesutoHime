@@ -5,6 +5,7 @@ from userManager import User_Manager
 from problemManager import Problem_Manager
 from contestManager import Contest_Manager
 from requests import post
+from config import DataConfig
 
 admin = Blueprint('admin', __name__, static_folder='static')
 
@@ -56,7 +57,6 @@ def _validate_contest_data(form):
 @admin.route('/')
 def index():
     privilege = Login_Manager.Get_Privilege()
-    privilege = Privilege.SUPER
     if privilege < Privilege.ADMIN:
         abort(404)
     return render_template('admin.html', privilege=privilege, Privilege=Privilege)
@@ -162,7 +162,7 @@ def data_upload():
     if 'file' in request.files:
         f = request.files['file']
         try:
-            r = post('', files={'file': (f.filename, f)})
+            r = post(DataConfig.server + '/' + DataConfig.key + '/upload.php', files={'file': (f.filename, f)})
             return {'e': r.content}
         except:
             pass

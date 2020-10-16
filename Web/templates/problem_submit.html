@@ -23,11 +23,17 @@
 					<h1 class="text-center"> {{Problem_ID}} 代码提交</h1>
 				</div>
 				<form action="submit" method="post" id="problem_submit_form" role="form">
-					<select id="lang" name="lang" class="form-control input-default">
+					<select id="lang" name="lang" class="form-control input-default" style="height: auto">
 						<option value ="cpp">cpp</option>
 						<option value ="git">git</option>
 					</select>
-					<input type="checkbox" name="shared" id="shared" value="shared">代码对他人可见
+					<p></p>
+					<span>代码对他人可见&nbsp&nbsp&nbsp&nbsp&nbsp</span>
+					<label class="custom-toggle" style="position: absolute;">
+  						<input type="checkbox" name="shared" id="shared" value="shared">
+  						<span class="custom-toggle-slider rounded-circle"></span>
+					</label>
+					<p></p>
 					<textarea id="code" name="code" class="form-control input-default" rows="18"></textarea>
 					<input type="hidden" name="problem_id" value="{{Problem_ID}}">
 					<br>
@@ -43,6 +49,6 @@
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
 <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 <script src="{{ url_for('static', filename = 'js/problem_submit.js')}}"></script>
+<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 </html>

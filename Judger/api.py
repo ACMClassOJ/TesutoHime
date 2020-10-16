@@ -8,6 +8,7 @@ from Judger.Judger_Data import get_data, ProblemConfig
 from types import SimpleNamespace
 from time import sleep
 import os
+import signal
 
 api = Flask('API')
 
@@ -47,6 +48,8 @@ def judge():
     else:
         newpid = os.fork()
         if newpid != 0:
+            # avoid zombie process
+            signal.signal(signal.SIGCHLD,signal.SIG_IGN)
             return '0'
     judgeManager.judgingFlag = True
     try:

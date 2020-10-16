@@ -5,6 +5,17 @@ $(function(){
         url: "/api/get_username",
         success: function (response_text)
         {
+			var _mtac = {};
+			(function() {
+				var mta = document.createElement("script");
+				mta.src = "//pingjs.qq.com/h5/stats.js?v2.0.4";
+				mta.setAttribute("name", "MTAH5");
+				mta.setAttribute("sid", "500731541");
+
+				var s = document.getElementsByTagName("script")[0];
+				s.parentNode.insertBefore(mta, s);
+			})();
+
 			if(response_text == "Nobody")
 			{
 				document.getElementById('navbar_right').innerHTML = '\

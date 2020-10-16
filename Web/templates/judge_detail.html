@@ -33,6 +33,7 @@
                                     <th>评测状态</th>
                                     <th>运行时间</th>
                                     <th>内存</th>
+                                    <th>分数</th>
                                     <th>语言</th>
                                     <th>提交时间</th>
                                 </tr>
@@ -68,11 +69,8 @@
                                 </td>
                                 <td>{{Detail['Time_Used']}}ms</td>
                                 <td>{{Detail['Mem_Used']}}KiB</td>
-                                {% if Detail['Visible'] %}
-                                <td><a href="/code?submit_id={{Detail['ID']}}">{{Detail['Lang']}}</a></td>
-                                {%else%}
+                                <td>{{Detail['Score']}}</td>
                                 <td>{{Detail['Lang']}}</td>
-                                {%endif%}
                                 <td>{{Detail['Time']}}</td>
                             </tr>
                         </table>
@@ -95,7 +93,7 @@
                                 <tr><td>
                                     {% for group in Data %}
                                         <table class="table table-striped table-bordered table-hover">
-                                            <tr><th>Subtask{{ group[0] }}: {{ group[1] }}&nbsp;&nbsp;&nbsp;Score:{{ group[2] }}</th><tr>
+                                            <tr><th>Subtask{{ group[0] }}: {{ group[1] }}&nbsp;&nbsp;&nbsp;Score:{{ group[3] }}</th><tr>
                                             {% for j in range(4, group|length) %}
                                                 <tr>
                                                     <td>
@@ -126,7 +124,7 @@
                                                             <span class="text-black">Skipped</span>
                                                         {% endif %}</b>
                                                         <br>
-                                                        Time Used: {{ group[j][3] }}ms  Mem Used:{{ group[j][2] }}KiB<br>
+                                                        Time Used: {{ group[j][3]|int }}ms  Mem Used:{{ group[j][2]|int }}KiB<br>
                                                         {% if group[j][4] != -1 %}
                                                             Disk Usage: {{ group[j][4] / 1024 }}KiB<br>
                                                         {% endif %}
@@ -154,7 +152,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/styles/github.min.css">
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/highlight.min.js"></script>
     <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-    <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
     <script src="{{ url_for('static', filename = 'js/judge_detail.js')}}"></script>
+    <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 </html>
 

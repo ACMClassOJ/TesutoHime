@@ -43,10 +43,18 @@
                                     <td>{{ cur['End_Time'] }}</td>
                                     <td>{{ cur['Status'] }}</td>
                                     <td>
-                                        {% if cur['Joined'] %}
-                                            <button disabled class="btn btn-primary">已报名参赛</button>
+                                        {% if cur['Blocked'] %}
+                                            {% if cur['Joined'] %}
+                                                <button disabled class="btn btn-primary">已报名参赛</button>
+                                            {% else %}
+                                                <button disabled class="btn btn-primary">报名参赛</button>
+                                            {% endif %}
                                         {% else %}
-                                            <button onclick="post_join({{ cur['ID'] }})" class="btn btn-primary">报名参赛</button>
+                                            {% if cur['Joined'] %}
+                                                <button disabled class="btn btn-primary">已报名参赛</button>
+                                            {% else %}
+                                                <button onclick="post_join({{ cur['ID'] }})" class="btn btn-primary">报名参赛</button>
+                                            {% endif %}
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -64,6 +72,6 @@
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
 <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 <script src="{{ url_for('static', filename = 'js/post_join.js')}}"></script>
+<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
 </html>

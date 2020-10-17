@@ -331,7 +331,7 @@ def Status():
         Page = max(min(max_Page, Page), 1)
         endID = len(Record) - (Page - 1) * JudgeConfig.Judge_Each_Page
         startID = max(endID - JudgeConfig.Judge_Each_Page + 1, 1)
-        Record = Record[startID - 1: endID]
+        Record = reversed(Record[startID - 1: endID])
         Data = []
         for ele in Record: # ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language
             cur = {}

@@ -42,10 +42,7 @@
                             {% for i in range(0, len) %}
                                 <tr>
                                     <td>{{ i + 1 }}</td>
-                                    <td>{{Data[i][2]}}</td>
-                                    {% if is_Admin %}
-                                        <span class="text-black-50">{{ Data[i][len2 + 3] }}</span>
-                                    {% endif %}
+                                    <td>{{Data[i][2]}}{% if is_Admin %}<span class="text-black-50"><small>{{ Data[i][len2 + 3] }}</small></span>{% endif %}</td>
                                     {% for j in range(0, len2) %}
                                         <td>{% if Data[i][j + 3][1] %}{{Data[i][j + 3][0]}}{% if not Data[i][j+3][2] %}<span class="text-red">(-{{Data[i][j+3][1]}})</span>{% else %}<span class="text-green">({{Data[i][j + 3][1]}}Y)</span>{% endif %}{% endif %}</td>
                                     {% endfor %}

@@ -40,6 +40,9 @@
                     {% for i in range(0, len) %}
                         <tr>
                             <td>{{Data[i][1]}}</td>
+                            {% if is_Admin %}
+                                <span class="text-black-50">{{ Data[i][len2 + 2] }}</span>
+                            {% endif %}
                             {% for j in range(0, len2) %}
                                 <td>
                                     {% if Data[i][j + 2][1] %}{% if not Data[i][j+2][0] %}<span class="text-red">(-{{Data[i][j + 2][1]}})</span>{% else %}<span class="text-green">({{Data[i][j + 2][1]}}Y)</span>{% endif %}{% endif %}

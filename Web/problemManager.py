@@ -12,7 +12,7 @@ class ProblemManager:
         except:
             db.rollback()
             sys.stderr.write("SQL Error in ProblemManager: Add_Problem\n")
-            db.close()
+        db.close()
         return
 
     def Modify_Problem(self, ID:int, Title:str, Description:str, Input:str, Output:str, Example_Input:str, Example_Output:str, Data_Range:str, Release_Time:int):

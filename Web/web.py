@@ -9,6 +9,7 @@ from judgeManager import Judge_Manager
 from contestManager import Contest_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
 from judgeServerManager import JudgeServer_Manager
+from referenceManager import Reference_Manager
 from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
 from utils import *
 from admin import admin
@@ -407,6 +408,7 @@ def Contest():
         Problems = Contest_Manager.List_Problem_For_Contest(Contest_ID)
         Players = Contest_Manager.List_Player_For_Contest(Contest_ID)
         Data = []
+        is_Admin = Login_Manager.Get_Privilege() > 0
         for Player in Players:
             tmp = [0, 0, User_Manager.Get_Friendly_Name(Player)]
             for Problem in Problems:
@@ -424,8 +426,11 @@ def Contest():
                             break
                 tmp[0] += maxScore
                 tmp.append([maxScore, Submit_Time, isAC]) # AC try time or failed times
+            if is_Admin:
+                tmp.append(Reference_Manager.Query_Realname(User_Manager.Get_Student_ID(Player)))
+            else:
+                tmp.append("")
             tmp[1] //= 60
-            print(tmp)
             Data.append(tmp)
 
         curTime = UnixNano()
@@ -440,7 +445,7 @@ def Contest():
         Title = Contest_Manager.Get_Title(Contest_ID)[0][0]
         return render_template('contest.html', id = Contest_ID, Title = Title, Status = Status,
                                StartTime = Readable_Time(StartTime), EndTime = Readable_Time(Endtime), Problems = Problems,
-                               Data = Data, len = len(Players), len2 = len(Problems))
+                               Data = Data, len = len(Players), len2 = len(Problems), is_Admin = is_Admin)
 
 @web.route('/homework')
 def Homework():
@@ -474,6 +479,7 @@ def Homework():
         Problems = Contest_Manager.List_Problem_For_Contest(Contest_ID)
         Players = Contest_Manager.List_Player_For_Contest(Contest_ID)
         Data = []
+        is_Admin = Login_Manager.Get_Privilege() > 0
         for Player in Players:
             tmp = [0, User_Manager.Get_Friendly_Name(Player)]
             for Problem in Problems:
@@ -489,8 +495,11 @@ def Homework():
                 if isAC:
                     tmp[0] += 1
                 tmp.append([isAC, Try_Time]) # AC try time or failed times
+            if is_Admin:
+                tmp.append(Reference_Manager.Query_Realname(User_Manager.Get_Student_ID(Player)))
+            else:
+                tmp.append("")
             Data.append(tmp)
-        print(Data)
 
         curTime = UnixNano()
         Status = -1

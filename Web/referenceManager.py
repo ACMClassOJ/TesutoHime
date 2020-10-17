@@ -24,8 +24,8 @@ class ReferenceManager:
         cur = db.cursor()
         cur.execute("SELECT Real_Name FROM Realname_Reference WHERE Student_ID = %s", (Student_ID, ))
         ret = cur.fetchone()
-        if ret == None:
+        if ret == None or len(ret) == 0:
             return 'Unknown'
-        return str(ret)
+        return str(ret[0])
 
 Reference_Manager = ReferenceManager()

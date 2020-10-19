@@ -18,12 +18,12 @@ class SessionManager:
 
     def Get_Username(self) -> str:
         lid = request.cookies.get('Login_ID')
-        return self.mem[lid] if lid in self.mem else 'Nobody'
+        return self.mem[lid] if lid in self.mem else ''
 
     def Get_FriendlyName(self) -> str:
         lid = request.cookies.get('Login_ID')
         if not (lid in self.mem):
-            return 'Nobody'
+            return ''
         return UserManager().Get_Friendly_Name(self.mem[lid])
 
     def Get_Privilege(self) -> int:

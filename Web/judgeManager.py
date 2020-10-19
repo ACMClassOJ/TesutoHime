@@ -138,7 +138,7 @@ class JudgeManager:
             com = com + 'Language = %s'
             pre.append(str(Arg_Lang))
         if Arg_Param == None:
-            com = com + ' ORDER BY ID desc'
+            com = com + ' ORDER BY ID asc'
         else:
             com = com + ' ORDER BY Time_Used asc'
         cursor.execute(com, tuple(pre))

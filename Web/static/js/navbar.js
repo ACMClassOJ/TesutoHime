@@ -18,5 +18,5 @@ document.getElementById('navbar_global').innerHTML = '\
 </ul>';
 
 $(function(){
-	$("#footer").html("<br>ACM Class OnlineJudge © 2020 Powered By <a href='https://github.com/cmd2001/Open-TesutoHime/' target='_blank'>TesutoHime</a><br><br>");
+	$("#footer").html("<br>ACM Class OnlineJudge © 2020 Powered By <a href='https://github.com/cmd2001/Open-TesutoHime/' target='_blank'>TesutoHime</a><br>备案号：<a href='https://beian.miit.gov.cn/#/Integrated/recordQuery' target='_blank'>沪ICP备2020031263号-1</a><br><br>");
 });

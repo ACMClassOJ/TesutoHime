@@ -15,8 +15,7 @@ $(function(){
 				var s = document.getElementsByTagName("script")[0];
 				s.parentNode.insertBefore(mta, s);
 			})();
-
-			if(response_text == "Nobody")
+			if(response_text === "" || response_text == null)
 			{
 				document.getElementById('navbar_right').innerHTML = '\
 					<ul class="navbar-nav navbar-nav-hover align-items-lg-right">\

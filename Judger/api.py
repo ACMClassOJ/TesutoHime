@@ -8,7 +8,6 @@ from Judger.Judger_Data import get_data, ProblemConfig
 from types import SimpleNamespace
 from time import sleep
 import os
-import signal
 
 api = Flask('API')
 
@@ -47,9 +46,7 @@ def judge():
         return '-1'
     else:
         newpid = os.fork()
-        if newpid != 0:
-            # avoid zombie process
-            signal.signal(signal.SIGCHLD,signal.SIG_IGN)
+        if newpid == 0:
             return '0'
     judgeManager.judgingFlag = True
     try:
@@ -76,7 +73,8 @@ def judge():
             break
         sleep(Judge_Result_Resend_Period / 1000)
     judgeManager.judgingFlag = False
-    os._exit(0)
+    os.waitpid(newpid, 0)
+    return '0'
 
 @api.route('/isBusy', methods = ['POST'])
 def isBusy():

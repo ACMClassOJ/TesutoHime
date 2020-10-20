@@ -15,7 +15,7 @@
             </div>
             <div class="row mx-0">
                 <label for="code">代码</label>
-                {% if not In_Contest %}
+                {% if not In_Contest -%}
                     <div class="form-group ml-auto">
                         <div class="custom-control custom-switch">
                             <input class="custom-control-input" type="checkbox" name="shared" id="shared"
@@ -23,7 +23,7 @@
                             <label class="custom-control-label" for="shared">代码对他人可见</label>
                         </div>
                     </div>
-                {% endif %}
+                {%- endif %}
             </div>
             <textarea class="form-control mb-3" rows="18" id="code" name="code"></textarea>
             <input type="hidden" name="problem_id" value="{{ Problem_ID }}">
@@ -34,7 +34,7 @@
 
 {% block script %}
     <script src="{{ url_for('static', filename = 'js/problem_submit.js') }}"></script>
-    {% if not In_Contest %}
+    {% if not In_Contest -%}
         <script>
             $(function () {
                 let share = localStorage.getItem("share");
@@ -45,5 +45,5 @@
                 $("#shared").prop("checked", share === "true");
             });
         </script>
-    {% endif %}
+    {%- endif %}
 {% endblock %}

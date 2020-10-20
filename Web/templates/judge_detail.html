@@ -32,29 +32,31 @@
                         <a href="/problem?problem_id={{ Detail['Problem_ID'] }}">{{ Detail['Problem_ID'] }}. {{ Detail['Problem_Title'] }}</a>
                     </td>
                     <td>
-                        <b>{% if Detail['Status'] == '0' %}
-                            <span class="text-gray">Pending</span>
-                        {% elif Detail['Status'] == '1' %}
-                            <span class="text-blue">Running & Judging</span>
-                        {% elif Detail['Status'] == '2' %}
-                            <span class="text-green">Accepted</span>
-                        {% elif Detail['Status'] == '3' %}
-                            <span class="text-red">Wrong Answer</span>
-                        {% elif Detail['Status'] == '5' %}
-                            <span class="text-red">Runtime Error</span>
-                        {% elif Detail['Status'] == '4' %}
-                            <span class="text-yellow">Compile Error</span>
-                        {% elif Detail['Status'] == '6' %}
-                            <span class="text-orange">Time Limit Exceed</span>
-                        {% elif Detail['Status'] == '7' %}
-                            <span class="text-orange">Memory Limit Exceed</span>
-                        {% elif Detail['Status'] == '10' %}
-                            <span class="text-purple">Disk Limit Exceed</span>
-                        {% elif Detail['Status'] == '8' %}
-                            <span class="text-purple">Memory Leak</span>
-                        {% elif Detail['Status'] == '9' %}
-                            <span class="text-gray-dark">System Error</span>
-                        {% endif %}</b>
+                        <b>
+                            {% if Detail['Status'] == '0' -%}
+                                <span class="text-gray">Pending</span>
+                            {% elif Detail['Status'] == '1' -%}
+                                <span class="text-blue">Running & Judging</span>
+                            {% elif Detail['Status'] == '2' -%}
+                                <span class="text-green">Accepted</span>
+                            {% elif Detail['Status'] == '3' -%}
+                                <span class="text-red">Wrong Answer</span>
+                            {% elif Detail['Status'] == '5' -%}
+                                <span class="text-red">Runtime Error</span>
+                            {% elif Detail['Status'] == '4' -%}
+                                <span class="text-yellow">Compile Error</span>
+                            {% elif Detail['Status'] == '6' -%}
+                                <span class="text-orange">Time Limit Exceed</span>
+                            {% elif Detail['Status'] == '7'-%}
+                                <span class="text-orange">Memory Limit Exceed</span>
+                            {% elif Detail['Status'] == '10' -%}
+                                <span class="text-purple">Disk Limit Exceed</span>
+                            {% elif Detail['Status'] == '8' -%}
+                                <span class="text-purple">Memory Leak</span>
+                            {% elif Detail['Status'] == '9' -%}
+                                <span class="text-gray-dark">System Error</span>
+                            {%- endif %}
+                        </b>
                     </td>
                     <td>{{ Detail['Time_Used'] }}ms</td>
                     <td>{{ Detail['Mem_Used'] }}KiB</td>
@@ -67,7 +69,7 @@
         <hr>
         <h5>代码：</h5>
         <pre><code id="judge_detail_code_highlighted">Waiting for code</code></pre>
-        {% if Data != None %}
+        {% if Data != None -%}
             <hr>
             <div>
                 <h5>测试点详情：</h5>
@@ -86,53 +88,53 @@
                                                 <span class="ml-2">Score:{{ group[3] }}</span>
                                             </th>
                                         <tr>
-                                            {% for j in range(4, group|length) %}
+                                            {% for j in range(4, group|length) -%}
                                                 <tr>
                                                     <td>
-                                                        Testpoint {{ group[j][0] }}:<b>
-                                                        {% if group[j][1] == 0 %}
+                                                        Testpoint {{ group[j][0] }}: <b>
+                                                        {%- if group[j][1] == 0 -%}
                                                             <span class="text-gray">Pending</span>
-                                                        {% elif group[j][1] == 1 %}
+                                                        {%- elif group[j][1] == 1 -%}
                                                             <span class="text-blue">Running & Judging</span>
-                                                        {% elif group[j][1] == 2 %}
+                                                        {%- elif group[j][1] == 2 -%}
                                                             <span class="text-green">Accepted</span>
-                                                        {% elif group[j][1] == 3 %}
+                                                        {%- elif group[j][1] == 3 -%}
                                                             <span class="text-red">Wrong Answer</span>
-                                                        {% elif group[j][1] == 5 %}
+                                                        {%- elif group[j][1] == 5 -%}
                                                             <span class="text-red">Runtime Error</span>
-                                                        {% elif group[j][1] == 4 %}
+                                                        {%- elif group[j][1] == 4 -%}
                                                             <span class="text-yellow">Compile Error</span>
-                                                        {% elif group[j][1] == 6 %}
+                                                        {%- elif group[j][1] == 6 -%}
                                                             <span class="text-orange">Time Limit Exceed</span>
-                                                        {% elif group[j][1] == 7 %}
+                                                        {%- elif group[j][1] == 7 -%}
                                                             <span class="text-orange">Memory Limit Exceed</span>
-                                                        {% elif group[j][1] == 10 %}
-                                                            <span class="text-purple">Disk Limit Exceed</span>
-                                                        {% elif group[j][1] == 8 %}
+                                                        {%- elif group[j][1] == 8 -%}
                                                             <span class="text-purple">Memory Leak</span>
-                                                        {% elif group[j][1] == 9 %}
+                                                        {%- elif group[j][1] == 9 -%}
                                                             <span class="text-gray-dark">System Error</span>
-                                                        {% elif group[j][1] == 11 %}
+                                                        {%- elif group[j][1] == 10 -%}
+                                                            <span class="text-purple">Disk Limit Exceed</span>
+                                                        {%- elif group[j][1] == 11 -%}
                                                             <span class="text-black">Skipped</span>
-                                                        {% endif %}</b>
+                                                        {%- endif -%}</b>
                                                         <br>
                                                         Time Used: {{ group[j][3]|int }}ms Mem
                                                         Used:{{ group[j][2]|int }}KiB<br>
-                                                        {% if group[j][4] != -1 %}
+                                                        {% if group[j][4] != -1 -%}
                                                             Disk Usage: {{ group[j][4] / 1024 }}KiB<br>
-                                                        {% endif %}
+                                                        {%- endif %}
                                                         Info: {{ group[j][5] }}
                                                     </td>
                                                 <tr>
-                                            {% endfor %}
+                                            {%- endfor %}
                                     </table>
-                                {% endfor %}
+                                {%- endfor %}
                             </td>
                         </tr>
                     </table>
                 </div>
             </div>
-        {% endif %}
+        {%- endif %}
     </div>
 {% endblock %}
 
@@ -143,7 +145,7 @@
             $.ajax({
                 type: "POST",
                 dataType: "text",
-                data: {submit_id: {{ Detail['Problem_ID'] }}},
+                data: {submit_id: {{ Detail['ID'] }}},
                 url: "/api/code",
                 success: function (response_text) {
                     $("#judge_detail_code_highlighted").text(response_text);

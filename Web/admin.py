@@ -105,19 +105,19 @@ def problem_manager():
     try:
         op = int(form[String.TYPE])
         if op == 0:
-            Problem_Manager.Add_Problem(form[String.TITLE], form[String.DESCRIPTION],
+            Problem_Manager.add_problem(form[String.TITLE], form[String.DESCRIPTION],
                                         form[String.INPUT], form[String.OUTPUT], form[String.EXAMPLE_INPUT],
                                         form[String.EXAMPLE_OUTPUT], form[String.DATA_RANGE], form[String.RELEASE_TIME])
             return ReturnCode.SUC_ADD_PROBLEM
         elif op == 1:
-            Problem_Manager.Modify_Problem(int(form[String.PROBLEM_ID]), form.get(String.TITLE, None),
+            Problem_Manager.modify_problem(int(form[String.PROBLEM_ID]), form.get(String.TITLE, None),
                                            form.get(String.DESCRIPTION, None), form.get(String.INPUT, None),
                                            form.get(String.OUTPUT, None), form.get(String.EXAMPLE_INPUT, None),
                                            form.get(String.EXAMPLE_OUTPUT, None), form.get(String.DATA_RANGE, None),
                                            form.get(String.RELEASE_TIME, None))
             return ReturnCode.SUC_MOD_PROBLEM
         elif op == 2:
-            Problem_Manager.Delete_Problem(form[String.PROBLEM_ID])
+            Problem_Manager.delete_problem(form[String.PROBLEM_ID])
             return ReturnCode.SUC_DEL_PROBLEM
         else:
             return ReturnCode.ERR_BAD_DATA

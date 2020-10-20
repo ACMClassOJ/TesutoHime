@@ -39,7 +39,7 @@
                 <thead>
                 <tr>
                     <th>评测编号</th>
-                    <th>用户昵称</th>
+                    <th>用户</th>
                     <th>题目名称</th>
                     <th><span class="mr-2">评测状态</span><a href="/about">?</a></th>
                     <th>运行时间</th>
@@ -48,65 +48,75 @@
                     <th>提交时间</th>
                 </tr>
                 </thead>
-                {% for cur in Data %}
+                {% for cur in Data -%}
                     <tr>
                         <td>{{ cur['ID'] }}</td>
-                        <td>{{ cur['Friendly_Name'] }}</td>
+                        <td>
+                            <span>{{ cur['Friendly_Name'] }}</span>
+                            {% if is_Admin -%}
+                                <span class="text-black-50 float-right"><small>{{ cur['Real_Name'] }}</small></span>
+                            {%- endif %}
+                        </td>
                         <td>
                             <a href="/problem?problem_id={{ cur['Problem_ID'] }}">{{ cur['Problem_ID'] }}. {{ cur['Problem_Title'] }}</a>
                         </td>
                         <td>
-                            <b>{% if cur['Status'] == '0' %}
-                                <span class="text-gray">Pending</span>
-                            {% elif cur['Status'] == '1' %}
-                                <span class="text-blue">Running & Judging</span>
-                            {% elif cur['Status'] == '2' %}
-                                <span class="text-green">Accepted</span>
-                            {% elif cur['Status'] == '3' %}
-                                <span class="text-red">Wrong Answer</span>
-                            {% elif cur['Status'] == '5' %}
-                                <span class="text-red">Runtime Error</span>
-                            {% elif cur['Status'] == '4' %}
-                                <span class="text-yellow">Compile Error</span>
-                            {% elif cur['Status'] == '6' %}
-                                <span class="text-orange">Time Limit Exceed</span>
-                            {% elif cur['Status'] == '7' %}
-                                <span class="text-orange">Memory Limit Exceed</span>
-                            {% elif cur['Status'] == '10' %}
-                                <span class="text-purple">Disk Limit Exceed</span>
-                            {% elif cur['Status'] == '8' %}
-                                <span class="text-purple">Memory Leak</span>
-                            {% elif cur['Status'] == '9' %}
-                                <span class="text-gray-dark">System Error</span>
-                            {% endif %}</b>
+                            <b>
+                                {%- if cur['Status'] == '0' -%}
+                                    <span class="text-gray">Pending</span>
+                                {%- elif cur['Status'] == '1' -%}
+                                    <span class="text-blue">Running & Judging</span>
+                                {%- elif cur['Status'] == '2' -%}
+                                    <span class="text-green">Accepted</span>
+                                {%- elif cur['Status'] == '3' -%}
+                                    <span class="text-red">Wrong Answer</span>
+                                {%- elif cur['Status'] == '4' -%}
+                                    <span class="text-yellow">Compile Error</span>
+                                {%- elif cur['Status'] == '5' -%}
+                                    <span class="text-red">Runtime Error</span>
+                                {%- elif cur['Status'] == '6' -%}
+                                    <span class="text-orange">Time Limit Exceed</span>
+                                {%- elif cur['Status'] == '7' -%}
+                                    <span class="text-orange">Memory Limit Exceed</span>
+                                {%- elif cur['Status'] == '8' -%}
+                                    <span class="text-purple">Memory Leak</span>
+                                {%- elif cur['Status'] == '9' -%}
+                                    <span class="text-gray-dark">System Error</span>
+                                {%- elif cur['Status'] == '10' -%}
+                                    <span class="text-purple">Disk Limit Exceed</span>
+                                {%- endif -%}
+                            </b>
                         </td>
                         <td>{{ cur['Time_Used'] }}ms</td>
                         <td>{{ cur['Mem_Used'] }}KiB</td>
-                        {% if cur['Visible'] %}
+                        {% if cur['Visible'] -%}
                             <td><a href="/code?submit_id={{ cur['ID'] }}">{{ cur['Lang'] }}</a></td>
-                        {% else %}
+                        {% else -%}
                             <td>{{ cur['Lang'] }}</td>
-                        {% endif %}
+                        {%- endif %}
                         <td>{{ cur['Time'] }}</td>
                     </tr>
-                {% endfor %}
+                {%- endfor %}
             </table>
         </div>
-        <div class="btn-group">
-            {% for x in Pages %}
-                {% if x[2] == -1 %}
-                    <a href="/status?page={{ x[1] }}"
-                       class="btn btn-light disabled page_turing_button"> {{ x[0] }} </a>
-                {% elif x[2] == 1 %}
-                    <a href="/status?page={{ x[1] }}" class="btn btn-primary page_turing_button"> {{ x[0] }} </a>
-                {% else %}
-                    <a href="/status?page={{ x[1] }}" class="btn btn-light page_turing_button"> {{ x[0] }} </a>
-                {% endif %}
-            {% endfor %}
-        </div>
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% for x in Pages -%}
+                    {%- if x[2] == 1 -%}
+                        <li class="page-item active">
+                            <a class="page-link btn-light" href="/status?page={{ x[1] }}"> {{ x[0] }} </a>
+                        </li>
+                    {%- elif x[2] != -1 -%}
+                        <li class="page-item">
+                            <a class="page-link btn-light" href="/status?page={{ x[1] }}"> {{ x[0] }} </a>
+                        </li>
+                    {%- endif -%}
+                {%- endfor %}
+            </ul>
+        </nav>
     </div>
 {% endblock %}
+
 {% block script %}
     <script src="{{ url_for('static', filename = 'js/status.js') }}"></script>
 {% endblock %}
-

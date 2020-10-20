@@ -1,97 +1,103 @@
 import sys
 from utils import *
 
+
 class ProblemManager:
-    def Add_Problem(self, Title:str, Description:str, Input:str, Output:str, Example_Input:str, Example_Output:str, Data_Range:str, Release_Time:int):
+    def add_problem(self, title: str, description: str, problem_input: str, problem_output: str, example_input: str,
+                    example_output: str, data_range: str, release_time: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("INSERT INTO Problem(Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)",
-                           (Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time))
+            cursor.execute(
+                "INSERT INTO Problem(Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)",
+                (title, description, problem_input, problem_output, example_input, example_output, data_range,
+                 release_time))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
             sys.stderr.write("SQL Error in ProblemManager: Add_Problem\n")
         db.close()
         return
 
-    def Modify_Problem(self, ID:int, Title:str, Description:str, Input:str, Output:str, Example_Input:str, Example_Output:str, Data_Range:str, Release_Time:int):
+    def modify_problem(self, problem_id: int, title: str, description: str, problem_input: str, problem_output: str,
+                       example_input: str, example_output: str, data_range: str, release_time: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Problem SET Title = %s, Description = %s, Input = %s, Output = %s, Example_Input = %s, Example_Output = %s, Data_Range = %s, Release_Time = %s WHERE ID = %s",
-                           (Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time, ID))
+            cursor.execute(
+                "UPDATE Problem SET Title = %s, Description = %s, Input = %s, Output = %s, Example_Input = %s, Example_Output = %s, Data_Range = %s, Release_Time = %s WHERE ID = %s",
+                (title, description, problem_input, problem_output, example_input, example_output, data_range,
+                 release_time, problem_id))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
             sys.stderr.write("SQL Error in ProblemManager: Modify_Problem\n")
             db.close()
         return
 
-    def Get_Problem(self, ID:int)->dict:
+    def get_problem(self, problem_id: int) -> dict:
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM Problem WHERE ID = %s", (str(ID)))
+        cursor.execute("SELECT * FROM Problem WHERE ID = %s", (str(problem_id)))
         data = cursor.fetchone()
         db.close()
-        if data == None:
+        if data is None:
             return {}
-        ret = {}
-        ret['ID'] = int(data[0])
-        ret['Title'] = str(data[1])
-        ret['Description'] = str(data[2])
-        ret['Input'] = str(data[3])
-        ret['Output'] = str(data[4])
-        ret['Example_Input'] = str(data[5])
-        ret['Example_Output'] = str(data[6])
-        ret['Data_Range'] = str(data[7])
-        ret['Release_Time'] = int(data[8])
-        ret['Flag_Count'] = int(data[9])
+        ret = {'ID': int(data[0]),
+               'Title': str(data[1]),
+               'Description': str(data[2]),
+               'Input': str(data[3]),
+               'Output': str(data[4]),
+               'Example_Input': str(data[5]),
+               'Example_Output': str(data[6]),
+               'Data_Range': str(data[7]),
+               'Release_Time': int(data[8]),
+               'Flag_Count': int(data[9])}
         return ret
 
-    def Lock_Problem(self, ID:int):
+    def lock_problem(self, problem_id: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Problem SET Flag_Count = 1 WHERE ID = %s", (str(ID)))
+            cursor.execute("UPDATE Problem SET Flag_Count = 1 WHERE ID = %s", (str(problem_id)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
             sys.stderr.write("SQL Error in ProblemManager: Lock_Problem\n")
         db.close()
 
-    def Unlock_Problem(self, ID:int):
+    def unlock_problem(self, problem_id: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Problem SET Flag_Count = 0 WHERE ID = %s", (str(ID)))
+            cursor.execute("UPDATE Problem SET Flag_Count = 0 WHERE ID = %s", (str(problem_id)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
             sys.stderr.write("SQL Error in ProblemManager: Unlock_Problem\n")
         db.close()
 
-    def Get_Title(self, ID:int) -> str:
+    def get_title(self, problem_id: int) -> str:
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT Title FROM Problem WHERE ID = %s", (str(ID)))
+        cursor.execute("SELECT Title FROM Problem WHERE ID = %s", (str(problem_id)))
         data = cursor.fetchone()
         db.close()
-        if data == None:
+        if data is None:
             return ""
         return str(data[0])
 
-    def In_Contest(self, ID: int) -> bool: # return True when this Problem is in a Contest or Homework
+    def in_contest(self, problem_id: int) -> bool:  # return True when this Problem is in a Contest or Homework
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT Flag_Count FROM Problem WHERE ID = %s", (str(ID)))
+        cursor.execute("SELECT Flag_Count FROM Problem WHERE ID = %s", (str(problem_id)))
         data = cursor.fetchone()
         db.close()
-        if data == None:
+        if data is None:
             return False
         return int(data[0]) != 0
 
-    def Get_Max_ID(self) -> int:
+    def get_max_id(self) -> int:
         db = DB_Connect()
         cursor = db.cursor()
         cursor.execute("SELECT MAX(ID) FROM Problem")
@@ -99,36 +105,38 @@ class ProblemManager:
         db.close()
         return data[0]
 
-    def Get_Release_Time(self, Problem_ID: int) -> int:
+    def get_release_time(self, problem_id: int) -> int:
         db = DB_Connect()
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT Release_Time FROM Problem WHERE ID = %s", (str(Problem_ID)))
+        cursor.execute("SELECT Release_Time FROM Problem WHERE ID = %s", (str(problem_id)))
         ret = cursor.fetchone()
         db.close()
-        if ret == None:
+        if ret is None:
             return 0
         return int(ret[0])
 
-    def Problem_In_Range(self, startID: int, endID: int, timeNow: int, is_Admin: bool):
+    def problem_in_range(self, start_id: int, end_id: int, time_now: int, is_admin: bool):
         db = DB_Connect()
         cursor = db.cursor()
-        if not is_Admin:
-            cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= %s and ID <= %s and Release_Time <= %s", (str(startID), str(endID), str(timeNow)))
+        if not is_admin:
+            cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= %s and ID <= %s and Release_Time <= %s",
+                           (str(start_id), str(end_id), str(time_now)))
         else:
-            cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= %s and ID <= %s", (str(startID), str(endID)))
+            cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= %s and ID <= %s", (str(start_id), str(end_id)))
         ret = cursor.fetchall()
         db.close()
         return ret
 
-    def Delete_Problem(self, ID: int):
+    def delete_problem(self, problem_id: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("DELETE FROM Problem WHERE ID = %s", (str(ID)))
-        except:
+            cursor.execute("DELETE FROM Problem WHERE ID = %s", (str(problem_id)))
+        except pymysql.Error:
             db.rollback()
             return
         db.close()
+
 
 Problem_Manager = ProblemManager()

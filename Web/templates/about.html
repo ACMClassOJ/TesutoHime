@@ -88,32 +88,32 @@
                 </th>
             </tr>
             </thead>
-            {% for x in Server_List %}
+            {% for x in Server_List -%}
                 <tr>
                     <td>
-                        {% if x['Status'] %}
+                        {% if x['Status'] -%}
                             <span class="text-green">Online</span>
-                        {% else %}
+                        {% else -%}
                             <span class="text-red">Offline</span>
-                        {% endif %}
+                        {%- endif %}
                     </td>
                     <td>{{ x['Name'] }}</td>
                     <td>{{ x['System'] }}</td>
                     <td>{{ x['Last_Seen_Time'] }}</td>
                     <td>
-                        {% if x['Status'] %}
-                            {% if x['Busy'] %}
+                        {% if x['Status'] -%}
+                            {%- if x['Busy'] -%}
                                 <span class="text-orange">Busy</span>
-                            {% else %}
+                            {%- else -%}
                                 <span class="text-blue">Idle</span>
-                            {% endif %}
-                        {% else %}
+                            {%- endif -%}
+                        {% else -%}
                             <span class="text-black-50">Invalid</span>
-                        {% endif %}
+                        {%- endif %}
                     </td>
                     <td>{{ x['Provider'] }}</td>
                 </tr>
-            {% endfor %}
+            {%- endfor %}
         </table>
     </div>
 {% endblock %}

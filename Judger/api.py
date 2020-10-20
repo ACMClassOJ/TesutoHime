@@ -48,32 +48,36 @@ def judge():
         newpid = os.fork()
         if newpid == 0:
             return '0'
-    judgeManager.judgingFlag = True
-    try:
-        problemConfig, dataPath = get_data(DataConfig, request.form.get('Problem_ID'))
-    except Exception as e:
-        print('Error occurred during fetching data:', e)
-        result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [], ProblemConfig([], [], 0, 0, 0))
-    else:
+    judgepid = os.fork()
+    if judgepid == 0:
+        judgeManager.judgingFlag = True
         try:
-            result = judgeManager.judge(problemConfig, dataPath, request.form.get('Lang'), request.form.get('Code'))
+            problemConfig, dataPath = get_data(DataConfig, request.form.get('Problem_ID'))
         except Exception as e:
-            print(e)
-            result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during judging.") for testcase in problemConfig.Details], problemConfig)
-    #print(result.Status)
-    resultlist = make_result_list(result)
-    msg = {'Server_Secret': My_Web_Server_Secret, 'Judge_ID': Judge_ID}
-    msg['Result'] = json.dumps(resultlist)
-    while True:
-        try:
-            re = requests.post(Web_Server + '/pushResult', data = msg).content.decode()
-        except:
-            re = '-1'
-        if re == '0':
-            break
-        sleep(Judge_Result_Resend_Period / 1000)
-    judgeManager.judgingFlag = False
+            print('Error occurred during fetching data:', e)
+            result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [], ProblemConfig([], [], 0, 0, 0))
+        else:
+            try:
+                result = judgeManager.judge(problemConfig, dataPath, request.form.get('Lang'), request.form.get('Code'))
+            except Exception as e:
+                print(e)
+                result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during judging.") for testcase in problemConfig.Details], problemConfig)
+        #print(result.Status)
+        resultlist = make_result_list(result)
+        msg = {'Server_Secret': My_Web_Server_Secret, 'Judge_ID': Judge_ID}
+        msg['Result'] = json.dumps(resultlist)
+        while True:
+            try:
+                re = requests.post(Web_Server + '/pushResult', data = msg).content.decode()
+            except:
+                re = '-1'
+            if re == '0':
+                break
+            sleep(Judge_Result_Resend_Period / 1000)
+        judgeManager.judgingFlag = False
+        return '0'
     os.waitpid(newpid, 0)
+    os.waitpid(judgepid, 0)
     return '0'
 
 @api.route('/isBusy', methods = ['POST'])

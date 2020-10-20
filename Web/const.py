@@ -43,6 +43,7 @@ class ReturnCode:
     SUC_DEL_USERS_FROM_CONTEST = {'e': 0, 'msg': 'user(s) removed from contest successfully'}
 
     ERR_BAD_DATA = {'e': -1, 'msg': 'bad data'}
+    ERR_NETWORK_FAILURE = {'e': -2, 'msg': 'network failure'}
     ERR_LOGIN = {'e': -10, 'msg': 'login failed'}
     ERR_LOGOUT = {'e': -11, 'msg': 'logout failed'}
 

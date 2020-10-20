@@ -11,12 +11,11 @@ $(function(){
 				mta.src = "//pingjs.qq.com/h5/stats.js?v2.0.4";
 				mta.setAttribute("name", "MTAH5");
 				mta.setAttribute("sid", "500731541");
-
+				mta.setAttribute("cid", "500731570");
 				var s = document.getElementsByTagName("script")[0];
 				s.parentNode.insertBefore(mta, s);
 			})();
-
-			if(response_text == "Nobody")
+			if(response_text === "" || response_text == null)
 			{
 				document.getElementById('navbar_right').innerHTML = '\
 					<ul class="navbar-nav navbar-nav-hover align-items-lg-right">\

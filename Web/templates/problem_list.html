@@ -1,65 +1,37 @@
-<!DOCTYPE html>
-<head>
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>题目列表</title>
-		<link rel="shortcut icon" href="favicon.ico">
-		<link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-		<link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet">
-	</head>
-	<body style="background-color: rgba(193,220,248,0.1);">
-		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
-			<div class="container">
-				<a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
-				<div class="navbar-collapse collapse" id="navbar_global"></div>
-				<div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
-			</div>
-		</nav>
-		<div class="container">
-			<div class="card card-body">
-				<div class="page-header">
-					<h1 class="text-center"> 题目列表 </h1>
-				</div>
-				<div class="bootstrap-data-table-panel">
-					<div class="table-responsive">
-						<table class="table table-striped table-bordered table-hover" id="problem_list">
-							<thead>
-								<tr>
-									<th>编号</th>
-									<th>题目名称</th>
-								</tr>
-							</thead>
-                            {% for Problem in Problems %}
-                                <tr>
-                                    <th>{{ Problem[0] }}</th>
-                                    <td><a href="problem?problem_id={{Problem[0]}}" target="_blank">{{Problem[1]}}</a></td>
-                                </tr>
-                            {% endfor %}
-						</table>
+{% extends 'base.html' %}
 
-                        <div class="btn-group">
-                            {% for x in Pages %}
-                                {% if x[2] == -1%}
-                                    <a href="problems?page={{x[1]}}" class="btn btn-light disabled"> {{ x[0] }} </a>
-                                {% elif x[2] == 1 %}
-                                    <a href="problems?page={{x[1]}}" class="btn btn-primary"> {{ x[0] }} </a>
-                                {% else %}
-                                    <a href="problems?page={{x[1]}}" class="btn btn-light"> {{ x[0] }} </a>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-					</div>
-				</div>
-			</div>
-			<footer>
-				<div class="container text-center" id="footer"></div>
-			</footer>
-		</div>
-	</body>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
-<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
+{% set page='Problems' %}
+
+{% block content %}
+    <div class="card card-body">
+        <h1 class="text-center">题目列表</h1>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered table-hover" id="problem_list">
+                <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>题目名称</th>
+                </tr>
+                </thead>
+                {% for Problem in Problems %}
+                    <tr>
+                        <th>{{ Problem[0] }}</th>
+                        <td><a href="/problem?problem_id={{ Problem[0] }}" target="_blank">{{ Problem[1] }}</a></td>
+                    </tr>
+                {% endfor %}
+            </table>
+
+            <div class="btn-group">
+                {% for x in Pages %}
+                    {% if x[2] == -1 %}
+                        <a href="/problems?page={{ x[1] }}" class="btn btn-light disabled"> {{ x[0] }} </a>
+                    {% elif x[2] == 1 %}
+                        <a href="/problems?page={{ x[1] }}" class="btn btn-primary"> {{ x[0] }} </a>
+                    {% else %}
+                        <a href="/problems?page={{ x[1] }}" class="btn btn-light"> {{ x[0] }} </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

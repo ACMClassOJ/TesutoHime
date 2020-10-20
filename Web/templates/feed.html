@@ -1,45 +1,29 @@
-<!DOCTYPE html>
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>投食～</title>
-    <link rel="shortcut icon" href="favicon.ico">
-    <link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet">
-</head>
-<body style="background-color: rgba(193,220,248,0.1);">
-<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
-    <div class="container">
-        <a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
-        <div class="navbar-collapse collapse" id="navbar_global"></div>
-        <div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
-    </div>
-</nav>
-<div class="container">
+{% extends 'base.html' %}
+
+{% set page='Feed' %}
+
+{% block content %}
     <div class="card card-body col-lg-12 m-auto">
-        <div class="page-header">
-            <h1 class="text-center"> 给评测姬投食！ </h1>
-        </div>
-        <p style="color: black"><del>(Todo: 此处应有站娘)</del></p>
-        <p style="color: black">我很可爱，请给我钱～</p>
-        <p style="color: black">您的每一分捐赠，都将为评测姬提供一份助力。</p>
-        <p style="color: black"><del>您的每一分捐赠，都会被收入评测姬的主人囊中</del></p>
-        <p style="color: black"><del>(Todo: 此处应有评测姬的本子)</del></p>
-        <div class="row">
-            <div class="col-lg-5"><img src="https://cdn.yukisaki.io:2333/pay/alipay.jpeg" class="img-fluid"></div>
-            <div class="col-lg-5"><img src="https://cdn.yukisaki.io:2333/pay/wechat.jpeg" class="img-fluid"></div>
+        <h1 class="text-center"> 给评测姬投食！ </h1>
+        <p>
+            <del>(Todo: 此处应有站娘)</del>
+        </p>
+        <p>我很可爱，请给我钱～</p>
+        <p>您的每一分捐赠，都将为评测姬提供一份助力。</p>
+        <p>
+            <del>您的每一分捐赠，都会被收入评测姬的主人囊中</del>
+        </p>
+        <p>
+            <del>(Todo: 此处应有评测姬的本子)</del>
+        </p>
+        <div class="row justify-content-center">
+            <div class="col-lg-5">
+                <img src="https://cdn.yukisaki.io:2333/pay/alipay.jpeg" class="img-fluid h-100" alt="alipay qr code">
+            </div>
+            <div class="col-lg-5">
+                <img src="https://cdn.yukisaki.io:2333/pay/wechat.jpeg" class="img-fluid h-100"
+                     alt="wechat payment qr code">
+            </div>
         </div>
     </div>
-    <footer>
-        <div class="container text-center" id="footer"></div>
-    </footer>
-</div>
-</body>
-
-
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
-<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
+{% endblock %}

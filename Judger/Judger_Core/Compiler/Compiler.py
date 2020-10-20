@@ -44,7 +44,7 @@ public:
         source  = program + ".cpp"
 
         className = "".join(random.sample(string.ascii_letters, 10))
-        code = code + self.cpp_header.format(a=className)
+        #code = code + self.cpp_header.format(a=className)
 
         try:
             codeFile = open(os.path.join(path, source), "w")

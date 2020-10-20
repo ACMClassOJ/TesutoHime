@@ -1,8 +1,8 @@
-var result = {};
+let result = {};
 $(function(){
-    var url = window.location.href; 
+    let url = window.location.href; 
     url = url.substr(url.indexOf("?")+1);
-    var queryString = url || location.search.substring(1),
+    let queryString = url || location.search.substring(1),
         re = /([^&=]+)=([^&]*)/g,
         m; 
    	while (m = re.exec(queryString))

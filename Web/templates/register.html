@@ -1,47 +1,33 @@
-<!DOCTYPE html>
-<head>
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Register</title>
-		<link rel="shortcut icon" href="favicon.ico">
-		<link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-		<link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet"> 
-	</head>
-	<body style="background-color: rgba(193,220,248,0.1);">
-		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
-			<div class="container">
-				<a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
-				<div class="navbar-collapse collapse" id="navbar_global"></div>
-				<div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
-			</div>
-		</nav>
-		<div class="container">
-			<div class="row justify-content-center">
-				<div class="card card-body col-lg-5">
-					<div class="page-header">
-						<h1 class="text-center">注册</h1>
-					</div>
-					<form method="post" id="register">
-						用户名：<input class="form-control input-default" type="text" name="username" id="username" required="required">
-						密码：<input class="form-control input-default" type="password" name="password" id="password" required="required">
-						昵称：<input class="form-control input-default" type="text" name="friendly_name" id="friendly_name" required="required">
-						学号：<input class="form-control input-default" type="text" name="student_id" id="student_id" required="required">
-						<br>
-						<input type="submit" class="btn btn-primary btn-block" value="注册">
-					</form>
-				</div>
-			</div>
-			<footer>
-				<div class="container text-center" id="footer"></div>
-			</footer>
-		</div>
-	</body>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
-<script src="{{ url_for('static', filename = 'js/register.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
-</html>
+{% extends 'base.html' %}
+
+{% set page='Register' %}
+
+{% block content %}
+    <div class="card card-body col-lg-5 m-auto">
+        <h1 class="text-center">注册</h1>
+        <form method="post" id="register">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input class="form-control" type="text" name="username" id="username" required="required">
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input class="form-control" type="password" name="password" id="password" required="required">
+            </div>
+            <div class="form-group">
+                <label for="friendly_name">昵称</label>
+                <input class="form-control" type="text" name="friendly_name" id="friendly_name" required="required">
+            </div>
+            <div class="form-group">
+                <label for="student_id">学号</label>
+                <input class="form-control" type="text" name="student_id" id="student_id" required="required">
+            </div>
+            <br>
+            <input class="btn btn-block btn-primary" type="submit" value="注册">
+        </form>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename = 'js/register.js') }}"></script>
+{% endblock %}

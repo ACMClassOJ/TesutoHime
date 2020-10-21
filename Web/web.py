@@ -313,9 +313,13 @@ def status():
         return redirect('login?next=' + request.url.split('/')[-1])
 
     page = request.args.get('page')
-    arg_submitter = request.args.get('submitter', None)
-    arg_problem_id = request.args.get('problem_id', None)
-    arg_status = request.args.get('status', None)
+    arg_submitter = request.args.get('submitter')
+    if arg_submitter == '':
+        arg_submitter = None
+    arg_problem_id = request.args.get('problem_id')
+    if arg_problem_id == '':
+        arg_problem_id = None
+    arg_status = request.args.get('status')
     if arg_status == '-1':
         arg_status = None
     arg_lang = request.args.get('lang')

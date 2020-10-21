@@ -12,7 +12,7 @@
 </head>
 
 <body class="bg-secondary">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary p-2 mb-3">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary py-2 mb-3">
     <div class="container">
         <a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
         <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarContent">
@@ -45,7 +45,7 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ friendlyName }}</a>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" href="#">个人信息</a>
+                            <a class="dropdown-item" href="#">个人信息（未完成）</a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="/logout">注销</a>
                         </div>
@@ -58,7 +58,7 @@
         </div>
     </div>
 </nav>
-<main class="container">
+<main class="container" style="">
     {% block content %}{% endblock %}
 </main>
 <footer class="footer">
@@ -85,4 +85,5 @@
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
 <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
 {% block script %}{% endblock %}
+<script src="https://pingjs.qq.com/h5/stats.js?v2.0.4" name="MTAH5" sid="500731541" cid="500731570"></script>
 </html>

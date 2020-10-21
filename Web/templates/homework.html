@@ -1,67 +1,59 @@
-<!DOCTYPE html>
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>作业详情</title>
-    <link rel="shortcut icon" href="favicon.ico">
-    <link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet"> 
-</head>
+{% extends 'base.html' %}
 
-<body style="background-color: rgba(193,220,248,0.1);">
-<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
-    <div class="container">
-        <a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
-        <div class="navbar-collapse collapse" id="navbar_global"></div>
-        <div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
-    </div>
-</nav>
-<div class="container">
+{% set page='Homework' %}
+
+{% block content %}
     <div class="card card-body">
-        <div class="page-header">
-            <h1 class="text-center"> {{id}}.{{Title}} </h1>
-        </div>
-        <div class="m-auto">
-            <h5> {{StartTime}} ~ {{EndTime}} {{Status}}</h5>
-        </div>
-        <div class="bootstrap-data-table-panel">
-            <div class="table-responsive">
-                <table class="table table-striped table-bordered table-hover" id="homework">
-                    <thead>
-                    <tr>
-                        <th>用户</th>
-                        {% for problem in Problems %}
-                            <th><a href="problem?problem_id={{problem[0]}}" target="_blank">{{problem[0]}}</a></th>
-                        {% endfor %}
-                        <th>总通过数</th>
-                    </tr>
-                    </thead>
-                    {% for i in range(0, len) %}
-                        <tr>
-                            <td>{{Data[i][1]}}{% if is_Admin %}<span class="text-black-50"><small>{{ Data[i][len2 + 2] }}</small></span>{% endif %}</td>
-                            {% for j in range(0, len2) %}
-                                <td>
-                                    {% if Data[i][j + 2][1] %}{% if not Data[i][j+2][0] %}<span class="text-red">(-{{Data[i][j + 2][1]}})</span>{% else %}<span class="text-green">({{Data[i][j + 2][1]}}Y)</span>{% endif %}{% endif %}
-                                </td>
-                            {% endfor %}
-                            <td>{{ Data[i][0] }}</td>
-                        </tr>
-                    {% endfor %}
-                </table>
+        <h1 class="text-center"> {{ id }}.{{ Title }} </h1>
+        <div class="progress-wrapper">
+            <div class="progress-info">
+                <div class="progress-label">
+                    {{ StartTime }} ~ {{ EndTime }}
+                </div>
+                <div class="progress-percentage">
+                    <span>{{ Percentage }}% {{ Status }}</span>
+                </div>
+            </div>
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped{{ " progress-bar-animated" if Percentage!=100 else "" }}"
+                     style="width: {{ Percentage }}%;">
+                </div>
             </div>
         </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered table-hover" id="homework">
+                <thead>
+                <tr>
+                    <th>用户</th>
+                    {% for problem in Problems -%}
+                        <th><a href="/problem?problem_id={{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
+                    {%- endfor %}
+                    <th>总通过数</th>
+                </tr>
+                </thead>
+                {% for i in range(0, len) -%}
+                    <tr>
+                        <td>
+                            <span>{{ Data[i][1] }}</span>
+                            {% if is_Admin %}
+                                <span class="text-black-50 float-right"><small>{{ Data[i][len2 + 2] }}</small></span>
+                            {% endif %}
+                        </td>
+                        {% for j in range(0, len2) -%}
+                            <td>
+                                {% if Data[i][j + 2][1] -%}
+                                    {%- if not Data[i][j+2][0] -%}
+                                        <span class="text-red">(-{{ Data[i][j + 2][1] }})</span>
+                                    {%- else -%}
+                                        <span class="text-green">({{ Data[i][j + 2][1] }}Y)</span>
+                                    {%- endif -%}
+                                {%- endif %}
+                            </td>
+                        {%- endfor %}
+                        <td>{{ Data[i][0] }}</td>
+                    </tr>
+                {%- endfor %}
+            </table>
+        </div>
     </div>
-    <footer>
-        <div class="container text-center" id="footer"></div>
-    </footer>
-</div>
-</body>
-
-
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
-<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
-</html>
+{% endblock %}

@@ -1,69 +1,45 @@
-<!DOCTYPE html>
-<html>
-	<head>
-	<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>{{ID}}. {{Title}}</title>
-		<link rel="shortcut icon" href="favicon.ico">
-		<link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-		<link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet"> 
-	</head>
-	
-	<body style="background-color: rgba(193,220,248,0.1);">
-		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
-			<div class="container">
-				<a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
-				<div class="navbar-collapse collapse" id="navbar_global"></div>
-				<div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
-			</div>
-		</nav>
-		<div class="container m-auto">
-			<div class="card card-body">
-				<div class="page-header">
-					<h1 class="text-center"><span id="problem_id">{{ ID }}</span><span>. {{ Title }}</span></h1>
-				</div>
-				<div id="content">
-					<h3>题目描述</h3>
-					<p id="problem_details_description"></p>
-					<h3>输入格式</h3>
-					<p id="problem_details_input"></p>
-					<h3>输出格式</h3>
-					<p id="problem_details_output"></p>
-					<h3>样例输入</h3>
-					<p id="problem_details_example_input"></p>
-					<h3>样例输出</h3>
-					<p id="problem_details_example_output"></p>
-					<h3>数据范围</h3>
-					<p id="problem_details_data_range"></p>
-				</div>
-			</div>
-			<br>
-			<div class="row justify-content-center">
-				<div class="btn-group">
-					<a href="submit?problem_id={{ID}}" class="btn btn-primary"> 提交 </a>
-					<a href="status?problem_id={{ID}}" class="btn btn-info"> 评测状态 </a>
-					{% if not In_Contest %}
-					<a href="discuss?problem_id={{ID}}" class="btn btn-success"> 讨论 </a>
-					<a href="rank?problem_id={{ID}}" class="btn btn-light"> 排行榜 </a>
-					{% endif %}
-				</div>
-			</div>
-			<br>
-			<footer>
-				<div class="container text-center" id="footer"></div>
-			</footer>
-		</div>
-	</body>	
+{% extends 'base.html' %}
 
-	<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-	<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-	<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
-	<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/marked.min.js"></script>
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
-	<script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
-	<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-	<script src="{{ url_for('static', filename = 'js/problem_details.js')}}"></script>
-    <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
-</html>
+{% set page=Title %}
+
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+{% endblock %}
+
+{% block content %}
+    <div class="card card-body">
+        <h1 class="text-center"><span id="problem_id">{{ ID }}</span><span>. {{ Title }}</span></h1>
+        <div id="content">
+            <h3>题目描述</h3>
+            <p id="problem_details_description"></p>
+            <h3>输入格式</h3>
+            <p id="problem_details_input"></p>
+            <h3>输出格式</h3>
+            <p id="problem_details_output"></p>
+            <h3>样例输入</h3>
+            <p id="problem_details_example_input"></p>
+            <h3>样例输出</h3>
+            <p id="problem_details_example_output"></p>
+            <h3>数据范围</h3>
+            <p id="problem_details_data_range"></p>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="btn-group m-auto">
+            <a href="/submit?problem_id={{ ID }}" class="btn btn-primary"> 提交 </a>
+            <a href="/status?problem_id={{ ID }}" class="btn btn-info"> 评测状态 </a>
+            {% if not In_Contest -%}
+                <a href="/discuss?problem_id={{ ID }}" class="btn btn-success"> 讨论 </a>
+                <a href="/rank?problem_id={{ ID }}" class="btn btn-light"> 排行榜 </a>
+            {%- endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="{{ url_for('static', filename = 'js/problem_details.js') }}"></script>
+{% endblock %}

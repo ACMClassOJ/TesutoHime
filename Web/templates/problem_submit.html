@@ -1,54 +1,49 @@
-<!DOCTYPE html>
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>提交</title>
-		<link rel="shortcut icon" href="favicon.ico">
-		<link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-		<link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet"> 
-	</head>
-	
-	<body style="background-color: rgba(193,220,248,0.1);" onload="shared_checkbox_hide({{In_Contest}})">
-		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
-			<div class="container">
-				<a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
-				<div class="navbar-collapse collapse" id="navbar_global"></div>
-				<div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
-			</div>
-		</nav>
-		<div class="container">
-			<div class="card card-body">
-				<div class="page-header">
-					<h1 class="text-center"> {{Problem_ID}} 代码提交</h1>
-				</div>
-				<form action="submit" method="post" id="problem_submit_form" role="form">
-					<select id="lang" name="lang" class="form-control input-default" style="height: auto">
-						<option value ="cpp">cpp</option>
-						<option value ="git">git</option>
-					</select>
-					<p></p>
-					<span>代码对他人可见&nbsp&nbsp&nbsp&nbsp&nbsp</span>
-					<label class="custom-toggle" style="position: absolute;">
-  						<input type="checkbox" name="shared" id="shared" value="shared">
-  						<span class="custom-toggle-slider rounded-circle"></span>
-					</label>
-					<p></p>
-					<textarea id="code" name="code" class="form-control input-default" rows="18"></textarea>
-					<input type="hidden" name="problem_id" value="{{Problem_ID}}">
-					<br>
-					<input type="submit" class="btn btn-primary btn-block" value="提交评测">
-				</form>
-			</div>
-			<footer>
-				<div class="container text-center" id="footer"></div>
-			</footer>
-		</div>
-	</body>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
-<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/problem_submit.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
-</html>
+{% extends 'base.html' %}
+
+{% set page='Submit' %}
+
+{% block content %}
+    <div class="card card-body">
+        <h1 class="text-center"> {{ Problem_ID }}. {{ Title }}</h1>
+        <form method="post" id="problem_submit_form">
+            <div class="form-group">
+                <label for="lang">语言</label>
+                <select id="lang" name="lang" class="form-control py-0">
+                    <option value="cpp">cpp</option>
+                    <option value="git">git</option>
+                </select>
+            </div>
+            <div class="row mx-0">
+                <label for="code">代码</label>
+                {% if not In_Contest -%}
+                    <div class="form-group ml-auto">
+                        <div class="custom-control custom-switch">
+                            <input class="custom-control-input" type="checkbox" name="shared" id="shared"
+                                   value="shared">
+                            <label class="custom-control-label" for="shared">代码对他人可见</label>
+                        </div>
+                    </div>
+                {%- endif %}
+            </div>
+            <textarea class="form-control mb-3" rows="18" id="code" name="code"></textarea>
+            <input type="hidden" name="problem_id" value="{{ Problem_ID }}">
+            <input type="submit" class="btn btn-block btn-primary" value="提交评测">
+        </form>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename = 'js/problem_submit.js') }}"></script>
+    {% if not In_Contest -%}
+        <script>
+            $(function () {
+                let share = localStorage.getItem("share");
+                if (share == null) {
+                    localStorage.setItem("share", "false");
+                    share = "false";
+                }
+                $("#shared").prop("checked", share === "true");
+            });
+        </script>
+    {%- endif %}
+{% endblock %}

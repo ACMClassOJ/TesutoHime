@@ -17,7 +17,7 @@ from api import api
 from functools import cmp_to_key
 import json
 import os
-from const import Privilege
+from const import Privilege, ReturnCode
 
 web = Flask('WEB')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -436,7 +436,7 @@ def contest():
     else:
         contest_id = int(contest_id)
         start_time, end_time = Contest_Manager.get_time(contest_id)
-        problems = Contest_Manager.list_problem_for_contest(contest_id)
+        problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= UnixNano() else []
         players = Contest_Manager.list_player_for_contest(contest_id)
         data = []
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
@@ -509,7 +509,7 @@ def homework():
     else:
         contest_id = int(contest_id)
         start_time, end_time = Contest_Manager.get_time(contest_id)
-        problems = Contest_Manager.list_problem_for_contest(contest_id)
+        problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= UnixNano() else []
         players = Contest_Manager.list_player_for_contest(contest_id)
         data = []
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
@@ -548,6 +548,17 @@ def homework():
                                Percentage=min(
                                    max(int(100 * float(UnixNano() - start_time) / float(end_time - start_time)), 0),
                                    100), friendlyName=Login_Manager.get_friendly_name())
+
+
+@web.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if request.method == 'GET':
+        if not Login_Manager.check_user_status():
+            return redirect('login?next=' + request.url.split('/')[-1])
+        return render_template('profile.html', friendlyName=Login_Manager.get_friendly_name())
+    else:
+        if not Login_Manager.check_user_status():
+            return ReturnCode.ERR_USER_NOT_LOGGED_IN
 
 
 @web.route('/about')

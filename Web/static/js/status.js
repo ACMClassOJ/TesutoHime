@@ -16,7 +16,7 @@ $(function () {
     if (result['lang'])
         $("#lang").val(result['lang']);
 
-    $(".page_turing_button").each(function () {
+    $(".page-item").each(function () {
         if (result['submitter'])
             $(this).attr("href", $(this).attr("href") + "&submitter=" + result['submitter']);
         if (result['problem_id'])

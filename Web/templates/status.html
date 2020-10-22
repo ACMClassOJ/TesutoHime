@@ -11,29 +11,30 @@
         <h1 class="text-center"> 评测状态 </h1>
         <div>
             <form class="form-group input-group" method="get" id="status_serach">
-                <input class="form-control input-group" type="text" name="submitter" id="submitter" placeholder="用户名">
+                <input class="form-control input-group" type="text" name="submitter" id="submitter" placeholder="用户名"
+                       value="{{ Args["submitter"] if "submitter" in Args }}">
                 <input class="form-control input-group" type="number" name="problem_id" id="problem_id"
-                       placeholder="题目编号">
+                       placeholder="题目编号" value="{{ Args["problem_id"] if "problem_id" in Args }}">
                 <select class="form-control selectpicker" name="status" id="status"
                         data-style="form-control font-weight-normal border-grey shadow-none">
-                    <option value="-1">All</option>
-                    <option value="0">Pending</option>
-                    <option value="1">Running</option>
-                    <option value="2">Accepted</option>
-                    <option value="3">Wrong Answer</option>
-                    <option value="4">Compile Error</option>
-                    <option value="5">Runtime Error</option>
-                    <option value="6">Time Limit Exceed</option>
-                    <option value="7">Memory Limit Exceed</option>
-                    <option value="8">Memory Leak</option>
-                    <option value="10">Disk Limit Exceed</option>
-                    <option value="9">System Error</option>
+                    <option value="-1" {{ "selected" if "status" in Args and Args["status"]=="-1" }}>All</option>
+                    <option value="0" {{ "selected" if "status" in Args and Args["status"]=="0" }}>Pending</option>
+                    <option value="1" {{ "selected" if "status" in Args and Args["status"]=="1" }}>Running</option>
+                    <option value="2" {{ "selected" if "status" in Args and Args["status"]=="2" }}>Accepted</option>
+                    <option value="3" {{ "selected" if "status" in Args and Args["status"]=="3" }}>Wrong Answer</option>
+                    <option value="4" {{ "selected" if "status" in Args and Args["status"]=="4" }}>Compile Error</option>
+                    <option value="5" {{ "selected" if "status" in Args and Args["status"]=="5" }}>Runtime Error</option>
+                    <option value="6" {{ "selected" if "status" in Args and Args["status"]=="6" }}>Time Limit Exceed</option>
+                    <option value="7" {{ "selected" if "status" in Args and Args["status"]=="7" }}>Memory Limit Exceed</option>
+                    <option value="8" {{ "selected" if "status" in Args and Args["status"]=="8" }}>Memory Leak</option>
+                    <option value="10" {{ "selected" if "status" in Args and Args["status"]=="10" }}>Disk Limit Exceed</option>
+                    <option value="9" {{ "selected" if "status" in Args and Args["status"]=="9" }}>System Error</option>
                 </select>
                 <select class="form-control selectpicker" name="lang" id="lang"
                         data-style="form-control font-weight-normal border-grey shadow-none">
-                    <option value="-1">All</option>
-                    <option value="0">C++</option>
-                    <option value="1">Git</option>
+                    <option value="-1" {{ "selected" if "lang" in Args and Args["lang"]=="-1" }}>All</option>
+                    <option value="0" {{ "selected" if "lang" in Args and Args["lang"]=="0" }}>C++</option>
+                    <option value="1" {{ "selected" if "lang" in Args and Args["lang"]=="1" }}>Git</option>
                 </select>
                 <div class="input-group-append">
                     <button class="btn btn-primary">搜索</button>
@@ -110,11 +111,15 @@
                 {% for x in Pages -%}
                     {%- if x[2] == 1 -%}
                         <li class="page-item active">
-                            <a class="page-link btn-light" href="/status?page={{ x[1] }}"> {{ x[0] }} </a>
+                            <a class="page-link btn-light" href="javascript:void(0)"> {{ x[0] }} </a>
                         </li>
                     {%- elif x[2] != -1 -%}
                         <li class="page-item">
-                            <a class="page-link btn-light" href="/status?page={{ x[1] }}"> {{ x[0] }} </a>
+                            <a class="page-link btn-light" href="/status?page={{ x[1] }}
+                            {%- for arg in Args.items() -%}
+                                &{{ arg[0] }}={{ arg[1] }}
+                            {%- endfor -%}
+                            "> {{ x[0] }} </a>
                         </li>
                     {%- endif -%}
                 {%- endfor %}

@@ -18,7 +18,7 @@ class JudgeServerScheduler:
         self.Check_System_Error()
 
         Server = JudgeServer_Manager.Get_Standby_Server(UnixNano() - JudgeConfig.Max_Duration)
-        print(Server)
+        # print(Server)
         if Server == None or len(Server) == 0: # no avaliable server
             return
         Record = Judge_Manager.get_pending_judge() # ID, Problem_ID, Code, Language
@@ -70,7 +70,7 @@ class JudgeServerScheduler:
 
         JudgeServer_Manager.Flush_Busy(Secret, False)
         x = json.loads(Result)
-        print(x[0])
+        # print(x[0])
         Judge_Manager.update_after_judge(Judge_ID, int(x[0]), x[1], Result, x[3], x[2])
         JudgeServer_Manager.Flush_Busy(Secret, False)
         self.Check_Queue()

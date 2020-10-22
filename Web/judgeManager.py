@@ -27,9 +27,6 @@ class JudgeManager:
             db.commit()
         except pymysql.Error:
             db.rollback()
-            print(
-                "INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status) VALUES(%s, %s, %s, %s, %s, '0')" % (
-                    code, user, str(problem_id), str(language), str(time)))
             sys.stderr.write("SQL Error in JudgeManager: Add_Judge\n")
         db.close()
         return
@@ -50,8 +47,6 @@ class JudgeManager:
                            mem_used: str):
         db = DB_Connect()
         cursor = db.cursor()
-        print("UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s" % (
-            str(new_status), str(score), detail, time_used, mem_used, str(judge_id)))
         try:
             cursor.execute(
                 "UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s",

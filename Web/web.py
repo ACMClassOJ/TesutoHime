@@ -336,23 +336,6 @@ def status():
         end_id = Judge_Manager.max_id() - (page - 1) * JudgeConfig.Judge_Each_Page
         start_id = end_id - JudgeConfig.Judge_Each_Page + 1
         record = Judge_Manager.judge_in_range(start_id, end_id)
-        data = []
-        for ele in record:
-            cur = {'ID': ele['ID'],
-                   'Friendly_Name': User_Manager.Get_Friendly_Name(ele['Username']),
-                   'Problem_ID': ele['Problem_ID'],
-                   'Problem_Title': Problem_Manager.get_title(ele['Problem_ID']),
-                   'Status': ele['Status'], 'Time_Used': ele['Time_Used'],
-                   'Mem_Used': ele['Mem_Used'],
-                   'Lang': ele['Lang'],
-                   'Visible': username == ele['Username'] or privilege == 2 or (
-                           bool(ele['Share']) and not Problem_Manager.in_contest(ele['Problem_ID'])),
-                   'Time': Readable_Time(ele['Time'])}
-            if is_admin:
-                cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.Get_Student_ID(ele['Username']))
-            data.append(fix_status_cur(cur))
-        return render_template('status.html', Data=data, Pages=Gen_Page(page, max_page), is_Admin=is_admin,
-                               friendlyName=Login_Manager.get_friendly_name())
     else:
         record = Judge_Manager.search_judge(arg_submitter, arg_problem_id, arg_status, arg_lang)
         max_page = int((len(record) + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
@@ -361,22 +344,25 @@ def status():
         end_id = len(record) - (page - 1) * JudgeConfig.Judge_Each_Page
         start_id = max(end_id - JudgeConfig.Judge_Each_Page + 1, 1)
         record = reversed(record[start_id - 1: end_id])
-        data = []
-        for ele in record:  # ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language
-            cur = {'ID': ele[0],
-                   'Friendly_Name': User_Manager.Get_Friendly_Name(ele[1]),
-                   'Problem_ID': ele[2],
-                   'Problem_Title': Problem_Manager.get_title(ele[2]),
-                   'Status': ele[6],
-                   'Time_Used': ele[4],
-                   'Mem_Used': ele[5],
-                   'Lang': ele[7],
-                   'Visible': username == ele[1] or privilege == 2 or (
-                           bool(ele[8]) and not Problem_Manager.in_contest(ele[2])),
-                   'Time': Readable_Time(ele[3])}
-            data.append(fix_status_cur(cur))
-        return render_template('status.html', Data=data, Pages=Gen_Page(page, max_page), Submitter=arg_submitter,
-                               Problem_ID=arg_problem_id, friendlyName=Login_Manager.get_friendly_name())
+    data = []
+    for ele in record:
+        cur = {'ID': ele['ID'],
+               'Friendly_Name': User_Manager.Get_Friendly_Name(ele['Username']),
+               'Problem_ID': ele['Problem_ID'],
+               'Problem_Title': Problem_Manager.get_title(ele['Problem_ID']),
+               'Status': ele['Status'],
+               'Time_Used': ele['Time_Used'],
+               'Mem_Used': ele['Mem_Used'],
+               'Lang': ele['Lang'],
+               'Visible': username == ele['Username'] or privilege == 2 or (
+                       bool(ele['Share']) and not Problem_Manager.in_contest(ele['Problem_ID'])),
+               'Time': Readable_Time(ele['Time'])}
+        if is_admin:
+            cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.Get_Student_ID(ele['Username']))
+        data.append(fix_status_cur(cur))
+    return render_template('status.html', Data=data, Pages=Gen_Page(page, max_page),
+                           Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
+                           is_Admin=is_admin, friendlyName=Login_Manager.get_friendly_name())
 
 
 @web.route('/code')

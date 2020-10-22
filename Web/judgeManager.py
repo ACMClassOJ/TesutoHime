@@ -150,8 +150,20 @@ class JudgeManager:
         else:
             com = com + ' ORDER BY Time_Used asc'
         cursor.execute(com, tuple(pre))
-        ret = cursor.fetchall()
+        data = cursor.fetchall()
         db.close()
+        ret = []
+        for d in data:
+            cur = {'ID': int(d[0]),
+                   'Username': str(d[1]),
+                   'Problem_ID': int(d[2]),
+                   'Time': int(d[3]),
+                   'Time_Used': int(d[4]),
+                   'Mem_Used': int(d[5]),
+                   'Status': str(d[6]),
+                   'Lang': str(d[7]),
+                   'Share': bool(d[8])}
+            ret.append(cur)
         return ret
 
     def search_ac(self, problem_id):

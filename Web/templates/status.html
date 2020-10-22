@@ -2,6 +2,10 @@
 
 {% set page='Status' %}
 
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-select.min.css') }}">
+{% endblock %}
+
 {% block content %}
     <div class="card card-body">
         <h1 class="text-center"> 评测状态 </h1>
@@ -10,7 +14,8 @@
                 <input class="form-control input-group" type="text" name="submitter" id="submitter" placeholder="用户名">
                 <input class="form-control input-group" type="number" name="problem_id" id="problem_id"
                        placeholder="题目编号">
-                <select class="form-control input-group h-100" name="status" id="status">
+                <select class="form-control selectpicker" name="status" id="status"
+                        data-style="form-control font-weight-normal border-grey shadow-none">
                     <option value="-1">All</option>
                     <option value="0">Pending</option>
                     <option value="1">Running</option>
@@ -24,7 +29,8 @@
                     <option value="10">Disk Limit Exceed</option>
                     <option value="9">System Error</option>
                 </select>
-                <select class="form-control input-group h-100" name="lang" id="lang">
+                <select class="form-control selectpicker" name="lang" id="lang"
+                        data-style="form-control font-weight-normal border-grey shadow-none">
                     <option value="-1">All</option>
                     <option value="0">C++</option>
                     <option value="1">Git</option>
@@ -118,5 +124,6 @@
 {% endblock %}
 
 {% block script %}
+    <script src="{{ url_for('static', filename = 'js/bootstrap-select.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'js/status.js') }}"></script>
 {% endblock %}

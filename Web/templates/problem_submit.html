@@ -2,13 +2,18 @@
 
 {% set page='Submit' %}
 
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-select.min.css') }}">
+{% endblock %}
+
 {% block content %}
     <div class="card card-body">
         <h1 class="text-center"> {{ Problem_ID }}. {{ Title }}</h1>
         <form method="post" id="problem_submit_form">
             <div class="form-group">
                 <label for="lang">语言</label>
-                <select id="lang" name="lang" class="form-control py-0">
+                <select id="lang" name="lang" class="form-control input-group py-0 selectpicker"
+                        data-style="form-control rounded border-grey shadow-none font-weight-normal">
                     <option value="cpp">cpp</option>
                     <option value="git">git</option>
                 </select>
@@ -33,6 +38,7 @@
 {% endblock %}
 
 {% block script %}
+    <script src="{{ url_for('static', filename = 'js/bootstrap-select.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'js/problem_submit.js') }}"></script>
     {% if not In_Contest -%}
         <script>

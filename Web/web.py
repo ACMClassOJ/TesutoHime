@@ -51,7 +51,6 @@ def get_detail():
     problem_id = request.form.get('problem_id')
     if Problem_Manager.get_release_time(problem_id) > UnixNano() and Login_Manager.get_privilege() < Privilege.ADMIN:
         return '-1'
-    print(json.dumps(Problem_Manager.get_problem(problem_id)))
     return json.dumps(Problem_Manager.get_problem(problem_id))
 
 
@@ -83,7 +82,6 @@ def get_code():
     run_id = int(request.form.get('submit_id'))
     if run_id < 0 or run_id > Judge_Manager.max_id():
         return '-1'
-    print(1)
     detail = Judge_Manager.query_judge(run_id)
     if detail['User'] != Login_Manager.get_username() and Login_Manager.get_privilege() < Privilege.SUPER and (
             not detail['Share'] or Problem_Manager.in_contest(detail['Problem_ID'])):
@@ -168,7 +166,6 @@ def problem_list():
 @web.route('/problem')
 def problem_detail():
     if not Login_Manager.check_user_status():
-        print(request.path)
         return redirect('login?next=' + request.url.split('/')[-1])
     problem_id = request.args.get('problem_id')
     if problem_id is None or int(problem_id) < 1000 or int(problem_id) > Problem_Manager.get_max_id():
@@ -213,7 +210,6 @@ def submit_problem():
             return '-1'
         username = Login_Manager.get_username()
         lang = 0 if str(request.form.get('lang')) == 'cpp' else 1  # cpp or git
-        print(lang)
         user_code = request.form.get('code')
         if len(str(user_code)) > ProblemConfig.Max_Code_Length:
             return '-1'
@@ -317,14 +313,16 @@ def status():
         return redirect('login?next=' + request.url.split('/')[-1])
 
     page = request.args.get('page')
-    arg_submitter = request.args.get('submitter', None)
-    arg_problem_id = request.args.get('problem_id', None)
-    arg_status = request.args.get('status', None)
-    print(arg_status)
+    arg_submitter = request.args.get('submitter')
+    if arg_submitter == '':
+        arg_submitter = None
+    arg_problem_id = request.args.get('problem_id')
+    if arg_problem_id == '':
+        arg_problem_id = None
+    arg_status = request.args.get('status')
     if arg_status == '-1':
         arg_status = None
     arg_lang = request.args.get('lang')
-    print(arg_lang)
     if arg_lang == '-1':
         arg_lang = None
     username = Login_Manager.get_username()

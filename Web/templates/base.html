@@ -7,7 +7,7 @@
     <title>TesutoHime·{{ page }}</title>
     <link rel="shortcut icon" href="favicon.ico">
     <link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     {% block head %}{% endblock %}
 </head>
 

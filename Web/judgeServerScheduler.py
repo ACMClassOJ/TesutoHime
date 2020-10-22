@@ -18,10 +18,10 @@ class JudgeServerScheduler:
         self.Check_System_Error()
 
         Server = JudgeServer_Manager.Get_Standby_Server(UnixNano() - JudgeConfig.Max_Duration)
-        print(Server)
+        # print(Server)
         if Server == None or len(Server) == 0: # no avaliable server
             return
-        Record = Judge_Manager.Get_Pending_Judge() # ID, Problem_ID, Code, Language
+        Record = Judge_Manager.get_pending_judge() # ID, Problem_ID, Code, Language
         if Record == None or len(Record) == 0:
             return
         data = {}
@@ -33,7 +33,7 @@ class JudgeServerScheduler:
         for i in range(0, 3):
             re = requests.post(Server[0] + '/judge', data = data).content.decode() # Fixme: check self-signed SSL
             if re == '0':
-                Judge_Manager.Update_Status(int(Record[0]), 1)
+                Judge_Manager.update_status(int(Record[0]), 1)
                 JudgeServer_Manager.Flush_Busy(Server[1], True, int(Record[0]))
                 break
         return
@@ -41,7 +41,7 @@ class JudgeServerScheduler:
     def Start_Judge(self, Problem_ID, User, Code, Lang, Share):
         self.Check_System_Error()
 
-        Judge_Manager.Add_Judge(Code, User, Problem_ID, Lang, UnixNano(), Share)
+        Judge_Manager.add_judge(Code, User, Problem_ID, Lang, UnixNano(), Share)
         self.Check_Queue()
         return
 
@@ -70,8 +70,8 @@ class JudgeServerScheduler:
 
         JudgeServer_Manager.Flush_Busy(Secret, False)
         x = json.loads(Result)
-        print(x[0])
-        Judge_Manager.Update_After_Judge(Judge_ID, int(x[0]), x[1], Result, x[3], x[2])
+        # print(x[0])
+        Judge_Manager.update_after_judge(Judge_ID, int(x[0]), x[1], Result, x[3], x[2])
         JudgeServer_Manager.Flush_Busy(Secret, False)
         self.Check_Queue()
         return
@@ -81,7 +81,7 @@ class JudgeServerScheduler:
         if failure == None:
             return
         for x in failure:
-            Judge_Manager.Update_Status(x, 10)
+            Judge_Manager.update_status(x, 10)
         return
 
 

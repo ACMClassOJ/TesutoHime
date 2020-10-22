@@ -265,14 +265,14 @@
     </div>
 {% endblock %}
 {% block script %}
-    <script src="{{ url_for('static', filename = 'js/jszip.min.js') }}"></script>
+    <script src="https://cdn.yukisaki.io:2333/oj_cdn/jszip/jszip.min.js"></script>
     <script>
         $.fn.serializeObject = function () {
             let data = {};
             this.serializeArray().forEach(function (e) {
                 if (e.value !== "")
                     if (e.name.search("[T t]ime") !== -1)
-                        data[e.name] = new Date(e.value).getTime() / 1000;
+                        data[e.name] = Math.floor(new Date(e.value).getTime() / 1000);
                     else if ($("#" + e.name))
                         data[e.name] = e.value;
             });

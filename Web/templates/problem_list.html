@@ -13,25 +13,28 @@
                     <th>题目名称</th>
                 </tr>
                 </thead>
-                {% for Problem in Problems %}
+                {% for Problem in Problems -%}
                     <tr>
                         <th>{{ Problem[0] }}</th>
                         <td><a href="/problem?problem_id={{ Problem[0] }}" target="_blank">{{ Problem[1] }}</a></td>
                     </tr>
-                {% endfor %}
+                {%- endfor %}
             </table>
-
-            <div class="btn-group">
-                {% for x in Pages %}
-                    {% if x[2] == -1 %}
-                        <a href="/problems?page={{ x[1] }}" class="btn btn-light disabled"> {{ x[0] }} </a>
-                    {% elif x[2] == 1 %}
-                        <a href="/problems?page={{ x[1] }}" class="btn btn-primary"> {{ x[0] }} </a>
-                    {% else %}
-                        <a href="/problems?page={{ x[1] }}" class="btn btn-light"> {{ x[0] }} </a>
-                    {% endif %}
-                {% endfor %}
-            </div>
         </div>
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% for x in Pages -%}
+                    {%- if x[2] == 1 -%}
+                        <li class="page-item active">
+                            <a class="page-link btn-light" href="/problems?page={{ x[1] }}"> {{ x[0] }} </a>
+                        </li>
+                    {%- elif x[2] != -1 -%}
+                        <li class="page-item">
+                            <a class="page-link btn-light" href="/problems?page={{ x[1] }}"> {{ x[0] }} </a>
+                        </li>
+                    {%- endif -%}
+                {%- endfor %}
+            </ul>
+        </nav>
     </div>
 {% endblock %}

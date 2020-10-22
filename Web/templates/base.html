@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TesutoHime·{{ page }}</title>
     <link rel="shortcut icon" href="favicon.ico">
-    <link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet">
     {% block head %}{% endblock %}
 </head>
@@ -45,7 +45,7 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ friendlyName }}</a>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" href="#">个人信息</a>
+                            <a class="dropdown-item" href="#">个人信息（未完成）</a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="/logout">注销</a>
                         </div>
@@ -58,14 +58,13 @@
         </div>
     </div>
 </nav>
-<main class="container">
+<main class="container" style="">
     {% block content %}{% endblock %}
 </main>
 <footer class="footer">
     <div class="container">
         <div class="row justify-content-center">
-            ACM Class OnlineJudge © 2020 Powered By <a href='https://github.com/cmd2001/Open-TesutoHime/'
-                                                       target='_blank'>TesutoHime</a>
+            ACM&nbsp;Class&nbsp;OnlineJudge&nbsp;©&nbsp;2020&nbsp;Powered&nbsp;By&nbsp;<a href='https://github.com/cmd2001/Open-TesutoHime/' target='_blank'>TesutoHime</a>
         </div>
         <div class="row justify-content-center">
             备案号：<a href='https://beian.miit.gov.cn/#/Integrated/recordQuery' target='_blank'>沪ICP备2020031263号-1</a>
@@ -74,15 +73,11 @@
 </footer>
 </body>
 
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
-        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
-        crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"
-        integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s"
-        crossorigin="anonymous"></script>
-<script src="{{ url_for('static', filename = 'js/argon-design-system.min.js') }}"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
+<script src="https://cdn.yukisaki.io:2333/oj_cdn/jquery/jquery.min.js"></script>
+<script src="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/popper.min.js"></script>
+<script src="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap.min.js"></script>
+<script src="https://cdn.yukisaki.io:2333/oj_cdn/jquery/jquery.form.js"></script>
+<script src="https://cdn.yukisaki.io:2333/oj_cdn/sweetalert/sweetalert.min.js"></script>
 {% block script %}{% endblock %}
+<script src="https://pingjs.qq.com/h5/stats.js?v2.0.4" name="MTAH5" sid="500731541" cid="500731570"></script>
 </html>

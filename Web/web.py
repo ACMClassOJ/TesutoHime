@@ -46,11 +46,12 @@ def get_username():
 
 @web.route('/api/get_detail', methods=['POST'])
 def get_detail():
-    if not Login_Manager.check_user_status() or Login_Manager.get_privilege():
+    if not Login_Manager.check_user_status():
         return '-1'
     problem_id = request.form.get('problem_id')
-    print(json.dumps(Problem_Manager.Get_Problem(problem_id)))
-    return json.dumps(Problem_Manager.Get_Problem(problem_id))
+    if Problem_Manager.get_release_time(problem_id) > UnixNano() and Login_Manager.get_privilege() < Privilege.ADMIN:
+        return '-1'
+    return json.dumps(Problem_Manager.get_problem(problem_id))
 
 
 @web.route('/api/join', methods=['POST'])
@@ -76,17 +77,15 @@ def get_code():
     arg = request.form.get('submit_id')
     if arg is None:
         return '-1'
-    if not Login_Manager.check_user_status():
-        return ''
     if not str(request.form.get('submit_id')).isdigit():  # bad argument
-        return ''
+        return '-1'
     run_id = int(request.form.get('submit_id'))
-    if run_id < 0 or run_id > Judge_Manager.Max_ID():
-        return ''
-    detail = Judge_Manager.Query_Judge(run_id)
+    if run_id < 0 or run_id > Judge_Manager.max_id():
+        return '-1'
+    detail = Judge_Manager.query_judge(run_id)
     if detail['User'] != Login_Manager.get_username() and Login_Manager.get_privilege() < Privilege.SUPER and (
-            not detail['Share'] or Problem_Manager.In_Contest(detail['Problem_ID'])):
-        return ''
+            not detail['Share'] or Problem_Manager.in_contest(detail['Problem_ID'])):
+        return '-1'
     return detail['Code']
 
 
@@ -154,11 +153,11 @@ def problem_list():
     page = request.args.get('page')
     page = int(page) if page is not None else 1
     max_page = int(
-        (Problem_Manager.Get_Max_ID() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
+        (Problem_Manager.get_max_id() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
     page = max(min(max_page, page), 1)
     start_id = (page - 1) * WebConfig.Problems_Each_Page + 1 + 999
     end_id = page * WebConfig.Problems_Each_Page + 999
-    problems = Problem_Manager.Problem_In_Range(start_id, end_id, UnixNano(),
+    problems = Problem_Manager.problem_in_range(start_id, end_id, UnixNano(),
                                                 Login_Manager.get_privilege() >= Privilege.ADMIN)
     return render_template('problem_list.html', Problems=problems, Pages=Gen_Page(page, max_page),
                            friendlyName=Login_Manager.get_friendly_name())
@@ -167,14 +166,13 @@ def problem_list():
 @web.route('/problem')
 def problem_detail():
     if not Login_Manager.check_user_status():
-        print(request.path)
         return redirect('login?next=' + request.url.split('/')[-1])
     problem_id = request.args.get('problem_id')
-    if problem_id is None or int(problem_id) < 1000 or int(problem_id) > Problem_Manager.Get_Max_ID():
+    if problem_id is None or int(problem_id) < 1000 or int(problem_id) > Problem_Manager.get_max_id():
         return redirect('/')  # No argument fed
-    if Problem_Manager.Get_Release_Time(problem_id) > UnixNano() and Login_Manager.get_privilege() < Privilege.ADMIN:
+    if Problem_Manager.get_release_time(problem_id) > UnixNano() and Login_Manager.get_privilege() < Privilege.ADMIN:
         return abort(404)
-    in_contest = Problem_Manager.In_Contest(problem_id) and Login_Manager.get_privilege() < Privilege.ADMIN
+    in_contest = Problem_Manager.in_contest(problem_id) and Login_Manager.get_privilege() < Privilege.ADMIN
     return render_template('problem_details.html', ID=problem_id, Title=Problem_Manager.get_title(problem_id),
                            In_Contest=in_contest, friendlyName=Login_Manager.get_friendly_name())
 
@@ -187,32 +185,31 @@ def submit_problem():
         if request.args.get('problem_id') is None:
             return abort(404)
         problem_id = int(request.args.get('problem_id'))
-        if Problem_Manager.Get_Release_Time(
+        if Problem_Manager.get_release_time(
                 problem_id) > UnixNano() and Login_Manager.get_privilege() < Privilege.ADMIN:
             return abort(404)
         title = Problem_Manager.get_title(problem_id)
-        in_contest = Problem_Manager.In_Contest(id) and Login_Manager.get_privilege() < Privilege.ADMIN
+        in_contest = Problem_Manager.in_contest(id) and Login_Manager.get_privilege() < Privilege.ADMIN
         return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Contest=in_contest,
                                friendlyName=Login_Manager.get_friendly_name())
     else:
         if not Login_Manager.check_user_status():
             return redirect('login')
         problem_id = int(request.form.get('problem_id'))
-        if Problem_Manager.Get_Release_Time(
+        if Problem_Manager.get_release_time(
                 problem_id) > UnixNano() and Login_Manager.get_privilege() < Privilege.ADMIN:
             return '-1'
         share = bool(request.form.get('shared', 0))  # 0 or 1
-        if Problem_Manager.In_Contest(
+        if Problem_Manager.in_contest(
                 id) and Login_Manager.get_privilege() < Privilege.ADMIN and share:  # invalid sharing
             return '-1'
-        if problem_id < 1000 or problem_id > Problem_Manager.Get_Max_ID():
+        if problem_id < 1000 or problem_id > Problem_Manager.get_max_id():
             abort(404)
-        if UnixNano() < Problem_Manager.Get_Release_Time(
+        if UnixNano() < Problem_Manager.get_release_time(
                 int(problem_id)) and Login_Manager.get_privilege() < Privilege.ADMIN:
             return '-1'
         username = Login_Manager.get_username()
         lang = 0 if str(request.form.get('lang')) == 'cpp' else 1  # cpp or git
-        print(lang)
         user_code = request.form.get('code')
         if len(str(user_code)) > ProblemConfig.Max_Code_Length:
             return '-1'
@@ -230,7 +227,7 @@ def problem_rank():
     sort_parameter = request.args.get('sort_param')
     if sort_parameter != 'time' and sort_parameter != 'memory' and sort_parameter != 'submit_time':
         sort_parameter = 'time'
-    record = Judge_Manager.Search_AC(problem_id)
+    record = Judge_Manager.search_ac(problem_id)
     for i in range(0, len(record)):  # ID, User, Time_Used, Mem_Used, Language, Time
         record[i][2] = int(record[i][2])
         record[i][3] = int(record[i][3])
@@ -253,7 +250,7 @@ def discuss():  # todo: Debug discuss
         problem_id = int(request.args.get('problem_id'))
         if problem_id is None:
             return redirect('/')
-        if Problem_Manager.In_Contest(
+        if Problem_Manager.in_contest(
                 problem_id) and Login_Manager.get_privilege() < Privilege.ADMIN:  # Problem in Contest or Homework and Current User is NOT administrator
             return render_template('problem_discussion.html', Problem_ID=problem_id,
                                    Title=Problem_Manager.get_title(problem_id), Blocked=True,
@@ -330,30 +327,34 @@ def status():
         arg_lang = None
     username = Login_Manager.get_username()
     privilege = Login_Manager.get_privilege()
+    is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
 
     if arg_submitter is None and arg_problem_id is None and arg_status is None and arg_lang is None:
         page = int(page) if page is not None else 1
-        max_page = int((Judge_Manager.Max_ID() + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
+        max_page = int((Judge_Manager.max_id() + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
         page = max(min(max_page, page), 1)
-        end_id = Judge_Manager.Max_ID() - (page - 1) * JudgeConfig.Judge_Each_Page
+        end_id = Judge_Manager.max_id() - (page - 1) * JudgeConfig.Judge_Each_Page
         start_id = end_id - JudgeConfig.Judge_Each_Page + 1
-        record = Judge_Manager.Judge_In_Range(start_id, end_id)
+        record = Judge_Manager.judge_in_range(start_id, end_id)
         data = []
         for ele in record:
-            cur = {'ID': ele['ID'], 'Friendly_Name': User_Manager.Get_Friendly_Name(ele['Username']),
+            cur = {'ID': ele['ID'],
+                   'Friendly_Name': User_Manager.Get_Friendly_Name(ele['Username']),
                    'Problem_ID': ele['Problem_ID'],
                    'Problem_Title': Problem_Manager.get_title(ele['Problem_ID']),
                    'Status': ele['Status'], 'Time_Used': ele['Time_Used'],
                    'Mem_Used': ele['Mem_Used'],
                    'Lang': ele['Lang'],
                    'Visible': username == ele['Username'] or privilege == 2 or (
-                           bool(ele['Share']) and not Problem_Manager.In_Contest(ele['Problem_ID'])),
+                           bool(ele['Share']) and not Problem_Manager.in_contest(ele['Problem_ID'])),
                    'Time': Readable_Time(ele['Time'])}
+            if is_admin:
+                cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.Get_Student_ID(ele['Username']))
             data.append(fix_status_cur(cur))
-        return render_template('status.html', Data=data, Pages=Gen_Page(page, max_page),
+        return render_template('status.html', Data=data, Pages=Gen_Page(page, max_page), is_Admin=is_admin,
                                friendlyName=Login_Manager.get_friendly_name())
     else:
-        record = Judge_Manager.Search_Judge(arg_submitter, arg_problem_id, arg_status, arg_lang)
+        record = Judge_Manager.search_judge(arg_submitter, arg_problem_id, arg_status, arg_lang)
         max_page = int((len(record) + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
         page = int(page) if page is not None else 1
         page = max(min(max_page, page), 1)
@@ -371,7 +372,7 @@ def status():
                    'Mem_Used': ele[5],
                    'Lang': ele[7],
                    'Visible': username == ele[1] or privilege == 2 or (
-                           bool(ele[8]) and not Problem_Manager.In_Contest(ele[2])),
+                           bool(ele[8]) and not Problem_Manager.in_contest(ele[2])),
                    'Time': Readable_Time(ele[3])}
             data.append(fix_status_cur(cur))
         return render_template('status.html', Data=data, Pages=Gen_Page(page, max_page), Submitter=arg_submitter,
@@ -385,11 +386,11 @@ def code():
     if not str(request.args.get('submit_id')).isdigit():  # bad argument
         abort(404)
     run_id = int(request.args.get('submit_id'))
-    if run_id < 0 or run_id > Judge_Manager.Max_ID():
+    if run_id < 0 or run_id > Judge_Manager.max_id():
         abort(404)
-    detail = Judge_Manager.Query_Judge(run_id)
+    detail = Judge_Manager.query_judge(run_id)
     if detail['User'] != Login_Manager.get_username() and Login_Manager.get_privilege() < Privilege.SUPER and (
-            not detail['Share'] or Problem_Manager.In_Contest(detail['Problem_ID'])):
+            not detail['Share'] or Problem_Manager.in_contest(detail['Problem_ID'])):
         return abort(403)
     else:
         detail['Friendly_Name'] = User_Manager.Get_Friendly_Name(detail['User'])
@@ -442,7 +443,7 @@ def contest():
         for Player in players:
             tmp = [0, 0, User_Manager.Get_Friendly_Name(Player)]
             for Problem in problems:
-                submits = Judge_Manager.Get_Contest_Judge(int(Problem[0]), Player[0], start_time, end_time)
+                submits = Judge_Manager.get_contest_judge(int(Problem[0]), Player[0], start_time, end_time)
                 max_score = 0
                 is_ac = False
                 submit_time = 0
@@ -475,7 +476,9 @@ def contest():
         return render_template('contest.html', id=contest_id, Title=title, Status=contest_status,
                                StartTime=Readable_Time(start_time), EndTime=Readable_Time(end_time), Problems=problems,
                                Data=data, len=len(players), len2=len(problems), is_Admin=is_admin,
-                               friendlyName=Login_Manager.get_friendly_name())
+                               Percentage=min(
+                                   max(int(100 * float(UnixNano() - start_time) / float(end_time - start_time)), 0),
+                                   100), friendlyName=Login_Manager.get_friendly_name())
 
 
 @web.route('/homework')
@@ -513,7 +516,7 @@ def homework():
         for Player in players:
             tmp = [0, User_Manager.Get_Friendly_Name(Player)]
             for Problem in problems:
-                submits = Judge_Manager.Get_Contest_Judge(int(Problem[0]), Player[0], start_time, end_time)
+                submits = Judge_Manager.get_contest_judge(int(Problem[0]), Player[0], start_time, end_time)
                 is_ac = False
                 try_time = 0
                 if submits is not None:
@@ -539,11 +542,12 @@ def homework():
         else:
             contest_status = 'Going On'
         title = Contest_Manager.get_title(contest_id)[0][0]
-
         return render_template('homework.html', id=contest_id, Title=title, Status=contest_status,
                                StartTime=Readable_Time(start_time), EndTime=Readable_Time(end_time), Problems=problems,
-                               Players=players, Data=data, len=len(players), len2=len(problems),
-                               friendlyName=Login_Manager.get_friendly_name())
+                               Players=players, Data=data, len=len(players), len2=len(problems), is_Admin=is_admin,
+                               Percentage=min(
+                                   max(int(100 * float(UnixNano() - start_time) / float(end_time - start_time)), 0),
+                                   100), friendlyName=Login_Manager.get_friendly_name())
 
 
 @web.route('/about')

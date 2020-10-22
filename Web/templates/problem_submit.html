@@ -2,20 +2,25 @@
 
 {% set page='Submit' %}
 
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap-select.min.css">
+{% endblock %}
+
 {% block content %}
     <div class="card card-body">
         <h1 class="text-center"> {{ Problem_ID }}. {{ Title }}</h1>
         <form method="post" id="problem_submit_form">
             <div class="form-group">
                 <label for="lang">语言</label>
-                <select id="lang" name="lang" class="form-control py-0">
+                <select id="lang" name="lang" class="form-control input-group py-0 selectpicker"
+                        data-style="form-control rounded border-grey shadow-none font-weight-normal">
                     <option value="cpp">cpp</option>
                     <option value="git">git</option>
                 </select>
             </div>
             <div class="row mx-0">
                 <label for="code">代码</label>
-                {% if not In_Contest %}
+                {% if not In_Contest -%}
                     <div class="form-group ml-auto">
                         <div class="custom-control custom-switch">
                             <input class="custom-control-input" type="checkbox" name="shared" id="shared"
@@ -23,7 +28,7 @@
                             <label class="custom-control-label" for="shared">代码对他人可见</label>
                         </div>
                     </div>
-                {% endif %}
+                {%- endif %}
             </div>
             <textarea class="form-control mb-3" rows="18" id="code" name="code"></textarea>
             <input type="hidden" name="problem_id" value="{{ Problem_ID }}">
@@ -33,8 +38,9 @@
 {% endblock %}
 
 {% block script %}
+    <script src="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap-select.min.js"></script>
     <script src="{{ url_for('static', filename = 'js/problem_submit.js') }}"></script>
-    {% if not In_Contest %}
+    {% if not In_Contest -%}
         <script>
             $(function () {
                 let share = localStorage.getItem("share");
@@ -45,5 +51,5 @@
                 $("#shared").prop("checked", share === "true");
             });
         </script>
-    {% endif %}
+    {%- endif %}
 {% endblock %}

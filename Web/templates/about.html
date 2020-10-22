@@ -6,8 +6,8 @@
     <div class="card card-body col-lg-11 m-auto">
         <h1 class="text-center">关于</h1>
         <h4>使用的技术：</h4>
-        <p>本OJ基于TesutoHime，其开源版可从<a href="https://github.com/cmd2001/Open-TesutoHime"
-                                    target="_blank">Open-TesutoHime</a>获取。</p>
+        <p>本OJ基于TesutoHime，开源地址为<a href="https://github.com/cmd2001/Open-TesutoHime"
+                                    target="_blank">Open-TesutoHime</a>。</p>
         <p>使用的技术：<a href="https://github.com/pallets/flask" target="_blank">Flask</a>，<a
                 href="https://www.creative-tim.com/product/argon-design-system" target="_blank">Argon Design</a>，<a
                 href="https://nsjail.dev/" target="_blank">nsjail</a></p>
@@ -34,43 +34,43 @@
                 <a href="https://github.com/cmd2001" target="_blank"><img class="img-fluid w-100"
                                                                           src="https://avatars1.githubusercontent.com/u/25078724?s=460&u=ee774535b1575662be6024d9bdb48dfbf6baa958&v=4"
                                                                           alt="Amagi_Yukisaki"></a>
-                <p class="text-center"><span class="text-blue">Amagi_Yukisaki</span><br>项目主管&数据库结构</p>
+                <p class="text-center"><span class="text-primary">Amagi_Yukisaki</span><br>项目主管&数据库结构</p>
             </div>
             <div class="col-lg-3 m-auto">
                 <a href="https://github.com/cong258258" target="_blank"><img class="img-fluid w-100"
                                                                              src="https://avatars0.githubusercontent.com/u/40522050?s=460&u=a0fdd72e19431ba44c1920878670e4df17d09149&v=4"
                                                                              alt="cong258258"></a>
-                <p class="text-center"><span class="text-blue">cong258258</span><br>前端&美化</p>
+                <p class="text-center"><span class="text-primary">cong258258</span><br>前端&美化</p>
             </div>
             <div class="col-lg-3 m-auto">
                 <a href="https://github.com/Pioooooo" target="_blank"><img class="img-fluid w-100"
                                                                            src="https://avatars3.githubusercontent.com/u/25563691?s=460&u=31d9b5dcac3d8eb20314998b2d2bd461b0e5cffc&v=4"
                                                                            alt="Pioooooo"></a>
-                <p class="text-center"><span class="text-blue">Pioooooo</span><br>管理界面&前端</p>
+                <p class="text-center"><span class="text-primary">Pioooooo</span><br>管理界面&前端美化</p>
             </div>
             <div class="col-lg-3 m-auto">
                 <a href="https://github.com/acrazyczy" target="_blank"><img class="img-fluid w-100"
                                                                             src="https://avatars1.githubusercontent.com/u/30522481?s=460&u=f23c0d7b58849ed701001195baf31e0ed6e091d6&v=4"
                                                                             alt="acrazyczy"></a>
-                <p class="text-center"><span class="text-blue">acrazyczy</span><br>评测端主管&接口</p>
+                <p class="text-center"><span class="text-primary">acrazyczy</span><br>评测端主管&接口</p>
             </div>
             <div class="col-lg-3 m-auto">
                 <a href="https://github.com/Anoxiacxy" target="_blank"><img class="img-fluid w-100"
                                                                             src="https://avatars2.githubusercontent.com/u/28628519?s=460&u=ea4e4aa0f917e7526a0d40a099e673b64546ad27&v=4"
                                                                             alt="Anoxiacxy"></a>
-                <p class="text-center"><span class="text-blue">Anoxiacxy</span><br>编译沙箱</p>
+                <p class="text-center"><span class="text-primary">Anoxiacxy</span><br>编译沙箱</p>
             </div>
             <div class="col-lg-3 m-auto">
                 <a href="https://github.com/XOR-op" target="_blank"><img class="img-fluid w-100"
                                                                          src="https://avatars2.githubusercontent.com/u/17672363?s=460&u=dcf142aa8227d4545c9a697723d2f024e2646f76&v=4"
                                                                          alt="XOR-op"></a>
-                <p class="text-center"><span class="text-blue">XOR-op</span><br>评测沙箱</p>
+                <p class="text-center"><span class="text-primary">XOR-op</span><br>评测沙箱</p>
             </div>
             <div class="col-lg-3 m-auto">
                 <a href="https://github.com/stneng" target="_blank"><img class="img-fluid w-100"
                                                                          src="https://avatars1.githubusercontent.com/u/9738894?s=460&v=4"
                                                                          alt="stneng"></a>
-                <p class="text-center"><span class="text-blue">stneng</span><br>数据服务</p>
+                <p class="text-center"><span class="text-primary">stneng</span><br>数据服务</p>
             </div>
         </div>
         <hr>
@@ -88,32 +88,32 @@
                 </th>
             </tr>
             </thead>
-            {% for x in Server_List %}
+            {% for x in Server_List -%}
                 <tr>
                     <td>
-                        {% if x['Status'] %}
+                        {% if x['Status'] -%}
                             <span class="text-green">Online</span>
-                        {% else %}
+                        {% else -%}
                             <span class="text-red">Offline</span>
-                        {% endif %}
+                        {%- endif %}
                     </td>
                     <td>{{ x['Name'] }}</td>
                     <td>{{ x['System'] }}</td>
                     <td>{{ x['Last_Seen_Time'] }}</td>
                     <td>
-                        {% if x['Status'] %}
-                            {% if x['Busy'] %}
+                        {% if x['Status'] -%}
+                            {%- if x['Busy'] -%}
                                 <span class="text-orange">Busy</span>
-                            {% else %}
+                            {%- else -%}
                                 <span class="text-blue">Idle</span>
-                            {% endif %}
-                        {% else %}
+                            {%- endif -%}
+                        {% else -%}
                             <span class="text-black-50">Invalid</span>
-                        {% endif %}
+                        {%- endif %}
                     </td>
                     <td>{{ x['Provider'] }}</td>
                 </tr>
-            {% endfor %}
+            {%- endfor %}
         </table>
     </div>
 {% endblock %}

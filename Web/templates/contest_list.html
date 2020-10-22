@@ -17,7 +17,7 @@
                     <th>报名</th>
                 </tr>
                 </thead>
-                {% for cur in  Data %}
+                {% for cur in  Data -%}
                     <tr>
                         <td>{{ cur['ID'] }}</td>
                         <td><a href="/contest?contest_id={{ cur['ID'] }}">{{ cur['Title'] }}</a></td>
@@ -25,23 +25,23 @@
                         <td>{{ cur['End_Time'] }}</td>
                         <td>{{ cur['Status'] }}</td>
                         <td>
-                            {% if cur['Blocked'] %}
-                                {% if cur['Joined'] %}
+                            {% if cur['Blocked'] -%}
+                                {%- if cur['Joined'] -%}
                                     <button disabled class="btn btn-primary">已报名参赛</button>
-                                {% else %}
+                                {%- else -%}
                                     <button disabled class="btn btn-primary">报名参赛</button>
-                                {% endif %}
-                            {% else %}
-                                {% if cur['Joined'] %}
+                                {%- endif %}
+                            {% else -%}
+                                {%- if cur['Joined'] -%}
                                     <button disabled class="btn btn-primary">已报名参赛</button>
-                                {% else %}
+                                {%- else -%}
                                     <button onclick="post_join({{ cur['ID'] }})" class="btn btn-primary">报名参赛
                                     </button>
-                                {% endif %}
-                            {% endif %}
+                                {%- endif -%}
+                            {%- endif %}
                         </td>
                     </tr>
-                {% endfor %}
+                {%- endfor %}
             </table>
         </div>
     </div>

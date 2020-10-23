@@ -187,7 +187,7 @@ def problem_detail():
 
 @web.route('/submit', methods=['GET', 'POST'])
 def submit_problem():
-    tracker.log(drop_args=True)
+    tracker.log()
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.url.split('/')[-1])

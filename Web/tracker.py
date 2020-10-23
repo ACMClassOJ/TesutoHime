@@ -11,17 +11,18 @@ class Tracker:
         logging.basicConfig(filename=LogConfig.path, level=logging.INFO)
         logging.handlers.RotatingFileHandler(filename=LogConfig.path, maxBytes=LogConfig.maxBytes)
 
-    def log(self, drop_args = False):
+    def log(self):
         everything = {}
         everything['IP'] = request.remote_addr
         everything['Username'] = Login_Manager.get_username()
         everything['Realname'] = Reference_Manager.Query_Realname(str(User_Manager.Get_Student_ID(str(everything['Username']))))
         everything['url'] = request.url
-        everything['post_args'] = request.form
-        if not drop_args:
-            everything['args'] = request.args
-        else:
-            everything['args'] = {}
+        everything['post_args'] = request.form.copy()
+        if 'password' in everything['post_args']:
+            del everything['post_args']['password']
+        if 'code' in everything['post_args']:
+            del everything['post_args']['code']
+        everything['args'] = request.args
         logging.info(json.dumps(everything))
 
 tracker = Tracker()

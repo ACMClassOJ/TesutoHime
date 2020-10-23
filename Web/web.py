@@ -17,7 +17,8 @@ from api import api
 from functools import cmp_to_key
 import json
 import os
-from const import Privilege
+from const import Privilege, ReturnCode
+from tracker import tracker
 
 web = Flask('WEB')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -31,11 +32,13 @@ def error_500():
 
 @web.route('/')
 def index():
+    tracker.log()
     return render_template('index.html', friendlyName=Login_Manager.get_friendly_name())
 
 
 @web.route('/index.html')
 def index2():
+    tracker.log()
     return redirect('/')
 
 
@@ -91,6 +94,7 @@ def get_code():
 
 @web.route('/login', methods=['GET', 'POST'])
 def login():
+    tracker.log()
     if request.method == 'GET':
         nxt = request.args.get('next')
         nxt = '/' if nxt is None else nxt
@@ -108,6 +112,7 @@ def login():
 
 @web.route('/logout')
 def logout():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('/')
     ret = make_response(redirect('/'))
@@ -133,6 +138,7 @@ def validate(username: str, password: str, friendly_name: str, student_id: str) 
 
 @web.route('/register', methods=['GET', 'POST'])
 def register():
+    tracker.log()
     if request.method == 'GET':
         nxt = request.args.get('next')
         return render_template('register.html', Next=nxt, friendlyName=Login_Manager.get_friendly_name())
@@ -148,6 +154,7 @@ def register():
 
 @web.route('/problems')
 def problem_list():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
     page = request.args.get('page')
@@ -165,6 +172,7 @@ def problem_list():
 
 @web.route('/problem')
 def problem_detail():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
     problem_id = request.args.get('problem_id')
@@ -179,6 +187,7 @@ def problem_detail():
 
 @web.route('/submit', methods=['GET', 'POST'])
 def submit_problem():
+    tracker.log()
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.url.split('/')[-1])
@@ -219,6 +228,7 @@ def submit_problem():
 
 @web.route('/rank')
 def problem_rank():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
     problem_id = request.args.get('problem_id')
@@ -244,6 +254,7 @@ def problem_rank():
 
 @web.route('/discuss', methods=['GET', 'POST'])
 def discuss():  # todo: Debug discuss
+    tracker.log()
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.url.split('/')[-1])
@@ -309,6 +320,7 @@ def fix_status_cur(cur):
 
 @web.route('/status')
 def status():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
 
@@ -336,23 +348,6 @@ def status():
         end_id = Judge_Manager.max_id() - (page - 1) * JudgeConfig.Judge_Each_Page
         start_id = end_id - JudgeConfig.Judge_Each_Page + 1
         record = Judge_Manager.judge_in_range(start_id, end_id)
-        data = []
-        for ele in record:
-            cur = {'ID': ele['ID'],
-                   'Friendly_Name': User_Manager.Get_Friendly_Name(ele['Username']),
-                   'Problem_ID': ele['Problem_ID'],
-                   'Problem_Title': Problem_Manager.get_title(ele['Problem_ID']),
-                   'Status': ele['Status'], 'Time_Used': ele['Time_Used'],
-                   'Mem_Used': ele['Mem_Used'],
-                   'Lang': ele['Lang'],
-                   'Visible': username == ele['Username'] or privilege == 2 or (
-                           bool(ele['Share']) and not Problem_Manager.in_contest(ele['Problem_ID'])),
-                   'Time': Readable_Time(ele['Time'])}
-            if is_admin:
-                cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.Get_Student_ID(ele['Username']))
-            data.append(fix_status_cur(cur))
-        return render_template('status.html', Data=data, Pages=Gen_Page(page, max_page), is_Admin=is_admin,
-                               friendlyName=Login_Manager.get_friendly_name())
     else:
         record = Judge_Manager.search_judge(arg_submitter, arg_problem_id, arg_status, arg_lang)
         max_page = int((len(record) + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
@@ -361,26 +356,30 @@ def status():
         end_id = len(record) - (page - 1) * JudgeConfig.Judge_Each_Page
         start_id = max(end_id - JudgeConfig.Judge_Each_Page + 1, 1)
         record = reversed(record[start_id - 1: end_id])
-        data = []
-        for ele in record:  # ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language
-            cur = {'ID': ele[0],
-                   'Friendly_Name': User_Manager.Get_Friendly_Name(ele[1]),
-                   'Problem_ID': ele[2],
-                   'Problem_Title': Problem_Manager.get_title(ele[2]),
-                   'Status': ele[6],
-                   'Time_Used': ele[4],
-                   'Mem_Used': ele[5],
-                   'Lang': ele[7],
-                   'Visible': username == ele[1] or privilege == 2 or (
-                           bool(ele[8]) and not Problem_Manager.in_contest(ele[2])),
-                   'Time': Readable_Time(ele[3])}
-            data.append(fix_status_cur(cur))
-        return render_template('status.html', Data=data, Pages=Gen_Page(page, max_page), Submitter=arg_submitter,
-                               Problem_ID=arg_problem_id, friendlyName=Login_Manager.get_friendly_name())
+    data = []
+    for ele in record:
+        cur = {'ID': ele['ID'],
+               'Friendly_Name': User_Manager.Get_Friendly_Name(ele['Username']),
+               'Problem_ID': ele['Problem_ID'],
+               'Problem_Title': Problem_Manager.get_title(ele['Problem_ID']),
+               'Status': ele['Status'],
+               'Time_Used': ele['Time_Used'],
+               'Mem_Used': ele['Mem_Used'],
+               'Lang': ele['Lang'],
+               'Visible': username == ele['Username'] or privilege == 2 or (
+                       bool(ele['Share']) and not Problem_Manager.in_contest(ele['Problem_ID'])),
+               'Time': Readable_Time(ele['Time'])}
+        if is_admin:
+            cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.Get_Student_ID(ele['Username']))
+        data.append(fix_status_cur(cur))
+    return render_template('status.html', Data=data, Pages=Gen_Page(page, max_page),
+                           Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
+                           is_Admin=is_admin, friendlyName=Login_Manager.get_friendly_name())
 
 
 @web.route('/code')
 def code():
+    tracker.log()
     if not Login_Manager.check_user_status():  # not login
         return redirect('login?next=' + request.url.split('/')[-1])
     if not str(request.args.get('submit_id')).isdigit():  # bad argument
@@ -410,6 +409,7 @@ def code():
 
 @web.route('/contest')
 def contest():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
     contest_id = request.args.get('contest_id')
@@ -436,7 +436,7 @@ def contest():
     else:
         contest_id = int(contest_id)
         start_time, end_time = Contest_Manager.get_time(contest_id)
-        problems = Contest_Manager.list_problem_for_contest(contest_id)
+        problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= UnixNano() else []
         players = Contest_Manager.list_player_for_contest(contest_id)
         data = []
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
@@ -483,6 +483,7 @@ def contest():
 
 @web.route('/homework')
 def homework():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
     contest_id = request.args.get('homework_id')
@@ -509,7 +510,7 @@ def homework():
     else:
         contest_id = int(contest_id)
         start_time, end_time = Contest_Manager.get_time(contest_id)
-        problems = Contest_Manager.list_problem_for_contest(contest_id)
+        problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= UnixNano() else []
         players = Contest_Manager.list_player_for_contest(contest_id)
         data = []
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
@@ -550,14 +551,28 @@ def homework():
                                    100), friendlyName=Login_Manager.get_friendly_name())
 
 
+@web.route('/profile', methods=['GET', 'POST'])
+def profile():
+    tracker.log()
+    if request.method == 'GET':
+        if not Login_Manager.check_user_status():
+            return redirect('login?next=' + request.url.split('/')[-1])
+        return render_template('profile.html', friendlyName=Login_Manager.get_friendly_name())
+    else:
+        if not Login_Manager.check_user_status():
+            return ReturnCode.ERR_USER_NOT_LOGGED_IN
+
+
 @web.route('/about')
 def about():
+    tracker.log()
     server_list = JudgeServer_Manager.Get_Server_List()
     return render_template('about.html', Server_List=server_list, friendlyName=Login_Manager.get_friendly_name())
 
 
 @web.route('/feed')
 def feed():
+    tracker.log()
     return render_template('feed.html', friendlyName=Login_Manager.get_friendly_name())
 
 

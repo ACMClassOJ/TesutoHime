@@ -42,9 +42,9 @@ def pushResult():
     if Secret == None:
         return '-1'
     Judge_ID = request.form.get("Judge_ID")
-    print(Judge_ID)
+    # print(Judge_ID)
     Result = request.form.get("Result")
-    print('Arg = ', Judge_ID, 'Result = ', Result)
+    # print('Arg = ', Judge_ID, 'Result = ', Result)
     JudgeServer_Scheduler.Receive_Judge_Result(Secret, Judge_ID, Result)
     return '0'
 

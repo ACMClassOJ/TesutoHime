@@ -88,6 +88,8 @@ class UserManager:
         cursor.execute("SELECT Student_ID FROM User WHERE Username = %s", (Username))
         data = cursor.fetchone()
         db.close()
+        if data == None:
+            return None
         return str(data[0])
 
     def Get_Privilege(self, Username:str) -> int: # Username must exist.

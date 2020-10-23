@@ -17,7 +17,7 @@ class Tracker:
         everything['Time'] = Readable_Time(UnixNano())
         everything['Username'] = Login_Manager.get_username()
         everything['Realname'] = Reference_Manager.Query_Realname(str(User_Manager.Get_Student_ID(str(everything['Username']))))
-        everything['url'] = request.url
+        everything['url'] = request.url.split('/')[-1]
         everything['post_args'] = request.form.copy()
         if 'password' in everything['post_args']:
             del everything['post_args']['password']

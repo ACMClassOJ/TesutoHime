@@ -39,9 +39,14 @@
                 <li class="nav-item"><a href="/homework" class="nav-link">作业</a></li>
                 <li class="nav-item"><a href="/status" class="nav-link">评测状态</a></li>
                 <li class="nav-item"><a href="/about" class="nav-link">关于</a></li>
+                {% if friendlyName=='' -%}
+                    <li class="dropdown-divider"></li>
+                    <li class="d-block d-lg-none nav-link"><a href="/login">登录</a></li>
+                    <li class="d-block d-lg-none nav-link"><a href="/register">注册</a></li>
+                {%- endif %}
             </ul>
             <ul class="navbar-nav ml-lg-auto" style="line-height: 1;">
-                {% if friendlyName!='' %}
+                {% if friendlyName!='' -%}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ friendlyName }}</a>
                         <div class="dropdown-menu dropdown-menu-right">
@@ -50,10 +55,12 @@
                             <a class="dropdown-item" href="/logout">注销</a>
                         </div>
                     </li>
-                {% else %}
-                    <a class="btn btn-neutral" href="/login">登录</a>
-                    <a class="btn btn-neutral" href="/register">注册</a>
-                {% endif %}
+                {% else -%}
+                    <li class="d-none d-lg-block">
+                        <a class="btn btn-neutral" href="/login">登录</a>
+                        <a class="btn btn-neutral" href="/register">注册</a>
+                    </li>
+                {%- endif %}
             </ul>
         </div>
     </div>
@@ -62,16 +69,14 @@
     {% block content %}{% endblock %}
 </main>
 <footer class="footer">
-    <div class="container">
-        <div class="row justify-content-center">
-            <p class="mb-0">
-                ACM Class OnlineJudge © 2020 Powered By
-                <a href='https://github.com/cmd2001/Open-TesutoHime/' target='_blank'> TesutoHime</a>
-            </p>
-        </div>
-        <div class="row justify-content-center">
+    <div class="container text-center">
+        <p class="mb-0">
+            ACM Class OnlineJudge © 2020 Powered By
+            <a href='https://github.com/cmd2001/Open-TesutoHime/' target='_blank'> TesutoHime</a>
+        </p>
+        <p>
             备案号：<a href='https://beian.miit.gov.cn/#/Integrated/recordQuery' target='_blank'>沪ICP备2020031263号-1</a>
-        </div>
+        </p>
     </div>
 </footer>
 </body>

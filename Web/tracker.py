@@ -14,6 +14,7 @@ class Tracker:
     def log(self):
         everything = {}
         everything['IP'] = request.remote_addr
+        everything['Time'] = Readable_Time(UnixNano())
         everything['Username'] = Login_Manager.get_username()
         everything['Realname'] = Reference_Manager.Query_Realname(str(User_Manager.Get_Student_ID(str(everything['Username']))))
         everything['url'] = request.url

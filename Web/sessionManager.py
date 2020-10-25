@@ -8,28 +8,29 @@ class SessionManager:
         self.mem = {}
         return
 
-    def Check_User_Status(self) -> bool: # to check whether current user has logged in properly
+    def check_user_status(self) -> bool:  # to check whether current user has logged in properly
         lid = request.cookies.get('Login_ID')
         return lid in self.mem
 
-    def New_Session(self, Username: str, Login_ID: str):
-        self.mem[Login_ID] = Username
+    def new_session(self, username: str, login_id: str):
+        self.mem[login_id] = username
         return
 
-    def Get_Username(self) -> str:
+    def get_username(self) -> str:
         lid = request.cookies.get('Login_ID')
-        return self.mem[lid] if lid in self.mem else 'Nobody'
+        return self.mem[lid] if lid in self.mem else ''
 
-    def Get_FriendlyName(self) -> str:
+    def get_friendly_name(self) -> str:
         lid = request.cookies.get('Login_ID')
         if not (lid in self.mem):
-            return 'Nobody'
+            return ''
         return UserManager().Get_Friendly_Name(self.mem[lid])
 
-    def Get_Privilege(self) -> int:
+    def get_privilege(self) -> int:
         lid = request.cookies.get('Login_ID')
         if not (lid in self.mem):
-            return -1 # lowest Privilege for Guests
+            return -1  # lowest Privilege for Guests
         return UserManager().Get_Privilege(self.mem[lid])
+
 
 Login_Manager = SessionManager()

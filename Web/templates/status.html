@@ -1,134 +1,133 @@
-<!DOCTYPE html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>评测状态</title>
-        <link rel="shortcut icon" href="favicon.ico">
-        <link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-        <link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet"> 
-    </head>
-    
-    <body style="background-color: rgba(193,220,248,0.1);">
-        <nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
-            <div class="container">
-                <a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
-                <div class="navbar-collapse collapse" id="navbar_global"></div>
-                <div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
-            </div>
-        </nav>
-        <div class="container">
-            <div class="card card-body">
-                <div class="page-header">
-                    <h1 class="text-center"> 评测状态 </h1>
-                </div>
-                <div>
-                    <form class="form-group input-group" method="get" id="status_serach">
-                        <input class="form-control input-group" type="text" name="submitter" id="submitter" placeholder="用户名">
-                        <input class="form-control input-group" type="number" name="problem_id" id="problem_id" placeholder="题目编号">
-                        <select class="form-control input-group" name="status" id="status" style="height: 43px">
-                            <option value = "-1">All</option>
-                            <option value = "0">Pending</option>
-                            <option value = "1">Running</option>
-                            <option value = "2">Accepted</option>
-                            <option value = "3">Wrong Answer</option>
-                            <option value = "4">Compile Error</option>
-                            <option value = "5">Runtime Error</option>
-                            <option value = "6">Time Exceed Exceed</option>
-                            <option value = "7">Memory Limit Exceed</option>
-                            <option value = "8">Memory Leak</option>
-                            <option value = "10">Disk Limit Exceed</option>
-                            <option value = "9">System Error</option>
-                        </select>
-                        <select class="form-control input-group" name="lang" id="lang" style="height: 43px">
-                            <option value = "-1">All</option>
-                            <option value = "0">C++</option>
-                            <option value = "1">Git</option>
-                        </select>
-                        <div class="input-group-append">
-                            <button class="btn btn-primary">搜索</button>  
-                        </div>
-                        </form>
-                </div>
-                <div class="bootstrap-data-table-panel">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered table-hover" id="status_list">
-                            <thead>
-                                <tr>
-                                    <th>评测编号</th>
-                                    <th>用户昵称</th>
-                                    <th>题目名称</th>
-                                    <th>评测状态</th>
-                                    <th>运行时间</th>
-                                    <th>内存</th>
-                                    <th>语言</th>
-                                    <th>提交时间</th>
-                                </tr>
-                            </thead>
-                            {% for cur in Data %}
-                                <tr>
-                                    <td>{{cur['ID']}}</td>
-                                    <td>{{cur['Friendly_Name']}}</td>
-                                    <td><a href="/problem?problem_id={{cur['Problem_ID']}}">{{cur['Problem_ID']}}. {{cur['Problem_Title']}}</a></td>
-                                    <td>
-                                        <b>{% if cur['Status'] == '0' %}
-                                            <span class="text-gray">Pending</span>
-                                        {% elif cur['Status'] == '1' %}
-                                            <span class="text-blue">Running & Judging</span>
-                                        {% elif cur['Status'] == '2' %}
-                                            <span class="text-green">Accepted</span>
-                                        {% elif cur['Status'] == '3' %}
-                                            <span class="text-red">Wrong Answer</span>
-                                        {% elif cur['Status'] == '5' %}
-                                            <span class="text-red">Runtime Error</span>
-                                        {% elif cur['Status'] == '4' %}
-                                            <span class="text-yellow">Compile Error</span>
-                                        {% elif cur['Status'] == '6' %}
-                                            <span class="text-orange">Time Limit Exceed</span>
-                                        {% elif cur['Status'] == '7' %}
-                                            <span class="text-orange">Memory Limit Exceed</span>
-                                        {% elif cur['Status'] == '10' %}
-                                            <span class="text-purple">Disk Limit Exceed</span>
-                                        {% elif cur['Status'] == '8' %}
-                                            <span class="text-purple">Memory Leak</span>
-                                        {% elif cur['Status'] == '9' %}
-                                            <span class="text-gray-dark">System Error</span>
-                                        {% endif %}</b>
-                                    </td>
-                                    <td>{{cur['Time_Used']}}ms</td>
-                                    <td>{{cur['Mem_Used']}}KiB</td>
-                                    {% if cur['Visible'] %}
-                                    <td><a href="/code?submit_id={{cur['ID']}}">{{cur['Lang']}}</a></td>
-                                    {%else%}
-                                    <td>{{cur['Lang']}}</td>
-                                    {%endif%}
-                                    <td>{{cur['Time']}}</td>
-                                </tr>
-                            {% endfor%}
-                        </table>
-                    </div>
-                    <div class="btn-group">
-                        {% for x in Pages %}
-                            {% if x[2] == -1%}
-                                <a href="status?page={{x[1]}}" class="btn btn-light disabled"> {{ x[0] }} </a>
-                            {% elif x[2] == 1 %}
-                                <a href="status?page={{x[1]}}" class="btn btn-primary"> {{ x[0] }} </a>
-                            {% else %}
-                                <a href="status?page={{x[1]}}" class="btn btn-light"> {{ x[0] }} </a>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            <footer>
-                <div class="container text-center" id="footer"></div>
-            </footer>
-        </div>
-    </body>
-    <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-    <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-    <script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script>
-    <script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-    <script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
-</html>
+{% extends 'base.html' %}
 
+{% set page='Status' %}
+
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap-select.min.css">
+{% endblock %}
+
+{% block content %}
+    <div class="card card-body">
+        <h1 class="text-center"> 评测状态 </h1>
+        <div>
+            <form class="form-group input-group" method="get" id="status_serach">
+                <input class="form-control input-group" type="text" name="submitter" id="submitter" placeholder="用户名"
+                       value="{{ Args["submitter"] if "submitter" in Args }}">
+                <input class="form-control input-group" type="number" name="problem_id" id="problem_id"
+                       placeholder="题目编号" value="{{ Args["problem_id"] if "problem_id" in Args }}">
+                <select class="form-control selectpicker" name="status" id="status"
+                        data-style="form-control font-weight-normal border-grey shadow-none">
+                    <option value="-1" {{ "selected" if "status" in Args and Args["status"]=="-1" }}>All</option>
+                    <option value="0" {{ "selected" if "status" in Args and Args["status"]=="0" }}>Pending</option>
+                    <option value="1" {{ "selected" if "status" in Args and Args["status"]=="1" }}>Running</option>
+                    <option value="2" {{ "selected" if "status" in Args and Args["status"]=="2" }}>Accepted</option>
+                    <option value="3" {{ "selected" if "status" in Args and Args["status"]=="3" }}>Wrong Answer</option>
+                    <option value="4" {{ "selected" if "status" in Args and Args["status"]=="4" }}>Compile Error</option>
+                    <option value="5" {{ "selected" if "status" in Args and Args["status"]=="5" }}>Runtime Error</option>
+                    <option value="6" {{ "selected" if "status" in Args and Args["status"]=="6" }}>Time Limit Exceed</option>
+                    <option value="7" {{ "selected" if "status" in Args and Args["status"]=="7" }}>Memory Limit Exceed</option>
+                    <option value="8" {{ "selected" if "status" in Args and Args["status"]=="8" }}>Memory Leak</option>
+                    <option value="10" {{ "selected" if "status" in Args and Args["status"]=="10" }}>Disk Limit Exceed</option>
+                    <option value="9" {{ "selected" if "status" in Args and Args["status"]=="9" }}>System Error</option>
+                </select>
+                <select class="form-control selectpicker" name="lang" id="lang"
+                        data-style="form-control font-weight-normal border-grey shadow-none">
+                    <option value="-1" {{ "selected" if "lang" in Args and Args["lang"]=="-1" }}>All</option>
+                    <option value="0" {{ "selected" if "lang" in Args and Args["lang"]=="0" }}>C++</option>
+                    <option value="1" {{ "selected" if "lang" in Args and Args["lang"]=="1" }}>Git</option>
+                </select>
+                <div class="input-group-append">
+                    <button class="btn btn-primary">搜索</button>
+                </div>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered table-hover" id="status_list">
+                <thead>
+                <tr>
+                    <th>评测编号</th>
+                    <th>用户</th>
+                    <th>题目名称</th>
+                    <th><span class="mr-2">评测状态</span><a href="/about">?</a></th>
+                    <th>运行时间</th>
+                    <th>内存</th>
+                    <th>语言</th>
+                    <th>提交时间</th>
+                </tr>
+                </thead>
+                {% for cur in Data -%}
+                    <tr>
+                        <td>{{ cur['ID'] }}</td>
+                        <td>
+                            <span>{{ cur['Friendly_Name'] }}</span>
+                            {% if is_Admin -%}
+                                <span class="text-black-50 float-right"><small>{{ cur['Real_Name'] }}</small></span>
+                            {%- endif %}
+                        </td>
+                        <td>
+                            <a href="/problem?problem_id={{ cur['Problem_ID'] }}">{{ cur['Problem_ID'] }}. {{ cur['Problem_Title'] }}</a>
+                        </td>
+                        <td>
+                            <b>
+                                {%- if cur['Status'] == '0' -%}
+                                    <span class="text-gray">Pending</span>
+                                {%- elif cur['Status'] == '1' -%}
+                                    <span class="text-blue">Running & Judging</span>
+                                {%- elif cur['Status'] == '2' -%}
+                                    <span class="text-green">Accepted</span>
+                                {%- elif cur['Status'] == '3' -%}
+                                    <span class="text-red">Wrong Answer</span>
+                                {%- elif cur['Status'] == '4' -%}
+                                    <span class="text-yellow">Compile Error</span>
+                                {%- elif cur['Status'] == '5' -%}
+                                    <span class="text-red">Runtime Error</span>
+                                {%- elif cur['Status'] == '6' -%}
+                                    <span class="text-orange">Time Limit Exceed</span>
+                                {%- elif cur['Status'] == '7' -%}
+                                    <span class="text-orange">Memory Limit Exceed</span>
+                                {%- elif cur['Status'] == '8' -%}
+                                    <span class="text-purple">Memory Leak</span>
+                                {%- elif cur['Status'] == '9' -%}
+                                    <span class="text-gray-dark">System Error</span>
+                                {%- elif cur['Status'] == '10' -%}
+                                    <span class="text-purple">Disk Limit Exceed</span>
+                                {%- endif -%}
+                            </b>
+                        </td>
+                        <td>{{ cur['Time_Used'] }}ms</td>
+                        <td>{{ cur['Mem_Used'] }}KiB</td>
+                        {% if cur['Visible'] -%}
+                            <td><a href="/code?submit_id={{ cur['ID'] }}">{{ cur['Lang'] }}</a></td>
+                        {% else -%}
+                            <td>{{ cur['Lang'] }}</td>
+                        {%- endif %}
+                        <td>{{ cur['Time'] }}</td>
+                    </tr>
+                {%- endfor %}
+            </table>
+        </div>
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% for x in Pages -%}
+                    {%- if x[2] == 1 -%}
+                        <li class="page-item active">
+                            <a class="page-link btn-light" href="javascript:void(0)"> {{ x[0] }} </a>
+                        </li>
+                    {%- elif x[2] != -1 -%}
+                        <li class="page-item">
+                            <a class="page-link btn-light" href="/status?page={{ x[1] }}
+                            {%- for arg in Args.items() -%}
+                                &{{ arg[0] }}={{ arg[1] }}
+                            {%- endfor -%}
+                            "> {{ x[0] }} </a>
+                        </li>
+                    {%- endif -%}
+                {%- endfor %}
+            </ul>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script src="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap-select.min.js"></script>
+{% endblock %}

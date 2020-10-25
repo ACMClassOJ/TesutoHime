@@ -1,42 +1,19 @@
-<!DOCTYPE html>
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>TesutoHime·ACM Class OnineJudge 2020</title>
-		<link rel="shortcut icon" href="favicon.ico">
-		<link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap.min.css" rel="stylesheet">
-		<link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet"> 
-	</head>
+{% extends 'base.html' %}
 
-	<body style="background-color: rgba(193,220,248,0.1);">
-		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-light">
-			<div class="container">
-				<a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
-				<div class="navbar-collapse collapse" id="navbar_global"></div>
-				<div class="navbar-collapse collapse justify-content-end" id="navbar_right"></div>
-			</div>
-		</nav>
-		<div class="container">
-			<div class="card card-body col-lg-12 m-auto">
-				<div class="page-header">
-					<h1 class="text-center"> Welcome to TesutoHime. </h1>
-					<h4 class="text-center"> ACM Class OnlineJudge 2020. </h4>
-				</div>
-				<div id="content">
-					<p>Compiler environment:</p>
-					<code>g++ code.cpp -o code -lm -O2 -DONLINE_JUDGE</code>
-				</div>
-			</div>
-			<footer>
-				<div class="container text-center" id="footer"></div>
-			</footer>
-		</div>
-	</body>
+{% set page='Index' %}
 
-
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/jquery.form.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/lib/sweetalert/sweetalert.min.js"></script> 
-<script src="{{ url_for('static', filename = 'js/navbar.js')}}"></script>
-<script src="{{ url_for('static', filename = 'js/user-avatar.js')}}"></script>
+{% block content %}
+    <div class="jumbotron bg-white">
+        <h1>Welcome to TesutoHime</h1>
+        <h4>ACM Class OnlineJudge 2020</h4>
+        <hr class="my-4">
+        <h4>Compiler Options:</h4>
+        <p>C++：<code>g++ code.cpp -o code -lm -O2 -DONLINE_JUDGE</code></p>
+        <p>Git：<code>cmake . && make</code></p>
+        <p class="text-muted">Everything in the world is designed to END.</p>
+        <hr class="my-4">
+        <a class="btn btn-lg btn-primary mb-3" href="/problems">Challenge</a>
+        <a class="btn btn-lg btn-warning mb-3" href="/about">About</a>
+        <a class="btn btn-lg btn-default mb-3"  href="/feed">Feed</a>
+    </div>
+{% endblock %}

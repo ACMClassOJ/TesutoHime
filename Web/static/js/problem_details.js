@@ -21,6 +21,7 @@ $(function(){
 					]
 				}
 			);
+			hljs.initHighlighting();
 		},
 	});
 });

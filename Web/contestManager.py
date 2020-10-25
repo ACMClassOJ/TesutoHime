@@ -1,154 +1,162 @@
 import sys
 from utils import *
 
+
 class ContestManager:
-    def Create_Contest(self, Name: str, Start_Time: int, End_Time: int, Type: int):
+    def create_contest(self, name: str, start_time: int, end_time: int, contest_type: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
             cursor.execute("INSERT INTO Contest (Name, Start_Time, End_Time, Type) VALUES (%s, %s, %s, %s)",
-                           (Name, Start_Time, End_Time, Type))
+                           (name, start_time, end_time, contest_type))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
-            sys.stderr.write("SQL Error in ConetstManager: Create_Contest\n")
+            sys.stderr.write("SQL Error in ContestManager: Create_Contest\n")
         db.close()
         return
 
-    def Modify_Contest(self, ID: int, New_Name: str, New_Start_Time: int, New_End_Time: int, New_Type: int):
+    def modify_contest(self, contest_id: int, new_name: str, new_start_time: int, new_end_time: int,
+                       new_contest_type: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
             cursor.execute("UPDATE Contest SET Name = %s, Start_Time = %s, End_Time = %s, Type = %s WHERE ID = %s",
-                           (New_Name, New_Start_Time, New_End_Time, New_Type, ID))
+                           (new_name, new_start_time, new_end_time, new_contest_type, contest_id))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
-            sys.stderr.write("SQL Error in ConetstManager: Modify_Contest\n")
+            sys.stderr.write("SQL Error in ContestManager: Modify_Contest\n")
         db.close()
         return
 
-    def Delete_Contest(self, ID: int):
+    def delete_contest(self, contest_id: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("DELETE FROM Contest WHERE ID = %s", (str(ID)))
+            cursor.execute("DELETE FROM Contest WHERE ID = %s", (str(contest_id)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
-            sys.stderr.write("SQL Error in ConetstManager: Delete_Contest(1)\n")
+            sys.stderr.write("SQL Error in ContestManager: Delete_Contest(1)\n")
 
         try:
-            cursor.execute("DELETE FROM Contest_Player WHERE Belong = %s", (str(ID)))
+            cursor.execute("DELETE FROM Contest_Player WHERE Belong = %s", (str(contest_id)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
-            sys.stderr.write("SQL Error in ConetstManager: Delete_Contest(2)\n")
+            sys.stderr.write("SQL Error in ContestManager: Delete_Contest(2)\n")
 
         try:
-            cursor.execute("DELETE FROM Contest_Problem WHERE Belong = %s", (str(ID)))
+            cursor.execute("DELETE FROM Contest_Problem WHERE Belong = %s", (str(contest_id)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
-            sys.stderr.write("SQL Error in ConetstManager: Delete_Contest(3)\n")
+            sys.stderr.write("SQL Error in ContestManager: Delete_Contest(3)\n")
 
         db.close()
         return
 
-    def Add_Problem_To_Contest(self, Contest_ID: int, Problem_ID: int):
+    def add_problem_to_contest(self, contest_id: int, problem_id: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("INSERT INTO Contest_Problem (Belong, Problem_ID) VALUES (%s, %s)", (str(Contest_ID), str(Problem_ID)))
+            cursor.execute("INSERT INTO Contest_Problem (Belong, Problem_ID) VALUES (%s, %s)",
+                           (str(contest_id), str(problem_id)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
-            sys.stderr.write("SQL Error in ConetstManager: Add_Problem_To_Contest\n")
+            sys.stderr.write("SQL Error in ContestManager: Add_Problem_To_Contest\n")
         db.close()
         return
 
-    def Delete_Problem_From_Contest(self, Contest_ID: int, Problem_ID: int):
+    def delete_problem_from_contest(self, contest_id: int, problem_id: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("DELETE FROM Contest_Problem WHERE Belong = %s AND Problem_ID = %s", (str(Contest_ID), str(Problem_ID)))
+            cursor.execute("DELETE FROM Contest_Problem WHERE Belong = %s AND Problem_ID = %s",
+                           (str(contest_id), str(problem_id)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
-            sys.stderr.write("SQL Error in ConetstManager: Delete_Problem_From_Contest\n")
+            sys.stderr.write("SQL Error in ContestManager: Delete_Problem_From_Contest\n")
         db.close()
         return
 
-    def Add_Player_To_Contest(self, Contest_ID: int, Username: str):
+    def add_player_to_contest(self, contest_id: int, username: str):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("INSERT INTO Contest_Player (Belong, Username) VALUES (%s, %s)", (str(Contest_ID), str(Username)))
+            cursor.execute("INSERT INTO Contest_Player (Belong, Username) VALUES (%s, %s)",
+                           (str(contest_id), str(username)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
-            sys.stderr.write("SQL Error in ConetstManager: Add_Player_To_Contest\n")
+            sys.stderr.write("SQL Error in ContestManager: Add_Player_To_Contest\n")
         db.close()
         return
 
-    def Check_Player_In_Contest(self, Contest_ID: int, Username: str):
+    def check_player_in_contest(self, contest_id: int, username: str):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT tempID FROM Contest_Player WHERE Belong = %s AND Username = %s", (Contest_ID, Username))
+        cursor.execute("SELECT tempID FROM Contest_Player WHERE Belong = %s AND Username = %s", (contest_id, username))
         ret = cursor.fetchall()
         db.close()
         return len(ret) != 0
 
-    def Delete_Player_From_Contest(self, Contest_ID: int, Username: str):
+    def delete_player_from_contest(self, contest_id: int, username: str):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("DELETE FROM Contest_Player WHERE Belong = %s AND Username = %s", (str(Contest_ID), str(Username)))
+            cursor.execute("DELETE FROM Contest_Player WHERE Belong = %s AND Username = %s",
+                           (str(contest_id), str(username)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
-            sys.stderr.write("SQL Error in ConetstManager: Delete_Player_From_Contest\n")
+            sys.stderr.write("SQL Error in ContestManager: Delete_Player_From_Contest\n")
         db.close()
         return
 
-    def List_Contest(self, Type: int):
+    def list_contest(self, contest_type: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, Name, Start_Time, End_Time FROM Contest WHERE Type = %s ORDER BY ID DESC", (Type))
+        cursor.execute("SELECT ID, Name, Start_Time, End_Time FROM Contest WHERE Type = %s ORDER BY ID DESC",
+                       (contest_type))
         ret = cursor.fetchall()
         db.close()
         return ret
 
-    def Get_Time(self, ID: int):
+    def get_time(self, contest_id: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT Start_Time, End_Time FROM Contest WHERE ID = %s", (str(ID)))
+        cursor.execute("SELECT Start_Time, End_Time FROM Contest WHERE ID = %s", (str(contest_id)))
         ret = cursor.fetchone()
         db.close()
         return int(ret[0]), int(ret[1])
 
-    def List_Problem_For_Contest(self, Contest_ID: int):
+    def list_problem_for_contest(self, contest_id: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT Problem_ID FROM Contest_Problem WHERE Belong = %s", (str(Contest_ID)))
+        cursor.execute("SELECT Problem_ID FROM Contest_Problem WHERE Belong = %s", (str(contest_id)))
         ret = cursor.fetchall()
         db.close()
         return ret
 
-    def List_Player_For_Contest(self, Contest_ID: int):
+    def list_player_for_contest(self, contest_id: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT Username FROM Contest_Player WHERE Belong = %s", (str(Contest_ID)))
+        cursor.execute("SELECT Username FROM Contest_Player WHERE Belong = %s", (str(contest_id)))
         ret = cursor.fetchall()
         db.close()
         return ret
 
-    def Get_Title(self, Contest_ID: int):
+    def get_title(self, contest_id: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT Name FROM Contest WHERE ID = %s", (str(Contest_ID)))
+        cursor.execute("SELECT Name FROM Contest WHERE ID = %s", (str(contest_id)))
         ret = cursor.fetchall()
         db.close()
         return ret
+
 
 Contest_Manager = ContestManager()

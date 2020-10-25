@@ -1,8 +1,9 @@
 import sys
 from utils import *
 
+
 class JudgeManager:
-    '''
+    """
     * ID: INT, auto_increment, PRIMARY KEY
     * Code: TEXT
     * User: TINYTEXT
@@ -14,69 +15,73 @@ class JudgeManager:
     * Time_Used: INT // ms
     * Mem_Used: INT // Byte
     * Detail: MEDIUMTEXT // may exceed 64 KB
-    '''
-    def Add_Judge(self, Code: str, User: str, Problem_ID: int, Language: int, Time: int, Share:bool):
+    """
+
+    def add_judge(self, code: str, user: str, problem_id: int, language: int, time: int, share: bool):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status, Share) VALUES(%s, %s, %s, %s, %s, '0', %s)",
-                           (Code, User, str(Problem_ID), str(Language), str(Time), int(Share)))
+            cursor.execute(
+                "INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status, Share) VALUES(%s, %s, %s, %s, %s, '0', %s)",
+                (code, user, str(problem_id), str(language), str(time), int(share)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
-            print("INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status) VALUES(%s, %s, %s, %s, %s, '0')" % (Code, User, str(Problem_ID), str(Language), str(Time)))
             sys.stderr.write("SQL Error in JudgeManager: Add_Judge\n")
         db.close()
         return
 
-    def Update_Status(self, ID: int, NewStatus: int):
+    def update_status(self, judge_id: int, new_status: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Judge SET Status = %s WHERE ID = %s", (str(NewStatus), str(ID)))
+            cursor.execute("UPDATE Judge SET Status = %s WHERE ID = %s", (str(new_status), str(judge_id)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
             sys.stderr.write("SQL Error in JudgeManager: Update_Status\n")
         db.close()
         return
 
-    def Update_After_Judge(self, ID: int, NewStatus: int, Score: int, Detail: str, Time_Used: str, Mem_Used: str):
+    def update_after_judge(self, judge_id: int, new_status: int, score: int, detail: str, time_used: str,
+                           mem_used: str):
         db = DB_Connect()
         cursor = db.cursor()
-        print("UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s" % (str(NewStatus), str(Score), Detail, Time_Used, Mem_Used, str(ID)))
         try:
-            cursor.execute("UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s", (str(NewStatus), str(Score), Detail, Time_Used, Mem_Used, str(ID)))
+            cursor.execute(
+                "UPDATE Judge SET Status = %s, Score = %s, Detail = %s, Time_Used = %s, Mem_Used = %s WHERE ID = %s",
+                (str(new_status), str(score), detail, time_used, mem_used, str(judge_id)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
             sys.stderr.write("SQL Error in JudgeManager: Update_After_Judge\n")
         db.close()
         return
 
-    def Query_Judge(self, ID: int)->dict: # for details
+    def query_judge(self, judge_id: int) -> dict:  # for details
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used, Share, Status, Language, Code  FROM Judge WHERE ID = %s", (str(ID)))
+        cursor.execute(
+            "SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used, Share, Status, Language, Code  FROM Judge WHERE ID = %s",
+            (str(judge_id)))
         data = cursor.fetchone()
         db.close()
-        if data == None:
+        if data is None:
             return {}
-        ret = {}
-        ret['ID'] = int(data[0])
-        ret['User'] = str(data[1])
-        ret['Problem_ID'] = int(data[2])
-        ret['Detail'] = str(data[3])
-        ret['Time'] = int(data[4])
-        ret['Time_Used'] = int(data[5])
-        ret['Mem_Used'] = int(data[6])
-        ret['Share'] = bool(data[7])
-        ret['Status'] = str(data[8])
-        ret['Lang'] = int(data[9])
-        ret['Code'] = str(data[10])
+        ret = {'ID': int(data[0]),
+               'User': str(data[1]),
+               'Problem_ID': int(data[2]),
+               'Detail': str(data[3]),
+               'Time': int(data[4]),
+               'Time_Used': int(data[5]),
+               'Mem_Used': int(data[6]),
+               'Share': bool(data[7]),
+               'Status': str(data[8]),
+               'Lang': int(data[9]),
+               'Code': str(data[10])}
         return ret
 
-    def Max_ID(self):
+    def max_id(self):
         db = DB_Connect()
         cursor = db.cursor()
         cursor.execute("SELECT MAX(ID) FROM Judge")
@@ -84,94 +89,112 @@ class JudgeManager:
         db.close()
         return int(data[0])
 
-    def Judge_In_Range(self, startID: int, endID: int): # [{}], for page display.
+    def judge_in_range(self, start_id: int, end_id: int):  # [{}], for page display.
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language, Share FROM Judge WHERE ID >= %s and ID <= %s ORDER BY ID desc", (str(startID), str(endID)))
+        cursor.execute(
+            "SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language, Share FROM Judge WHERE ID >= %s and ID <= %s ORDER BY ID desc",
+            (str(start_id), str(end_id)))
         data = cursor.fetchall()
         ret = []
         for d in data:
-            cur = {}
-            cur['ID'] = int(d[0])
-            cur['Username'] = str(d[1])
-            cur['Problem_ID'] = int(d[2])
-            cur['Time'] = int(d[3])
-            cur['Time_Used'] = int(d[4])
-            cur['Mem_Used'] = int(d[5])
-            cur['Status'] = str(d[6])
-            cur['Lang'] = str(d[7])
-            cur['Share'] = bool(d[8])
+            cur = {'ID': int(d[0]),
+                   'Username': str(d[1]),
+                   'Problem_ID': int(d[2]),
+                   'Time': int(d[3]),
+                   'Time_Used': int(d[4]),
+                   'Mem_Used': int(d[5]),
+                   'Status': str(d[6]),
+                   'Lang': str(d[7]),
+                   'Share': bool(d[8])}
             ret.append(cur)
         db.close()
         return ret
 
-    def Get_Contest_Judge(self, Problem_ID: int, Username: str, Start_Time: int, End_Time: int):
+    def get_contest_judge(self, problem_id: int, username: str, start_time: int, end_time: int):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, Status, Score, Time FROM Judge WHERE Problem_ID = %s AND User = %s AND Time >= %s AND Time <= %s", (str(Problem_ID), Username, str(Start_Time), str(End_Time)))
+        cursor.execute(
+            "SELECT ID, Status, Score, Time FROM Judge WHERE Problem_ID = %s AND User = %s AND Time >= %s AND Time <= %s",
+            (str(problem_id), username, str(start_time), str(end_time)))
         ret = cursor.fetchall()
         db.close()
         return ret
 
-    def Search_Judge(self, Arg_Submitter, Arg_Problem_ID, Arg_Status, Arg_Lang, Arg_Param = None):
+    def search_judge(self, arg_submitter, arg_problem_id, arg_status, arg_lang, arg_param=None):
         db = DB_Connect()
         cursor = db.cursor()
         com = 'SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language, Share FROM Judge WHERE '
         pre = []
 
-        if Arg_Problem_ID != None:
+        if arg_problem_id is not None:
             com = com + 'Problem_ID = %s'
-            pre.append(str(Arg_Problem_ID))
-        if Arg_Submitter != None:
+            pre.append(str(arg_problem_id))
+        if arg_submitter is not None:
             if len(pre):
                 com = com + ' AND '
             com = com + 'User = %s'
-            pre.append(str(Arg_Submitter))
-        if Arg_Status != None:
+            pre.append(str(arg_submitter))
+        if arg_status is not None:
             if len(pre):
                 com = com + ' AND '
             com = com + 'Status = %s'
-            pre.append(str(Arg_Status))
-        if Arg_Lang != None:
+            pre.append(str(arg_status))
+        if arg_lang is not None:
             if len(pre):
                 com = com + ' AND '
             com = com + 'Language = %s'
-            pre.append(str(Arg_Lang))
-        if Arg_Param == None:
-            com = com + ' ORDER BY ID desc'
+            pre.append(str(arg_lang))
+        if arg_param is None:
+            com = com + ' ORDER BY ID asc'
         else:
             com = com + ' ORDER BY Time_Used asc'
         cursor.execute(com, tuple(pre))
-        ret = cursor.fetchall()
-        db.close
+        data = cursor.fetchall()
+        db.close()
+        ret = []
+        for d in data:
+            cur = {'ID': int(d[0]),
+                   'Username': str(d[1]),
+                   'Problem_ID': int(d[2]),
+                   'Time': int(d[3]),
+                   'Time_Used': int(d[4]),
+                   'Mem_Used': int(d[5]),
+                   'Status': str(d[6]),
+                   'Lang': str(d[7]),
+                   'Share': bool(d[8])}
+            ret.append(cur)
         return ret
 
-    def Search_AC(self, Problem_ID):
+    def search_ac(self, problem_id):
         db = DB_Connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, User, Time_Used, Mem_Used, Language, Time FROM Judge WHERE Problem_ID = %s and Status = 2", (str(Problem_ID)))
+        cursor.execute(
+            "SELECT ID, User, Time_Used, Mem_Used, Language, Time FROM Judge WHERE Problem_ID = %s and Status = 2",
+            (str(problem_id)))
         ret = cursor.fetchall()
         db.close()
         return ret
 
-    def Delete_Judge(self, ID: int):
+    def delete_judge(self, judge_id: int):
         db = DB_Connect()
         cursor = db.cursor()
         try:
-            cursor.execute("DELETE FROM Judge WHERE  ID = %s", (str(ID)))
+            cursor.execute("DELETE FROM Judge WHERE  ID = %s", (str(judge_id)))
             db.commit()
-        except:
+        except pymysql.Error:
             db.rollback()
             sys.stderr.write("SQL Error in JudgeManager: Erase_Judge\n")
         return
 
-    def Get_Pending_Judge(self):
+    def get_pending_judge(self):
         db = DB_Connect()
         cursor = db.cursor()
         cursor.execute("SELECT ID, Problem_ID, Code, Language FROM Judge WHERE Status = 0")
         ls = cursor.fetchall()
-        if ls == None or len(ls) == 0:
+        if ls is None or len(ls) == 0:
             return None
         return ls[0]
+
 
 Judge_Manager = JudgeManager()

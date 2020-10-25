@@ -5,6 +5,8 @@ from userManager import User_Manager
 from problemManager import Problem_Manager
 from contestManager import Contest_Manager
 from requests import post
+from requests.exceptions import RequestException
+from config import DataConfig
 
 admin = Blueprint('admin', __name__, static_folder='static')
 
@@ -55,115 +57,132 @@ def _validate_contest_data(form):
 
 @admin.route('/')
 def index():
-    privilege = Login_Manager.Get_Privilege()
-    privilege = Privilege.SUPER
+    privilege = Login_Manager.get_privilege()
     if privilege < Privilege.ADMIN:
         abort(404)
-    return render_template('admin.html', privilege=privilege, Privilege=Privilege)
+    return render_template('admin.html', privilege=privilege, Privilege=Privilege,
+                           friendlyName=Login_Manager.get_friendly_name())
 
 
 @admin.route('/user', methods=['post'])
 def user_manager():
-    if Login_Manager.Get_Privilege() < Privilege.SUPER:
+    if Login_Manager.get_privilege() < Privilege.SUPER:
         abort(404)
     form = request.json
     # err = _validate_user_data(form)
     # if err is not None:
     #     return err
-    op = int(form[String.TYPE])
-    if op == 0:
-        User_Manager.Add_User(form[String.USERNAME], int(form[String.STUDENT_ID]), form[String.FRIENDLY_NAME],
-                              form[String.PASSWORD], form[String.PRIVILEGE])
-        return ReturnCode.SUC_ADD_USER
-    elif op == 1:
-        User_Manager.Modify_User(form[String.USERNAME], form[String.STUDENT_ID], form[String.FRIENDLY_NAME],
-                                 form[String.PASSWORD], form[String.PRIVILEGE])
-        return ReturnCode.SUC_MOD_USER
-    elif op == 2:
-        User_Manager.Delete_User(form[String.USERNAME])
-        return ReturnCode.SUC_DEL_USER
-    else:
+    try:
+        op = int(form[String.TYPE])
+        if op == 0:
+            User_Manager.Add_User(form[String.USERNAME], int(form[String.STUDENT_ID]), form[String.FRIENDLY_NAME],
+                                  form[String.PASSWORD], form[String.PRIVILEGE])
+            return ReturnCode.SUC_ADD_USER
+        elif op == 1:
+            User_Manager.Modify_User(form[String.USERNAME], form.get(String.STUDENT_ID, None),
+                                     form.get(String.FRIENDLY_NAME, None), form.get(String.PASSWORD, None),
+                                     form.get(String.PRIVILEGE, None))
+            return ReturnCode.SUC_MOD_USER
+        elif op == 2:
+            User_Manager.Delete_User(form[String.USERNAME])
+            return ReturnCode.SUC_DEL_USER
+        else:
+            return ReturnCode.ERR_BAD_DATA
+    except KeyError:
+        return ReturnCode.ERR_BAD_DATA
+    except TypeError:
         return ReturnCode.ERR_BAD_DATA
 
 
 @admin.route('/problem', methods=['post'])
 def problem_manager():
-    if Login_Manager.Get_Privilege() < Privilege.ADMIN:
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
     form = request.json
     # err = _validate_problem_data(form)
     # if err is not None:
     #     return err
-    op = int(form[String.TYPE])
-    if op == 0:
-        Problem_Manager.Add_Problem(form[String.TITLE], form[String.DESCRIPTION], form[String.INPUT],
-                                    form[String.OUTPUT],
-                                    form[String.EXAMPLE_INPUT], form[String.EXAMPLE_OUTPUT], form[String.DATA_RANGE],
-                                    form[String.RELEASE_TIME])
-        return ReturnCode.SUC_ADD_PROBLEM
-    elif op == 1:
-        Problem_Manager.Modify_Problem(int(form[String.PROBLEM_ID]), form[String.TITLE], form[String.DESCRIPTION],
-                                       form[String.INPUT], form[String.OUTPUT], form[String.EXAMPLE_INPUT],
-                                       form[String.EXAMPLE_OUTPUT], form[String.DATA_RANGE], form[String.RELEASE_TIME])
-        return ReturnCode.SUC_MOD_PROBLEM
-    elif op == 2:
-        Problem_Manager.Delete_Problem(form[String.PROBLEM_ID])
-        return ReturnCode.SUC_DEL_PROBLEM
-    else:
+    try:
+        op = int(form[String.TYPE])
+        if op == 0:
+            Problem_Manager.add_problem(form[String.TITLE], form[String.DESCRIPTION],
+                                        form[String.INPUT], form[String.OUTPUT], form[String.EXAMPLE_INPUT],
+                                        form[String.EXAMPLE_OUTPUT], form[String.DATA_RANGE], form[String.RELEASE_TIME])
+            return ReturnCode.SUC_ADD_PROBLEM
+        elif op == 1:
+            Problem_Manager.modify_problem(int(form[String.PROBLEM_ID]), form.get(String.TITLE, None),
+                                           form.get(String.DESCRIPTION, None), form.get(String.INPUT, None),
+                                           form.get(String.OUTPUT, None), form.get(String.EXAMPLE_INPUT, None),
+                                           form.get(String.EXAMPLE_OUTPUT, None), form.get(String.DATA_RANGE, None),
+                                           form.get(String.RELEASE_TIME, None))
+            return ReturnCode.SUC_MOD_PROBLEM
+        elif op == 2:
+            Problem_Manager.delete_problem(form[String.PROBLEM_ID])
+            return ReturnCode.SUC_DEL_PROBLEM
+        else:
+            return ReturnCode.ERR_BAD_DATA
+    except KeyError:
+        return ReturnCode.ERR_BAD_DATA
+    except TypeError:
         return ReturnCode.ERR_BAD_DATA
 
 
 @admin.route('/contest', methods=['post'])
 def contest_manager():
-    if Login_Manager.Get_Privilege() < Privilege.ADMIN:
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
     form = request.json
     # err = _validate_contest_data(form)
     # if err is not None:
     #     return err
-    op = int(form[String.TYPE])
-    if op == 0:
-        Contest_Manager.Create_Contest(form[String.CONTEST_NAME], int(form[String.START_TIME]),
-                                       int(form[String.END_TIME]),
-                                       int(form[String.CONTEST_TYPE]))
-        return ReturnCode.SUC_ADD_CONTEST
-    elif op == 1:
-        Contest_Manager.Modify_Contest(int(form[String.CONTEST_ID]), form[String.CONTEST_NAME],
-                                       int(form[String.START_TIME]),
-                                       int(form[String.END_TIME]), int(form[String.CONTEST_TYPE]))
-        return ReturnCode.SUC_MOD_CONTEST
-    elif op == 2:
-        Contest_Manager.Delete_Contest(int(form[String.CONTEST_ID]))
-        return ReturnCode.SUC_DEL_CONTEST
-    elif op == 3:
-        for problemId in form[String.CONTEST_PROBLEM_IDS]:
-            Contest_Manager.Add_Problem_To_Contest(int(form[String.CONTEST_ID]), int(problemId))
-        return ReturnCode.SUC_ADD_PROBLEMS_TO_CONTEST
-    elif op == 4:
-        for problemId in form[String.CONTEST_PROBLEM_IDS]:
-            Contest_Manager.Delete_Problem_From_Contest(int(form[String.CONTEST_ID]), int(problemId))
-        return ReturnCode.SUC_DEL_PROBLEMS_FROM_CONTEST
-    elif op == 5:
-        for username in form[String.CONTEST_USERNAMES]:
-            Contest_Manager.Add_Player_To_Contest(int(form[String.CONTEST_ID]), username)
-        return ReturnCode.SUC_ADD_USERS_TO_CONTEST
-    elif op == 6:
-        for username in form[String.CONTEST_USERNAMES]:
-            Contest_Manager.Delete_Player_From_Contest(int(form[String.CONTEST_ID]), username)
-        return ReturnCode.SUC_DEL_USERS_FROM_CONTEST
-    else:
+    try:
+        op = int(form[String.TYPE])
+        if op == 0:
+            Contest_Manager.create_contest(form[String.CONTEST_NAME], int(form[String.START_TIME]),
+                                           int(form[String.END_TIME]),
+                                           int(form[String.CONTEST_TYPE]))
+            return ReturnCode.SUC_ADD_CONTEST
+        elif op == 1:
+            Contest_Manager.modify_contest(int(form[String.CONTEST_ID]), form.get(String.CONTEST_NAME, None),
+                                           int(form.get(String.START_TIME, None)), int(form.get(String.END_TIME, None)),
+                                           int(form.get(String.CONTEST_TYPE, None)))
+            return ReturnCode.SUC_MOD_CONTEST
+        elif op == 2:
+            Contest_Manager.delete_contest(int(form[String.CONTEST_ID]))
+            return ReturnCode.SUC_DEL_CONTEST
+        elif op == 3:
+            for problemId in form[String.CONTEST_PROBLEM_IDS]:
+                Contest_Manager.add_problem_to_contest(int(form[String.CONTEST_ID]), int(problemId))
+            return ReturnCode.SUC_ADD_PROBLEMS_TO_CONTEST
+        elif op == 4:
+            for problemId in form[String.CONTEST_PROBLEM_IDS]:
+                Contest_Manager.delete_problem_from_contest(int(form[String.CONTEST_ID]), int(problemId))
+            return ReturnCode.SUC_DEL_PROBLEMS_FROM_CONTEST
+        elif op == 5:
+            for username in form[String.CONTEST_USERNAMES]:
+                Contest_Manager.add_player_to_contest(int(form[String.CONTEST_ID]), username)
+            return ReturnCode.SUC_ADD_USERS_TO_CONTEST
+        elif op == 6:
+            for username in form[String.CONTEST_USERNAMES]:
+                Contest_Manager.delete_player_from_contest(int(form[String.CONTEST_ID]), username)
+            return ReturnCode.SUC_DEL_USERS_FROM_CONTEST
+        else:
+            return ReturnCode.ERR_BAD_DATA
+    except KeyError:
+        return ReturnCode.ERR_BAD_DATA
+    except TypeError:
         return ReturnCode.ERR_BAD_DATA
 
 
 @admin.route('/data', methods=['POST'])
 def data_upload():
-    if Login_Manager.Get_Privilege() < Privilege.ADMIN:
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
     if 'file' in request.files:
         f = request.files['file']
         try:
-            r = post('', files={'file': (f.filename, f)})
-            return {'e': r.content}
-        except:
-            pass
-    return {'e': -1}
+            r = post(DataConfig.server + '/' + DataConfig.key + '/upload.php', files={'file': (f.filename, f)})
+            return {'e': 0, 'msg': r.content}
+        except RequestException:
+            return ReturnCode.ERR_NETWORK_FAILURE
+    return ReturnCode.ERR_BAD_DATA

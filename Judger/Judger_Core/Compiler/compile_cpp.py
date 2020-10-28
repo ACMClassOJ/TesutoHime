@@ -25,12 +25,12 @@ def compile_cpp(codes, time_limit, seccomp=False):
     source = program + ".cpp"
 
     class_name = random_string(10)
+    print(codes.keys())
     if "main.cpp" in codes.keys():
         if seccomp:
             codes["main.cpp"] = codes["main.cpp"] + CPP_APPENDIX.format(a=class_name)
         codes[source] = codes["main.cpp"]
         del codes["main.cpp"]
-
     try:
         for file, code in codes.items():
             code_file = open(os.path.join(path, file), "w")
@@ -47,7 +47,7 @@ def compile_cpp(codes, time_limit, seccomp=False):
 
     try:
         parameter = ["g++", source, "-o", program] + \
-                    ["-fmax-errors=10", "-O2", "-DONLINE_JUDGE", "-lm"]
+                    ["-fmax-errors=10", "-O2", "-DONLINE_JUDGE", "-lm", "-std=c++17"]
         if seccomp:
             parameter += ["-lseccomp"]
         print(parameter)

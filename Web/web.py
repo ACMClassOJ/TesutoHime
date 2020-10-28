@@ -18,6 +18,7 @@ from functools import cmp_to_key
 import json
 import os
 from const import Privilege, ReturnCode
+from tracker import tracker
 
 web = Flask('WEB')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -31,11 +32,13 @@ def error_500():
 
 @web.route('/')
 def index():
+    tracker.log()
     return render_template('index.html', friendlyName=Login_Manager.get_friendly_name())
 
 
 @web.route('/index.html')
 def index2():
+    tracker.log()
     return redirect('/')
 
 
@@ -91,6 +94,7 @@ def get_code():
 
 @web.route('/login', methods=['GET', 'POST'])
 def login():
+    tracker.log()
     if request.method == 'GET':
         nxt = request.args.get('next')
         nxt = '/' if nxt is None else nxt
@@ -108,6 +112,7 @@ def login():
 
 @web.route('/logout')
 def logout():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('/')
     ret = make_response(redirect('/'))
@@ -133,6 +138,7 @@ def validate(username: str, password: str, friendly_name: str, student_id: str) 
 
 @web.route('/register', methods=['GET', 'POST'])
 def register():
+    tracker.log()
     if request.method == 'GET':
         nxt = request.args.get('next')
         return render_template('register.html', Next=nxt, friendlyName=Login_Manager.get_friendly_name())
@@ -148,6 +154,7 @@ def register():
 
 @web.route('/problems')
 def problem_list():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
     page = request.args.get('page')
@@ -165,6 +172,7 @@ def problem_list():
 
 @web.route('/problem')
 def problem_detail():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
     problem_id = request.args.get('problem_id')
@@ -179,6 +187,7 @@ def problem_detail():
 
 @web.route('/submit', methods=['GET', 'POST'])
 def submit_problem():
+    tracker.log()
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.url.split('/')[-1])
@@ -219,6 +228,7 @@ def submit_problem():
 
 @web.route('/rank')
 def problem_rank():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
     problem_id = request.args.get('problem_id')
@@ -244,6 +254,7 @@ def problem_rank():
 
 @web.route('/discuss', methods=['GET', 'POST'])
 def discuss():  # todo: Debug discuss
+    tracker.log()
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.url.split('/')[-1])
@@ -309,6 +320,7 @@ def fix_status_cur(cur):
 
 @web.route('/status')
 def status():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
 
@@ -367,6 +379,7 @@ def status():
 
 @web.route('/code')
 def code():
+    tracker.log()
     if not Login_Manager.check_user_status():  # not login
         return redirect('login?next=' + request.url.split('/')[-1])
     if not str(request.args.get('submit_id')).isdigit():  # bad argument
@@ -396,6 +409,7 @@ def code():
 
 @web.route('/contest')
 def contest():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
     contest_id = request.args.get('contest_id')
@@ -469,6 +483,7 @@ def contest():
 
 @web.route('/homework')
 def homework():
+    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.url.split('/')[-1])
     contest_id = request.args.get('homework_id')
@@ -538,6 +553,7 @@ def homework():
 
 @web.route('/profile', methods=['GET', 'POST'])
 def profile():
+    tracker.log()
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.url.split('/')[-1])
@@ -549,12 +565,14 @@ def profile():
 
 @web.route('/about')
 def about():
+    tracker.log()
     server_list = JudgeServer_Manager.Get_Server_List()
     return render_template('about.html', Server_List=server_list, friendlyName=Login_Manager.get_friendly_name())
 
 
 @web.route('/feed')
 def feed():
+    tracker.log()
     return render_template('feed.html', friendlyName=Login_Manager.get_friendly_name())
 
 

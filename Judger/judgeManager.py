@@ -3,6 +3,7 @@ from Judger.JudgerResult import *
 from Judger.Judger_Core.Compiler.Compiler import compiler
 from Judger.Judger_Core.classic_judger import ClassicJudger
 from Judger.Judger_Data import ProblemConfig, Group
+import multiprocessing
 import subprocess
 import os.path
 
@@ -19,59 +20,113 @@ class JudgeManager:
               language: str,
               sourceCode: str
               ) -> JudgerResult:
-        compileResult = compiler.CompileInstance(CompilationConfig(sourceCode, language, problemConfig.CompileTimeLimit))
-        if not compileResult.compiled:
+        srcDict = {}
+        if problemConfig.SPJ != 2:
+            srcDict['main.cpp'] = sourceCode
+            compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
+        else:
+            srcDict['src.hpp'] = sourceCode
+        if problemConfig.SPJ != 2 and not compileResult.compiled:
             print('Compilation Error')
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(1, ResultType.CE, 0, 0, 0, -1, compileResult.msg)], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
         else:
-            print('Compilation Done')
             Details = []
+            manager = multiprocessing.Manager()
+            return_dict = manager.dict()
             for testcase in problemConfig.Details:
                 if testcase.Dependency == 0 or Details[testcase.Dependency - 1].result == ResultType.AC:
-                    relatedFile = dataPath + '/' + str(testcase.ID)
-                    testPointDetail, userOutput = ClassicJudger().JudgeInstance(
-                        TestPointConfig(
-                            compileResult.programPath,
-                            None,
-                            relatedFile + '.in',
-                            testcase.TimeLimit,
-                            testcase.MemoryLimit,
-                            testcase.DiskLimit,
-                            testcase.Dependency == 0,
-                            testcase.ValgrindTestOn
+                    Runnable = True
+                    if problemConfig.SPJ == 2:
+                        Runnable = False
+                        try:
+                            with open(dataPath + '/' + str(testcase.ID) + '.cpp') as f:
+                                srcDict['main.cpp'] = f.read()
+                        except:
+                            try:
+                                with open(dataPath + '/' + 'main.cpp') as f:
+                                    srcDict['main.cpp'] = f.read()
+                            except:
+                                testPointDetail = DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'No main function found in data.')
+                            else:
+                                Runnable = True
+                        else:
+                            Runnable = True
+                        if Runnable:
+                            compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
+                            if not compileResult.compiled:
+                                print('Compilation Error')
+                                testPointDetail = DetailResult(testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg)
+                                Runnable = False
+                    if Runnable:
+                        relatedFile = dataPath + '/' + str(testcase.ID)
+                        #testPointDetail, userOutput
+                        judgeProcess = multiprocessing.Process(target=ClassicJudger().JudgeInstance, args=(
+                            TestPointConfig(
+                                compileResult.programPath,
+                                None,
+                                '/dev/null' if problemConfig.SPJ == 2 else relatedFile + '.in',
+                                testcase.TimeLimit,
+                                testcase.MemoryLimit,
+                                testcase.DiskLimit,
+                                testcase.Dependency == 0,
+                                testcase.ValgrindTestOn,
+                            ),
+                                return_dict)
                         )
-                    )
-                    testPointDetail.ID = testcase.ID
-                    if testPointDetail.result == ResultType.UNKNOWN:
-                        if problemConfig.SPJ == 1:
-                            subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
-                            with open('score.log') as f:
-                                testPointDetail.score = float("\n".join(f.readline().splitlines()))
-                            testPointDetail.result = ResultType.WA if testPointDetail.score == 0 else ResultType.AC
-                            with open('message.log') as f:
-                                testPointDetail.message += f.readline().splitlines()
-                        else:
-                            if os.path.isfile(relatedFile + '.ans'):
-                                runDiff = subprocess.run(['diff', '-Z', '-B', userOutput , relatedFile + '.ans'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
-                            else:
-                                runDiff = subprocess.run(['diff', '-Z', '-B', userOutput , relatedFile + '.out'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
-                            #print(runDiff.stderr.decode() + runDiff.stdout.decode())
-                            if runDiff.returncode == 0:
+                        judgeProcess.start()
+                        judgeProcess.join()
+                        testPointDetail, userOutput = return_dict['testPointDetail'], return_dict['userOutput']
+                        testPointDetail.ID = testcase.ID
+                        if testPointDetail.result == ResultType.UNKNOWN:
+                            if testcase.ValgrindTestOn:
                                 testPointDetail.score, testPointDetail.result = 1.0, ResultType.AC
+                            elif problemConfig.SPJ == 1:
+                                try:
+                                    subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20)
+                                    with open('score.log') as f:
+                                        testPointDetail.score = float("\n".join(f.readline().splitlines()))
+                                    testPointDetail.result = ResultType.WA if testPointDetail.score == 0 else ResultType.AC
+                                    with open('message.log') as f:
+                                        testPointDetail.message += f.readline().splitlines()
+                                except Exception as e:
+                                    print(e)
+                                    testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while running SPJ.', ResultType.SYSERR
+                            elif problemConfig.SPJ == 2:
+                                try:
+                                    with open(userOutput) as f:
+                                        return_list = f.read().splitlines()
+                                        testPointDetail.score = float(return_list[0])# to do : how to get message
+                                        testPointDetail.result = ResultType.WA if testPointDetail.score == 0 else ResultType.AC
+                                        for i in range(1, len(return_list)):
+                                            testPointDetail.message += return_list[i] + '\n'
+                                except Exception as e:
+                                    print(e)
+                                    testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, "Something must be wrong with main.cpp.", ResultType.SYSERR
                             else:
-                                testPointDetail.score, testPointDetail.result = 0.0, ResultType.WA
-                                #testPointDetail.message += runDiff.stdout.decode() + runDiff.stderr.decode()
-                    else:
-                        testPointDetail.score = 0.
-                        if testPointDetail.result == ResultType.TLE :
-                            testPointDetail.message = "Time Limit Exceeded\n"
-                        elif testPointDetail.result == ResultType.MLE :
-                            testPointDetail.message = "Memory Limit Exceeded\n"
-                        elif testPointDetail.result == ResultType.RE :
-                            testPointDetail.message = "Runtime Error\n"
+                                try:
+                                    if os.path.isfile(relatedFile + '.ans'):
+                                        runDiff = subprocess.run(['diff', '-q', '-Z', '-B', userOutput , relatedFile + '.ans'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 30)
+                                    else:
+                                        runDiff = subprocess.run(['diff', '-q', '-Z', '-B', userOutput , relatedFile + '.out'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 30)
+                                    #print(runDiff.stderr.decode() + runDiff.stdout.decode())
+                                    if runDiff.returncode == 0:
+                                        testPointDetail.score, testPointDetail.result = 1.0, ResultType.AC
+                                    else:
+                                        testPointDetail.score, testPointDetail.result = 0.0, ResultType.WA
+                                        #testPointDetail.message += runDiff.stdout.decode() + runDiff.stderr.decode()
+                                except Exception as e:
+                                    print(e)
+                                    testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while comparing outputs.', ResultType.SYSERR
                         else:
-                            testPointDetail.message = "Memory Leak\n"
-                    testPointDetail.ID = testcase.ID
+                            testPointDetail.score = 0.
+                            if testPointDetail.result == ResultType.TLE :
+                                testPointDetail.message = "Time Limit Exceeded\n"
+                            elif testPointDetail.result == ResultType.MLE :
+                                testPointDetail.message = "Memory Limit Exceeded\n"
+                            elif testPointDetail.result == ResultType.RE :
+                                testPointDetail.message = "Runtime Error\n"
+                            elif testPointDetail.result == ResultType.MEMLEK :
+                                testPointDetail.message = "Memory Leak\n"
                     Details.append(testPointDetail)
                 else:
                     Details.append(DetailResult(testcase.ID, ResultType.SKIPPED, 0, 0, 0, -1, 'Skipped.'))
@@ -103,7 +158,7 @@ class JudgeManager:
                         inputString += str(len(group.TestPoints)) + ' ' + str(group.GroupScore) + ' '
                         for testPoint in group.TestPoints:
                             inputString += str(testPoint) + ' '
-                    process = subprocess.run(dataPath + '/scorer.py', stdin = inputString, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 10)
+                    process = subprocess.run(dataPath + '/scorer.py', stdin = inputString, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20)
                 except subprocess.TimeoutExpired:
                     judgeResult = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'Scorer timeout.\n') for testcase in problemConfig.Details], problemConfig)
                 else:

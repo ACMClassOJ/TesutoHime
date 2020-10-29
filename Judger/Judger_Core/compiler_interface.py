@@ -1,8 +1,7 @@
-from Judger.Judger_Core import config as conf
 from abc import abstractmethod
-
+from .config import CompilationConfig, CompilationResult
 
 class CompilerInterface:
     @abstractmethod
-    def CompileInstance(self, code_config : conf.CompilationConfig) -> conf.CompilationResult: pass
+    def CompileInstance(self, code_config: CompilationConfig) -> CompilationResult: pass
     

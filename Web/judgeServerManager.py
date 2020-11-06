@@ -129,6 +129,7 @@ class JudgeServerManager:
 
 
     def Get_Standby_Server(self, MinTime: int):
+        self.Error_Check_Correct(MinTime)
         db = DB_Connect()
         cursor = db.cursor()
         cursor.execute("SELECT Address, Secret_Key FROM Judge_Server WHERE Last_Seen_Time >= %s AND Busy = %s", (str(MinTime), '0'))

@@ -1,6 +1,7 @@
 import sys
 import random
 from utils import *
+from judgeManager import Judge_Manager
 
 class JudgeServerManager:
     def Add_Judge_Server(self, Address: str, Secret: str, Friendly_Name: str, Detail: str):
@@ -95,8 +96,37 @@ class JudgeServerManager:
         except:
             db.rollback()
             sys.stderr.write("SQL Error in JudgeServerManager: Set_Offline\n")
+        cursor.execute("SELECT Current_Task FROM Judge_Server WHERE Secret_Key = %s", (Secret))
+        Current_Task = cursor.fetchone()
+        if (str(Current_Task) != '-1'):
+            Judge_Manager.update_after_judge(Current_Task, 9)
         db.close()
         return
+
+    def Error_Check_Correct(self, Mintime: int):
+        db = DB_Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Address, Secret_Key, Current_Task FROM Judge_Server WHERE Last_Seen_Time >= %s AND Busy = %s", (str(Mintime), '1'))
+        ret = cursor.fetchall()
+        db.close()
+        if ret == None or len(ret) == 0: # nothing to do
+            return
+        for x in ret:
+            url = x[0]
+            Secret = x[1]
+            Current_Task = x[2]
+            for i in range(0, 3):
+                try:
+                    data = {}
+                    data['Server_Secret'] = JudgeConfig.Web_Server_Secret
+                    re = requests.post(url + '/isBusy', data=data).content.decode()  # Fixme: check self-signed SSL
+                    if re == '0':
+                        JudgeServer_Manager.Flush_Busy(Secret, False)
+                        Judge_Manager.update_after_judge(Current_Task, 9) # set system error for fake busy
+                    break
+                except:
+                    pass
+
 
     def Get_Standby_Server(self, MinTime: int):
         db = DB_Connect()

@@ -1,12 +1,12 @@
-from Judger.Judger_Core import judger_interface as interface
-import Judger.JudgerResult as jr
-from Judger.Judger_Core import config as conf
+from Judger_Core import judger_interface as interface
+import JudgerResult as jr
+from Judger_Core import config as conf
 import random
 import os
 import time
 import subprocess as sp
 import resource
-from Judger.config import Performance_Rate
+from config import Performance_Rate
 
 
 

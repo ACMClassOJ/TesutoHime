@@ -1,7 +1,7 @@
 import subprocess as sp
 from abc import abstractmethod
-from Judger.Judger_Core import config as conf
-from Judger.JudgerResult import DetailResult
+from Judger_Core import config as conf
+from JudgerResult import DetailResult
 
 class SPJInterface:
     @abstractmethod

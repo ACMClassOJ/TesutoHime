@@ -1,5 +1,5 @@
 from enum import Enum
-from Judger.Judger_Data import ProblemConfig
+from Judger_Data import ProblemConfig
 
 class ResultType(Enum):
         AC = 2

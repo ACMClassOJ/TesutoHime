@@ -1,8 +1,8 @@
-from Judger.Judger_Core.config import *
-from Judger.JudgerResult import *
-from Judger.Judger_Core.Compiler.Compiler import compiler
-from Judger.Judger_Core.classic_judger import ClassicJudger
-from Judger.Judger_Data import ProblemConfig, Group
+from Judger_Core.config import *
+from JudgerResult import *
+from Judger_Core.Compiler.Compiler import compiler
+from Judger_Core.classic_judger import ClassicJudger
+from Judger_Data import ProblemConfig, Group
 import multiprocessing
 import subprocess
 import os.path

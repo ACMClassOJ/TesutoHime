@@ -9,14 +9,13 @@ def compile_git(url: str, time_limit):
     path = WORK_DIR
     program = PROGRAM_NAME
     msg = ""
-
     try:
-        print("Cloning...", end="")
+        print("\nCloning...", end="")
         process = subprocess.run(
             ["git", "clone", url],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            timeout=time_limit / 1000,
+            timeout=time_limit,
             cwd=path)
     except subprocess.TimeoutExpired:
         return CompilationResult(
@@ -30,7 +29,7 @@ def compile_git(url: str, time_limit):
             msg="Unknown Error!",
             programPath="")
     else:
-        print("Done.")
+        print("Done.\n")
 
     if process:
         msg += process.stderr.decode() + "\n"
@@ -56,6 +55,12 @@ def compile_git(url: str, time_limit):
                 timeout=time_limit)
         except subprocess.TimeoutExpired:
             pass
+        except Exception as e:
+            print(e)
+        return CompilationResult(
+            compiled=False,
+            msg="Unknown Error!",
+            programPath="")
         if process:
             msg += process.stderr.decode() + "\n"
             msg += process.stdout.decode() + "\n"

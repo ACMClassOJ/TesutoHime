@@ -55,6 +55,12 @@ def compile_git(url: str, time_limit):
                 timeout=time_limit)
         except subprocess.TimeoutExpired:
             pass
+        except Exception as e:
+            print(e)
+        return CompilationResult(
+            compiled=False,
+            msg="Unknown Error!",
+            programPath="")
         if process:
             msg += process.stderr.decode() + "\n"
             msg += process.stdout.decode() + "\n"

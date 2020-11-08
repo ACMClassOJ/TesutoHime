@@ -1,10 +1,10 @@
 from flask import Flask, request
 import requests
 import json
-from Judger.judgeManager import judgeManager
-from Judger.JudgerResult import *
-from Judger.config import *
-from Judger.Judger_Data import get_data, ProblemConfig
+from judgeManager import judgeManager
+from JudgerResult import *
+from config import *
+from Judger_Data import get_data, ProblemConfig
 from types import SimpleNamespace
 from time import sleep
 import os

@@ -30,15 +30,20 @@ def error_500():
     return "Internal Server Error: invalid Request"
 
 
+@web.before_request
+def log():
+    if request.full_path.startswith(('/api', '/static')):
+        return
+    tracker.log()
+
+
 @web.route('/')
 def index():
-    tracker.log()
     return render_template('index.html', friendlyName=Login_Manager.get_friendly_name())
 
 
 @web.route('/index.html')
 def index2():
-    tracker.log()
     return redirect('/')
 
 
@@ -94,14 +99,13 @@ def get_code():
 
 @web.route('/login', methods=['GET', 'POST'])
 def login():
-    tracker.log()
     if request.method == 'GET':
         nxt = request.args.get('next')
         nxt = '/' if nxt is None else nxt
         return render_template('login.html', Next=nxt, friendlyName=Login_Manager.get_friendly_name())
     username = request.form.get('username')
     password = request.form.get('password')
-    if not User_Manager.Check_Login(username, password):  # no need to avoid sql injection
+    if not User_Manager.check_login(username, password):  # no need to avoid sql injection
         return '-1'
     lid = str(uuid4())
     Login_Manager.new_session(username, lid)
@@ -112,7 +116,6 @@ def login():
 
 @web.route('/logout')
 def logout():
-    tracker.log()
     if not Login_Manager.check_user_status():
         return redirect('/')
     ret = make_response(redirect('/'))
@@ -133,12 +136,11 @@ def validate(username: str, password: str, friendly_name: str, student_id: str) 
         return -1
     if re.match(student_id_reg, student_id) is None:
         return -1
-    return 0 if User_Manager.Validate_Username(username) else -1
+    return 0 if User_Manager.validate_username(username) else -1
 
 
 @web.route('/register', methods=['GET', 'POST'])
 def register():
-    tracker.log()
     if request.method == 'GET':
         nxt = request.args.get('next')
         return render_template('register.html', Next=nxt, friendlyName=Login_Manager.get_friendly_name())
@@ -148,15 +150,14 @@ def register():
     student_id = request.form.get('student_id')
     val = validate(username, password, friendly_name, student_id)
     if val == 0:
-        User_Manager.Add_User(username, student_id, friendly_name, password, '0')
+        User_Manager.add_user(username, student_id, friendly_name, password, '0')
     return str(val)
 
 
 @web.route('/problems')
 def problem_list():
-    tracker.log()
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.url.split('/')[-1])
+        return redirect('login?next=' + request.full_path)
     page = request.args.get('page')
     page = int(page) if page is not None else 1
     max_page = int(
@@ -172,9 +173,8 @@ def problem_list():
 
 @web.route('/problem')
 def problem_detail():
-    tracker.log()
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.url.split('/')[-1])
+        return redirect('login?next=' + request.full_path)
     problem_id = request.args.get('problem_id')
     if problem_id is None or int(problem_id) < 1000 or int(problem_id) > Problem_Manager.get_max_id():
         return redirect('/')  # No argument fed
@@ -187,10 +187,9 @@ def problem_detail():
 
 @web.route('/submit', methods=['GET', 'POST'])
 def submit_problem():
-    tracker.log()
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
-            return redirect('login?next=' + request.url.split('/')[-1])
+            return redirect('login?next=' + request.full_path)
         if request.args.get('problem_id') is None:
             return abort(404)
         problem_id = int(request.args.get('problem_id'))
@@ -228,9 +227,8 @@ def submit_problem():
 
 @web.route('/rank')
 def problem_rank():
-    tracker.log()
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.url.split('/')[-1])
+        return redirect('login?next=' + request.full_path)
     problem_id = request.args.get('problem_id')
     if problem_id is None:
         return redirect('/')
@@ -254,10 +252,9 @@ def problem_rank():
 
 @web.route('/discuss', methods=['GET', 'POST'])
 def discuss():  # todo: Debug discuss
-    tracker.log()
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
-            return redirect('login?next=' + request.url.split('/')[-1])
+            return redirect('login?next=' + request.full_path)
         problem_id = int(request.args.get('problem_id'))
         if problem_id is None:
             return redirect('/')
@@ -320,9 +317,8 @@ def fix_status_cur(cur):
 
 @web.route('/status')
 def status():
-    tracker.log()
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.url.split('/')[-1])
+        return redirect('login?next=' + request.full_path)
 
     page = request.args.get('page')
     arg_submitter = request.args.get('submitter')
@@ -359,7 +355,7 @@ def status():
     data = []
     for ele in record:
         cur = {'ID': ele['ID'],
-               'Friendly_Name': User_Manager.Get_Friendly_Name(ele['Username']),
+               'Friendly_Name': User_Manager.get_friendly_name(ele['Username']),
                'Problem_ID': ele['Problem_ID'],
                'Problem_Title': Problem_Manager.get_title(ele['Problem_ID']),
                'Status': ele['Status'],
@@ -370,7 +366,7 @@ def status():
                        bool(ele['Share']) and not Problem_Manager.in_contest(ele['Problem_ID'])),
                'Time': Readable_Time(ele['Time'])}
         if is_admin:
-            cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.Get_Student_ID(ele['Username']))
+            cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.get_student_id(ele['Username']))
         data.append(fix_status_cur(cur))
     return render_template('status.html', Data=data, Pages=Gen_Page(page, max_page),
                            Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
@@ -379,9 +375,8 @@ def status():
 
 @web.route('/code')
 def code():
-    tracker.log()
     if not Login_Manager.check_user_status():  # not login
-        return redirect('login?next=' + request.url.split('/')[-1])
+        return redirect('login?next=' + request.full_path)
     if not str(request.args.get('submit_id')).isdigit():  # bad argument
         abort(404)
     run_id = int(request.args.get('submit_id'))
@@ -392,7 +387,7 @@ def code():
             not detail['Share'] or Problem_Manager.in_contest(detail['Problem_ID'])):
         return abort(403)
     else:
-        detail['Friendly_Name'] = User_Manager.Get_Friendly_Name(detail['User'])
+        detail['Friendly_Name'] = User_Manager.get_friendly_name(detail['User'])
         detail['Problem_Title'] = Problem_Manager.get_title(detail['Problem_ID'])
         detail['Lang'] = 'C++' if detail['Lang'] == 0 else 'Git'
         detail['Time'] = Readable_Time(int(detail['Time']))
@@ -409,9 +404,8 @@ def code():
 
 @web.route('/contest')
 def contest():
-    tracker.log()
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.url.split('/')[-1])
+        return redirect('login?next=' + request.full_path)
     contest_id = request.args.get('contest_id')
     username = Login_Manager.get_username()
     if contest_id is None:  # display contest list
@@ -441,7 +435,7 @@ def contest():
         data = []
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         for Player in players:
-            tmp = [0, 0, User_Manager.Get_Friendly_Name(Player)]
+            tmp = [0, 0, User_Manager.get_friendly_name(Player)]
             for Problem in problems:
                 submits = Judge_Manager.get_contest_judge(int(Problem[0]), Player[0], start_time, end_time)
                 max_score = 0
@@ -458,7 +452,7 @@ def contest():
                 tmp[0] += max_score
                 tmp.append([max_score, submit_time, is_ac])  # AC try time or failed times
             if is_admin:
-                tmp.append(Reference_Manager.Query_Realname(User_Manager.Get_Student_ID(Player)))
+                tmp.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(Player)))
             else:
                 tmp.append("")
             tmp[1] //= 60
@@ -483,9 +477,8 @@ def contest():
 
 @web.route('/homework')
 def homework():
-    tracker.log()
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.url.split('/')[-1])
+        return redirect('login?next=' + request.full_path)
     contest_id = request.args.get('homework_id')
     username = Login_Manager.get_username()
     if contest_id is None:  # display contest list
@@ -515,7 +508,7 @@ def homework():
         data = []
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         for Player in players:
-            tmp = [0, User_Manager.Get_Friendly_Name(Player)]
+            tmp = [0, User_Manager.get_friendly_name(Player)]
             for Problem in problems:
                 submits = Judge_Manager.get_contest_judge(int(Problem[0]), Player[0], start_time, end_time)
                 is_ac = False
@@ -530,7 +523,7 @@ def homework():
                     tmp[0] += 1
                 tmp.append([is_ac, try_time])  # AC try time or failed times
             if is_admin:
-                tmp.append(Reference_Manager.Query_Realname(User_Manager.Get_Student_ID(Player)))
+                tmp.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(Player)))
             else:
                 tmp.append("")
             data.append(tmp)
@@ -553,26 +546,31 @@ def homework():
 
 @web.route('/profile', methods=['GET', 'POST'])
 def profile():
-    tracker.log()
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
-            return redirect('login?next=' + request.url.split('/')[-1])
+            return redirect('login?next=' + request.full_path)
         return render_template('profile.html', friendlyName=Login_Manager.get_friendly_name())
     else:
         if not Login_Manager.check_user_status():
             return ReturnCode.ERR_USER_NOT_LOGGED_IN
+        form = request.json
+        try:
+            User_Manager.modify_user(Login_Manager.get_username(), None, form['friendly_name'], form['password'], None)
+            return ReturnCode.SUC_MOD_USER
+        except KeyError:
+            return ReturnCode.ERR_BAD_DATA
+        except TypeError:
+            return ReturnCode.ERR_BAD_DATA
 
 
 @web.route('/about')
 def about():
-    tracker.log()
     server_list = JudgeServer_Manager.Get_Server_List()
     return render_template('about.html', Server_List=server_list, friendlyName=Login_Manager.get_friendly_name())
 
 
 @web.route('/feed')
 def feed():
-    tracker.log()
     return render_template('feed.html', friendlyName=Login_Manager.get_friendly_name())
 
 

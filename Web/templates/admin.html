@@ -2,11 +2,13 @@
 
 {% set page="Admin" %}
 
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap-select.min.css">
+{% endblock %}
+
 {% block content %}
     <div class="card card-body">
-        <div class="page-header">
-            <h1 class="text-center"> Management </h1>
-        </div>
+        <h1 class="text-center"> Management </h1>
     </div>
     {% if privilege>=Privilege.SUPER %}
         <div class="card card-body">
@@ -170,31 +172,52 @@
         <h3> Data Management </h3>
         <form id="formData">
             <div class="form-row">
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-3 mb-3">
                     <label for="iptDataProblemID"> Problem ID </label>
                     <input class="form-control" type="number" name="id" id="iptDataProblemID">
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-3 mb-3">
                     <label for="iptCompileTime"> Compile Time Limit </label>
                     <input class="form-control" type="number" name="time" id="iptCompileTime">
                 </div>
+                <div class="form-group col-md-3 mb-3">
+                    <label for="iptCompileTime"> Problem Type </label>
+                    <select class="form-control selectpicker" name="type" id="type"
+                            data-style="form-control font-weight-normal border-grey shadow-none">
+                        <option value="0">Classic</option>
+                        <option value="1">Special Judge</option>
+                        <option value="2">Interaction</option>
+                        <option value="3">Scorer</option>
+                    </select>
+                </div>
             </div>
             <div class="form-row">
-                <div class="form-group col-md-3 custom-file">
+                <div class="form-group custom-file col-md-3 mb-3">
                     <label class="custom-file-label ml-1 mr-1" for="iptData"> Test Data </label>
                     <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans"
                            multiple>
                 </div>
-                <div class="form-group col-md-3 custom-file">
+                <div class="form-group custom-file col-md-3 mb-3">
                     <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge </label>
                     <input class="custom-file-input" type="file" name="data" id="iptSpj">
                 </div>
-                <div class="form-group col-md-3 custom-file">
+                <div class="form-group custom-file col-md-3 mb-3">
                     <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
                     <input class="custom-file-input" type="file" name="data" id="iptScorer" accept=".py">
                 </div>
+                <div class="form-group custom-file col-md-3 mb-3">
+                    <label class="custom-file-label ml-1 mr-1" for="iptConfig"> Config </label>
+                    <input class="custom-file-input" type="file" name="config" id="iptConfig" accept=".json">
+                </div>
+                <div class="float-right d-flex ml-auto pr-1 mb-3">
+                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnClearConfig">Clear Config
+                    </button>
+                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemData">
+                        Add Problem Data
+                    </button>
+                </div>
             </div>
-            <h5 class="mt-2"> Configuration </h5>
+            <h5 class="mt-2"> Configuration (If <code>config.json</code> not provided) </h5>
             <div class="table-responsive mb-3">
                 <table class="table table-bordered">
                     <thead>
@@ -209,8 +232,8 @@
                     <tr>
                         <td>1</td>
                         <td>1</td>
-                        <td>100</td>
-                        <td>1,2,3,4,5,6,7,8,9,10</td>
+                        <td>10</td>
+                        <td>1</td>
                     </tr>
                     </tbody>
                 </table>
@@ -254,17 +277,12 @@
                     </button>
                 </div>
             </div>
-            <div class="float-right">
-                <button class="btn btn-outline-primary" type="button" id="btnClearSpj">Clear Spj</button>
-                <button class="btn btn-outline-primary" type="button" id="btnClearScorer">Clear Scorer</button>
-                <button class="btn btn-outline-primary" type="submit" id="btnAddProblemData">Add Problem Data
-                </button>
-            </div>
         </form>
     </div>
     </div>
 {% endblock %}
 {% block script %}
+    <script src="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap-select.min.js"></script>
     <script src="https://cdn.yukisaki.io:2333/oj_cdn/jszip/jszip.min.js"></script>
     <script>
         $.fn.serializeObject = function () {
@@ -384,26 +402,30 @@
             });
 
             $("#btnAddGroupsRow").click(function () {
-                let t = $("#tableGroups");
-                t.append($(`<tr><td>${t.children().length + 1}</td><td>${t.children().length + 1}</td><td></td><td></td></tr>`));
+                let t = $("#tableGroups"), r = t.find("tr:last").clone(), td = r.children();
+                if (!isNaN(td.eq(1).html())) {
+                    td.eq(1).html(parseInt(td.eq(1).html()) + 1);
+                }
+                if (!isNaN(td.last().html())) {
+                    td.last().html(parseInt(td.last().html()) + 1);
+                }
+                td.first().html(parseInt(td.first().html()) + 1);
+                t.append(r);
             });
             $("#btnRemoveGroupsRow").click(function () {
                 $("#tableGroups").children().last().remove();
             });
             $("#btnAddDetailsRow").click(function () {
-                let t = $("#tableDetails");
-                t.append($(`<tr><td>${t.children().length + 1}</td><td>0</td><td></td><td></td><td>0</td><td contenteditable="false">` +
-                    `<div class="custom-checkbox ml-3"><input class="form-check-input" type="checkbox" id="iptValgrind1">` +
-                    `<label class="form-check-label" for="iptValgrind1"></label></div></td></tr>`))
+                let t = $("#tableDetails"), r = t.find("tr:last").clone(), td = r.children();
+                td.eq(1).html(parseInt(td.eq(1).html()) === parseInt(td.first().html()) - 1 && td.eq(1).html() !== "0" ? td.first().html() : 0);
+                td.first().html(parseInt(td.first().html()) + 1);
+                t.append(r);
             });
             $("#btnRemoveDetailsRow").click(function () {
                 $("#tableDetails").children().last().remove();
             });
-            $("#btnClearSpj").click(function () {
-                $("#iptSpj").val("");
-            });
-            $("#btnClearScorer").click(function () {
-                $("#iptScorer").val("");
+            $("#btnClearConfig").click(function () {
+                $("#iptConfig").val("");
             });
 
             function generateConfig() {
@@ -421,9 +443,9 @@
                         `"TimeLimit":${d[2].innerHTML.replace("<br>", "")},"MemoryLimit":${d[3].innerHTML.replace("<br>", "")},` +
                         `"DiskLimit":${d[4].innerHTML.replace("<br>", "")},"ValgrindTestOn":${$(d[5]).find("input").is(":checked") ? "true" : "false"}}`;
                 });
-                let spj = $("#iptSpj"), scorer = $("#iptScorer");
-                config += `],"CompileTimeLimit":${$("#iptCompileTime").val()},"SPJ":${spj.val() !== null && spj.val() !== "" ? 1 : 0},` +
-                    `"Scorer":${scorer.val() !== null && scorer.val() !== "" ? 1 : 0}}`;
+                let type = $("#type");
+                config += `],"CompileTimeLimit":${$("#iptCompileTime").val()},"SPJ":${type.val()},` +
+                    `"Scorer":${type.val() === 3 ? 1 : 0}}`;
                 return config;
             }
 
@@ -435,16 +457,21 @@
                 $(files).each(function (index, file) {
                     folder.file(file.name, file);
                 });
-                let spj = $("#iptSpj"), scorer = $("#iptScorer");
-                if (spj.val() !== null && spj.val() !== "") {
+                let type = $("#type"), spj = $("#iptSpj"), scorer = $("#iptScorer"), config = $("#iptConfig");
+                if (type.val() === 1 || type.val() === 2 && spj.val() !== null && spj.val() !== "") {
                     spj = spj[0].files[0];
                     folder.file(spj.name, spj);
                 }
-                if (scorer.val() !== null && scorer.val() !== "") {
+                if (type.val() === 3 && scorer.val() !== null && scorer.val() !== "") {
                     scorer = scorer[0].files[0];
                     folder.file(scorer.name, scorer);
                 }
-                folder.file("config.json", generateConfig());
+                if (config.val() !== null && config.val() !== "") {
+                    config = config[0].files[0];
+                    folder.file("config.json", config);
+                } else {
+                    folder.file("config.json", generateConfig());
+                }
                 zip.generateAsync({
                     type: "blob"
                 }).then(function (blob) {

@@ -49,7 +49,8 @@ class ClassicJudger(interface.JudgerInterface):
                 group_id = str(99958)
                 command = '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1' + \
                         ' --rlimit_fsize ' + ('inf' if sub_config.diskLimit == 0 else str(int(abs(sub_config.diskLimit) / 1048576 * 3 + 1))) + \
-                        ' --rlimit_nofile ' + ('inf' if sub_config.fileNumberLimit == -1 else str(sub_config.fileNumberLimit * 3 + 1)) + \
+                        ' --rlimit_nofile ' + ('65536' if sub_config.fileNumberLimit == -1 else str(sub_config.fileNumberLimit * 3 + 1)) + \
+                        ' --rlimit_stack inf' + \
                         ' -t ' + str(int(sub_config.timeLimit / 1000 * Performance_Rate * 1.2 + 1)) + \
                         ' --cgroup_mem_mount ' + str(sub_config.memoryLimit) + \
                         ' --user ' + user_id + ' --group ' + group_id + \
@@ -96,5 +97,5 @@ class ClassicJudger(interface.JudgerInterface):
 
 
         return_dict['testPointDetail'], return_dict['userOutput'] = jr.DetailResult(0, jr.ResultType.UNKNOWN if not isinstance(child, sp.Popen) or child.returncode == 0 else jr.ResultType.RE, 0,
-                            running_time * 1000 / Performance_Rate, mem, 0, ''), self.output_file
+                            running_time * 1000 / Performance_Rate, mem, diskUsage, ''), self.output_file
         return

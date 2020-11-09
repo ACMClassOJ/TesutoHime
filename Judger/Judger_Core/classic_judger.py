@@ -47,11 +47,14 @@ class ClassicJudger(interface.JudgerInterface):
             else:
                 user_id = str(99942)
                 group_id = str(99958)
-                command = '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1 --rlimit_fsize inf --rlimit_nofile 512 -t ' + \
-                        str(int(sub_config.timeLimit / 1000 * Performance_Rate * 1.2 + 1)) + \
+                command = '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1' + \
+                        ' --rlimit_fsize ' + ('inf' if sub_config.diskLimit == 0 else str(int(abs(sub_config.diskLimit) / 1048576 * 3 + 1))) + \
+                        ' --rlimit_nofile ' + ('inf' if sub_config.fileNumberLimit == -1 else str(sub_config.fileNumberLimit * 3 + 1)) + \
+                        ' -t ' + str(int(sub_config.timeLimit / 1000 * Performance_Rate * 1.2 + 1)) + \
                         ' --cgroup_mem_mount ' + str(sub_config.memoryLimit) + \
                         ' --user ' + user_id + ' --group ' + group_id + \
-                        ' -R /lib64 -R /lib  -R /exe /exe/' + sub_config.programPath.split('/')[-1] + \
+                        ' --cwd ' + self.exe_path + \
+                        ' -R /lib64 -R /lib  -B /exe /exe/' + sub_config.programPath.split('/')[-1] + \
                         ' <' + sub_config.inputFile + ' >' + self.output_file + ' 2>/dev/null'
                 running_time = -time.time()
                 child = sp.Popen(command, shell=True)
@@ -82,13 +85,11 @@ class ClassicJudger(interface.JudgerInterface):
             raise e
         
         diskUsage = int(sp.check_output('du -s --exclude=' + sub_config.programPath.split('/')[-1] + ' /exe/', shell=True).decode().split()[0])
-        print(diskUsage)
-        print(abs(sub_config.diskLimit) / 1024)
         if sub_config.diskLimit != 0 and diskUsage * 1024 > abs(sub_config.diskLimit):
             return_dict['testPointDetail'], return_dict['userOutput'] = jr.DetailResult(0, jr.ResultType.DLE, 0, running_time * 1000 / Performance_Rate, mem, diskUsage, 'Too much disk usage.'), self.output_file
             return
         if sub_config.fileNumberLimit != -1:
-            fileNumber = int(sp.check_output('find /exe/ -type f,d | wc -l')) - 2
+            fileNumber = int(sp.check_output('find /exe/ -type f,d | wc -l', shell=True)) - 2
             if fileNumber > sub_config.fileNumberLimit:
                 return_dict['testPointDetail'], return_dict['userOutput'] = jr.DetailResult(0, jr.ResultType.DLE, 0, running_time * 1000 / Performance_Rate, mem, diskUsage, 'Too much files and directories.'), self.output_file
                 return

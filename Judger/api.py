@@ -50,7 +50,7 @@ def judge():
             return '0'
     judgepid = os.fork()
     if judgepid == 0:
-        open('BusyFlag', 'w').close()
+        open(busyFlag, 'w').close()
         try:
             problemConfig, dataPath = get_data(DataConfig, request.form.get('Problem_ID'))
         except Exception as e:
@@ -76,7 +76,7 @@ def judge():
             if re == '0':
                 break
             sleep(Judge_Result_Resend_Period / 1000)
-        os.remove('BusyFlag')
+        os.remove(busyFlag)
         return '0'
     os.waitpid(newpid, 0)
     os.waitpid(judgepid, 0)
@@ -86,7 +86,7 @@ def judge():
 def isBusy():
     if request.form.get('Server_Secret') != Master_Server_Secret:
         return '-1'
-    elif os.path.exists('BusyFlag'):
+    elif os.path.exists(busyFlag):
         return '1'
     else:
         return '0'

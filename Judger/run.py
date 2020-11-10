@@ -11,6 +11,9 @@ from config import Path
 import os
 os.chdir(Path)
 
+if os.path.exists('BusyFlag'):
+   os.remove('BusyFlag')
+
 global api
 t1 = threading.Thread(target=RunFlask, args=(api.run, API_port,))
 global HeartBeat

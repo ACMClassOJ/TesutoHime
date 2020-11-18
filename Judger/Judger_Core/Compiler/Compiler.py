@@ -14,7 +14,7 @@ class Compiler(CompilerInterface):
         print("Compiling...", end="")
         if type(code) is str:
             code = {"main.cpp": code}
-        result = compile_cpp(code, time_limit)
+        result = compile_cpp(code.copy(), time_limit)
         print("Done.")
         return result
 

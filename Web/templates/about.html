@@ -16,48 +16,63 @@
         <p>特别感谢：<a href="https://mariadb.org/" target="_blank">maria-db</a>，为我们提供了强大的数据库支持。</p>
         <hr class="mt-3">
         <h4>评测状态解释：</h4>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-gray">Pending</span>：</div>
-            <p>等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</p>
+        <div class="d-none d-xl-block">
+            <div class="row">
+                <div class="col-sm-3"><span class="text-gray">Pending</span>：</div>
+                <p>等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</p>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><span class="text-blue">Running & Judging</span>：</div>
+                <p>正在测试。你的程序正在被评测机运行以检查正确性。</p>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><span class="text-green">Accepted</span>：</div>
+                <p>通过。你的程序正确通过全部测试点。</p>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><span class="text-red">Wrong Answer</span>：</div>
+                <p>答案错误。你的程序在某个测试点输出了错误的答案。</p>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><span class="text-yellow">Compile Error</span>：</div>
+                <p>编译错误。你的程序没有通过编译。</p>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><span class="text-red">Runtime Error</span>：</div>
+                <p>运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、除以0等。</p>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><span class="text-orange">Time Limit Exceed</span>：</div>
+                <p>时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</p>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><span class="text-orange">Memory Limit Exceed</span>：</div>
+                <p>内存超限。你的程序请求了过多的内存。</p></div>
+            <div class="row">
+                <div class="col-sm-3"><span class="text-purple">Memory Leak</span>：</div>
+                <p>内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</p>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><span class="text-purple">Disk Limit Exceed</span>：</div>
+                <p>磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</p>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><span class="text-gray-dark">System Error</span>：</div>
+                <p>系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</p>
+            </div>
         </div>
-        <div class="row ">
-            <div class="col-sm-3"><span class="text-blue">Running & Judging</span>：</div>
-            <p>正在测试。你的程序正在被评测机运行以检查正确性。</p>
-        </div>
-        <div class="row ">
-            <div class="col-sm-3"><span class="text-green">Accepted</span>：</div>
-            <p>通过。你的程序正确通过全部测试点。</p>
-        </div>
-        <div class="row ">
-            <div class="col-sm-3"><span class="text-red">Wrong Answer</span>：</div>
-            <p>答案错误。你的程序在某个测试点输出了错误的答案。</p>
-        </div>
-        <div class="row ">
-            <div class="col-sm-3"><span class="text-yellow">Compile Error</span>：</div>
-            <p>编译错误。你的程序没有通过编译。</p>
-        </div>
-        <div class="row ">
-            <div class="col-sm-3"><span class="text-red">Runtime Error</span>：</div>
-            <p>运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、除以0等。</p>
-        </div>
-        <div class="row ">
-            <div class="col-sm-3"><span class="text-orange">Time Limit Exceed</span>：</div>
-            <p>时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</p>
-        </div>
-        <div class="row ">
-            <div class="col-sm-3"><span class="text-orange">Memory Limit Exceed</span>：</div>
-            <p>内存超限。你的程序请求了过多的内存。</p></div>
-        <div class="row ">
-            <div class="col-sm-3"><span class="text-purple">Memory Leak</span>：</div>
-            <p>内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</p>
-        </div>
-        <div class="row ">
-            <div class="col-sm-3"><span class="text-purple">Disk Limit Exceed</span>：</div>
-            <p>磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</p>
-        </div>
-        <div class="row ">
-            <div class="col-sm-3"><span class="text-gray-dark">System Error</span>：</div>
-            <p>系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</p>
+        <div class="d-block d-xl-none">
+            <p><span class="text-gray">Pending</span>：等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</p>
+            <p><span class="text-blue">Running & Judging</span>：正在测试。你的程序正在被评测机运行以检查正确性。</p>
+            <p><span class="text-green">Accepted</span>：通过。你的程序正确通过全部测试点。</p>
+            <p><span class="text-red">Wrong Answer</span>：答案错误。你的程序在某个测试点输出了错误的答案。</p>
+            <p><span class="text-yellow">Compile Error</span>：编译错误。你的程序没有通过编译。</p>
+            <p><span class="text-red">Runtime Error</span>：运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、除以0等。</p>
+            <p><span class="text-orange">Time Limit Exceed</span>：时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</p>
+            <p><span class="text-orange">Memory Limit Exceed</span>：内存超限。你的程序请求了过多的内存。</p>
+            <p><span class="text-purple">Memory Leak</span>：内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</p>
+            <p><span class="text-purple">Disk Limit Exceed</span>：磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</p>
+            <p><span class="text-gray-dark">System Error</span>：系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</p>
         </div>
         <hr class="mt-3">
         <h4>Contributor(排名不分先后)：</h4>

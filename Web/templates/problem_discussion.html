@@ -2,23 +2,260 @@
 
 {% set page='Discussion' %}
 
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/styles/github.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='editor.md/css/editormd.min.css') }}"/>
+{% endblock %}
+
 {% block content %}
-    <div class="sidebar sidebar-hide-to-small sidebar-shrink sidebar-gestures"></div>
-    <div class="card card-body">
-        <div class="page-header">
-            <h1 class="text-center"> {{ Problem_ID }}.{{ Title }} </h1>
-        </div>
-        <div class="btn-group m-auto">
-            <a href="" class="btn btn-primary"> 提交 </a>
-            <a href="" class="btn btn-info"> 评测状态 </a>
-            <a href="" class="btn btn-success"> 讨论 </a>
+    <div class="card card-body mb-3">
+        <div class="row mx-md-1">
+            <h1 class="my-auto"> {{ Problem_ID }}. {{ Title }} </h1>
+            <div class="btn-group float-right ml-auto my-auto">
+                <a href="javascript:void(0)" class="btn btn-primary" id="btnSort">正序 <i class="fa fa-sort-down"></i></a>
+                <a href="/problem?problem_id={{ Problem_ID }}" class="btn btn-warning"> 题面 </a>
+                <a href="/rank?problem_id={{ Problem_ID }}" class="btn btn-light"> 排行榜 </a>
+            </div>
         </div>
     </div>
-    <div class="card card-body">
-        <h3>奇怪的markdown讨论区</h3>
-        <h5>来发表你的看法吧~</h5>
-        <form>
-            <textarea id="problem_details_discussion"></textarea>
-        </form>
-    </div>
+    {% if Blocked %}
+        <h2 class="text-center text-muted">本题讨论区禁用</h2>
+    {% else %}
+        <div id="divDiscuss">
+            {% for row in Discuss -%}
+                <div class="card card-body mb-2 pb-2">
+                    <p class="mb-2">{{ row[1] }}<small class="text-muted float-right">{{ row[3] }}</small></p>
+                    <hr class="mt-0 mb-4">
+                    <div class="md-render" {% if row[4] %}id="discuss{{ row[0] }}"{% endif %}>{{ row[2] }}</div>
+                    {% if row[4] -%}
+                        <hr class="my-2 ">
+                        <div class="btn-group ml-auto mb-0">
+                            <a class="nav-link" href="javascript:editDiscuss({{ row[0] }})" title="编辑">
+                                <i class="fa fa-pencil"></i>
+                            </a>
+                            <a class="nav-link" href="javascript:deleteDiscuss({{ row[0] }})" title="删除">
+                                <i class="fa fa-trash-o"></i>
+                            </a>
+                        </div>
+                    {%- endif %}
+                </div>
+            {%- endfor %}
+        </div>
+        <div class="card card-body">
+            <h5 class="mb-3">发表讨论</h5>
+            <form>
+                <div id="editor"><textarea style="display: none" autocomplete="off"></textarea></div>
+                <button class="btn btn-primary" type="button" id="btnComment">评论</button>
+            </form>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block script %}
+    <script src="https://cdn.yukisaki.io:2333/oj_cdn/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/highlight.min.js"></script>
+    <script src="{{ url_for('static', filename='editor.md/editormd.min.js') }}"></script>
+    <script>
+        let discuss = {
+        {% for row in Discuss if row[4] %}
+            {{ row[0] }}: {{ row[2]|tojson }},
+        {% endfor %}
+        };
+
+        let originalDiscuss, originalBtnGroup, activeEditor, activeID;
+
+        function saveDiscuss() {
+            originalDiscuss.show();
+            discuss[activeID] = JSON.stringify(activeEditor.getMarkdown());
+            originalDiscuss.parent().children().last().replaceWith(originalBtnGroup);
+            activeID = NaN;
+            activeEditor.editor.remove();
+        }
+
+        function abortEditDiscuss() {
+            originalDiscuss.show();
+            originalDiscuss.parent().children().last().replaceWith(originalBtnGroup);
+            originalDiscuss = null;
+            activeEditor.editor.remove();
+        }
+
+        function submitEditDiscuss(id) {
+            let data = {
+                action: "edit",
+                discuss_id: id,
+                text: activeEditor.getMarkdown()
+            };
+            console.log(data);
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "/discuss",
+                dataType: "json",
+                data: JSON.stringify(data),
+                success: function (ret) {
+                    if (ret["e"] === 0) {
+                        window.location.reload();
+                    } else {
+                        swal("Oops", "编辑评论失败，检查您的网络连接！", "error");
+                    }
+                }
+            });
+        }
+
+        function editDiscuss(id) {
+            if (originalDiscuss != null) {
+                saveDiscuss()
+            }
+            activeID = id;
+            let div = $(`#discuss${id}`);
+            originalBtnGroup = div.parent().children().last().replaceWith($(`<div class="btn-group ml-auto mb-0">` +
+                `<a class="nav-link" href="javascript:abortEditDiscuss()" title="放弃"><i class="fa fa-times"></i></a>` +
+                `<a class="nav-link" href="javascript:submitEditDiscuss(${id})" title="确认"><i class="fa fa-check"></i></a>` +
+                `<a class="nav-link" href="javascript:deleteDiscuss(${id})"><i class="fa fa-trash-o"></i></a></div>`));
+            div.after($(`<div id="activeEditor"></div>`));
+            originalDiscuss = div.hide();
+            activeEditor = editormd(`activeEditor`, {
+                path: "{{ url_for('static', filename='editor.md/lib/') }}",
+                toolbarIcons: function () {
+                    return [
+                        "undo", "redo", "|",
+                        "bold", "del", "italic", "quote", "|",
+                        "h1", "h2", "h3", "h4", "h5", "h6", "|",
+                        "list-ul", "list-ol", "hr", "|",
+                        "link", "reference-link", "image", "code", "preformatted-text", "code-block", "table", "html-entities", "pagebreak", "|",
+                        "watch", "preview", "fullscreen", "clear", "search", "||",
+                        "help", "info"
+                    ];
+                },
+                markdown: discuss[id],
+                autoFocus: true,
+                codeFold: true,
+                searchReplace: true,
+                htmlDecode: "style,script,iframe|onclick,title,onmouseover,onmouseout,style",
+                taskList: true,
+                tocm: true,
+                tex: true,
+                flowChart: true,
+                sequenceDiagram: true,
+                atLink: false,
+                emailLink: true,
+                pageBreak: true,
+                onload: function () {
+                    this.setCursor({line: this.cm.lineCount()});
+                }
+            });
+        }
+
+        function deleteDiscuss(id) {
+            let data = {
+                action: "delete",
+                discuss_id: id
+            };
+            console.log(data);
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "/discuss",
+                dataType: "json",
+                data: JSON.stringify(data),
+                success: function (ret) {
+                    if (ret["e"] === 0) {
+                        window.location.reload();
+                    } else {
+                        swal("Oops", "删除评论失败，检查您的网络连接！", "error");
+                    }
+                }
+            });
+        }
+
+        $(function () {
+            $(".md-render").each(function (_, e) {
+                $(e).html(marked($(e).html()));
+            });
+            renderMathInElement($("#divDiscuss")[0], {
+                    delimiters: [{
+                        left: "$$", right: "$$", display: true
+                    }, {
+                        left: "$", right: "$", display: false
+                    }]
+                }
+            );
+            hljs.initHighlighting();
+            let editor = editormd("editor", {
+                width: "100%",
+                height: 400,
+                path: "{{ url_for('static', filename='editor.md/lib/') }}",
+                toolbarIcons: function () {
+                    return [
+                        "undo", "redo", "|",
+                        "bold", "del", "italic", "quote", "|",
+                        "h1", "h2", "h3", "h4", "h5", "h6", "|",
+                        "list-ul", "list-ol", "hr", "|",
+                        "link", "reference-link", "image", "code", "preformatted-text", "code-block", "table", "html-entities", "pagebreak", "|",
+                        "watch", "preview", "fullscreen", "clear", "search", "||",
+                        "help", "info"
+                    ];
+                },
+                autoFocus: false,
+                placeholder: "支持 Markdown 及 HTML 格式。",
+                codeFold: true,
+                searchReplace: true,
+                htmlDecode: "style,script,iframe|onclick,title,onmouseover,onmouseout,style",
+                taskList: true,
+                tocm: true,
+                tex: true,
+                flowChart: true,
+                sequenceDiagram: true,
+                atLink: false,
+                emailLink: true,
+                pageBreak: true
+            });
+            $("#btnComment").click(function () {
+                let data = {
+                    action: "post",
+                    problem_id: {{ Problem_ID }},
+                    text: editor.getMarkdown()
+                };
+                console.log(data);
+                $.ajax({
+                    type: "POST",
+                    contentType: "application/json",
+                    url: "/discuss",
+                    dataType: "json",
+                    data: JSON.stringify(data),
+                    success: function (ret) {
+                        if (ret["e"] === 0) {
+                            window.location.reload();
+                        } else {
+                            swal("Oops", "评论失败，检查您的网络连接！", "error");
+                        }
+                    }
+                });
+            });
+            $("#btnSort").click(function () {
+                console.log(sorting);
+                sorting = !sorting;
+                let divDiscuss = $("#divDiscuss");
+                divDiscuss.html(divDiscuss.children().toArray().reverse());
+                if (sorting) {
+                    $(this).html(`正序 <i class="fa fa-sort-down"></i>`);
+                } else {
+                    $(this).html(`倒序 <i class=\"fa fa-sort-up\"></i>`);
+                }
+                localStorage.setItem("sorting", sorting.toString());
+            });
+            let sorting = localStorage.getItem("sorting");
+            if (sorting == null) {
+                localStorage.setItem("sorting", "true");
+                sorting = true;
+            }
+            if (!sorting) {
+                $("#btnSort").trigger("click");
+            }
+        });
+    </script>
 {% endblock %}

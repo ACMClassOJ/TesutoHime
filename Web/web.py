@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, redirect, make_response, abort, send_from_directory
 from uuid import uuid4
 import re
+from typing import Optional
 from sessionManager import Login_Manager
 from userManager import User_Manager
 from problemManager import Problem_Manager
@@ -39,7 +40,8 @@ def log():
 
 @web.route('/')
 def index():
-    return render_template('index.html', friendlyName=Login_Manager.get_friendly_name())
+    return render_template('index.html', friendlyName=Login_Manager.get_friendly_name(),
+                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
 @web.route('/index.html')
@@ -102,7 +104,8 @@ def login():
     if request.method == 'GET':
         nxt = request.args.get('next')
         nxt = '/' if nxt is None else nxt
-        return render_template('login.html', Next=nxt, friendlyName=Login_Manager.get_friendly_name())
+        return render_template('login.html', Next=nxt, friendlyName=Login_Manager.get_friendly_name(),
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     username = request.form.get('username')
     password = request.form.get('password')
     if not User_Manager.check_login(username, password):  # no need to avoid sql injection
@@ -123,27 +126,31 @@ def logout():
     return ret
 
 
-def validate(username: str, password: str, friendly_name: str, student_id: str) -> int:
+def validate(username: Optional['str'] = None, password: Optional['str'] = None, friendly_name: Optional['str'] = None,
+             student_id: Optional['str'] = None) -> int:
     username_reg = '([a-zA-Z][a-zA-Z0-9_]{0,19})$'
     password_reg = '([a-zA-Z0-9_\!\@\#\$\%\^&\*\(\)]{6,30})$'
     friendly_name_reg = '([a-zA-Z0-9_]{1,60})$'
     student_id_reg = '([0-9]{12})$'
-    if re.match(username_reg, username) is None:
+    if username is not None and re.match(username_reg, username) is None:
         return -1
-    if re.match(password_reg, password) is None:
+    if password is not None and re.match(password_reg, password) is None:
         return -1
-    if re.match(friendly_name_reg, friendly_name) is None:
+    if friendly_name is not None and re.match(friendly_name_reg, friendly_name) is None:
         return -1
-    if re.match(student_id_reg, student_id) is None:
+    if student_id is not None and re.match(student_id_reg, student_id) is None:
         return -1
-    return 0 if User_Manager.validate_username(username) else -1
+    if username is not None and not User_Manager.validate_username(username):
+        return -1
+    return 0
 
 
 @web.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
         nxt = request.args.get('next')
-        return render_template('register.html', Next=nxt, friendlyName=Login_Manager.get_friendly_name())
+        return render_template('register.html', Next=nxt, friendlyName=Login_Manager.get_friendly_name(),
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     username = request.form.get('username')
     password = request.form.get('password')
     friendly_name = request.form.get('friendly_name')
@@ -168,7 +175,8 @@ def problem_list():
     problems = Problem_Manager.problem_in_range(start_id, end_id, UnixNano(),
                                                 Login_Manager.get_privilege() >= Privilege.ADMIN)
     return render_template('problem_list.html', Problems=problems, Pages=Gen_Page(page, max_page),
-                           friendlyName=Login_Manager.get_friendly_name())
+                           friendlyName=Login_Manager.get_friendly_name(),
+                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
 @web.route('/problem')
@@ -177,12 +185,13 @@ def problem_detail():
         return redirect('login?next=' + request.full_path)
     problem_id = request.args.get('problem_id')
     if problem_id is None or int(problem_id) < 1000 or int(problem_id) > Problem_Manager.get_max_id():
-        return redirect('/')  # No argument fed
+        abort(404)  # No argument fed
     if Problem_Manager.get_release_time(problem_id) > UnixNano() and Login_Manager.get_privilege() < Privilege.ADMIN:
-        return abort(404)
+        abort(404)
     in_contest = Problem_Manager.in_contest(problem_id) and Login_Manager.get_privilege() < Privilege.ADMIN
     return render_template('problem_details.html', ID=problem_id, Title=Problem_Manager.get_title(problem_id),
-                           In_Contest=in_contest, friendlyName=Login_Manager.get_friendly_name())
+                           In_Contest=in_contest, friendlyName=Login_Manager.get_friendly_name(),
+                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
 @web.route('/submit', methods=['GET', 'POST'])
@@ -191,18 +200,19 @@ def submit_problem():
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.full_path)
         if request.args.get('problem_id') is None:
-            return abort(404)
+            abort(404)
         problem_id = int(request.args.get('problem_id'))
         if Problem_Manager.get_release_time(
                 problem_id) > UnixNano() and Login_Manager.get_privilege() < Privilege.ADMIN:
-            return abort(404)
+            abort(404)
         title = Problem_Manager.get_title(problem_id)
         in_contest = Problem_Manager.in_contest(id) and Login_Manager.get_privilege() < Privilege.ADMIN
         return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Contest=in_contest,
-                               friendlyName=Login_Manager.get_friendly_name())
+                               friendlyName=Login_Manager.get_friendly_name(),
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     else:
         if not Login_Manager.check_user_status():
-            return redirect('login')
+            return redirect('login?next=' + request.full_path)
         problem_id = int(request.form.get('problem_id'))
         if Problem_Manager.get_release_time(
                 problem_id) > UnixNano() and Login_Manager.get_privilege() < Privilege.ADMIN:
@@ -231,7 +241,7 @@ def problem_rank():
         return redirect('login?next=' + request.full_path)
     problem_id = request.args.get('problem_id')
     if problem_id is None:
-        return redirect('/')
+        abort(404)
     sort_parameter = request.args.get('sort_param')
     if sort_parameter != 'time' and sort_parameter != 'memory' and sort_parameter != 'submit_time':
         sort_parameter = 'time'
@@ -247,7 +257,8 @@ def problem_rank():
     elif sort_parameter == 'memory':
         record = sorted(record, key=lambda x, y: x[5] < y[5])
     return render_template('problem_rank.html', Problem_ID=problem_id, Title=Problem_Manager.get_title(problem_id),
-                           Data=record, friendlyName=Login_Manager.get_friendly_name())
+                           Data=record, friendlyName=Login_Manager.get_friendly_name(),
+                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
 @web.route('/discuss', methods=['GET', 'POST'])
@@ -255,63 +266,74 @@ def discuss():  # todo: Debug discuss
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.full_path)
-        problem_id = int(request.args.get('problem_id'))
+        problem_id = request.args.get('problem_id')
         if problem_id is None:
-            return redirect('/')
+            abort(404)
         if Problem_Manager.in_contest(
                 problem_id) and Login_Manager.get_privilege() < Privilege.ADMIN:  # Problem in Contest or Homework and Current User is NOT administrator
             return render_template('problem_discussion.html', Problem_ID=problem_id,
                                    Title=Problem_Manager.get_title(problem_id), Blocked=True,
-                                   friendlyName=Login_Manager.get_friendly_name())  # Discussion Closed
+                                   friendlyName=Login_Manager.get_friendly_name(),
+                                   is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)  # Discussion Closed
         username = Login_Manager.get_username()  # for whether to display edit or delete
         privilege = Login_Manager.get_privilege()
-        data = Discuss_Manager.Get_Discuss_For_Problem(problem_id)
+        data = Discuss_Manager.get_discuss_for_problem(problem_id)
         discussion = []
         for ele in data:
-            tmp = [ele[0], ele[1], Readable_Time(int(ele[2]))]
-            if ele[0] == username or privilege == 2:  # ele[3]: editable?
+            tmp = [ele[0], User_Manager.get_friendly_name(ele[1]), ele[2], Readable_Time(int(ele[3]))]
+            if ele[1] == username or privilege == 2:  # ele[4]: editable?
                 tmp.append(True)
             else:
                 tmp.append(False)
             discussion.append(tmp)
-        return render_template('problem_discussion.html', Title=Problem_Manager.get_title(problem_id),
-                               Discuss=discussion, friendlyName=Login_Manager.get_friendly_name())
+        return render_template('problem_discussion.html', Problem_ID=problem_id,
+                               Title=Problem_Manager.get_title(problem_id), Discuss=discussion,
+                               friendlyName=Login_Manager.get_friendly_name(),
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     else:
         if not Login_Manager.check_user_status():
-            return redirect('login')
-        action = request.form.get('action')  # post, edit, delete
-        problem_id = int(request.form.get('problem_id'))  # this argument must be given
-        if action == 'post':
-            text = request.form.get('text')
-            username = Login_Manager.get_username()
-            Discuss_Manager.Add_Discuss(problem_id, username, text)
-            return redirect('/discuss?problem_id=' + str(problem_id))
-        if action == 'edit':
-            discuss_id = int(request.form.get('id'))
-            text = request.form.get('text')
-            username = Login_Manager.get_username()
-            if username == Discuss_Manager.Get_Author(
-                    discuss_id) or Login_Manager.get_privilege() >= Privilege.ADMIN:  # same user or administrator
-                Discuss_Manager.Modify_Discuss(discuss_id, text)
-            else:
-                print('Access Dined in Discuss: Edit')
-            return redirect('/discuss?problem_id=' + str(problem_id))
-        if action == 'delete':
-            discuss_id = int(request.form.get('id'))
-            username = Login_Manager.get_username()
-            if username == Discuss_Manager.Get_Author(
-                    discuss_id) or Login_Manager.get_privilege() >= Privilege.ADMIN:  # same user or administrator
-                Discuss_Manager.Delete_Discuss(discuss_id)
-            else:
-                print('Access Dined in Discuss: Delete')
-            return redirect('/discuss?problem_id=' + str(problem_id))
-        else:  # what happened?
-            return redirect('/discuss?problem_id=' + str(problem_id))
+            return ReturnCode.ERR_USER_NOT_LOGGED_IN
+        try:
+            form = request.json
+            action = form.get('action')  # post, edit, delete
+            problem_id = form.get('problem_id')  # this argument must be given
+            if action == 'post':
+                text = form.get('text')
+                username = Login_Manager.get_username()
+                Discuss_Manager.add_discuss(problem_id, username, text)
+                return ReturnCode.SUC
+            if action == 'edit':
+                discuss_id = form.get('discuss_id')
+                text = form.get('text')
+                username = Login_Manager.get_username()
+                if username == Discuss_Manager.get_author(
+                        discuss_id) or Login_Manager.get_privilege() >= Privilege.ADMIN:  # same user or administrator
+                    Discuss_Manager.modify_discuss(discuss_id, text)
+                    return ReturnCode.SUC
+                else:
+                    print('Access Dined in Discuss: Edit')
+                    return ReturnCode.ERR_PERMISSION_DENIED
+            if action == 'delete':
+                discuss_id = form.get('discuss_id')
+                username = Login_Manager.get_username()
+                if username == Discuss_Manager.get_author(
+                        discuss_id) or Login_Manager.get_privilege() >= Privilege.ADMIN:  # same user or administrator
+                    Discuss_Manager.delete_discuss(discuss_id)
+                    return ReturnCode.SUC
+                else:
+                    print('Access Dined in Discuss: Delete')
+                    return ReturnCode.ERR_PERMISSION_DENIED
+            else:  # what happened?
+                return ReturnCode.ERR_BAD_DATA
+        except KeyError:
+            return ReturnCode.ERR_BAD_DATA
+        except TypeError:
+            return ReturnCode.ERR_BAD_DATA
 
 
 def fix_status_cur(cur):
     cur['Status'] = str(cur['Status'])
-    cur['Lang'] = 'C++' if int(cur['Lang']) == 0 else 'Git'
+    cur['Lang'] = 'C++' if int(cur['Lang']) == 0 else 'Git' if int(cur['Lang']) == 1 else 'UNKNOWN'
     return cur
 
 
@@ -399,7 +421,8 @@ def code():
         else:
             detail['Score'] = 0
         return render_template('judge_detail.html', Detail=detail, Data=data,
-                               friendlyName=Login_Manager.get_friendly_name())
+                               friendlyName=Login_Manager.get_friendly_name(),
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
 @web.route('/contest')
@@ -426,14 +449,15 @@ def contest():
             else:
                 cur['Status'] = 'Going On'
             data.append(cur)
-        return render_template('contest_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name())
+        return render_template('contest_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name(),
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     else:
         contest_id = int(contest_id)
         start_time, end_time = Contest_Manager.get_time(contest_id)
-        problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= UnixNano() else []
+        is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+        problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= UnixNano() or is_admin else []
         players = Contest_Manager.list_player_for_contest(contest_id)
         data = []
-        is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         for Player in players:
             tmp = [0, 0, User_Manager.get_friendly_name(Player)]
             for Problem in problems:
@@ -499,7 +523,8 @@ def homework():
             else:
                 cur['Status'] = 'Going On'
             data.append(cur)
-        return render_template('homework_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name())
+        return render_template('homework_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name(),
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     else:
         contest_id = int(contest_id)
         start_time, end_time = Contest_Manager.get_time(contest_id)
@@ -549,14 +574,19 @@ def profile():
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.full_path)
-        return render_template('profile.html', friendlyName=Login_Manager.get_friendly_name())
+        return render_template('profile.html', friendlyName=Login_Manager.get_friendly_name(),
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     else:
         if not Login_Manager.check_user_status():
             return ReturnCode.ERR_USER_NOT_LOGGED_IN
         form = request.json
         try:
-            User_Manager.modify_user(Login_Manager.get_username(), None, form['friendly_name'], form['password'], None)
-            return ReturnCode.SUC_MOD_USER
+            ret = validate(password=form.get('password'), friendly_name=form.get('friendly_name'))
+            if ret == 0:
+                User_Manager.modify_user(Login_Manager.get_username(), None, form.get('friendly_name'), form.get(
+                    'password'), None)
+                return ReturnCode.SUC_MOD_USER
+
         except KeyError:
             return ReturnCode.ERR_BAD_DATA
         except TypeError:
@@ -566,12 +596,14 @@ def profile():
 @web.route('/about')
 def about():
     server_list = JudgeServer_Manager.Get_Server_List()
-    return render_template('about.html', Server_List=server_list, friendlyName=Login_Manager.get_friendly_name())
+    return render_template('about.html', Server_List=server_list, friendlyName=Login_Manager.get_friendly_name(),
+                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
 @web.route('/feed')
 def feed():
-    return render_template('feed.html', friendlyName=Login_Manager.get_friendly_name())
+    return render_template('feed.html', friendlyName=Login_Manager.get_friendly_name(),
+                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
 @web.route('/favicon.ico')

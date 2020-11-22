@@ -1,7 +1,7 @@
 # This is a test program.
 
-from Judger.JudgerResult import *
-from Judger.Judger_Data.ProblemConfig import *
+from JudgerResult import *
+from Judger_Data.ProblemConfig import *
 from types import SimpleNamespace
 import json
 

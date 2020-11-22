@@ -1,10 +1,10 @@
 from flask import Flask, request
 import requests
 import json
-from Judger.judgeManager import judgeManager
-from Judger.JudgerResult import *
-from Judger.config import *
-from Judger.Judger_Data import get_data, ProblemConfig
+from judgeManager import judgeManager
+from JudgerResult import *
+from config import *
+from Judger_Data import get_data, ProblemConfig
 from types import SimpleNamespace
 from time import sleep
 import os
@@ -50,12 +50,14 @@ def judge():
             return '0'
     judgepid = os.fork()
     if judgepid == 0:
-        judgeManager.judgingFlag = True
+        open(busyFlag, 'w').close()
         try:
             problemConfig, dataPath = get_data(DataConfig, request.form.get('Problem_ID'))
         except Exception as e:
-            print('Error occurred during fetching data:', e)
-            result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [], ProblemConfig([], [], 0, 0, 0))
+            result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(0, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during fetching data: " + str(e))], ProblemConfig([], [], 0, 0, 0))
+            timestampFile = DataConfig.cache_dir + '/' + request.form.get('Problem_ID') + '.timestamp'
+            if os.path.exists(timestampFile):
+                os.remove(timestampFile)
         else:
             try:
                 result = judgeManager.judge(problemConfig, dataPath, request.form.get('Lang'), request.form.get('Code'))
@@ -74,7 +76,7 @@ def judge():
             if re == '0':
                 break
             sleep(Judge_Result_Resend_Period / 1000)
-        judgeManager.judgingFlag = False
+        os.remove(busyFlag)
         return '0'
     os.waitpid(newpid, 0)
     os.waitpid(judgepid, 0)
@@ -84,7 +86,7 @@ def judge():
 def isBusy():
     if request.form.get('Server_Secret') != Master_Server_Secret:
         return '-1'
-    elif judgeManager.isJudging():
+    elif os.path.exists(busyFlag):
         return '1'
     else:
         return '0'

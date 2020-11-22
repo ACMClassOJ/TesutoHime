@@ -1,4 +1,4 @@
-WORK_DIR = "compiling"
+WORK_DIR = "/work/compiling"
 PROGRAM_NAME = "code"
 PRAGMA_WHITE_LIST = [
     "#pragma once"

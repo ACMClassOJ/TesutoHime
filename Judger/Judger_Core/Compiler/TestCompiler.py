@@ -14,11 +14,11 @@ class TestCompiler:
             compileTimeLimit=10000)).msg)
     def test_git(self):
         result = compiler.CompileInstance(CompilationConfig(
-            sourceCode="https://github.com/acrazyczy/RISC-V-Simulator.git",
+            sourceCode="https://github.com/acrazyczy/aplusb.git",
             language="git",
             compileTimeLimit=30000))
         #print(result.compiled)
         print(result.msg)
         #print(result.programPath)
-TestCompiler().test_hpp()
-#TestCompiler().test_git()
+#TestCompiler().test_hpp()
+TestCompiler().test_git()

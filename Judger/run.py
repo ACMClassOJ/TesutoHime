@@ -1,11 +1,18 @@
 import threading
-from Judger.api import api
-from Judger.heartBeat import HeartBeat
-from Judger.config import API_port
+from api import api
+from heartBeat import HeartBeat
+from config import API_port
 
 def RunFlask(f, port):
     f(host='0.0.0.0', port=port)
 
+
+from config import Path
+import os
+os.chdir(Path)
+
+if os.path.exists('BusyFlag'):
+   os.remove('BusyFlag')
 
 global api
 t1 = threading.Thread(target=RunFlask, args=(api.run, API_port,))

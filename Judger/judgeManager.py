@@ -1,19 +1,13 @@
-from Judger.Judger_Core.config import *
-from Judger.JudgerResult import *
-from Judger.Judger_Core.Compiler.Compiler import compiler
-from Judger.Judger_Core.classic_judger import ClassicJudger
-from Judger.Judger_Data import ProblemConfig, Group
+from Judger_Core.config import *
+from JudgerResult import *
+from Judger_Core.Compiler.Compiler import compiler
+from Judger_Core.classic_judger import ClassicJudger
+from Judger_Data import ProblemConfig, Group, Detail
 import multiprocessing
 import subprocess
 import os.path
 
 class JudgeManager:
-    def __init__(self):
-        self.judgingFlag = False
-
-    def isJudging(self) -> bool:
-        return self.judgingFlag
-
     def judge(self,
               problemConfig: ProblemConfig,
               dataPath: str,
@@ -68,8 +62,8 @@ class JudgeManager:
                                 testcase.TimeLimit,
                                 testcase.MemoryLimit,
                                 testcase.DiskLimit,
-                                testcase.Dependency == 0,
-                                testcase.ValgrindTestOn,
+                                -1 if not 'FileNumberLimit' in testcase._asdict() else testcase.FileNumberLimit,
+                                testcase.ValgrindTestOn
                             ),
                                 return_dict)
                         )
@@ -95,7 +89,7 @@ class JudgeManager:
                                 try:
                                     with open(userOutput) as f:
                                         return_list = f.read().splitlines()
-                                        testPointDetail.score = float(return_list[0])# to do : how to get message
+                                        testPointDetail.score = float(return_list[0])
                                         testPointDetail.result = ResultType.WA if testPointDetail.score == 0 else ResultType.AC
                                         for i in range(1, len(return_list)):
                                             testPointDetail.message += return_list[i] + '\n'

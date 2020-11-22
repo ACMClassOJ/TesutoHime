@@ -14,13 +14,19 @@ class Compiler(CompilerInterface):
         print("Compiling...", end="")
         if type(code) is str:
             code = {"main.cpp": code}
-        result = compile_cpp(code, time_limit)
+        result = compile_cpp(code.copy(), time_limit)
         print("Done.")
         return result
 
     @staticmethod
-    def compile_git(url: str, time_limit):
+    def compile_git(url, time_limit):
         print("Compiling...", end="")
+        if type(url) is dict:
+            try:
+                url = url["main.cpp"]
+            except Exception as e:
+                print(e)
+                raise
         result = compile_git(url, time_limit)
         print("Done.")
         return result

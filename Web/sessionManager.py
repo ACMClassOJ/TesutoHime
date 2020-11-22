@@ -1,6 +1,5 @@
 from userManager import UserManager
 from flask import request
-from utils import UnixNano
 
 
 class SessionManager:

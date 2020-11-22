@@ -18,7 +18,7 @@ class UserManager:
                  privilege: int):  # will not check whether the argument is illegal
         salt = rand_int()
         password = hash(password, salt)
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         # print("INSERT INTO User(Username, Student_ID, Friendly_Name, Password, Salt, Privilege) VALUES(%s, %s, %s, %s, %s, %s)" % (Username, Student_ID, Friendly_Name, Password, str(Salt), Privilege))
         try:
@@ -34,7 +34,7 @@ class UserManager:
 
     def modify_user(self, username: str, student_id: Optional['int'], friendly_name: Optional['str'],
                     password: Optional['str'], privilege: Optional['int']):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute(
             "SELECT Username, Student_ID, Friendly_Name, Password, Salt, Privilege FROM User WHERE Username = %s",
@@ -66,7 +66,7 @@ class UserManager:
         db.close()
 
     def validate_username(self, username: str) -> bool:
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT * FROM User WHERE Username = %s", username)
         data = cursor.fetchone()
@@ -75,7 +75,7 @@ class UserManager:
         return data is None
 
     def check_login(self, username: str, password: str) -> bool:
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Password, Salt FROM User WHERE Username = %s", username)
         data = cursor.fetchone()
@@ -86,7 +86,7 @@ class UserManager:
         return h == data[0]
 
     def get_friendly_name(self, username: str) -> str:  # Username must exist.
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Friendly_Name FROM User WHERE Username = %s", username)
         data = cursor.fetchone()
@@ -94,7 +94,7 @@ class UserManager:
         return data[0]
 
     def get_student_id(self, username: str) -> Optional[str]:  # Username must exist.
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Student_ID FROM User WHERE Username = %s", username)
         data = cursor.fetchone()
@@ -104,7 +104,7 @@ class UserManager:
         return str(data[0])
 
     def get_privilege(self, username: str) -> int:  # Username must exist.
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Privilege FROM User WHERE Username = %s", username)
         data = cursor.fetchone()
@@ -112,7 +112,7 @@ class UserManager:
         return int(data[0])
 
     def delete_user(self, username: str):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("DELETE FROM User WHERE Username = %s", username)

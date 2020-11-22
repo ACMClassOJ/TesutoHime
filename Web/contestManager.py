@@ -4,7 +4,7 @@ from utils import *
 
 class ContestManager:
     def create_contest(self, name: str, start_time: int, end_time: int, contest_type: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("INSERT INTO Contest (Name, Start_Time, End_Time, Type) VALUES (%s, %s, %s, %s)",
@@ -18,7 +18,7 @@ class ContestManager:
 
     def modify_contest(self, contest_id: int, new_name: str, new_start_time: int, new_end_time: int,
                        new_contest_type: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("UPDATE Contest SET Name = %s, Start_Time = %s, End_Time = %s, Type = %s WHERE ID = %s",
@@ -31,7 +31,7 @@ class ContestManager:
         return
 
     def delete_contest(self, contest_id: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("DELETE FROM Contest WHERE ID = %s", (str(contest_id)))
@@ -58,7 +58,7 @@ class ContestManager:
         return
 
     def add_problem_to_contest(self, contest_id: int, problem_id: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("INSERT INTO Contest_Problem (Belong, Problem_ID) VALUES (%s, %s)",
@@ -71,7 +71,7 @@ class ContestManager:
         return
 
     def delete_problem_from_contest(self, contest_id: int, problem_id: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("DELETE FROM Contest_Problem WHERE Belong = %s AND Problem_ID = %s",
@@ -84,7 +84,7 @@ class ContestManager:
         return
 
     def add_player_to_contest(self, contest_id: int, username: str):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("INSERT INTO Contest_Player (Belong, Username) VALUES (%s, %s)",
@@ -97,7 +97,7 @@ class ContestManager:
         return
 
     def check_player_in_contest(self, contest_id: int, username: str):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT tempID FROM Contest_Player WHERE Belong = %s AND Username = %s", (contest_id, username))
         ret = cursor.fetchall()
@@ -105,7 +105,7 @@ class ContestManager:
         return len(ret) != 0
 
     def delete_player_from_contest(self, contest_id: int, username: str):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("DELETE FROM Contest_Player WHERE Belong = %s AND Username = %s",
@@ -118,7 +118,7 @@ class ContestManager:
         return
 
     def list_contest(self, contest_type: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT ID, Name, Start_Time, End_Time FROM Contest WHERE Type = %s ORDER BY ID DESC",
                        (contest_type))
@@ -127,7 +127,7 @@ class ContestManager:
         return ret
 
     def get_time(self, contest_id: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Start_Time, End_Time FROM Contest WHERE ID = %s", (str(contest_id)))
         ret = cursor.fetchone()
@@ -135,7 +135,7 @@ class ContestManager:
         return int(ret[0]), int(ret[1])
 
     def list_problem_for_contest(self, contest_id: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Problem_ID FROM Contest_Problem WHERE Belong = %s", (str(contest_id)))
         ret = cursor.fetchall()
@@ -143,7 +143,7 @@ class ContestManager:
         return ret
 
     def list_player_for_contest(self, contest_id: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Username FROM Contest_Player WHERE Belong = %s", (str(contest_id)))
         ret = cursor.fetchall()
@@ -151,7 +151,7 @@ class ContestManager:
         return ret
 
     def get_title(self, contest_id: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Name FROM Contest WHERE ID = %s", (str(contest_id)))
         ret = cursor.fetchall()

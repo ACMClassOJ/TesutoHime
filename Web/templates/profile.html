@@ -33,10 +33,13 @@
                     swal("Oops", "两次输入的密码不一致！", "error");
                     return false;
                 }
-                let data = {
-                    "password": p,
-                    "friendly_name": n
-                };
+                let data = {};
+                if (p !== "") {
+                    data["password"] = p;
+                }
+                if (n !== "") {
+                    data["friendly_name"] = n;
+                }
                 $.ajax({
                     type: "POST",
                     contentType: "application/json",

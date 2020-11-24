@@ -18,7 +18,7 @@ def heartBeat():
     if not JudgeServer_Manager.Check_Secret(Secret):
         return '-1'
     Last_Seen_Time = int(JudgeServer_Manager.Get_Last_Heartbeat(Secret))
-    if Last_Seen_Time < UnixNano() - JudgeConfig.Max_Duration:
+    if Last_Seen_Time < unix_nano() - JudgeConfig.Max_Duration:
         url = JudgeServer_Manager.Get_URL(Secret)
         for i in range(0, 3):
             try:
@@ -32,7 +32,7 @@ def heartBeat():
                 break
             except:
                 pass
-    JudgeServer_Manager.Flush_Heartbeat(Secret, UnixNano())
+    JudgeServer_Manager.Flush_Heartbeat(Secret, unix_nano())
     JudgeServer_Scheduler.Check_Queue()
     return '0'
 

@@ -11,13 +11,13 @@ class JudgeServerScheduler:
 
         if not JudgeServer_Manager.Check_Secret(Secret):
             return False
-        JudgeServer_Manager.Flush_Heartbeat(Secret, UnixNano())
+        JudgeServer_Manager.Flush_Heartbeat(Secret, unix_nano())
         return True
 
     def Check_Queue(self):
         self.Check_System_Error()
 
-        Server = JudgeServer_Manager.Get_Standby_Server(UnixNano() - JudgeConfig.Max_Duration)
+        Server = JudgeServer_Manager.Get_Standby_Server(unix_nano() - JudgeConfig.Max_Duration)
         # print(Server)
         if Server == None or len(Server) == 0: # no avaliable server
             return
@@ -41,7 +41,7 @@ class JudgeServerScheduler:
     def Start_Judge(self, Problem_ID, User, Code, Lang, Share):
         self.Check_System_Error()
 
-        Judge_Manager.add_judge(Code, User, Problem_ID, Lang, UnixNano(), Share)
+        Judge_Manager.add_judge(Code, User, Problem_ID, Lang, unix_nano(), Share)
         self.Check_Queue()
         return
 

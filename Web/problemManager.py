@@ -5,7 +5,7 @@ from utils import *
 class ProblemManager:
     def add_problem(self, title: str, description: str, problem_input: str, problem_output: str, example_input: str,
                     example_output: str, data_range: str, release_time: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute(
@@ -21,7 +21,7 @@ class ProblemManager:
 
     def modify_problem(self, problem_id: int, title: str, description: str, problem_input: str, problem_output: str,
                        example_input: str, example_output: str, data_range: str, release_time: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute(
@@ -36,7 +36,7 @@ class ProblemManager:
         return
 
     def get_problem(self, problem_id: int) -> dict:
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT * FROM Problem WHERE ID = %s", (str(problem_id)))
         data = cursor.fetchone()
@@ -56,7 +56,7 @@ class ProblemManager:
         return ret
 
     def lock_problem(self, problem_id: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("UPDATE Problem SET Flag_Count = 1 WHERE ID = %s", (str(problem_id)))
@@ -67,7 +67,7 @@ class ProblemManager:
         db.close()
 
     def unlock_problem(self, problem_id: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("UPDATE Problem SET Flag_Count = 0 WHERE ID = %s", (str(problem_id)))
@@ -78,7 +78,7 @@ class ProblemManager:
         db.close()
 
     def get_title(self, problem_id: int) -> str:
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Title FROM Problem WHERE ID = %s", (str(problem_id)))
         data = cursor.fetchone()
@@ -88,7 +88,7 @@ class ProblemManager:
         return str(data[0])
 
     def in_contest(self, problem_id: int) -> bool:  # return True when this Problem is in a Contest or Homework
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Flag_Count FROM Problem WHERE ID = %s", (str(problem_id)))
         data = cursor.fetchone()
@@ -98,7 +98,7 @@ class ProblemManager:
         return int(data[0]) != 0
 
     def get_max_id(self) -> int:
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT MAX(ID) FROM Problem")
         data = cursor.fetchone()
@@ -106,8 +106,8 @@ class ProblemManager:
         return data[0]
 
     def get_release_time(self, problem_id: int) -> int:
-        db = DB_Connect()
-        db = DB_Connect()
+        db = db_connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Release_Time FROM Problem WHERE ID = %s", (str(problem_id)))
         ret = cursor.fetchone()
@@ -117,7 +117,7 @@ class ProblemManager:
         return int(ret[0])
 
     def problem_in_range(self, start_id: int, end_id: int, time_now: int, is_admin: bool):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         if not is_admin:
             cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= %s and ID <= %s and Release_Time <= %s",
@@ -129,7 +129,7 @@ class ProblemManager:
         return ret
 
     def delete_problem(self, problem_id: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("DELETE FROM Problem WHERE ID = %s", (str(problem_id)))

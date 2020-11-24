@@ -1,6 +1,61 @@
-Current User: {{ Friendly_Username }}
-{{ Problem_ID }}, {{ Title }} <br>
-todo: Sort By: (sort_param) time memory submit_time
-{% for x in Data- %}
-    {{ x }}<br>
-{%-endfor %}
+{% extends 'base.html' %}
+
+{% set page='Rank' %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static',filename='font-awesome/css/all.min.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="card card-body">
+        <h1 class="text-center">{{ Problem_ID }}. {{ Title }}</h1>
+        <div class="btn-group mx-auto mb-3">
+            <a href="/problem?problem_id={{ Problem_ID }}" class="btn btn-warning"> 题面 </a>
+            <a href="/submit?problem_id={{ Problem_ID }}" class="btn btn-primary"> 提交 </a>
+            <a href="/status?problem_id={{ Problem_ID }}" class="btn btn-info"> 评测状态 </a>
+            <a href="/discuss?problem_id={{ Problem_ID }}" class="btn btn-success"> 讨论 </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered table-hover" id="status_list">
+                <thead>
+                <tr>
+                    <th><span>#</span></th>
+                    <th><span>用户</span></th>
+                    <th><a class="nav-link p-0" href="/rank?problem_id={{ Problem_ID }}&sort=time">
+                        <span>运行时间</span>
+                        <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
+                            <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>
+                            <i class="fa fa-sort-down fa-stack-1x" {{ 'style="color: #ced4da"'|safe if Sorting != 'time' }}></i>
+                        </span>
+                    </a></th>
+                    <th><a class="nav-link p-0" href="/rank?problem_id={{ Problem_ID }}&sort=memory">
+                        <span>内存</span>
+                        <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
+                            <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>
+                            <i class="fa fa-sort-down fa-stack-1x" {{ 'style="color: #ced4da"'|safe if Sorting != 'memory' }}></i>
+                        </span>
+                    </a></th>
+                    <th><span>语言</span></th>
+                    <th><a class="nav-link p-0" href="/rank?problem_id={{ Problem_ID }}&sort=submit_time">
+                        <span>提交时间</span>
+                        <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
+                            <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>
+                            <i class="fa fa-sort-down fa-stack-1x" {{ 'style="color: #ced4da"'|safe if Sorting != 'submit_time' }}></i>
+                        </span>
+                    </a></th>
+                </tr>
+                </thead>
+                {% for cur in Data -%}
+                    <tr>
+                        <td><a href="/code?submit_id={{ cur[0] }}">{{ loop.index }}</a></td>
+                        <td>{{ cur[1] }}</td>
+                        <td>{{ cur[2] }}ms</td>
+                        <td>{{ cur[3] }}KiB</td>
+                        <td>{{ readable_lang(cur[4]) }}</td>
+                        <td>{{ readable_time(cur[5]) }}</td>
+                    </tr>
+                {%- endfor %}
+            </table>
+        </div>
+    </div>
+{% endblock %}

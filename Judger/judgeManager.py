@@ -72,9 +72,7 @@ class JudgeManager:
                         testPointDetail, userOutput = return_dict['testPointDetail'], return_dict['userOutput']
                         testPointDetail.ID = testcase.ID
                         if testPointDetail.result == ResultType.UNKNOWN:
-                            if testcase.ValgrindTestOn:
-                                testPointDetail.score, testPointDetail.result = 1.0, ResultType.AC
-                            elif problemConfig.SPJ == 1:
+                            if problemConfig.SPJ == 1:
                                 try:
                                     subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20)
                                     with open('score.log') as f:

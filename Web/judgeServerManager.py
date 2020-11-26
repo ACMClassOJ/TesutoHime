@@ -129,7 +129,7 @@ class JudgeServerManager:
 
 
     def Get_Standby_Server(self, MinTime: int):
-        self.Error_Check_Correct(MinTime)
+        # self.Error_Check_Correct(MinTime)
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Address, Secret_Key FROM Judge_Server WHERE Last_Seen_Time >= %s AND Busy = %s", (str(MinTime), '0'))
@@ -155,6 +155,13 @@ class JudgeServerManager:
         if ret == None or len(ret) == 0:
             return None
         return ret
+
+    def Get_Current_Task(self, secret):
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Current_Task FROM Judge_Server WHERE Secret_Key = %s", (secret, ))
+        ret = cursor.fetchone()
+        return int(ret)
 
     def Get_Server_List(self):
         db = db_connect()

@@ -158,6 +158,8 @@ def logout():
 
 @web.route('/register', methods=['GET', 'POST'])
 def register():
+    if WebConfig.Block_Register:
+        abort(404)
     if request.method == 'GET':
         nxt = request.args.get('next')
         return render_template('register.html', Next=nxt, friendlyName=Login_Manager.get_friendly_name(),

@@ -1,6 +1,7 @@
 from flask import Flask, request, Blueprint
 from judgeServerManager import JudgeServer_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
+from judgeManager import Judge_Manager
 from utils import *
 import json
 
@@ -26,6 +27,9 @@ def heartBeat():
                 data['Server_Secret'] = JudgeConfig.Web_Server_Secret
                 re = requests.post(url + '/isBusy', data = data).content.decode() # Fixme: check self-signed SSL
                 if re == '0':
+                    Faliure = JudgeServer_Manager.Get_Current_Task(Secret)
+                    if Faliure != -1:
+                        Judge_Manager.update_status(Faliure, 10)
                     JudgeServer_Manager.Flush_Busy(Secret, False)
                 else:
                     JudgeServer_Manager.Flush_Busy(Secret, True)

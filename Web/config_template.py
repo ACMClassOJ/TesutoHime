@@ -9,6 +9,7 @@ class LoginConfig:
 
 class WebConfig:
     Problems_Each_Page = 20
+    Block_Register = False
 
 class JudgeConfig:
     Judge_Each_Page = 15

@@ -5,7 +5,7 @@
 {% block head %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/styles/github.min.css">
-    <link rel="stylesheet" href="https://cdn.yukisaki.io:2333/oj_cdn/editor.md/css/editormd.min.css">
+    <link rel="stylesheet" href="https://cdn2.yukisaki.io:41053/oj_cdn/editor.md/css/editormd.min.css">
 {% endblock %}
 
 {% block content %}
@@ -53,11 +53,11 @@
 {% endblock %}
 
 {% block script %}
-    <script src="https://cdn.yukisaki.io:2333/oj_cdn/marked/marked.min.js"></script>
+    <script src="https://cdn2.yukisaki.io:41053/oj_cdn/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/highlight.min.js"></script>
-    <script src="https://cdn.yukisaki.io:2333/oj_cdn/editor.md/editormd.min.js"></script>
+    <script src="https://cdn2.yukisaki.io:41053/oj_cdn/editor.md/editormd.min.js"></script>
     <script>
         let discuss = {
         {% for row in Discuss if row[4] %}
@@ -118,7 +118,7 @@
             div.after($(`<div id="activeEditor"></div>`));
             originalDiscuss = div.hide();
             activeEditor = editormd(`activeEditor`, {
-                path: "https://cdn.yukisaki.io:2333/oj_cdn/editor.md/lib/",
+                path: "https://cdn2.yukisaki.io:41053/oj_cdn/editor.md/lib/",
                 toolbarIcons: function () {
                     return [
                         "undo", "redo", "|",
@@ -187,7 +187,7 @@
             let editor = editormd("editor", {
                 width: "100%",
                 height: 400,
-                path: "https://cdn.yukisaki.io:2333/oj_cdn/editor.md/lib/",
+                path: "https://cdn2.yukisaki.io:41053/oj_cdn/editor.md/lib/",
                 toolbarIcons: function () {
                     return [
                         "undo", "redo", "|",

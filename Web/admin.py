@@ -60,7 +60,7 @@ def index():
     privilege = Login_Manager.get_privilege()
     if privilege < Privilege.ADMIN:
         abort(404)
-    return render_template('admin.html', privilege=privilege, Privilege=Privilege,
+    return render_template('admin.html', privilege=privilege, Privilege=Privilege, is_Admin=True,
                            friendlyName=Login_Manager.get_friendly_name())
 
 

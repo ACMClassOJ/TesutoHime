@@ -15,12 +15,12 @@ class JudgeManager:
               sourceCode: str
               ) -> JudgerResult:
         srcDict = {}
-        if problemConfig.SPJ != 2:
+        if problemConfig.SPJ != 2 and problemConfig.SPJ != 3:
             srcDict['main.cpp'] = sourceCode
             compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
         else:
             srcDict['src.hpp'] = sourceCode
-        if problemConfig.SPJ != 2 and not compileResult.compiled:
+        if problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and not compileResult.compiled:
             print('Compilation Error')
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(1, ResultType.CE, 0, 0, 0, -1, compileResult.msg)], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
         else:
@@ -30,7 +30,7 @@ class JudgeManager:
             for testcase in problemConfig.Details:
                 if testcase.Dependency == 0 or Details[testcase.Dependency - 1].result == ResultType.AC:
                     Runnable = True
-                    if problemConfig.SPJ == 2:
+                    if problemConfig.SPJ == 2 or problemConfig.SPJ == 3:
                         Runnable = False
                         try:
                             with open(dataPath + '/' + str(testcase.ID) + '.cpp') as f:

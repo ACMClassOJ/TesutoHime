@@ -27,6 +27,7 @@ class ClassicJudger(interface.JudgerInterface):
             os.system('rm ' + self.exe_path + '* -r -f')
 
         child=None
+        mem = 0
         try:
             # user_id=str(random.randint(99000,99999))
             # group_id=str(random.randint(99000,99999))

@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TesutoHime·{{ page }}</title>
+    <title>TesutoHime · {{ page }}</title>
     <link rel="shortcut icon" href="favicon.ico">
-    <link href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet">
+    <link href="https://cdn2.yukisaki.io:41053/oj_cdn/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn2.yukisaki.io:41053/oj_cdn/argon/css/style.css" rel="stylesheet">
     {% block head %}{% endblock %}
 </head>
 
@@ -38,6 +38,9 @@
                 <li class="nav-item"><a href="/contest" class="nav-link">比赛</a></li>
                 <li class="nav-item"><a href="/homework" class="nav-link">作业</a></li>
                 <li class="nav-item"><a href="/status" class="nav-link">评测状态</a></li>
+                {% if is_Admin %}
+                    <li class="nav-item"><a href="/admin" class="nav-link">管理</a></li>
+                {% endif %}
                 <li class="nav-item"><a href="/about" class="nav-link">关于</a></li>
                 {% if friendlyName=='' -%}
                     <li class="dropdown-divider"></li>
@@ -81,11 +84,11 @@
 </footer>
 </body>
 
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/jquery/jquery.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/popper.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap.min.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/jquery/jquery.form.js"></script>
-<script src="https://cdn.yukisaki.io:2333/oj_cdn/sweetalert/sweetalert.min.js"></script>
+<script src="https://cdn2.yukisaki.io:41053/oj_cdn/jquery/jquery.min.js"></script>
+<script src="https://cdn2.yukisaki.io:41053/oj_cdn/bootstrap/popper.min.js"></script>
+<script src="https://cdn2.yukisaki.io:41053/oj_cdn/bootstrap/bootstrap.min.js"></script>
+<script src="https://cdn2.yukisaki.io:41053/oj_cdn/jquery/jquery.form.js"></script>
+<script src="https://cdn2.yukisaki.io:41053/oj_cdn/sweetalert/sweetalert.min.js"></script>
 {% block script %}{% endblock %}
 <script src="https://pingjs.qq.com/h5/stats.js?v2.0.4" name="MTAH5" sid="500731541" cid="500731570"></script>
 </html>

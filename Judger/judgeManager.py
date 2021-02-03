@@ -15,12 +15,12 @@ class JudgeManager:
               sourceCode: str
               ) -> JudgerResult:
         srcDict = {}
-        if problemConfig.SPJ != 2:
+        if problemConfig.SPJ != 2 and problemConfig.SPJ != 3:
             srcDict['main.cpp'] = sourceCode
             compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
         else:
             srcDict['src.hpp'] = sourceCode
-        if problemConfig.SPJ != 2 and not compileResult.compiled:
+        if problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and not compileResult.compiled:
             print('Compilation Error')
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(1, ResultType.CE, 0, 0, 0, -1, compileResult.msg)], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
         else:
@@ -30,7 +30,7 @@ class JudgeManager:
             for testcase in problemConfig.Details:
                 if testcase.Dependency == 0 or Details[testcase.Dependency - 1].result == ResultType.AC:
                     Runnable = True
-                    if problemConfig.SPJ == 2:
+                    if problemConfig.SPJ == 2 or problemConfig.SPJ == 3:
                         Runnable = False
                         try:
                             with open(dataPath + '/' + str(testcase.ID) + '.cpp') as f:
@@ -72,9 +72,7 @@ class JudgeManager:
                         testPointDetail, userOutput = return_dict['testPointDetail'], return_dict['userOutput']
                         testPointDetail.ID = testcase.ID
                         if testPointDetail.result == ResultType.UNKNOWN:
-                            if testcase.ValgrindTestOn:
-                                testPointDetail.score, testPointDetail.result = 1.0, ResultType.AC
-                            elif problemConfig.SPJ == 1:
+                            if problemConfig.SPJ == 1:
                                 try:
                                     subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20)
                                     with open('score.log') as f:

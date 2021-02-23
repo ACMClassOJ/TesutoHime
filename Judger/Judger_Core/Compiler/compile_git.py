@@ -91,6 +91,8 @@ def compile_git(url: str, time_limit):
     if process:
         msg += process.stderr.decode() + "\n"
         msg += process.stdout.decode() + "\n"
+        if len(msg) > 10000:
+            msg = msg[0 : 10000]
 
     if not process or process.returncode != 0:
         return CompilationResult(

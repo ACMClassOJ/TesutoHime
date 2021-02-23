@@ -22,6 +22,7 @@ class JudgeManager:
             srcDict['src.hpp'] = sourceCode
         if problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and not compileResult.compiled:
             print('Compilation Error')
+            #print(len(compileResult.msg))
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(1, ResultType.CE, 0, 0, 0, -1, compileResult.msg)], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
         else:
             Details = []
@@ -67,6 +68,7 @@ class JudgeManager:
                             ),
                                 return_dict)
                         )
+                        print("start judging on testcase" + str(testcase.ID))
                         judgeProcess.start()
                         judgeProcess.join()
                         testPointDetail, userOutput = return_dict['testPointDetail'], return_dict['userOutput']

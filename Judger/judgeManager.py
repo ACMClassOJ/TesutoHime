@@ -15,6 +15,17 @@ class JudgeManager:
               sourceCode: str
               ) -> JudgerResult:
         srcDict = {}
+
+        # begin 2021 2 24 cxy
+        if "SupportedFiles" in problemConfig._asdict():
+            for fileName in problemConfig.SupportFiles:
+                try:
+                    with open(dataPath + '/' + fileName) as f:
+                        srcDict[fileName] = f.read()
+                except:
+                    testPointDetail = DetailResult(1, ResultType.SYSERR, 0, 0, 0, -1, "\"" + fileName + '" not found in data.')            
+        # end
+
         if problemConfig.SPJ != 2 and problemConfig.SPJ != 3:
             srcDict['main.cpp'] = sourceCode
             compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
@@ -47,6 +58,7 @@ class JudgeManager:
                         else:
                             Runnable = True
                         if Runnable:
+                            #print(srcDict.keys())
                             compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
                             if not compileResult.compiled:
                                 print('Compilation Error')

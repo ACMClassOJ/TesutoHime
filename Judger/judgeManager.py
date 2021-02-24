@@ -17,7 +17,7 @@ class JudgeManager:
         srcDict = {}
 
         # begin 2021 2 24 cxy
-        if "SupportFiles" in ProblemConfig:
+        if "SupportFiles" in problemConfig:
             for fileName in problemConfig.SupportFiles:
                 try:
                     with open(dataPath + '/' + fileName) as f:

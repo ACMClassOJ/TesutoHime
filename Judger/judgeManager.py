@@ -18,7 +18,7 @@ class JudgeManager:
 
         # begin 2021 2 24 cxy
         if "SupportedFiles" in problemConfig._asdict():
-            for fileName in problemConfig.SupportFiles:
+            for fileName in problemConfig.SupportedFiles:
                 try:
                     with open(dataPath + '/' + fileName) as f:
                         srcDict[fileName] = f.read()

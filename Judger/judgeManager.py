@@ -17,7 +17,7 @@ class JudgeManager:
         srcDict = {}
 
         # begin 2021 2 24 cxy
-        if "SupportFiles" in problemConfig:
+        if "SupportedFiles" in problemConfig._asdict():
             for fileName in problemConfig.SupportFiles:
                 try:
                     with open(dataPath + '/' + fileName) as f:
@@ -58,6 +58,7 @@ class JudgeManager:
                         else:
                             Runnable = True
                         if Runnable:
+                            #print(srcDict.keys())
                             compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
                             if not compileResult.compiled:
                                 print('Compilation Error')

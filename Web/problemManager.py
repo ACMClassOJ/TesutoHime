@@ -103,7 +103,9 @@ class ProblemManager:
         cursor.execute("SELECT MAX(ID) FROM Problem")
         data = cursor.fetchone()
         db.close()
-        return data[0]
+        if data[0] is None:
+            return 0
+        return int(data[0])
 
     def get_release_time(self, problem_id: int) -> int:
         db = db_connect()

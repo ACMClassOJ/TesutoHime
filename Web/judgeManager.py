@@ -87,6 +87,8 @@ class JudgeManager:
         cursor.execute("SELECT MAX(ID) FROM Judge")
         data = cursor.fetchone()
         db.close()
+        if data[0] is None:
+            return 0
         return int(data[0])
 
     def judge_in_range(self, start_id: int, end_id: int):  # [{}], for page display.

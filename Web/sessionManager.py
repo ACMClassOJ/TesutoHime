@@ -1,6 +1,5 @@
 from userManager import UserManager
 from flask import request
-from utils import UnixNano
 
 
 class SessionManager:
@@ -24,13 +23,13 @@ class SessionManager:
         lid = request.cookies.get('Login_ID')
         if not (lid in self.mem):
             return ''
-        return UserManager().Get_Friendly_Name(self.mem[lid])
+        return UserManager().get_friendly_name(self.mem[lid])
 
     def get_privilege(self) -> int:
         lid = request.cookies.get('Login_ID')
         if not (lid in self.mem):
             return -1  # lowest Privilege for Guests
-        return UserManager().Get_Privilege(self.mem[lid])
+        return UserManager().get_privilege(self.mem[lid])
 
 
 Login_Manager = SessionManager()

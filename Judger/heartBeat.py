@@ -1,6 +1,6 @@
 from time import sleep
 import requests
-from Judger.config import *
+from config import *
 
 class HeartBeat:
     def sendHeartBeat():

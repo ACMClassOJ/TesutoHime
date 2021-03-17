@@ -60,7 +60,7 @@ def index():
     privilege = Login_Manager.get_privilege()
     if privilege < Privilege.ADMIN:
         abort(404)
-    return render_template('admin.html', privilege=privilege, Privilege=Privilege,
+    return render_template('admin.html', privilege=privilege, Privilege=Privilege, is_Admin=True,
                            friendlyName=Login_Manager.get_friendly_name())
 
 
@@ -75,16 +75,16 @@ def user_manager():
     try:
         op = int(form[String.TYPE])
         if op == 0:
-            User_Manager.Add_User(form[String.USERNAME], int(form[String.STUDENT_ID]), form[String.FRIENDLY_NAME],
+            User_Manager.add_user(form[String.USERNAME], int(form[String.STUDENT_ID]), form[String.FRIENDLY_NAME],
                                   form[String.PASSWORD], form[String.PRIVILEGE])
             return ReturnCode.SUC_ADD_USER
         elif op == 1:
-            User_Manager.Modify_User(form[String.USERNAME], form.get(String.STUDENT_ID, None),
+            User_Manager.modify_user(form[String.USERNAME], form.get(String.STUDENT_ID, None),
                                      form.get(String.FRIENDLY_NAME, None), form.get(String.PASSWORD, None),
                                      form.get(String.PRIVILEGE, None))
             return ReturnCode.SUC_MOD_USER
         elif op == 2:
-            User_Manager.Delete_User(form[String.USERNAME])
+            User_Manager.delete_user(form[String.USERNAME])
             return ReturnCode.SUC_DEL_USER
         else:
             return ReturnCode.ERR_BAD_DATA
@@ -182,7 +182,7 @@ def data_upload():
         f = request.files['file']
         try:
             r = post(DataConfig.server + '/' + DataConfig.key + '/upload.php', files={'file': (f.filename, f)})
-            return {'e': 0, 'msg': r.content}
+            return {'e': 0, 'msg': r.content.decode('utf-8')}
         except RequestException:
             return ReturnCode.ERR_NETWORK_FAILURE
     return ReturnCode.ERR_BAD_DATA

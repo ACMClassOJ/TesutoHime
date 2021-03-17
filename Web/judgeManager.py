@@ -18,7 +18,7 @@ class JudgeManager:
     """
 
     def add_judge(self, code: str, user: str, problem_id: int, language: int, time: int, share: bool):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute(
@@ -32,7 +32,7 @@ class JudgeManager:
         return
 
     def update_status(self, judge_id: int, new_status: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("UPDATE Judge SET Status = %s WHERE ID = %s", (str(new_status), str(judge_id)))
@@ -45,7 +45,7 @@ class JudgeManager:
 
     def update_after_judge(self, judge_id: int, new_status: int, score: int, detail: str, time_used: str,
                            mem_used: str):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute(
@@ -59,7 +59,7 @@ class JudgeManager:
         return
 
     def query_judge(self, judge_id: int) -> dict:  # for details
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute(
             "SELECT ID, User, Problem_ID, Detail, Time, Time_Used, Mem_Used, Share, Status, Language, Code  FROM Judge WHERE ID = %s",
@@ -82,15 +82,17 @@ class JudgeManager:
         return ret
 
     def max_id(self):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT MAX(ID) FROM Judge")
         data = cursor.fetchone()
         db.close()
+        if data[0] is None:
+            return 0
         return int(data[0])
 
     def judge_in_range(self, start_id: int, end_id: int):  # [{}], for page display.
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute(
             "SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language, Share FROM Judge WHERE ID >= %s and ID <= %s ORDER BY ID desc",
@@ -105,14 +107,14 @@ class JudgeManager:
                    'Time_Used': int(d[4]),
                    'Mem_Used': int(d[5]),
                    'Status': str(d[6]),
-                   'Lang': str(d[7]),
+                   'Lang': int(d[7]),
                    'Share': bool(d[8])}
             ret.append(cur)
         db.close()
         return ret
 
     def get_contest_judge(self, problem_id: int, username: str, start_time: int, end_time: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute(
             "SELECT ID, Status, Score, Time FROM Judge WHERE Problem_ID = %s AND User = %s AND Time >= %s AND Time <= %s",
@@ -122,7 +124,7 @@ class JudgeManager:
         return ret
 
     def search_judge(self, arg_submitter, arg_problem_id, arg_status, arg_lang, arg_param=None):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         com = 'SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language, Share FROM Judge WHERE '
         pre = []
@@ -161,13 +163,13 @@ class JudgeManager:
                    'Time_Used': int(d[4]),
                    'Mem_Used': int(d[5]),
                    'Status': str(d[6]),
-                   'Lang': str(d[7]),
+                   'Lang': int(d[7]),
                    'Share': bool(d[8])}
             ret.append(cur)
         return ret
 
     def search_ac(self, problem_id):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute(
             "SELECT ID, User, Time_Used, Mem_Used, Language, Time FROM Judge WHERE Problem_ID = %s and Status = 2",
@@ -177,7 +179,7 @@ class JudgeManager:
         return ret
 
     def delete_judge(self, judge_id: int):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute("DELETE FROM Judge WHERE  ID = %s", (str(judge_id)))
@@ -188,7 +190,7 @@ class JudgeManager:
         return
 
     def get_pending_judge(self):
-        db = DB_Connect()
+        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT ID, Problem_ID, Code, Language FROM Judge WHERE Status = 0")
         ls = cursor.fetchall()

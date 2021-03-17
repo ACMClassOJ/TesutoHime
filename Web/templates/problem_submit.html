@@ -3,7 +3,7 @@
 {% set page='Submit' %}
 
 {% block head %}
-    <link rel="stylesheet" href="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap-select.min.css">
+    <link rel="stylesheet" href="https://cdn2.yukisaki.io:41053/oj_cdn/bootstrap/bootstrap-select.min.css">
 {% endblock %}
 
 {% block content %}
@@ -14,8 +14,8 @@
                 <label for="lang">语言</label>
                 <select id="lang" name="lang" class="form-control input-group py-0 selectpicker"
                         data-style="form-control rounded border-grey shadow-none font-weight-normal">
-                    <option value="cpp">cpp</option>
-                    <option value="git">git</option>
+                    <option value="cpp">C++</option>
+                    <option value="git">Git</option>
                 </select>
             </div>
             <div class="row mx-0">
@@ -38,7 +38,7 @@
 {% endblock %}
 
 {% block script %}
-    <script src="https://cdn.yukisaki.io:2333/oj_cdn/bootstrap/bootstrap-select.min.js"></script>
+    <script src="https://cdn2.yukisaki.io:41053/oj_cdn/bootstrap/bootstrap-select.min.js"></script>
     <script src="{{ url_for('static', filename = 'js/problem_submit.js') }}"></script>
     {% if not In_Contest -%}
         <script>

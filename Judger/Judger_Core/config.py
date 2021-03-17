@@ -1,6 +1,6 @@
 class CompilationConfig:
     def __init__(self,
-                 sourceCode: str,
+                 sourceCode, # str for single code / dict for several files { file_name : source_code }
                  language: str,
                  compileTimeLimit: int
                  ):
@@ -15,8 +15,8 @@ class TestPointConfig:
                  inputFile: str,
                  timeLimit: int,
                  memoryLimit: int,
-                 diskLimit: int, # -1 if not need
-                 diskClearTag: bool, # true if need clearing
+                 diskLimit: int, # 0 if not need
+                 fileNumberLimit: int, # -1 if not need
                  valgrindTestOn: bool, # true if need checking memory leak
                  ):
         self.programPath = programPath
@@ -25,7 +25,7 @@ class TestPointConfig:
         self.timeLimit = timeLimit
         self.memoryLimit = memoryLimit
         self.diskLimit = diskLimit
-        self.diskClearTag = diskClearTag
+        self.fileNumberLimit = fileNumberLimit
         self.valgrindTestOn = valgrindTestOn
 
 class CompilationResult:

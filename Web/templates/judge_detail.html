@@ -67,7 +67,7 @@
             </table>
         </div>
         <hr>
-        <h5>代码：</h5>
+        <h5>代码：<button id="copy_button" class="btn btn-default" data-clipboard-target="#judge_detail_code_highlighted">复制</button></h5>
         <pre><code id="judge_detail_code_highlighted">Waiting for code</code></pre>
         {% if Data != None -%}
             <hr>
@@ -139,6 +139,10 @@
 {% endblock %}
 
 {% block script %}
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
+    <script>
+        var clipboard = new ClipboardJS(document.getElementById('copy_button'));
+    </script>
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/highlight.min.js"></script>
     <script>
         $(function () {

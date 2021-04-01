@@ -88,12 +88,13 @@ class JudgeManager:
                         if testPointDetail.result == ResultType.UNKNOWN:
                             if problemConfig.SPJ == 1:
                                 try:
+                                    subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'])
                                     subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20)
                                     with open('score.log') as f:
                                         testPointDetail.score = float("\n".join(f.readline().splitlines()))
                                     testPointDetail.result = ResultType.WA if testPointDetail.score == 0 else ResultType.AC
                                     with open('message.log') as f:
-                                        testPointDetail.message += f.readline().splitlines()
+                                        testPointDetail.message.join(f.readline().splitlines())
                                 except Exception as e:
                                     print(e)
                                     testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while running SPJ.', ResultType.SYSERR

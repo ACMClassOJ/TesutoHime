@@ -1,9 +1,64 @@
-{% extends 'base.html' %}
 
-{% set page='Index' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TesutoHime·Index</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-y/twitter-bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.yukisaki.io:2333/oj_cdn/argon/css/style.css" rel="stylesheet">
+    
+</head>
 
-{% block content %}
-    <div class="jumbotron bg-white">
+<body class="bg-secondary" style="background: url('1.jpg');background-position: center center;">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary py-2 mb-3">
+    <div class="container">
+        <a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
+        <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="navbar-collapse collapse" id="navbarContent">
+            <div class="navbar-collapse-header">
+                <div class="row">
+                    <div class="col-10 collapse-brand">
+                        <a href="/">ACM Class OnlineJudge 2020</a>
+                    </div>
+                    <div class="col-2 collapse-close">
+                        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse"
+                                data-target="#navbarContent">
+                            <span></span>
+                            <span></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <ul class="navbar-nav" style="line-height: 1;">
+                <li class="nav-item"><a href="/problems" class="nav-link">题库</a></li>
+                <li class="nav-item"><a href="/contest" class="nav-link">比赛</a></li>
+                <li class="nav-item"><a href="/homework" class="nav-link">作业</a></li>
+                <li class="nav-item"><a href="/status" class="nav-link">评测状态</a></li>
+                <li class="nav-item"><a href="/about" class="nav-link">关于</a></li>
+                
+            </ul>
+            <ul class="navbar-nav ml-lg-auto" style="line-height: 1;">
+                <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">cong258258</a>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="#">个人信息（未完成）</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="/logout">注销</a>
+                        </div>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<main class="container">
+    
+    <div class="jumbotron"  style="background: transparent;">
         <h1>Welcome to TesutoHime</h1>
         <h4>ACM Class OnlineJudge 2020</h4>
         <hr class="my-4">
@@ -11,9 +66,31 @@
         <p>C++：<code>g++ code.cpp -o code -lm -O2 -DONLINE_JUDGE</code></p>
         <p>Git：<code>cmake . && make</code></p>
         <p class="text-muted">Everything in the world is designed to END.</p>
+
         <hr class="my-4">
         <a class="btn btn-lg btn-primary mb-3" href="/problems">Challenge</a>
         <a class="btn btn-lg btn-warning mb-3" href="/about">About</a>
         <a class="btn btn-lg btn-default mb-3"  href="/feed">Feed</a>
     </div>
-{% endblock %}
+
+</main>
+<footer class="footer" style="background: transparent;">
+    <div class="container text-center">
+        <p class="mb-0">
+            ACM Class OnlineJudge © 2020 Powered By
+            <a href='https://github.com/cmd2001/Open-TesutoHime/' target='_blank'> TesutoHime</a>
+        </p>
+        <p>
+            备案号：<a href='https://beian.miit.gov.cn/#/Integrated/recordQuery' target='_blank'>沪ICP备2020031263号-1</a>
+        </p>
+    </div>
+</footer>
+</body>
+
+<script src="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-y/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-y/popper.js/2.7.0/cjs/popper.min.js"></script>
+<script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-y/twitter-bootstrap/4.5.0/js/bootstrap.min.js"></script>
+<script src="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-y/jquery.form/4.3.0/jquery.form.min.js"></script>
+<script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-y/sweetalert/2.1.2/sweetalert.min.js"></script>
+
+<script src="https://pingjs.qq.com/h5/stats.js?v2.0.4" name="MTAH5" sid="500731541" cid="500731570"></script>

@@ -6,8 +6,8 @@ from config import *
 
 
 def db_connect():
-    return pymysql.connect(DataBaseConfig.mysql_Host, DataBaseConfig.mysql_User, DataBaseConfig.mysql_Password,
-                           DataBaseConfig.mysql_Database)
+    return pymysql.connect(host = DataBaseConfig.mysql_Host, user = DataBaseConfig.mysql_User, password = DataBaseConfig.mysql_Password,
+                           database = DataBaseConfig.mysql_Database)
 
 
 def unix_nano() -> int:  # Integer Unix Nano

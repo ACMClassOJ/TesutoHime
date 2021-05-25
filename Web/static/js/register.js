@@ -20,6 +20,6 @@ $(function(){
 			},500);
 		}
 		else if(response_text == -1)
-			swal("Oops","注册失败，检查您的输入信息（昵称请不要使用中文）！","error");
+			swal("Oops","注册失败，检查您的输入信息是否合法！","error");
 	});
 });

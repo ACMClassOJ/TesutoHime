@@ -28,7 +28,13 @@ class JudgeServerScheduler:
         data['Server_Secret'] = JudgeConfig.Web_Server_Secret
         data['Problem_ID'] = str(Record[1])
         data['Judge_ID'] = str(Record[0])
-        data['Lang'] = 'cpp' if int(Record[3]) == 0 else 'git'
+        lang_digit = int(Record[3])
+        if lang_digit == 0:
+            data['Lang'] = 'cpp'
+        else if lang_digit == 1:
+            data['Lang'] = 'git'
+        else if lang_digit == 2:
+            data['Lang'] = 'verilog'
         data['Code'] = Record[2]
         for i in range(0, 3):
             re = requests.post(Server[0] + '/judge', data = data).content.decode() # Fixme: check self-signed SSL

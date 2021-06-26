@@ -243,11 +243,11 @@ def submit_problem():
         username = Login_Manager.get_username()
         lang = -1
         lang_request_str = str(request.form.get('lang'))
-        if lang_request_str == 'cpp' 
+        if lang_request_str == 'cpp': 
             lang = 0
-        else if lang_request_str == 'git'
+        else if lang_request_str == 'git':
             lang = 1
-        else if lang_request_str == 'verilog'
+        else if lang_request_str == 'verilog':
             lang = 2
         # cpp or git or verilog
         user_code = request.form.get('code')

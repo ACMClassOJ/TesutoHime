@@ -13,6 +13,8 @@ class Compiler(CompilerInterface):
     @staticmethod
     def compile_verilog(code, time_limit):
         log.info("Start Compiling.")
+        if type(code) is str:
+            code = {"test.v": code}
         result = compile_verilog(code.copy(), time_limit)
         log.info("Done.")
         return result

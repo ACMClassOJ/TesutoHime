@@ -8,21 +8,31 @@ import os
 #    logger.error('')
 
 def logger_creator(path : str):
+    if not os.path.exists(path):
+        os.makedirs(path)
     #创建日志级别
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
     #创建日志文件
-    handler_dbug = logging.FileHandler(os.path.join(path, 'debug_log.txt'))
+    file = os.path.join(path, 'debug_log.txt')
+    open(file, 'a').close()
+    handler_dbug = logging.FileHandler(file)
     handler_dbug.setLevel(logging.DEBUG)
 
-    handler_info = logging.FileHandler(os.path.join(path, 'info_log.txt'))
+    file = os.path.join(path, 'info_log.txt')
+    open(file, 'a').close()
+    handler_info = logging.FileHandler(file)
     handler_info.setLevel(logging.INFO)
 
-    handler_warn = logging.FileHandler(os.path.join(path, 'warning_log.txt'))
+    file = os.path.join(path, 'warning_log.txt')
+    open(file, 'a').close()
+    handler_warn = logging.FileHandler(file)
     handler_warn.setLevel(logging.WARNING)
 
-    handler_erro = logging.FileHandler(os.path.join(path, 'error_log.txt'))
+    file = os.path.join(path, 'error_log.txt')
+    open(file, 'a').close()
+    handler_erro = logging.FileHandler(file)
     handler_erro.setLevel(logging.ERROR)
 
     console = logging.StreamHandler()
@@ -44,5 +54,7 @@ def logger_creator(path : str):
     logger.addHandler(console)
 
     return logger
-    
-log = logger_creator("~") # cxy 2021 6 28 暂时使用桌面作为日志保存的地方
+
+log_path = "/work/log"
+
+log = logger_creator(log_path) # cxy 2021 6 28 暂时使用桌面作为日志保存的地方

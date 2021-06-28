@@ -12,6 +12,8 @@ def compile_verilog(codes, time_limit, seccomp=False):
     program = random_string(10)
     source = program + ".v"
 
+    
+
     if "test.v" in codes.keys():
         codes[source] = codes["test.v"]
         del codes["test.v"]

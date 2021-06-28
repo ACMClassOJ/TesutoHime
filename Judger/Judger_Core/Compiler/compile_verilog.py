@@ -17,7 +17,10 @@ def compile_verilog(codes, time_limit, seccomp=False):
         del codes["test.v"]
     else:
         log.warning("cannot found 'test.v'")
-        raise
+        return CompilationResult(
+            compiled=False,
+            msg="cannot found 'test.v'",
+            programPath="")
     try:
         #print(codes.keys())
         for file, code in codes.items():
@@ -25,7 +28,8 @@ def compile_verilog(codes, time_limit, seccomp=False):
             code_file.write(code)
             code_file.close()
     except IOError:
-        msg += "Failed to create the file\n"
+        msg = "Failed to create the file\n"
+        log.error(msg)
         return CompilationResult(
             compiled=False,
             msg=msg,
@@ -34,9 +38,9 @@ def compile_verilog(codes, time_limit, seccomp=False):
         msg += str(e) + "\n"
         return CompilationResult(
             compiled=False,
-            msg=msg + "Unknown Error!\n",
+            msg="Unknown Error!\n",
             programPath="")
-
+            
     try:
         parameter = ["iverilog", source, "-o", program]
         process = subprocess.run(

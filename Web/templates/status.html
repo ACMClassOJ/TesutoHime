@@ -3,7 +3,7 @@
 {% set page='Status' %}
 
 {% block head %}
-    <link rel="stylesheet" href="https://cdn2.yukisaki.io:41053/oj_cdn/bootstrap/bootstrap-select.min.css">
+    <link rel="stylesheet" href="https://cdn2.yukisaki.io:51391/oj_cdn/bootstrap/bootstrap-select.min.css">
 {% endblock %}
 
 {% block content %}
@@ -35,6 +35,7 @@
                     <option value="-1" {{ "selected" if "lang" in Args and Args["lang"]=="-1" }}>All</option>
                     <option value="0" {{ "selected" if "lang" in Args and Args["lang"]=="0" }}>C++</option>
                     <option value="1" {{ "selected" if "lang" in Args and Args["lang"]=="1" }}>Git</option>
+                    <option value="2" {{ "selected" if "lang" in Args and Args["lang"]=="2" }}>Verilog</option>
                 </select>
                 <div class="input-group-append">
                     <button class="btn btn-primary">搜索</button>
@@ -129,5 +130,5 @@
 {% endblock %}
 
 {% block script %}
-    <script src="https://cdn2.yukisaki.io:41053/oj_cdn/bootstrap/bootstrap-select.min.js"></script>
+    <script src="https://cdn2.yukisaki.io:51391/oj_cdn/bootstrap/bootstrap-select.min.js"></script>
 {% endblock %}

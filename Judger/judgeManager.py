@@ -17,8 +17,8 @@ class JudgeManager:
         srcDict = {}
 
         # begin 2021 2 24 cxy
-        if "SupportFiles" in problemConfig:
-            for fileName in problemConfig.SupportFiles:
+        if "SupportedFiles" in problemConfig._asdict():
+            for fileName in problemConfig.SupportedFiles:
                 try:
                     with open(dataPath + '/' + fileName) as f:
                         srcDict[fileName] = f.read()
@@ -58,6 +58,7 @@ class JudgeManager:
                         else:
                             Runnable = True
                         if Runnable:
+                            #print(srcDict.keys())
                             compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
                             if not compileResult.compiled:
                                 print('Compilation Error')
@@ -87,12 +88,13 @@ class JudgeManager:
                         if testPointDetail.result == ResultType.UNKNOWN:
                             if problemConfig.SPJ == 1:
                                 try:
+                                    subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'])
                                     subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20)
                                     with open('score.log') as f:
                                         testPointDetail.score = float("\n".join(f.readline().splitlines()))
                                     testPointDetail.result = ResultType.WA if testPointDetail.score == 0 else ResultType.AC
                                     with open('message.log') as f:
-                                        testPointDetail.message += f.readline().splitlines()
+                                        testPointDetail.message.join(f.readline().splitlines())
                                 except Exception as e:
                                     print(e)
                                     testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while running SPJ.', ResultType.SYSERR

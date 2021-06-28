@@ -48,7 +48,8 @@ def validate(username: Optional['str'] = None, password: Optional['str'] = None,
 def readable_lang(lang: int) -> str:
     lang_str = {
         0: 'C++',
-        1: 'Git'
+        1: 'Git',
+        2: 'Verilog'
     }
     try:
         return lang_str[lang]
@@ -240,7 +241,15 @@ def submit_problem():
                 int(problem_id)) and Login_Manager.get_privilege() < Privilege.ADMIN:
             return '-1'
         username = Login_Manager.get_username()
-        lang = 0 if str(request.form.get('lang')) == 'cpp' else 1  # cpp or git
+        lang = -1
+        lang_request_str = str(request.form.get('lang'))
+        if lang_request_str == 'cpp': 
+            lang = 0
+        else if lang_request_str == 'git':
+            lang = 1
+        else if lang_request_str == 'verilog':
+            lang = 2
+        # cpp or git or verilog
         user_code = request.form.get('code')
         if len(str(user_code)) > ProblemConfig.Max_Code_Length:
             return '-1'

@@ -32,6 +32,7 @@ def compile_cpp(codes, time_limit, seccomp=False):
         codes[source] = codes["main.cpp"]
         del codes["main.cpp"]
     try:
+        #print(codes.keys())
         for file, code in codes.items():
             code_file = open(os.path.join(path, file), "w")
             code_file.write(code)

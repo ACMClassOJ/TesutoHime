@@ -3,7 +3,7 @@
 {% set page="Admin" %}
 
 {% block head %}
-    <link rel="stylesheet" href="https://cdn2.yukisaki.io:41053/oj_cdn/bootstrap/bootstrap-select.min.css">
+    <link rel="stylesheet" href="https://cdn2.yukisaki.io:51391/oj_cdn/bootstrap/bootstrap-select.min.css">
 {% endblock %}
 
 {% block content %}
@@ -119,11 +119,11 @@
                     <input class="form-control" type="text" name="name" id="iptContestName">
                 </div>
                 <div class="form-group col-md-3">
-                    <label for="iptStartTime"> Start Time </label>
+                    <label for="iptStartTime"> Start Time (YYYY-MM-DDThh:mm:ss) </label>
                     <input class="form-control" type="datetime-local" name="start_time" id="iptStartTime">
                 </div>
                 <div class="form-group col-md-3">
-                    <label for="iptEndTime"> End Time </label>
+                    <label for="iptEndTime"> End Time (YYYY-MM-DDThh:mm:ss) </label>
                     <input class="form-control" type="datetime-local" name="end_time" id="iptEndTime">
                 </div>
                 <div class="form-group col-md-3">
@@ -177,7 +177,7 @@
                     <input class="form-control" type="number" name="id" id="iptDataProblemID">
                 </div>
                 <div class="form-group col-md-3 mb-3">
-                    <label for="iptCompileTime"> Compile Time Limit </label>
+                    <label for="iptCompileTime"> Compile Time Limit (ms) </label>
                     <input class="form-control" type="number" name="time" id="iptCompileTime">
                 </div>
                 <div class="form-group col-md-3 mb-3">
@@ -249,9 +249,9 @@
                     <tr>
                         <th scope="col">ID</th>
                         <th scope="col">Dependency</th>
-                        <th scope="col">Time Limit</th>
-                        <th scope="col">Memory Limit</th>
-                        <th scope="col">Disk Limit</th>
+                        <th scope="col">Time Limit (ms)</th>
+                        <th scope="col">Memory Limit (Byte)</th>
+                        <th scope="col">Disk Limit (Byte)</th>
                         <th scope="col">Valgrind</th>
                     </tr>
                     </thead>
@@ -282,8 +282,8 @@
     </div>
 {% endblock %}
 {% block script %}
-    <script src="https://cdn2.yukisaki.io:41053/oj_cdn/bootstrap/bootstrap-select.min.js"></script>
-    <script src="https://cdn2.yukisaki.io:41053/oj_cdn/jszip/jszip.min.js"></script>
+    <script src="https://cdn2.yukisaki.io:51391/oj_cdn/bootstrap/bootstrap-select.min.js"></script>
+    <script src="https://cdn2.yukisaki.io:51391/oj_cdn/jszip/jszip.min.js"></script>
     <script>
         $.fn.serializeObject = function () {
             let data = {};

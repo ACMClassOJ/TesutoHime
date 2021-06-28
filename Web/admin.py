@@ -182,7 +182,7 @@ def data_upload():
         f = request.files['file']
         try:
             r = post(DataConfig.server + '/' + DataConfig.key + '/upload.php', files={'file': (f.filename, f)})
-            return {'e': 0, 'msg': r.content}
+            return {'e': 0, 'msg': r.content.decode('utf-8')}
         except RequestException:
             return ReturnCode.ERR_NETWORK_FAILURE
     return ReturnCode.ERR_BAD_DATA

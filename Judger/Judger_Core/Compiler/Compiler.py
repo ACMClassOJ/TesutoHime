@@ -4,31 +4,39 @@ from .compile_util import readonly_handler
 from .compile_const import WORK_DIR
 from .compile_cpp import compile_cpp
 from .compile_git import compile_git
+from .compile_verilog import compile_verilog
+from ...util import log # cxy 2021 6 28
 import os
 import shutil
 
-
 class Compiler(CompilerInterface):
     @staticmethod
+    def compile_verilog(code, time_limit):
+        log.info("Start Compiling.")
+        result = compile_verilog(code.copy(), time_limit)
+        log.info("Done.")
+        return result
+
+    @staticmethod
     def compile_cpp(code, time_limit):
-        print("Compiling...", end="")
+        log.info("Start Compiling.")
         if type(code) is str:
             code = {"main.cpp": code}
         result = compile_cpp(code.copy(), time_limit)
-        print("Done.")
+        log.info("Done.")
         return result
 
     @staticmethod
     def compile_git(url, time_limit):
-        print("Compiling...", end="")
+        log.info("Start Compiling.")
         if type(url) is dict:
             try:
                 url = url["main.cpp"]
             except Exception as e:
-                print(e)
+                log.error(str(e))
                 raise
         result = compile_git(url, time_limit)
-        print("Done.")
+        log.info("Done.")
         return result
 
     @staticmethod
@@ -38,7 +46,7 @@ class Compiler(CompilerInterface):
             if os.path.exists(path):
                 shutil.rmtree(path, onerror=readonly_handler)
         except Exception as e:
-            print(e)
+            log.error(str(e))
         os.mkdir(path)
 
     def CompileInstance(self, code_config: CompilationConfig):
@@ -50,6 +58,8 @@ class Compiler(CompilerInterface):
             return self.compile_cpp(source_code, time_limit)
         elif language == "git":
             return self.compile_git(source_code, time_limit)
+        elif language == "verilog":
+            return self.compile_verilog(source_code, time_limit)
         else:
             return CompilationResult(
                 compiled=False,

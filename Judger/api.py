@@ -7,7 +7,11 @@ from config import *
 from Judger_Data import get_data, ProblemConfig
 from types import SimpleNamespace
 from time import sleep
+from util import log # cxy 2021 6 28
+
 import os
+
+
 
 api = Flask('API')
 
@@ -62,7 +66,8 @@ def judge():
             try:
                 result = judgeManager.judge(problemConfig, dataPath, request.form.get('Lang'), request.form.get('Code'))
             except Exception as e:
-                print(e)
+                # print(e)
+                log.error(str(e))
                 result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during judging.") for testcase in problemConfig.Details], problemConfig)
         #print(result.Status)
         resultlist = make_result_list(result)

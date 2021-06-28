@@ -5,7 +5,7 @@ from .compile_const import WORK_DIR
 from .compile_cpp import compile_cpp
 from .compile_git import compile_git
 from .compile_verilog import compile_verilog
-from ...util import log # cxy 2021 6 28
+from ..util import log # cxy 2021 6 28
 import os
 import shutil
 
@@ -16,7 +16,7 @@ class Compiler(CompilerInterface):
         if type(code) is str:
             code = {"test.v": code}
         result = compile_verilog(code.copy(), time_limit)
-        log.info("Done.")
+        #log.info("Done.")
         return result
 
     @staticmethod
@@ -49,6 +49,7 @@ class Compiler(CompilerInterface):
                 shutil.rmtree(path, onerror=readonly_handler)
         except Exception as e:
             log.error(str(e))
+            pass
         os.mkdir(path)
 
     def CompileInstance(self, code_config: CompilationConfig):
@@ -60,7 +61,7 @@ class Compiler(CompilerInterface):
             return self.compile_cpp(source_code, time_limit)
         elif language == "git":
             return self.compile_git(source_code, time_limit)
-        elif language == "verilog":
+        elif language == "Verilog":
             return self.compile_verilog(source_code, time_limit)
         else:
             return CompilationResult(

@@ -27,10 +27,16 @@ class JudgeManager:
         # end
 
         if problemConfig.SPJ != 2 and problemConfig.SPJ != 3:
-            srcDict['main.cpp'] = sourceCode
+            if language == 'Verilog':
+                srcDict['test.v'] = sourceCode
+            else:
+                srcDict['main.cpp'] = sourceCode
             compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
         else:
-            srcDict['src.hpp'] = sourceCode
+            if language == 'Verilog':
+                srcDict['answer.v'] = sourceCode
+            else:
+                srcDict['src.hpp'] = sourceCode
         if problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and not compileResult.compiled:
             print('Compilation Error')
             #print(len(compileResult.msg))
@@ -45,12 +51,20 @@ class JudgeManager:
                     if problemConfig.SPJ == 2 or problemConfig.SPJ == 3:
                         Runnable = False
                         try:
-                            with open(dataPath + '/' + str(testcase.ID) + '.cpp') as f:
-                                srcDict['main.cpp'] = f.read()
+                            if language == 'Verilog':
+                                with open(dataPath + '/' + str(testcase.ID) + '.v') as f:
+                                    srcDict['test.v'] = f.read()
+                            else:
+                                with open(dataPath + '/' + str(testcase.ID) + '.cpp') as f:
+                                    srcDict['main.cpp'] = f.read()
                         except:
                             try:
-                                with open(dataPath + '/' + 'main.cpp') as f:
-                                    srcDict['main.cpp'] = f.read()
+                                if language == 'Verilog':
+                                    with open(dataPath + '/' + 'test.v') as f:
+                                        srcDict['test.v'] = f.read()
+                                else:
+                                    with open(dataPath + '/' + 'main.cpp') as f:
+                                        srcDict['main.cpp'] = f.read()
                             except:
                                 testPointDetail = DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'No main function found in data.')
                             else:
@@ -69,6 +83,7 @@ class JudgeManager:
                         #testPointDetail, userOutput
                         judgeProcess = multiprocessing.Process(target=ClassicJudger().JudgeInstance, args=(
                             TestPointConfig(
+                                'Verilog' if language == 'Verilog' else "C++",
                                 compileResult.programPath,
                                 None,
                                 '/dev/null' if problemConfig.SPJ == 2 else relatedFile + '.in',

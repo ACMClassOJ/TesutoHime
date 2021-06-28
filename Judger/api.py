@@ -7,7 +7,7 @@ from config import *
 from Judger_Data import get_data, ProblemConfig
 from types import SimpleNamespace
 from time import sleep
-from util import log # cxy 2021 6 28
+from Judger_Core.util import log # cxy 2021 6 28
 
 import os
 

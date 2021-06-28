@@ -245,9 +245,9 @@ def submit_problem():
         lang_request_str = str(request.form.get('lang'))
         if lang_request_str == 'cpp': 
             lang = 0
-        else if lang_request_str == 'git':
+        elif lang_request_str == 'git':
             lang = 1
-        else if lang_request_str == 'verilog':
+        elif lang_request_str == 'verilog':
             lang = 2
         # cpp or git or verilog
         user_code = request.form.get('code')

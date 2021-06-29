@@ -25,6 +25,10 @@ def readable_time(nano) -> str:
 def gen_page(cur_page: int, max_page: int):
     ret = []
     if cur_page != 1:
+        ret.append(['<<', 1, 0])
+    else:
+        ret.append(['<<', 1, -1])  # -1 for disabled
+    if cur_page != 1:
         ret.append(['<', cur_page - 1, 0])
     else:
         ret.append(['<', cur_page - 1, -1])  # -1 for disabled
@@ -57,6 +61,10 @@ def gen_page(cur_page: int, max_page: int):
         ret.append(['>', cur_page + 1, 0])
     else:
         ret.append(['>', cur_page + 1, -1])
+    if cur_page < max_page:
+        ret.append(['>>', max_page, 0])
+    else:
+        ret.append(['>>', max_page, -1])
     return ret
 
 

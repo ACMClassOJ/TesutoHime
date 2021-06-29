@@ -21,4 +21,15 @@ class TestCompiler:
         print(result.msg)
         #print(result.programPath)
 #TestCompiler().test_hpp()
-TestCompiler().test_git()
+    def test_verilog(self):
+        result = compiler.CompileInstance(CompilationConfig(
+            sourceCode={
+                "test.v":open("./Judger/Judger_Core/Compiler/test.v").read(),
+                "notgate.v":open("./Judger/Judger_Core/Compiler/notgate.v").read()
+            },
+            language="verilog",
+            compileTimeLimit=30000))
+        #print(result.compiled)
+        print(result.msg)
+
+TestCompiler().test_verilog()

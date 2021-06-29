@@ -10,6 +10,7 @@ class CompilationConfig:
 
 class TestPointConfig:
     def __init__(self,
+                 language: str,
                  programPath: str, # when traditional problem
                  userOutputFile, # when uploading problem
                  inputFile: str,
@@ -19,6 +20,7 @@ class TestPointConfig:
                  fileNumberLimit: int, # -1 if not need
                  valgrindTestOn: bool, # true if need checking memory leak
                  ):
+        self.language = language
         self.programPath = programPath
         self.userOutputFile = userOutputFile
         self.inputFile = inputFile

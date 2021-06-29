@@ -5,7 +5,6 @@ import os
 
 
 def compile_git(url: str, time_limit):
-
     path = WORK_DIR
     program = PROGRAM_NAME
     msg = ""

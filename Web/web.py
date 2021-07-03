@@ -245,11 +245,11 @@ def submit_problem():
         lang_request_str = str(request.form.get('lang'))
         if lang_request_str == 'cpp': 
             lang = 0
-        else if lang_request_str == 'git':
+        elif lang_request_str == 'git':
             lang = 1
-        else if lang_request_str == 'verilog':
+        elif lang_request_str == 'Verilog':
             lang = 2
-        # cpp or git or verilog
+        # cpp or git or Verilog
         user_code = request.form.get('code')
         if len(str(user_code)) > ProblemConfig.Max_Code_Length:
             return '-1'

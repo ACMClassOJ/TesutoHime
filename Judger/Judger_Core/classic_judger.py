@@ -48,7 +48,7 @@ class ClassicJudger(interface.JudgerInterface):
             else:
                 user_id = str(99942)
                 group_id = str(99958)
-                command = '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1' + \
+                command = 'vvp /exe/' + sub_config.programPath.split('/')[-1] + ' >' + self.output_file + ' 2>/dev/null' if sub_config.language == 'Verilog' else '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1' + \
                         ' --rlimit_fsize ' + ('inf' if sub_config.diskLimit == 0 else str(int(abs(sub_config.diskLimit) / 1048576 * 3 + 1))) + \
                         ' --rlimit_nofile ' + ('65536' if sub_config.fileNumberLimit == -1 else str(sub_config.fileNumberLimit * 3 + 1)) + \
                         ' --rlimit_stack inf' + \

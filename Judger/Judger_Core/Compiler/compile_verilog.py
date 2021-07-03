@@ -1,7 +1,7 @@
 from .compile_const import *
 from .compile_util import random_string
 from ..config import CompilationResult
-from ...util import log
+from ..util import log
 import subprocess
 import os
 

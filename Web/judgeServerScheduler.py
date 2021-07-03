@@ -31,10 +31,10 @@ class JudgeServerScheduler:
         lang_digit = int(Record[3])
         if lang_digit == 0:
             data['Lang'] = 'cpp'
-        else if lang_digit == 1:
+        elif lang_digit == 1:
             data['Lang'] = 'git'
-        else if lang_digit == 2:
-            data['Lang'] = 'verilog'
+        elif lang_digit == 2:
+            data['Lang'] = 'Verilog'
         data['Code'] = Record[2]
         for i in range(0, 3):
             re = requests.post(Server[0] + '/judge', data = data).content.decode() # Fixme: check self-signed SSL

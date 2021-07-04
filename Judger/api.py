@@ -46,6 +46,7 @@ def make_result_list(result: JudgerResult):
 @api.route('/judge', methods = ['POST'])
 def judge():
     Server_Secret, Judge_ID = request.form.get('Server_Secret'), request.form.get('Judge_ID')
+    log.info("Server_Secret = {}, Judge_ID = {}".format(Server_Secret, Judge_ID))
     if Master_Server_Secret != Server_Secret:
         return '-1'
     else:
@@ -54,6 +55,7 @@ def judge():
             return '0'
     judgepid = os.fork()
     if judgepid == 0:
+        log.info("start judging")
         open(busyFlag, 'w').close()
         try:
             problemConfig, dataPath = get_data(DataConfig, request.form.get('Problem_ID'))
@@ -64,6 +66,8 @@ def judge():
                 os.remove(timestampFile)
         else:
             try:
+                log.info(request.form.get('Code'))
+                #return '0'
                 result = judgeManager.judge(problemConfig, dataPath, request.form.get('Lang'), request.form.get('Code'))
             except Exception as e:
                 # print(e)

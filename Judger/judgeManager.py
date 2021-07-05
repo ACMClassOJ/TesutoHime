@@ -92,7 +92,7 @@ class JudgeManager:
                                 compileResult.programPath,
                                 None,
                                 #'/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
-                                '/dev/null' if problemConfig.SPJ == 2 else relatedFile + '.in',
+                                '/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
                                 testcase.TimeLimit,
                                 testcase.MemoryLimit,
                                 testcase.DiskLimit,

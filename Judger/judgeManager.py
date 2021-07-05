@@ -1,8 +1,10 @@
+from genericpath import exists
 from Judger_Core.config import *
 from JudgerResult import *
 from Judger_Core.Compiler.Compiler import compiler
 from Judger_Core.classic_judger import ClassicJudger
 from Judger_Data import ProblemConfig, Group, Detail
+from Judger_Core.util import log
 import multiprocessing
 import subprocess
 import os.path
@@ -37,8 +39,11 @@ class JudgeManager:
                 srcDict['answer.v'] = sourceCode
             else:
                 srcDict['src.hpp'] = sourceCode
+
+
+
         if problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and not compileResult.compiled:
-            print('Compilation Error')
+            log.error('Compilation Error')
             #print(len(compileResult.msg))
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(1, ResultType.CE, 0, 0, 0, -1, compileResult.msg)], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
         else:
@@ -75,7 +80,7 @@ class JudgeManager:
                             #print(srcDict.keys())
                             compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
                             if not compileResult.compiled:
-                                print('Compilation Error')
+                                log.error('Compilation Error')
                                 testPointDetail = DetailResult(testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg)
                                 Runnable = False
                     if Runnable:
@@ -86,7 +91,8 @@ class JudgeManager:
                                 'Verilog' if language == 'Verilog' else "C++",
                                 compileResult.programPath,
                                 None,
-                                '/dev/null' if problemConfig.SPJ == 2 else relatedFile + '.in',
+                                #'/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
+                                '/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
                                 testcase.TimeLimit,
                                 testcase.MemoryLimit,
                                 testcase.DiskLimit,
@@ -95,7 +101,7 @@ class JudgeManager:
                             ),
                                 return_dict)
                         )
-                        print("start judging on testcase" + str(testcase.ID))
+                        log.info("start judging on testcase" + str(testcase.ID))
                         judgeProcess.start()
                         judgeProcess.join()
                         testPointDetail, userOutput = return_dict['testPointDetail'], return_dict['userOutput']
@@ -107,22 +113,22 @@ class JudgeManager:
                                     subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20)
                                     with open('score.log') as f:
                                         testPointDetail.score = float("\n".join(f.readline().splitlines()))
-                                    testPointDetail.result = ResultType.WA if testPointDetail.score == 0 else ResultType.AC
+                                    testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC
                                     with open('message.log') as f:
                                         testPointDetail.message.join(f.readline().splitlines())
                                 except Exception as e:
-                                    print(e)
+                                    log.error(e)
                                     testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while running SPJ.', ResultType.SYSERR
                             elif problemConfig.SPJ == 2:
                                 try:
                                     with open(userOutput) as f:
                                         return_list = f.read().splitlines()
                                         testPointDetail.score = float(return_list[0])
-                                        testPointDetail.result = ResultType.WA if testPointDetail.score == 0 else ResultType.AC
+                                        testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC
                                         for i in range(1, len(return_list)):
                                             testPointDetail.message += return_list[i] + '\n'
                                 except Exception as e:
-                                    print(e)
+                                    log.error(e)
                                     testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, "Something must be wrong with main.cpp.", ResultType.SYSERR
                             else:
                                 try:
@@ -137,7 +143,7 @@ class JudgeManager:
                                         testPointDetail.score, testPointDetail.result = 0.0, ResultType.WA
                                         #testPointDetail.message += runDiff.stdout.decode() + runDiff.stderr.decode()
                                 except Exception as e:
-                                    print(e)
+                                    log.error(e)
                                     testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while comparing outputs.', ResultType.SYSERR
                         else:
                             testPointDetail.score = 0.
@@ -185,11 +191,11 @@ class JudgeManager:
                     judgeResult = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'Scorer timeout.\n') for testcase in problemConfig.Details], problemConfig)
                 else:
                     score = process.stdout.decode()
-                    print(process.stderr.decode())
+                    log.info(process.stderr.decode())
                     judgeResult = JudgerResult(status, score, totalTime, maxMem, Details, problemConfig)
         #print("One",judgeResult.Status,judgeResult.TimeUsed,judgeResult.MemUsed)
-        #for i in judgeResult.Details:
-            #print(i.ID,i.result,i.score,i.time,i.memory,i.disk,i.message)
+        for i in judgeResult.Details:
+            log.info(str(i.ID) + ' ' + str(i.result) + ' ' + str(i.score) + ' ' + str(i.time) + ' ' + str(i.memory) + ' ' + str(i.disk) + ' ' + str(i.message))
         return judgeResult
 
 

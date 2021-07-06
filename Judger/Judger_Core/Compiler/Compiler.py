@@ -11,7 +11,7 @@ import shutil
 
 class Compiler(CompilerInterface):
     @staticmethod
-    def compile_verilog(code, time_limit):
+    def compile_verilog(code, time_limit, sandboxOn):
         log.info("Start Compiling.")
         if type(code) is str:
             code = {"test.v": code}
@@ -20,7 +20,7 @@ class Compiler(CompilerInterface):
         return result
 
     @staticmethod
-    def compile_cpp(code, time_limit):
+    def compile_cpp(code, time_limit, sandboxOn):
         log.info("Start Compiling.")
         if type(code) is str:
             code = {"main.cpp": code}
@@ -29,7 +29,7 @@ class Compiler(CompilerInterface):
         return result
 
     @staticmethod
-    def compile_git(url, time_limit):
+    def compile_git(url, time_limit, sandboxOn):
         log.info("Start Compiling.")
         if type(url) is dict:
             try:
@@ -37,7 +37,7 @@ class Compiler(CompilerInterface):
             except Exception as e:
                 log.error(str(e))
                 raise
-        result = compile_git(url, time_limit)
+        result = compile_git(url, time_limit, sandboxOn)
         log.info("Done.")
         return result
 
@@ -58,11 +58,11 @@ class Compiler(CompilerInterface):
         time_limit = code_config.compileTimeLimit / 1000.0
         Compiler.clear()
         if language == "c++" or language == "cpp" or language == "C++":
-            return self.compile_cpp(source_code, time_limit)
+            return self.compile_cpp(source_code, time_limit, code_config.sandboxOn)
         elif language == "git":
-            return self.compile_git(source_code, time_limit)
+            return self.compile_git(source_code, time_limit, code_config.sandboxOn)
         elif language == "Verilog":
-            return self.compile_verilog(source_code, time_limit)
+            return self.compile_verilog(source_code, time_limit, code_config.sandboxOn)
         else:
             return CompilationResult(
                 compiled=False,

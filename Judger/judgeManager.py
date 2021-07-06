@@ -45,7 +45,7 @@ class JudgeManager:
                     srcDict['test.v'] = sourceCode
                 else:
                     srcDict['main.cpp'] = sourceCode
-                compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
+                compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit, False))
             else:
                 if language == 'Verilog':
                     srcDict['answer.v'] = sourceCode
@@ -54,7 +54,7 @@ class JudgeManager:
 
 
 
-        if problemConfig.SPJ != 5 and problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and not compileResult.compiled:
+        if problemConfig.SPJ != 5 and problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and problemConfig.SPJ != 4 and not compileResult.compiled:
             log.error('Compilation Error')
             #print(len(compileResult.msg))
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(1, ResultType.CE, 0, 0, 0, -1, compileResult.msg)], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
@@ -90,7 +90,7 @@ class JudgeManager:
                             Runnable = True
                         if Runnable:
                             #print(srcDict.keys())
-                            compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
+                            compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit, False))
                             if not compileResult.compiled:
                                 log.error('Compilation Error')
                                 testPointDetail = DetailResult(testcase.ID, Re5sultType.CE, 0, 0, 0, -1, compileResult.msg)
@@ -123,9 +123,13 @@ class JudgeManager:
                             testPointDetail.ID = testcase.ID
                         if testPointDetail.result == ResultType.UNKNOWN:
                             if problemConfig.SPJ == 1 or problemConfig.SPJ == 4 or problemConfig.SPJ == 5:
+                                print('start spj')
                                 try:
                                     subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
-                                    subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.ans', '/work/score.log', '/work/message.log'], timeout = 20, cwd = dataPath)
+                                    if os.path.isfile(relatedFile + '.ans'):
+                                        subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.ans', '/work/score.log', '/work/message.log'], timeout = 20, cwd = dataPath)
+                                    else:
+                                        subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.out', '/work/score.log', '/work/message.log'], timeout = 20, cwd = dataPath)
                                     with open('/work/score.log') as f:
                                         testPointDetail.score = float("\n".join(f.readline().splitlines()))
                                     testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC

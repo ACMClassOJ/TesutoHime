@@ -36,7 +36,9 @@ class JudgeManager:
         # spj 5 output only
 
         if problemConfig.SPJ == 5:
-            userOutput = sourceCode # to do: write into /work/output.txt
+            with open(outputFilePath, "w") as f:
+                f.write(sourceCode)
+            userOutput = outputFilePath
         else:
             if problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and problemConfig.SPJ != 4:
                 if language == 'Verilog':
@@ -52,7 +54,7 @@ class JudgeManager:
 
 
 
-        if problemConfig.SPj != 5 and problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and not compileResult.compiled:
+        if problemConfig.SPJ != 5 and problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and not compileResult.compiled:
             log.error('Compilation Error')
             #print(len(compileResult.msg))
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(1, ResultType.CE, 0, 0, 0, -1, compileResult.msg)], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
@@ -91,13 +93,13 @@ class JudgeManager:
                             compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
                             if not compileResult.compiled:
                                 log.error('Compilation Error')
-                                testPointDetail = DetailResult(testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg)
+                                testPointDetail = DetailResult(testcase.ID, Re5sultType.CE, 0, 0, 0, -1, compileResult.msg)
                                 Runnable = False
                     if Runnable:
+                        relatedFile = dataPath + '/' + str(testcase.ID)
                         if problemConfig.SPJ == 5:
                             testPointDetail = DetailResult(testcase.ID, ResultType.UNKNOWN, 0, 0, 0, -1, '')
                         else:
-                            relatedFile = dataPath + '/' + str(testcase.ID)
                             #testPointDetail, userOutput
                             judgeProcess = multiprocessing.Process(target=ClassicJudger().JudgeInstance, args=(
                                 TestPointConfig(
@@ -122,12 +124,12 @@ class JudgeManager:
                         if testPointDetail.result == ResultType.UNKNOWN:
                             if problemConfig.SPJ == 1 or problemConfig.SPJ == 4 or problemConfig.SPJ == 5:
                                 try:
-                                    subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'])
-                                    subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20)
-                                    with open('score.log') as f:
+                                    subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
+                                    subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.ans', '/work/score.log', '/work/message.log'], timeout = 20, cwd = dataPath)
+                                    with open('/work/score.log') as f:
                                         testPointDetail.score = float("\n".join(f.readline().splitlines()))
                                     testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC
-                                    with open('message.log') as f:
+                                    with open('/work/message.log') as f:
                                         testPointDetail.message.join(f.readline().splitlines())
                                 except Exception as e:
                                     log.error(e)
@@ -199,11 +201,14 @@ class JudgeManager:
                         inputString += str(len(group.TestPoints)) + ' ' + str(group.GroupScore) + ' '
                         for testPoint in group.TestPoints:
                             inputString += str(testPoint) + ' '
-                    process = subprocess.run(dataPath + '/scorer.py', stdin = inputString, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20)
+                    with open('/work/score.in', 'w') as f:
+                        f.write(inputString)
+                    with open('/work/score.in', 'r') as f:
+                        process = subprocess.run(['python', 'scorer.py'], stdin = f, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20, cwd = dataPath)
                 except subprocess.TimeoutExpired:
                     judgeResult = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'Scorer timeout.\n') for testcase in problemConfig.Details], problemConfig)
                 else:
-                    score = process.stdout.decode()
+                    score = float(process.stdout.decode())
                     log.info(process.stderr.decode())
                     judgeResult = JudgerResult(status, score, totalTime, maxMem, Details, problemConfig)
         #print("One",judgeResult.Status,judgeResult.TimeUsed,judgeResult.MemUsed)

@@ -1,3 +1,5 @@
+outputFilePath = '/work/output.txt'
+
 class CompilationConfig:
     def __init__(self,
                  sourceCode, # str for single code / dict for several files { file_name : source_code }

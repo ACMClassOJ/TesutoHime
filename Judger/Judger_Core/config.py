@@ -1,12 +1,16 @@
+outputFilePath = '/work/output.txt'
+
 class CompilationConfig:
     def __init__(self,
                  sourceCode, # str for single code / dict for several files { file_name : source_code }
                  language: str,
-                 compileTimeLimit: int
+                 compileTimeLimit: int,
+                 sandboxOn: bool
                  ):
         self.sourceCode = sourceCode
         self.language = language
         self.compileTimeLimit = compileTimeLimit
+        self.sandboxOn = sandboxOn
 
 class TestPointConfig:
     def __init__(self,

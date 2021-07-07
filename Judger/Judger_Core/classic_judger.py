@@ -15,7 +15,7 @@ class ClassicJudger(interface.JudgerInterface):
         self.chroot_path = '/tmp/chroot'
         self.workspace_path = '/work/'
         self.exe_path = '/exe/'
-        self.output_file = '/work/output.txt'
+        self.output_file = conf.outputFilePath
 
     def JudgeInstance(self, sub_config: conf.TestPointConfig, return_dict):
 

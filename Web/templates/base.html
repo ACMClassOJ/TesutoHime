@@ -6,15 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TesutoHime · {{ page }}</title>
     <link rel="shortcut icon" href="favicon.ico">
-    <link href="{{ url_for('static', filename = 'lib/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename = 'style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('.static', filename = 'lib/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('.static', filename = 'style.css') }}" rel="stylesheet">
     {% block head %}{% endblock %}
 </head>
 
 <body class="bg-secondary">
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary py-2 mb-3">
     <div class="container">
-        <a class="navbar-brand" href="/">ACM Class OnlineJudge 2020</a>
+        <a class="navbar-brand" href="/OnlineJudge/">ACM Class OnlineJudge 2020</a>
         <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarContent">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -34,18 +34,18 @@
                 </div>
             </div>
             <ul class="navbar-nav" style="line-height: 1;">
-                <li class="nav-item"><a href="/problems" class="nav-link">题库</a></li>
-                <li class="nav-item"><a href="/contest" class="nav-link">比赛</a></li>
-                <li class="nav-item"><a href="/homework" class="nav-link">作业</a></li>
-                <li class="nav-item"><a href="/status" class="nav-link">评测状态</a></li>
+                <li class="nav-item"><a href="/OnlineJudge/problems" class="nav-link">题库</a></li>
+                <li class="nav-item"><a href="/OnlineJudge/contest" class="nav-link">比赛</a></li>
+                <li class="nav-item"><a href="/OnlineJudge/homework" class="nav-link">作业</a></li>
+                <li class="nav-item"><a href="/OnlineJudge/status" class="nav-link">评测状态</a></li>
                 {% if is_Admin %}
-                    <li class="nav-item"><a href="/admin" class="nav-link">管理</a></li>
+                    <li class="nav-item"><a href="/OnlineJudge/admin" class="nav-link">管理</a></li>
                 {% endif %}
-                <li class="nav-item"><a href="/about" class="nav-link">关于</a></li>
+                <li class="nav-item"><a href="/OnlineJudge/about" class="nav-link">关于</a></li>
                 {% if friendlyName=='' -%}
                     <li class="dropdown-divider"></li>
-                    <li class="d-block d-lg-none nav-link"><a href="/login">登录</a></li>
-                    <li class="d-block d-lg-none nav-link"><a href="/register">注册</a></li>
+                    <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/login">登录</a></li>
+                    <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/register">注册</a></li>
                 {%- endif %}
             </ul>
             <ul class="navbar-nav ml-lg-auto" style="line-height: 1;">
@@ -53,15 +53,15 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ friendlyName }}</a>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" href="/profile">个人信息</a>
+                            <a class="dropdown-item" href="/OnlineJudge/profile">个人信息</a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="/logout">注销</a>
+                            <a class="dropdown-item" href="/OnlineJudge/logout">注销</a>
                         </div>
                     </li>
                 {% else -%}
                     <li class="d-none d-lg-block">
-                        <a class="btn btn-neutral" href="/login">登录</a>
-                        <a class="btn btn-neutral" href="/register">注册</a>
+                        <a class="btn btn-neutral" href="/OnlineJudge/login">登录</a>
+                        <a class="btn btn-neutral" href="/OnlineJudge/register">注册</a>
                     </li>
                 {%- endif %}
             </ul>
@@ -84,10 +84,10 @@
 </footer>
 </body>
 
-<script src="{{ url_for('static', filename = 'lib/jquery.min.js') }}"></script>
-<script src="{{ url_for('static', filename = 'lib/popper.min.js') }}"></script>
-<script src="{{ url_for('static', filename = 'lib/bootstrap.min.js') }}"></script>
-<script src="{{ url_for('static', filename = 'lib/jquery.form.js') }}"></script>
-<script src="{{ url_for('static', filename = 'lib/sweetalert.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/jquery.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/popper.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/jquery.form.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/sweetalert.min.js') }}"></script>
 {% block script %}{% endblock %}
 </html>

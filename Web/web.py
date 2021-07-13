@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, make_response, abort, send_from_directory
+from flask import Flask, Blueprint, request, render_template, redirect, make_response, abort, send_from_directory
 from uuid import uuid4
 import re
 from typing import Optional
@@ -21,10 +21,9 @@ import os
 from const import Privilege, ReturnCode
 from tracker import tracker
 
-web = Flask('WEB')
+web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
 web.register_blueprint(api, url_prefix='/api')
-
 
 def validate(username: Optional['str'] = None, password: Optional['str'] = None, friendly_name: Optional['str'] = None,
              student_id: Optional['str'] = None) -> int:
@@ -78,7 +77,6 @@ def index():
 @web.route('/index.html')
 def index2():
     return redirect('/')
-
 
 @web.route('/api/get_username', methods=['POST'])
 def get_username():
@@ -622,3 +620,6 @@ def feed():
 def favicon():
     return send_from_directory(os.path.join(web.root_path, 'static'), 'favicon.ico',
                                mimetype='image/vnd.microsoft.icon')
+
+oj = Flask('WEB')
+oj.register_blueprint(web, url_prefix='/OnlineJudge')

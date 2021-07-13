@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TesutoHime · {{ page }}</title>
     <link rel="shortcut icon" href="favicon.ico">
-    <link href="https://cdn2.yukisaki.io:51391/oj_cdn/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn2.yukisaki.io:51391/oj_cdn/argon/css/style.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename = 'lib/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename = 'style.css') }}" rel="stylesheet">
     {% block head %}{% endblock %}
 </head>
 
@@ -78,17 +78,16 @@
             <a href='https://github.com/cmd2001/Open-TesutoHime/' target='_blank'> TesutoHime</a>
         </p>
         <p>
-            备案号：<a href='https://beian.miit.gov.cn/#/Integrated/recordQuery' target='_blank'>沪ICP备2020031263号-1</a>
+            备案号：<a href='https://beian.miit.gov.cn/#/Integrated/recordQuery' target='_blank'>???</a>
         </p>
     </div>
 </footer>
 </body>
 
-<script src="https://cdn2.yukisaki.io:51391/oj_cdn/jquery/jquery.min.js"></script>
-<script src="https://cdn2.yukisaki.io:51391/oj_cdn/bootstrap/popper.min.js"></script>
-<script src="https://cdn2.yukisaki.io:51391/oj_cdn/bootstrap/bootstrap.min.js"></script>
-<script src="https://cdn2.yukisaki.io:51391/oj_cdn/jquery/jquery.form.js"></script>
-<script src="https://cdn2.yukisaki.io:51391/oj_cdn/sweetalert/sweetalert.min.js"></script>
+<script src="{{ url_for('static', filename = 'lib/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename = 'lib/popper.min.js') }}"></script>
+<script src="{{ url_for('static', filename = 'lib/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename = 'lib/jquery.form.js') }}"></script>
+<script src="{{ url_for('static', filename = 'lib/sweetalert.min.js') }}"></script>
 {% block script %}{% endblock %}
-<script src="https://pingjs.qq.com/h5/stats.js?v2.0.4" name="MTAH5" sid="500731541" cid="500731570"></script>
 </html>

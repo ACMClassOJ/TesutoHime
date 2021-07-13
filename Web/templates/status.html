@@ -3,7 +3,7 @@
 {% set page='Status' %}
 
 {% block head %}
-    <link rel="stylesheet" href="https://cdn2.yukisaki.io:51391/oj_cdn/bootstrap/bootstrap-select.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/bootstrap-select.min.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -130,5 +130,5 @@
 {% endblock %}
 
 {% block script %}
-    <script src="https://cdn2.yukisaki.io:51391/oj_cdn/bootstrap/bootstrap-select.min.js"></script>
+    <script src="{{ url_for('static', filename = 'lib/bootstrap-select.min.js') }}"></script>
 {% endblock %}

@@ -57,7 +57,7 @@ class Compiler(CompilerInterface):
         language = code_config.language
         time_limit = code_config.compileTimeLimit / 1000.0
         Compiler.clear()
-        if language == "c++" or language == "cpp":
+        if language == "c++" or language == "cpp" or language == "C++":
             return self.compile_cpp(source_code, time_limit)
         elif language == "git":
             return self.compile_git(source_code, time_limit)

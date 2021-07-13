@@ -15,6 +15,7 @@ def try_cache(config, id: int) -> int:
         timestamp = int(r.text)
     except:
         timestamp = -1
+    print(id, timestamp, local_timestamp)
     if timestamp > local_timestamp:
         return 1
     if timestamp == -1 and local_timestamp == 0:

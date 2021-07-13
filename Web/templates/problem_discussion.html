@@ -3,9 +3,9 @@
 {% set page='Discussion' %}
 
 {% block head %}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/styles/github.min.css">
-    <link rel="stylesheet" href="https://cdn2.yukisaki.io:51391/oj_cdn/editor.md/css/editormd.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/katex.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/github.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/editormd.min.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -53,11 +53,11 @@
 {% endblock %}
 
 {% block script %}
-    <script src="https://cdn2.yukisaki.io:51391/oj_cdn/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/highlight.min.js"></script>
-    <script src="https://cdn2.yukisaki.io:51391/oj_cdn/editor.md/editormd.min.js"></script>
+    <script src="{{ url_for('static', filename = 'lib/marked.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'lib/katex.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'lib/auto-render.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'lib/highlight.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'lib/marked.min.js') }}"></script>
     <script>
         let discuss = {
         {% for row in Discuss if row[4] %}

@@ -4,16 +4,14 @@
 
 {% block content %}
     <div class="jumbotron bg-white">
-        <h1>Welcome to TesutoHime</h1>
-        <h4>ACM Class OnlineJudge 2020</h4>
+        <h1>Welcome to ACM Class OnlineJudge</h1>
         <hr class="my-4">
         <h4>Compiler Options:</h4>
-        <p>C++：<code>g++ code.cpp -o code -lm -O2 -DONLINE_JUDGE</code></p>
+        <p>C++：<code>g++ code.cpp -o code -fmax-errors=10 -O2 -DONLINE_JUDGE -lm -std=c++17</code></p>
         <p>Git：<code>cmake . && make</code></p>
-        <p class="text-muted">Everything in the world is designed to END.</p>
+        <p>Verilog：<code>iverlog answer.v -o code</code></p>
         <hr class="my-4">
         <a class="btn btn-lg btn-primary mb-3" href="/problems">Challenge</a>
         <a class="btn btn-lg btn-warning mb-3" href="/about">About</a>
-        <a class="btn btn-lg btn-default mb-3"  href="/feed">Feed</a>
     </div>
 {% endblock %}

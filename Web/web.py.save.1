@@ -21,7 +21,7 @@ import os
 from const import Privilege, ReturnCode
 from tracker import tracker
 
-web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
+web = Blueprint('web', __name__, )
 web.register_blueprint(admin, url_prefix='/admin')
 web.register_blueprint(api, url_prefix='/api')
 
@@ -149,8 +149,8 @@ def login():
 @web.route('/logout')
 def logout():
     if not Login_Manager.check_user_status():
-        return redirect('/OnlineJudge/')
-    ret = make_response(redirect('/OnlineJudge/'))
+        return redirect('/')
+    ret = make_response(redirect('/'))
     ret.delete_cookie('Login_ID')
     return ret
 

@@ -3,8 +3,8 @@
 {% set page=Title %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/katex.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/github.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/katex.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -28,20 +28,20 @@
     <br>
     <div class="row">
         <div class="btn-group m-auto">
-            <a href="/submit?problem_id={{ ID }}" class="btn btn-primary"> 提交 </a>
-            <a href="/status?problem_id={{ ID }}" class="btn btn-info"> 评测状态 </a>
+            <a href="/OnlineJudge/submit?problem_id={{ ID }}" class="btn btn-primary"> 提交 </a>
+            <a href="/OnlineJudge/status?problem_id={{ ID }}" class="btn btn-info"> 评测状态 </a>
             {% if not In_Contest -%}
-                <a href="/discuss?problem_id={{ ID }}" class="btn btn-success"> 讨论 </a>
-                <a href="/rank?problem_id={{ ID }}" class="btn btn-light"> 排行榜 </a>
+                <a href="/OnlineJudge/discuss?problem_id={{ ID }}" class="btn btn-success"> 讨论 </a>
+                <a href="/OnlineJudge/rank?problem_id={{ ID }}" class="btn btn-light"> 排行榜 </a>
             {%- endif %}
         </div>
     </div>
 {% endblock %}
 
 {% block script %}
-    <script src="{{ url_for('static', filename = 'lib/marked.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'lib/katex.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'lib/auto-render.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'lib/highlight.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'js/problem_details.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/katex.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/auto-render.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'js/problem_details.js') }}"></script>
 {% endblock %}

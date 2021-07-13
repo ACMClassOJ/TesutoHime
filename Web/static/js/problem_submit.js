@@ -33,7 +33,7 @@ $(function () {
             {
                 swal("Success", "提交成功", "success");
                 setTimeout(function () {
-                    window.location.replace('/status');
+                    window.location.replace('/OnlineJudge/status');
                 }, 500);
             }
             else

@@ -3,7 +3,7 @@
 {% set page="Admin" %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/bootstrap-select.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -282,8 +282,8 @@
     </div>
 {% endblock %}
 {% block script %}
-    <script src="{{ url_for('static', filename = 'lib/bootstrap-select.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'lib/jszip.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/jszip.min.js') }}"></script>
     <script>
         $.fn.serializeObject = function () {
             let data = {};
@@ -319,7 +319,7 @@
                 $.ajax({
                     type: "POST",
                     contentType: "application/json",
-                    url: "/admin/user",
+                    url: "/OnlineJudge/admin/user",
                     dataType: "json",
                     data: JSON.stringify(data),
                     complete: function (ret) {
@@ -348,7 +348,7 @@
                 $.ajax({
                     type: "POST",
                     contentType: "application/json",
-                    url: "/admin/problem",
+                    url: "/OnlineJudge/admin/problem",
                     dataType: "json",
                     data: JSON.stringify(data),
                     complete: function (ret) {
@@ -392,7 +392,7 @@
                 $.ajax({
                     type: "POST",
                     contentType: "application/json",
-                    url: "/admin/contest",
+                    url: "/OnlineJudge/admin/contest",
                     dataType: "json",
                     data: JSON.stringify(data),
                     complete: function (ret) {
@@ -479,7 +479,7 @@
                     data.append("file", blob, id + ".zip");
                     console.log(data);
                     $.ajax({
-                        url: "/admin/data",
+                        url: "/OnlineJudge/admin/data",
                         type: "POST",
                         processData: false,
                         contentType: false,

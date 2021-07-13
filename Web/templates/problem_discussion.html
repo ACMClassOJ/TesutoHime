@@ -3,9 +3,9 @@
 {% set page='Discussion' %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/katex.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/github.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/editormd.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/katex.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/editormd.min.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -14,8 +14,8 @@
             <h1 class="my-auto"> {{ Problem_ID }}. {{ Title }} </h1>
             <div class="btn-group float-right ml-auto my-auto">
                 <a href="javascript:void(0)" class="btn btn-primary" id="btnSort">正序 <i class="fa fa-sort-down"></i></a>
-                <a href="/problem?problem_id={{ Problem_ID }}" class="btn btn-warning"> 题面 </a>
-                <a href="/rank?problem_id={{ Problem_ID }}" class="btn btn-light"> 排行榜 </a>
+                <a href="/OnlineJudge/problem?problem_id={{ Problem_ID }}" class="btn btn-warning"> 题面 </a>
+                <a href="/OnlineJudge/rank?problem_id={{ Problem_ID }}" class="btn btn-light"> 排行榜 </a>
             </div>
         </div>
     </div>
@@ -53,11 +53,11 @@
 {% endblock %}
 
 {% block script %}
-    <script src="{{ url_for('static', filename = 'lib/marked.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'lib/katex.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'lib/auto-render.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'lib/highlight.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'lib/marked.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/katex.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/auto-render.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
     <script>
         let discuss = {
         {% for row in Discuss if row[4] %}
@@ -92,7 +92,7 @@
             $.ajax({
                 type: "POST",
                 contentType: "application/json",
-                url: "/discuss",
+                url: "/OnlineJudge/discuss",
                 dataType: "json",
                 data: JSON.stringify(data),
                 success: function (ret) {
@@ -223,7 +223,7 @@
                 $.ajax({
                     type: "POST",
                     contentType: "application/json",
-                    url: "/discuss",
+                    url: "/OnlineJudge/discuss",
                     dataType: "json",
                     data: JSON.stringify(data),
                     success: function (ret) {

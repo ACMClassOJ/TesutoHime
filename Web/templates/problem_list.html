@@ -16,7 +16,7 @@
                 {% for Problem in Problems -%}
                     <tr>
                         <th>{{ Problem[0] }}</th>
-                        <td><a href="/problem?problem_id={{ Problem[0] }}" target="_blank">{{ Problem[1] }}</a></td>
+                        <td><a href="/OnlineJudge/problem?problem_id={{ Problem[0] }}" target="_blank">{{ Problem[1] }}</a></td>
                     </tr>
                 {%- endfor %}
             </table>
@@ -26,11 +26,11 @@
                 {% for x in Pages -%}
                     {%- if x[2] == 1 -%}
                         <li class="page-item active">
-                            <a class="page-link btn-light" href="/problems?page={{ x[1] }}"> {{ x[0] }} </a>
+                            <a class="page-link btn-light" href="/OnlineJudge/problems?page={{ x[1] }}"> {{ x[0] }} </a>
                         </li>
                     {%- elif x[2] != -1 -%}
                         <li class="page-item">
-                            <a class="page-link btn-light" href="/problems?page={{ x[1] }}"> {{ x[0] }} </a>
+                            <a class="page-link btn-light" href="/OnlineJudge/problems?page={{ x[1] }}"> {{ x[0] }} </a>
                         </li>
                     {%- endif -%}
                 {%- endfor %}

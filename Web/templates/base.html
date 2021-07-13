@@ -1,55 +1,54 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TesutoHime · {{ page }}</title>
+    <title>ACMOJ · {{ page }}</title>
     <link rel="shortcut icon" href="favicon.ico">
     <link href="{{ url_for('.static', filename = 'lib/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('.static', filename = 'style.css') }}" rel="stylesheet">
-    {% block head %}{% endblock %}
+    <link href="{{ url_for('.static', filename = 'style.css') }}" rel="stylesheet"> {% block head %}{% endblock %}
 </head>
 
 <body class="bg-secondary">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary py-2 mb-3">
-    <div class="container">
-        <a class="navbar-brand" href="/OnlineJudge/">ACM Class OnlineJudge 2020</a>
-        <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarContent">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary py-2 mb-3">
+        <div class="container">
+            <a class="navbar-brand" href="/OnlineJudge/">ACM Class OnlineJudge</a>
+            <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarContent">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="navbar-collapse collapse" id="navbarContent">
-            <div class="navbar-collapse-header">
-                <div class="row">
-                    <div class="col-10 collapse-brand">
-                        <a href="/OnlineJudge/">ACM Class OnlineJudge 2020</a>
-                    </div>
-                    <div class="col-2 collapse-close">
-                        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse"
-                                data-target="#navbarContent">
+            <div class="navbar-collapse collapse" id="navbarContent">
+                <div class="navbar-collapse-header">
+                    <div class="row">
+                        <div class="col-10 collapse-brand">
+                            <a href="/OnlineJudge/">ACM Class OnlineJudge</a>
+                        </div>
+                        <div class="col-2 collapse-close">
+                            <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#navbarContent">
                             <span></span>
                             <span></span>
                         </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <ul class="navbar-nav" style="line-height: 1;">
-                <li class="nav-item"><a href="/OnlineJudge/problems" class="nav-link">题库</a></li>
-                <li class="nav-item"><a href="/OnlineJudge/contest" class="nav-link">比赛</a></li>
-                <li class="nav-item"><a href="/OnlineJudge/homework" class="nav-link">作业</a></li>
-                <li class="nav-item"><a href="/OnlineJudge/status" class="nav-link">评测状态</a></li>
-                {% if is_Admin %}
+                <ul class="navbar-nav" style="line-height: 1;">
+                    <li class="nav-item"><a href="/OnlineJudge/problems" class="nav-link">题库</a></li>
+                    <li class="nav-item"><a href="/OnlineJudge/contest" class="nav-link">比赛</a></li>
+                    <li class="nav-item"><a href="/OnlineJudge/homework" class="nav-link">作业</a></li>
+                    <li class="nav-item"><a href="/OnlineJudge/status" class="nav-link">评测状态</a></li>
+                    {% if is_Admin %}
                     <li class="nav-item"><a href="/OnlineJudge/admin" class="nav-link">管理</a></li>
-                {% endif %}
-                <li class="nav-item"><a href="/OnlineJudge/about" class="nav-link">关于</a></li>
-                {% if friendlyName=='' -%}
+                    {% endif %}
+                    <li class="nav-item"><a href="/OnlineJudge/about" class="nav-link">关于</a></li>
+                    {% if friendlyName=='' -%}
                     <li class="dropdown-divider"></li>
                     <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/login">登录</a></li>
                     <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/register">注册</a></li>
-                {%- endif %}
-            </ul>
-            <ul class="navbar-nav ml-lg-auto" style="line-height: 1;">
-                {% if friendlyName!='' -%}
+                    {%- endif %}
+                </ul>
+                <ul class="navbar-nav ml-lg-auto" style="line-height: 1;">
+                    {% if friendlyName!='' -%}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ friendlyName }}</a>
                         <div class="dropdown-menu dropdown-menu-right">
@@ -58,30 +57,27 @@
                             <a class="dropdown-item" href="/OnlineJudge/logout">注销</a>
                         </div>
                     </li>
-                {% else -%}
+                    {% else -%}
                     <li class="d-none d-lg-block">
                         <a class="btn btn-neutral" href="/OnlineJudge/login">登录</a>
                         <a class="btn btn-neutral" href="/OnlineJudge/register">注册</a>
                     </li>
-                {%- endif %}
-            </ul>
+                    {%- endif %}
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
-<main class="container" style="">
-    {% block content %}{% endblock %}
-</main>
-<footer class="footer">
-    <div class="container text-center">
-        <p class="mb-0">
-            ACM Class OnlineJudge © 2020 Powered By
-            <a href='https://github.com/cmd2001/Open-TesutoHime/' target='_blank'> TesutoHime</a>
-        </p>
-        <p>
-            备案号：<a href='https://beian.miit.gov.cn/#/Integrated/recordQuery' target='_blank'>???</a>
-        </p>
-    </div>
-</footer>
+    </nav>
+    <main class="container" style="">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">
+        <div class="container text-center">
+            <p class="mb-0">
+                ACM Class OnlineJudge © 2021 Powered By
+                <a href='https://github.com/cmd2001/Open-TesutoHime/' target='_blank'> TesutoHime</a>
+            </p>
+        </div>
+    </footer>
 </body>
 
 <script src="{{ url_for('.static', filename = 'lib/jquery.min.js') }}"></script>
@@ -90,4 +86,5 @@
 <script src="{{ url_for('.static', filename = 'lib/jquery.form.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/sweetalert.min.js') }}"></script>
 {% block script %}{% endblock %}
+
 </html>

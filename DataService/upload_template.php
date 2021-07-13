@@ -1,5 +1,5 @@
 <?php
-$dir = '/home/cong/OJ/data';
+$dir = 'data_directory';
 $id = basename($_FILES['file']['name'], '.zip');
 if (!preg_match('/^\d+$/', $id)) {
     echo "Possible file upload attack!\n";

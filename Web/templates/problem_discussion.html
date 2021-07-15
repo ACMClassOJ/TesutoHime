@@ -1,7 +1,7 @@
 {% extends 'base.html' %} {% set page='Discussion' %} {% block head %}
 <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.css">
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
-<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/editormd.min.css') }}"> {% endblock %} {% block content %}
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/editor.md/css/editormd.min.css') }}"> {% endblock %} {% block content %}
 <div class="card card-body mb-3">
     <div class="row mx-md-1">
         <h1 class="my-auto"> {{ Problem_ID }}. {{ Title }} </h1>
@@ -48,23 +48,15 @@
 <script src="{{ url_for('.static', filename = 'lib/auto-render.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
+
 <script>
     let discuss = {
-        { %
-            for row in Discuss
-            if row[4] %
-        } {
-            {
-                row[0]
-            }
-        }: {
-            {
-                row[2] | tojson
-            }
-        },
-        { % endfor %
-        }
-    };
+        {% for row in Discuss if row[4] %}
+            {{ row[0] }}: {{ row[2]|tojson }},
+        {% endfor %}
+        };
+
 
     let originalDiscuss, originalBtnGroup, activeEditor, activeID;
 
@@ -119,7 +111,7 @@
         div.after($(`<div id="activeEditor"></div>`));
         originalDiscuss = div.hide();
         activeEditor = editormd(`activeEditor`, {
-            path: "/OnlineJudge/static/lib/editor.md/lib/",
+            path: "{{ url_for('.static', filename = 'lib/editor.md/lib/') }}",
             toolbarIcons: function() {
                 return [
                     "undo", "redo", "|",
@@ -193,7 +185,7 @@
         let editor = editormd("editor", {
             width: "100%",
             height: 400,
-            path: "/OnlineJudge/static/lib/editor.md/lib/",
+            path: "{{ url_for('.static', filename = 'lib/editor.md/lib/') }}",
             toolbarIcons: function() {
                 return [
                     "undo", "redo", "|",
@@ -222,11 +214,7 @@
         $("#btnComment").click(function() {
             let data = {
                 action: "post",
-                problem_id: {
-                    {
-                        Problem_ID
-                    }
-                },
+                problem_id: {{ Problem_ID }},
                 text: editor.getMarkdown()
             };
             console.log(data);

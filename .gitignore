@@ -3,6 +3,7 @@ Judger/config.py
 compiling
 Judger/Judger_Core/Compiler/test
 BusyFlag
+scheduler.lock
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

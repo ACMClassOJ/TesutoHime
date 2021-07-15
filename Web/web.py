@@ -610,12 +610,6 @@ def about():
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
-@web.route('/feed')
-def feed():
-    return render_template('feed.html', friendlyName=Login_Manager.get_friendly_name(),
-                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
-
-
 @web.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(web.root_path, 'static'), 'favicon.ico',
@@ -623,3 +617,4 @@ def favicon():
 
 oj = Flask('WEB')
 oj.register_blueprint(web, url_prefix='/OnlineJudge')
+oj.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400

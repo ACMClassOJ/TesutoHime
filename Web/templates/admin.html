@@ -3,7 +3,7 @@
 {% set page="Admin" %}
 
 {% block head %}
-    <link rel="stylesheet" href="https://cdn2.yukisaki.io:51391/oj_cdn/bootstrap/bootstrap-select.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/bootstrap-select.min.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -194,7 +194,7 @@
             <div class="form-row">
                 <div class="form-group custom-file col-md-3 mb-3">
                     <label class="custom-file-label ml-1 mr-1" for="iptData"> Test Data </label>
-                    <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans"
+                    <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans,.out"
                            multiple>
                 </div>
                 <div class="form-group custom-file col-md-3 mb-3">
@@ -282,8 +282,8 @@
     </div>
 {% endblock %}
 {% block script %}
-    <script src="https://cdn2.yukisaki.io:51391/oj_cdn/bootstrap/bootstrap-select.min.js"></script>
-    <script src="https://cdn2.yukisaki.io:51391/oj_cdn/jszip/jszip.min.js"></script>
+    <script src="{{ url_for('static', filename = 'lib/bootstrap-select.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'lib/jszip.min.js') }}"></script>
     <script>
         $.fn.serializeObject = function () {
             let data = {};

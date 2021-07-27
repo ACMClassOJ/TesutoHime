@@ -64,7 +64,7 @@ class Compiler(CompilerInterface):
         language = code_config.language
         time_limit = code_config.compileTimeLimit / 1000.0 * Performance_Rate
 
-        if code_config == self.lastCompileConfig:
+        if self.lastCompileConfig != None and code_config.__dict__ == self.lastCompileConfig.__dict__:
             log.info("Compiler: the same code we have already compiled, just return the last compilation result")
             return self.lastCompileResult
 

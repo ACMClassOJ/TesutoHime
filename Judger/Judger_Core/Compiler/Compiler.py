@@ -12,6 +12,10 @@ import shutil
 
 
 class Compiler(CompilerInterface):
+    def __init__(self) -> None:
+        super().__init__()
+        self.lastCompileConfig = None
+        self.lastCompileResult = None
     @staticmethod
     def compile_verilog(code, time_limit, sandboxOn):
         log.info("Start Compiling.")

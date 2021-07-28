@@ -35,6 +35,10 @@ class JudgeManager:
         # spj 4 hpp with spj
         # spj 5 output only
 
+        if problemConfig.SPJ in [1, 4, 5]:
+            log.info("JudgeManager: compile once for spj")
+            subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
+
         if problemConfig.SPJ == 5:
             with open(outputFilePath, "w") as f:
                 f.write(sourceCode)
@@ -125,7 +129,9 @@ class JudgeManager:
                             if problemConfig.SPJ == 1 or problemConfig.SPJ == 4 or problemConfig.SPJ == 5:
                                 print('start spj')
                                 try:
-                                    subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
+                                    # upd, I guess that this line can be moved to the top, and excuted once for a judge
+                                    # subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
+
                                     if os.path.isfile(relatedFile + '.ans'):
                                         subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.ans', '/work/score.log', '/work/message.log'], timeout = 20, cwd = dataPath)
                                     else:

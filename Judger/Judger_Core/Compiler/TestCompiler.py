@@ -2,14 +2,50 @@ from .Compiler import compiler
 from ..config import CompilationConfig
 class TestCompiler:
     def test_cpp(self):
-        print(compiler.CompileInstance(CompilationConfig(
-            sourceCode={"main.cpp" : open("./Judger/Judger_Core/Compiler/test/test1.cpp").read()},
+        s = compiler.CompileInstance(CompilationConfig(
+            sourceCode={"main.cpp" : open("./Judger_Core/Compiler/test/test1.cpp").read()},
             language="c++",
-            compileTimeLimit=10000)).msg)
+            compileTimeLimit=10000,
+            sandboxOn=False)).msg
+        s = compiler.CompileInstance(CompilationConfig(
+            sourceCode={"main.cpp" : open("./Judger_Core/Compiler/test/test1.cpp").read()},
+            language="c++",
+            compileTimeLimit=10000,
+            sandboxOn=False)).msg
+        s = compiler.CompileInstance(CompilationConfig(
+            sourceCode={"main.cpp" : open("./Judger_Core/Compiler/test/test1.cpp").read()},
+            language="c++",
+            compileTimeLimit=10000,
+            sandboxOn=False)).msg
+        s = compiler.CompileInstance(CompilationConfig(
+            sourceCode={"main.cpp" : open("./Judger_Core/Compiler/test/test1.cpp").read()},
+            language="c++",
+            compileTimeLimit=10000,
+            sandboxOn=False)).msg
+        s = compiler.CompileInstance(CompilationConfig(
+            sourceCode={"main.cpp" : open("./Judger_Core/Compiler/test/test2.cpp").read()},
+            language="c++",
+            compileTimeLimit=10000,
+            sandboxOn=False)).msg
+        s = compiler.CompileInstance(CompilationConfig(
+            sourceCode={"main.cpp" : open("./Judger_Core/Compiler/test/test2.cpp").read()},
+            language="c++",
+            compileTimeLimit=10000,
+            sandboxOn=False)).msg
+        s = compiler.CompileInstance(CompilationConfig(
+            sourceCode={"main.cpp" : open("./Judger_Core/Compiler/test/test2.cpp").read()},
+            language="c++",
+            compileTimeLimit=10000,
+            sandboxOn=False)).msg
+        s = compiler.CompileInstance(CompilationConfig(
+            sourceCode={"main.cpp" : open("./Judger_Core/Compiler/test/test2.cpp").read()},
+            language="c++",
+            compileTimeLimit=10000,
+            sandboxOn=False)).msg
     def test_hpp(self):
         print(compiler.CompileInstance(CompilationConfig(
-            sourceCode={"main.cpp": open("./Judger/Judger_Core/Compiler/test/test2.cpp").read(),
-                        "header.hpp": open("./Judger/Judger_Core/Compiler/test/header.hpp").read() },
+            sourceCode={"main.cpp": open("./Judger_Core/Compiler/test/test2.cpp").read(),
+                        "header.hpp": open("./Judger_Core/Compiler/test/header.hpp").read() },
             language="c++",
             compileTimeLimit=10000)).msg)
     def test_git(self):
@@ -32,4 +68,7 @@ class TestCompiler:
         #print(result.compiled)
         print(result.msg)
 
-TestCompiler().test_verilog()
+TestCompiler().test_cpp()
+TestCompiler().test_cpp()
+TestCompiler().test_cpp()
+TestCompiler().test_cpp()

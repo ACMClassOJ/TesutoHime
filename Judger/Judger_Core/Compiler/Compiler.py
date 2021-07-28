@@ -6,10 +6,16 @@ from .compile_cpp import compile_cpp
 from .compile_git import compile_git
 from .compile_verilog import compile_verilog
 from ..util import log # cxy 2021 6 28
+from config import Performance_Rate
 import os
 import shutil
 
+
 class Compiler(CompilerInterface):
+    def __init__(self) -> None:
+        super().__init__()
+        self.lastCompileConfig = None
+        self.lastCompileResult = None
     @staticmethod
     def compile_verilog(code, time_limit, sandboxOn):
         log.info("Start Compiling.")
@@ -41,8 +47,9 @@ class Compiler(CompilerInterface):
         log.info("Done.")
         return result
 
-    @staticmethod
-    def clear():
+    def clear(self):
+        self.lastCompileConfig = None
+        self.lastCompileResult = None
         path = WORK_DIR
         try:
             if os.path.exists(path):
@@ -55,19 +62,37 @@ class Compiler(CompilerInterface):
     def CompileInstance(self, code_config: CompilationConfig):
         source_code = code_config.sourceCode
         language = code_config.language
-        time_limit = code_config.compileTimeLimit / 1000.0
-        Compiler.clear()
+        time_limit = code_config.compileTimeLimit / 1000.0 * Performance_Rate
+
+        if self.lastCompileConfig != None and code_config.__dict__ == self.lastCompileConfig.__dict__:
+            log.info("Compiler: the same code we have already compiled, just return the last compilation result")
+            return self.lastCompileResult
+
+        self.clear()
+        
         if language == "c++" or language == "cpp" or language == "C++":
-            return self.compile_cpp(source_code, time_limit, code_config.sandboxOn)
-        elif language == "git":
+            self.lastCompileConfig = code_config
+            self.lastCompileResult = self.compile_cpp(source_code, time_limit, code_config.sandboxOn)
+        elif language == "Verilog" or language == "verilog":
+            self.lastCompileConfig = code_config
+            self.lastCompileResult = self.compile_verilog(source_code, time_limit, code_config.sandboxOn)
+        elif language == "git" or language == "Git":
+            # git would change for every compilation
+            self.lastCompileConfig = None
+            self.lastCompileResult = None
             return self.compile_git(source_code, time_limit, code_config.sandboxOn)
-        elif language == "Verilog":
-            return self.compile_verilog(source_code, time_limit, code_config.sandboxOn)
         else:
+            self.lastCompileConfig = None
+            self.lastCompileResult = None
             return CompilationResult(
                 compiled=False,
-                msg="The language '" + language + "' is not supported now!",
+                msg="The language '" + language + "' is not supported now",
                 programPath="")
+
+        if self.lastCompileResult == None:
+            log.error("Compiler: unknown error that cause the empty compilation result")
+
+        return self.lastCompileResult            
 
 
 compiler = Compiler()

@@ -3,7 +3,7 @@
 {% set page='Submit' %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'lib/bootstrap-select.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -40,8 +40,8 @@
 {% endblock %}
 
 {% block script %}
-    <script src="{{ url_for('static', filename = 'lib/bootstrap-select.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'js/problem_submit.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}"></script>
     {% if not In_Contest -%}
         <script>
             $(function () {

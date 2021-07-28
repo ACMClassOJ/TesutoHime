@@ -3,7 +3,7 @@ $(function(){
         type: "POST",
         dataType: "text",
         data: {problem_id: $("#problem_id").text()},
-        url: "/api/get_detail",
+        url: "/OnlineJudge/api/get_detail",
         success: function (response_text)
         {
         	var main_json = JSON.parse(response_text);

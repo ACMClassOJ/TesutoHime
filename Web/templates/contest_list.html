@@ -20,7 +20,7 @@
                 {% for cur in  Data -%}
                     <tr>
                         <td>{{ cur['ID'] }}</td>
-                        <td><a href="/contest?contest_id={{ cur['ID'] }}">{{ cur['Title'] }}</a></td>
+                        <td><a href="/OnlineJudge/contest?contest_id={{ cur['ID'] }}">{{ cur['Title'] }}</a></td>
                         <td>{{ cur['Start_Time'] }}</td>
                         <td>{{ cur['End_Time'] }}</td>
                         <td>{{ cur['Status'] }}</td>
@@ -48,6 +48,6 @@
 {% endblock %}
 
 {% block script %}
-    <script src="{{ url_for('static', filename = 'js/post_join.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'js/post_join.js') }}"></script>
 {% endblock %}
 

@@ -59,7 +59,7 @@ class JudgeManager:
 
 
         if problemConfig.SPJ != 5 and problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and problemConfig.SPJ != 4 and not compileResult.compiled:
-            log.error('Compilation Error')
+            log.error('1: Compilation Error')
             #print(len(compileResult.msg))
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(1, ResultType.CE, 0, 0, 0, -1, compileResult.msg)], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
         else:
@@ -96,8 +96,8 @@ class JudgeManager:
                             #print(srcDict.keys())
                             compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit, False))
                             if not compileResult.compiled:
-                                log.error('Compilation Error')
-                                testPointDetail = DetailResult(testcase.ID, Re5sultType.CE, 0, 0, 0, -1, compileResult.msg)
+                                log.error('2: Compilation Error')
+                                testPointDetail = DetailResult(testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg)
                                 Runnable = False
                     if Runnable:
                         relatedFile = dataPath + '/' + str(testcase.ID)
@@ -131,6 +131,7 @@ class JudgeManager:
                                 try:
                                     # upd, I guess that this line can be moved to the top, and excuted once for a judge
                                     # subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
+
                                     if os.path.isfile(relatedFile + '.ans'):
                                         subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.ans', '/work/score.log', '/work/message.log'], timeout = 20, cwd = dataPath)
                                     else:

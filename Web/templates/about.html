@@ -1,189 +1,166 @@
-{% extends 'base.html' %}
-
-{% set page='About' %}
-
-{% block content %}
-    <div class="card card-body col-lg-11 m-auto">
-        <h1 class="text-center">关于</h1>
-        <h4>使用的技术：</h4>
-        <p>本OJ基于TesutoHime，开源地址为<a href="https://github.com/cmd2001/Open-TesutoHime"
-                                   target="_blank">Open-TesutoHime</a>。</p>
-        <p>使用的技术：<a href="https://github.com/pallets/flask" target="_blank">Flask</a>，<a
-                href="https://www.creative-tim.com/product/argon-design-system" target="_blank">Argon Design</a>，<a
-                href="https://nsjail.dev/" target="_blank">nsjail</a>，<a href="https://www.php.net/">PHP</a>。</p>
-        <p>服务器部署于<a href="https://www.debian.org/" target="_blank">Debian Linux</a>和<a
-                href="https://ubuntu.com/download/server" target="_blank">Ubuntu Server</a>。</p>
-        <p>特别感谢：<a href="https://mariadb.org/" target="_blank">maria-db</a>，为我们提供了强大的数据库支持。</p>
-        <hr class="mt-3">
-        <h4>评测状态解释：</h4>
-        <div class="d-none d-xl-block">
-            <div class="row">
-                <div class="col-sm-3"><span class="text-gray">Pending</span>：</div>
-                <p>等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</p>
-            </div>
-            <div class="row">
-                <div class="col-sm-3"><span class="text-blue">Running & Judging</span>：</div>
-                <p>正在测试。你的程序正在被评测机运行以检查正确性。</p>
-            </div>
-            <div class="row">
-                <div class="col-sm-3"><span class="text-green">Accepted</span>：</div>
-                <p>通过。你的程序正确通过全部测试点。</p>
-            </div>
-            <div class="row">
-                <div class="col-sm-3"><span class="text-red">Wrong Answer</span>：</div>
-                <p>答案错误。你的程序在某个测试点输出了错误的答案。</p>
-            </div>
-            <div class="row">
-                <div class="col-sm-3"><span class="text-yellow">Compile Error</span>：</div>
-                <p>编译错误。你的程序没有通过编译。</p>
-            </div>
-            <div class="row">
-                <div class="col-sm-3"><span class="text-red">Runtime Error</span>：</div>
-                <p>运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、除以0等。</p>
-            </div>
-            <div class="row">
-                <div class="col-sm-3"><span class="text-orange">Time Limit Exceed</span>：</div>
-                <p>时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</p>
-            </div>
-            <div class="row">
-                <div class="col-sm-3"><span class="text-orange">Memory Limit Exceed</span>：</div>
-                <p>内存超限。你的程序请求了过多的内存。</p></div>
-            <div class="row">
-                <div class="col-sm-3"><span class="text-purple">Memory Leak</span>：</div>
-                <p>内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</p>
-            </div>
-            <div class="row">
-                <div class="col-sm-3"><span class="text-purple">Disk Limit Exceed</span>：</div>
-                <p>磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</p>
-            </div>
-            <div class="row">
-                <div class="col-sm-3"><span class="text-gray-dark">System Error</span>：</div>
-                <p>系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</p>
-            </div>
-        </div>
-        <div class="d-block d-xl-none">
-            <p><span class="text-gray">Pending</span>：等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</p>
-            <p><span class="text-blue">Running & Judging</span>：正在测试。你的程序正在被评测机运行以检查正确性。</p>
-            <p><span class="text-green">Accepted</span>：通过。你的程序正确通过全部测试点。</p>
-            <p><span class="text-red">Wrong Answer</span>：答案错误。你的程序在某个测试点输出了错误的答案。</p>
-            <p><span class="text-yellow">Compile Error</span>：编译错误。你的程序没有通过编译。</p>
-            <p><span class="text-red">Runtime Error</span>：运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、除以0等。</p>
-            <p><span class="text-orange">Time Limit Exceed</span>：时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</p>
-            <p><span class="text-orange">Memory Limit Exceed</span>：内存超限。你的程序请求了过多的内存。</p>
-            <p><span class="text-purple">Memory Leak</span>：内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</p>
-            <p><span class="text-purple">Disk Limit Exceed</span>：磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</p>
-            <p><span class="text-gray-dark">System Error</span>：系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</p>
-        </div>
-        <hr class="mt-3">
-        <h4>Contributor(排名不分先后)：</h4>
+{% extends 'base.html' %} {% set page='About' %} {% block content %}
+<div class="card card-body col-lg-11 m-auto">
+    <h1 class="text-center">关于</h1>
+    <h4>使用的技术：</h4>
+    <p>本OJ基于TesutoHime，开源地址为<a href="https://github.com/cmd2001/Open-TesutoHime" target="_blank">Open-TesutoHime</a>。</p>
+    <p>使用的技术：<a href="https://github.com/pallets/flask" target="_blank">Flask</a>，<a href="https://www.creative-tim.com/product/argon-design-system" target="_blank">Argon Design</a>，<a href="https://nsjail.dev/" target="_blank">nsjail</a>，<a href="https://www.php.net/">PHP</a>。</p>
+    <p>服务器部署于<a href="https://www.debian.org/" target="_blank">Debian Linux</a>和<a href="https://ubuntu.com/download/server" target="_blank">Ubuntu Server</a>。</p>
+    <p>特别感谢：<a href="https://mariadb.org/" target="_blank">maria-db</a>，为我们提供了强大的数据库支持。</p>
+    <hr class="mt-3">
+    <h4>评测状态解释：</h4>
+    <div class="d-none d-xl-block">
         <div class="row">
-            <div class="col-lg-3 m-auto">
-                <a href="https://github.com/cmd2001" target="_blank">
-                    <img class="img-fluid w-100" alt="Amagi_Yukisaki"
-                         src="https://avatars1.githubusercontent.com/u/25078724?s=460&u=ee774535b1575662be6024d9bdb48dfbf6baa958&v=4">
-                </a>
-                <p class="text-center">
-                    <a href="https://github.com/cmd2001" target="_blank" class="text-primary">Amagi_Yukisaki</a><br>项目主管&数据库结构
-                </p>
-            </div>
-            <div class="col-lg-3 m-auto">
-                <a href="https://github.com/cong258258" target="_blank">
-                    <img class="img-fluid w-100" alt="cong258258"
-                         src="https://avatars0.githubusercontent.com/u/40522050?s=460&u=a0fdd72e19431ba44c1920878670e4df17d09149&v=4">
-                </a>
-                <p class="text-center">
-                    <a href="https://github.com/cong258258" target="_blank" class="text-primary">cong258258</a><br>前端&美化
-                </p>
-            </div>
-            <div class="col-lg-3 m-auto">
-                <a href="https://github.com/Pioooooo" target="_blank">
-                    <img class="img-fluid w-100" alt="Pioooooo"
-                         src="https://avatars3.githubusercontent.com/u/25563691?s=460&u=31d9b5dcac3d8eb20314998b2d2bd461b0e5cffc&v=4">
-                </a>
-                <p class="text-center">
-                    <a href="https://github.com/Pioooooo" target="_blank" class="text-primary">Pioooooo</a><br>管理界面&前端美化
-                </p>
-            </div>
-            <div class="col-lg-3 m-auto">
-                <a href="https://github.com/acrazyczy" target="_blank">
-                    <img class="img-fluid w-100" alt="acrazyczy"
-                         src="https://avatars1.githubusercontent.com/u/30522481?s=460&u=f23c0d7b58849ed701001195baf31e0ed6e091d6&v=4">
-                </a>
-                <p class="text-center">
-                    <a href="https://github.com/acrazyczy" target="_blank" class="text-primary">acrazyczy</a><br>评测端主管&接口
-                </p>
-            </div>
-            <div class="col-lg-3 m-auto">
-                <a href="https://github.com/Anoxiacxy" target="_blank">
-                    <img class="img-fluid w-100" alt="Anoxiacxy"
-                         src="https://avatars2.githubusercontent.com/u/28628519?s=460&u=ea4e4aa0f917e7526a0d40a099e673b64546ad27&v=4">
-                </a>
-                <p class="text-center">
-                    <a href="https://github.com/Anoxiacxy" target="_blank" class="text-primary">Anoxiacxy</a><br>编译沙箱
-                </p>
-            </div>
-            <div class="col-lg-3 m-auto">
-                <a href="https://github.com/XOR-op" target="_blank">
-                    <img class="img-fluid w-100" alt="XOR-op"
-                         src="https://avatars2.githubusercontent.com/u/17672363?s=460&u=dcf142aa8227d4545c9a697723d2f024e2646f76&v=4">
-                </a>
-                <p class="text-center">
-                    <a href="https://github.com/XOR-op" target="_blank" class="text-primary">XOR-op</a><br>评测沙箱
-                </p>
-            </div>
-            <div class="col-lg-3 m-auto">
-                <a href="https://github.com/stneng" target="_blank">
-                    <img class="img-fluid w-100" alt="stneng"
-                         src="https://avatars1.githubusercontent.com/u/9738894?s=460&v=4">
-                </a>
-                <p class="text-center">
-                    <a href="https://github.com/stneng" target="_blank" class="text-primary">stneng</a><br>数据服务
-                </p>
-            </div>
+            <div class="col-sm-3"><span class="text-gray">Pending</span>：</div>
+            <p>等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</p>
         </div>
-        <hr class="mt-3">
-        <h4>评测机状态</h4>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered table-hover" id="judge_server_list">
-                <thead>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-blue">Running & Judging</span>：</div>
+            <p>正在测试。你的程序正在被评测机运行以检查正确性。</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-green">Accepted</span>：</div>
+            <p>通过。你的程序正确通过全部测试点。</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-red">Wrong Answer</span>：</div>
+            <p>答案错误。你的程序在某个测试点输出了错误的答案。</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-yellow">Compile Error</span>：</div>
+            <p>编译错误。你的程序没有通过编译。</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-red">Runtime Error</span>：</div>
+            <p>运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、除以0等。</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-orange">Time Limit Exceed</span>：</div>
+            <p>时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-orange">Memory Limit Exceed</span>：</div>
+            <p>内存超限。你的程序请求了过多的内存。</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-purple">Memory Leak</span>：</div>
+            <p>内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-purple">Disk Limit Exceed</span>：</div>
+            <p>磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-gray-dark">System Error</span>：</div>
+            <p>系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</p>
+        </div>
+    </div>
+    <div class="d-block d-xl-none">
+        <p><span class="text-gray">Pending</span>：等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</p>
+        <p><span class="text-blue">Running & Judging</span>：正在测试。你的程序正在被评测机运行以检查正确性。</p>
+        <p><span class="text-green">Accepted</span>：通过。你的程序正确通过全部测试点。</p>
+        <p><span class="text-red">Wrong Answer</span>：答案错误。你的程序在某个测试点输出了错误的答案。</p>
+        <p><span class="text-yellow">Compile Error</span>：编译错误。你的程序没有通过编译。</p>
+        <p><span class="text-red">Runtime Error</span>：运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、除以0等。</p>
+        <p><span class="text-orange">Time Limit Exceed</span>：时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</p>
+        <p><span class="text-orange">Memory Limit Exceed</span>：内存超限。你的程序请求了过多的内存。</p>
+        <p><span class="text-purple">Memory Leak</span>：内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</p>
+        <p><span class="text-purple">Disk Limit Exceed</span>：磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</p>
+        <p><span class="text-gray-dark">System Error</span>：系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</p>
+    </div>
+    <hr class="mt-3">
+    <h4>Contributor(排名不分先后)：</h4>
+    <div class="row">
+        <div class="col-lg-3 m-auto">
+            <a href="https://github.com/cmd2001" target="_blank">
+                <img class="img-fluid w-100" alt="Amagi_Yukisaki" src="https://avatars1.githubusercontent.com/u/25078724?s=460&u=ee774535b1575662be6024d9bdb48dfbf6baa958&v=4">
+            </a>
+            <p class="text-center">
+                <a href="https://github.com/cmd2001" target="_blank" class="text-primary">Amagi_Yukisaki</a><br>项目主管&数据库结构
+            </p>
+        </div>
+        <div class="col-lg-3 m-auto">
+            <a href="https://github.com/cong258258" target="_blank">
+                <img class="img-fluid w-100" alt="cong258258" src="https://avatars0.githubusercontent.com/u/40522050?s=460&u=a0fdd72e19431ba44c1920878670e4df17d09149&v=4">
+            </a>
+            <p class="text-center">
+                <a href="https://github.com/cong258258" target="_blank" class="text-primary">cong258258</a><br>前端&美化
+            </p>
+        </div>
+        <div class="col-lg-3 m-auto">
+            <a href="https://github.com/Pioooooo" target="_blank">
+                <img class="img-fluid w-100" alt="Pioooooo" src="https://avatars3.githubusercontent.com/u/25563691?s=460&u=31d9b5dcac3d8eb20314998b2d2bd461b0e5cffc&v=4">
+            </a>
+            <p class="text-center">
+                <a href="https://github.com/Pioooooo" target="_blank" class="text-primary">Pioooooo</a><br>管理界面&前端美化
+            </p>
+        </div>
+        <div class="col-lg-3 m-auto">
+            <a href="https://github.com/acrazyczy" target="_blank">
+                <img class="img-fluid w-100" alt="acrazyczy" src="https://avatars1.githubusercontent.com/u/30522481?s=460&u=f23c0d7b58849ed701001195baf31e0ed6e091d6&v=4">
+            </a>
+            <p class="text-center">
+                <a href="https://github.com/acrazyczy" target="_blank" class="text-primary">acrazyczy</a><br>评测端主管&接口
+            </p>
+        </div>
+        <div class="col-lg-3 m-auto">
+            <a href="https://github.com/Anoxiacxy" target="_blank">
+                <img class="img-fluid w-100" alt="Anoxiacxy" src="https://avatars2.githubusercontent.com/u/28628519?s=460&u=ea4e4aa0f917e7526a0d40a099e673b64546ad27&v=4">
+            </a>
+            <p class="text-center">
+                <a href="https://github.com/Anoxiacxy" target="_blank" class="text-primary">Anoxiacxy</a><br>编译沙箱
+            </p>
+        </div>
+        <div class="col-lg-3 m-auto">
+            <a href="https://github.com/XOR-op" target="_blank">
+                <img class="img-fluid w-100" alt="XOR-op" src="https://avatars2.githubusercontent.com/u/17672363?s=460&u=dcf142aa8227d4545c9a697723d2f024e2646f76&v=4">
+            </a>
+            <p class="text-center">
+                <a href="https://github.com/XOR-op" target="_blank" class="text-primary">XOR-op</a><br>评测沙箱
+            </p>
+        </div>
+        <div class="col-lg-3 m-auto">
+            <a href="https://github.com/stneng" target="_blank">
+                <img class="img-fluid w-100" alt="stneng" src="https://avatars1.githubusercontent.com/u/9738894?s=460&v=4">
+            </a>
+            <p class="text-center">
+                <a href="https://github.com/stneng" target="_blank" class="text-primary">stneng</a><br>数据服务
+            </p>
+        </div>
+    </div>
+    <hr class="mt-3">
+    <h4>评测机状态</h4>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered table-hover" id="judge_server_list">
+            <thead>
                 <tr>
                     <th>状态</th>
                     <th>代号</th>
                     <th>配置</th>
                     <th>上次响应时间</th>
                     <th>运行状态</th>
-                    <th>贡献者
-                        <del>(评测姬的主人)</del>
-                    </th>
+                    <th>贡献者</th>
                 </tr>
-                </thead>
-                {% for x in Server_List -%}
-                    <tr>
-                        <td>
-                            {% if x['Status'] -%}
-                                <span class="text-green">Online</span>
-                            {% else -%}
-                                <span class="text-red">Offline</span>
-                            {%- endif %}
-                        </td>
-                        <td>{{ x['Name'] }}</td>
-                        <td>{{ x['System'] }}</td>
-                        <td>{{ x['Last_Seen_Time'] }}</td>
-                        <td>
-                            {% if x['Status'] -%}
-                                {%- if x['Busy'] -%}
-                                    <span class="text-orange">Busy</span>
-                                {%- else -%}
-                                    <span class="text-blue">Idle</span>
-                                {%- endif -%}
-                            {% else -%}
-                                <span class="text-black-50">Invalid</span>
-                            {%- endif %}
-                        </td>
-                        <td>{{ x['Provider'] }}</td>
-                    </tr>
-                {%- endfor %}
-            </table>
-        </div>
+            </thead>
+            {% for x in Server_List -%}
+            <tr>
+                <td>
+                    {% if x['Status'] -%}
+                    <span class="text-green">Online</span> {% else -%}
+                    <span class="text-red">Offline</span> {%- endif %}
+                </td>
+                <td>{{ x['Name'] }}</td>
+                <td>{{ x['System'] }}</td>
+                <td>{{ x['Last_Seen_Time'] }}</td>
+                <td>
+                    {% if x['Status'] -%} {%- if x['Busy'] -%}
+                    <span class="text-orange">Busy</span> {%- else -%}
+                    <span class="text-blue">Idle</span> {%- endif -%} {% else -%}
+                    <span class="text-black-50">Invalid</span> {%- endif %}
+                </td>
+                <td>{{ x['Provider'] }}</td>
+            </tr>
+            {%- endfor %}
+        </table>
     </div>
+</div>
 {% endblock %}

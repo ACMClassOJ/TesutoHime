@@ -28,7 +28,7 @@
                     <th>排名</th>
                     <th>用户</th>
                     {% for problem in Problems -%}
-                        <th><a href="/problem?problem_id={{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
+                        <th><a href="/OnlineJudge/problem?problem_id={{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
                     {%- endfor %}
                     <th>总得分</th>
                     <th>罚时</th>

@@ -16,7 +16,7 @@ $(function(){
 		{
 			swal("Success","注册成功！您现在可以登陆了","success");
 			setTimeout(function(){
-				window.location.replace("/");
+				window.location.replace("/OnlineJudge/");
 			},500);
 		}
 		else if(response_text == -1)

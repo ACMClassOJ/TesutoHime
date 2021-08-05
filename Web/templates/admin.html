@@ -94,6 +94,8 @@
                     <textarea class="form-control" name="range" id="iptDataRange"></textarea>
                 </div>
                 <div class="float-right d-flex mb-3 ml-auto pr-1">
+                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnGetProblemDetails">Add Problem
+                    </button>
                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblem">Add Problem
                     </button>
                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyProblem">Modify
@@ -329,6 +331,24 @@
             });
 
 
+            $("#btnGetProblemDetails").click(function(){
+                $.ajax({
+                    type: "POST",
+                    dataType: "text",
+                    data: {problem_id: $("#iptProblemID").text()},
+                    url: "/api/get_detail",
+                    success: function (response_text)
+                    {
+                        var main_json = JSON.parse(response_text);
+                        $("#iptDescription").val(main_json['Description']);
+                        $("#iptInput").val(main_json['Input']);
+                        $("#iptOutput").val(main_json['Output']);
+                        $("#iptExampleInput").val(main_json['Example_Input']);
+                        $("#iptExampleOutput").val(main_json['Example_Output']);
+                        $("#iptDataRange").val(main_json['Data_Range']);
+                    }
+                });
+            });
             $("#btnAddProblem").click(function () {
                 op = 0;
             });

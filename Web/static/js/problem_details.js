@@ -1,12 +1,12 @@
 $(function(){
 	$.ajax({
-        type: "POST",
-        dataType: "text",
-        data: {problem_id: $("#problem_id").text()},
-        url: "/api/get_detail",
-        success: function (response_text)
-        {
-        	var main_json = JSON.parse(response_text);
+		type: "POST",
+		dataType: "text",
+		data: {problem_id: $("#problem_id").text()},
+		url: "/api/get_detail",
+		success: function (response_text)
+		{
+			var main_json = JSON.parse(response_text);
 			$("#problem_details_description").html(marked(main_json['Description']));
 			$("#problem_details_input").html(marked(main_json['Input']));
 			$("#problem_details_output").html(marked(main_json['Output']));

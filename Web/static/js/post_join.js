@@ -4,7 +4,7 @@ function post_join(x)  {
             type: "POST",
             dataType: "text",
             data: {contest_id: x},
-            url: "/api/join",
+            url: "/OnlineJudge/api/join",
             success: function (response_text)  {
                     location.reload();
             },

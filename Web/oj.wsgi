@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,'/home/Amagi/TesutoHime/Web')
+sys.path.insert(0,'/home/acmoj/TesutoHime/Web')
 import os
-os.chdir('/home/Amagi/TesutoHime/Web')
-from web import web as application
+os.chdir('/home/acmoj/TesutoHime/Web')
+from web import oj as application

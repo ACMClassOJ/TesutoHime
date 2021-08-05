@@ -4,6 +4,7 @@ from judgeServerManager import JudgeServer_Manager
 from judgeManager import Judge_Manager
 from config import JudgeConfig
 import json
+import fcntl, os
 
 class JudgeServerScheduler:
     def Heart_Beat(self, Secret) -> bool:
@@ -17,12 +18,22 @@ class JudgeServerScheduler:
     def Check_Queue(self):
         self.Check_System_Error()
 
+        file_lock = "scheduler.lock"
+        if not os.path.exists(file_lock):
+            fd = open(file_lock, "w")
+            fd.write("")
+            fd.close()
+        fd = open(file_lock, "r+")
+        fcntl.flock(fd.fileno(), fcntl.LOCK_EX)
+
         Server = JudgeServer_Manager.Get_Standby_Server(unix_nano() - JudgeConfig.Max_Duration)
         # print(Server)
         if Server == None or len(Server) == 0: # no avaliable server
+            fd.close()
             return
         Record = Judge_Manager.get_pending_judge() # ID, Problem_ID, Code, Language
         if Record == None or len(Record) == 0:
+            fd.close()
             return
         data = {}
         data['Server_Secret'] = JudgeConfig.Web_Server_Secret
@@ -42,6 +53,7 @@ class JudgeServerScheduler:
                 Judge_Manager.update_status(int(Record[0]), 1)
                 JudgeServer_Manager.Flush_Busy(Server[1], True, int(Record[0]))
                 break
+        fd.close()
         return
 
     def Start_Judge(self, Problem_ID, User, Code, Lang, Share):

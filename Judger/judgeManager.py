@@ -28,22 +28,38 @@ class JudgeManager:
                     testPointDetail = DetailResult(1, ResultType.SYSERR, 0, 0, 0, -1, "\"" + fileName + '" not found in data.')            
         # end
 
-        if problemConfig.SPJ != 2 and problemConfig.SPJ != 3:
-            if language == 'Verilog':
-                srcDict['test.v'] = sourceCode
-            else:
-                srcDict['main.cpp'] = sourceCode
-            compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
+        # spj 0 single file with diff
+        # spj 1 single file with spj
+        # spj 2 hpp without diff
+        # spj 3 hpp with diff
+        # spj 4 hpp with spj
+        # spj 5 output only
+
+        if problemConfig.SPJ in [1, 4, 5]:
+            log.info("JudgeManager: compile once for spj")
+            subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
+
+        if problemConfig.SPJ == 5:
+            with open(outputFilePath, "w") as f:
+                f.write(sourceCode)
+            userOutput = outputFilePath
         else:
-            if language == 'Verilog':
-                srcDict['answer.v'] = sourceCode
+            if problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and problemConfig.SPJ != 4:
+                if language == 'Verilog':
+                    srcDict['test.v'] = sourceCode
+                else:
+                    srcDict['main.cpp'] = sourceCode
+                compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit, False))
             else:
-                srcDict['src.hpp'] = sourceCode
+                if language == 'Verilog':
+                    srcDict['answer.v'] = sourceCode
+                else:
+                    srcDict['src.hpp'] = sourceCode
 
 
 
-        if problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and not compileResult.compiled:
-            log.error('Compilation Error')
+        if problemConfig.SPJ != 5 and problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and problemConfig.SPJ != 4 and not compileResult.compiled:
+            log.error('1: Compilation Error')
             #print(len(compileResult.msg))
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(1, ResultType.CE, 0, 0, 0, -1, compileResult.msg)], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
         else:
@@ -53,7 +69,7 @@ class JudgeManager:
             for testcase in problemConfig.Details:
                 if testcase.Dependency == 0 or Details[testcase.Dependency - 1].result == ResultType.AC:
                     Runnable = True
-                    if problemConfig.SPJ == 2 or problemConfig.SPJ == 3:
+                    if problemConfig.SPJ == 2 or problemConfig.SPJ == 3 or problemConfig.SPJ == 4:
                         Runnable = False
                         try:
                             if language == 'Verilog':
@@ -78,43 +94,52 @@ class JudgeManager:
                             Runnable = True
                         if Runnable:
                             #print(srcDict.keys())
-                            compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit))
+                            compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit, False))
                             if not compileResult.compiled:
-                                log.error('Compilation Error')
+                                log.error('2: Compilation Error')
                                 testPointDetail = DetailResult(testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg)
                                 Runnable = False
                     if Runnable:
                         relatedFile = dataPath + '/' + str(testcase.ID)
-                        #testPointDetail, userOutput
-                        judgeProcess = multiprocessing.Process(target=ClassicJudger().JudgeInstance, args=(
-                            TestPointConfig(
-                                'Verilog' if language == 'Verilog' else "C++",
-                                compileResult.programPath,
-                                None,
-                                #'/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
-                                '/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
-                                testcase.TimeLimit,
-                                testcase.MemoryLimit,
-                                testcase.DiskLimit,
-                                -1 if not 'FileNumberLimit' in testcase._asdict() else testcase.FileNumberLimit,
-                                testcase.ValgrindTestOn
-                            ),
-                                return_dict)
-                        )
-                        log.info("start judging on testcase" + str(testcase.ID))
-                        judgeProcess.start()
-                        judgeProcess.join()
-                        testPointDetail, userOutput = return_dict['testPointDetail'], return_dict['userOutput']
-                        testPointDetail.ID = testcase.ID
+                        if problemConfig.SPJ == 5:
+                            testPointDetail = DetailResult(testcase.ID, ResultType.UNKNOWN, 0, 0, 0, -1, '')
+                        else:
+                            #testPointDetail, userOutput
+                            judgeProcess = multiprocessing.Process(target=ClassicJudger().JudgeInstance, args=(
+                                TestPointConfig(
+                                    'Verilog' if language == 'Verilog' else "C++",
+                                    compileResult.programPath,
+                                    None,
+                                    #'/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
+                                    '/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
+                                    testcase.TimeLimit,
+                                    testcase.MemoryLimit,
+                                    testcase.DiskLimit,
+                                    -1 if not 'FileNumberLimit' in testcase._asdict() else testcase.FileNumberLimit,
+                                    testcase.ValgrindTestOn
+                                ),
+                                    return_dict)
+                            )
+                            log.info("start judging on testcase" + str(testcase.ID))
+                            judgeProcess.start()
+                            judgeProcess.join()
+                            testPointDetail, userOutput = return_dict['testPointDetail'], return_dict['userOutput']
+                            testPointDetail.ID = testcase.ID
                         if testPointDetail.result == ResultType.UNKNOWN:
-                            if problemConfig.SPJ == 1:
+                            if problemConfig.SPJ == 1 or problemConfig.SPJ == 4 or problemConfig.SPJ == 5:
+                                print('start spj')
                                 try:
-                                    subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'])
-                                    subprocess.run([dataPath + '/spj', relatedFile + '.in', userOutput, relatedFile + '.ans', 'score.log', 'message.log'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20)
-                                    with open('score.log') as f:
+                                    # upd, I guess that this line can be moved to the top, and excuted once for a judge
+                                    # subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
+
+                                    if os.path.isfile(relatedFile + '.ans'):
+                                        subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.ans', '/work/score.log', '/work/message.log'], timeout = 20, cwd = dataPath)
+                                    else:
+                                        subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.out', '/work/score.log', '/work/message.log'], timeout = 20, cwd = dataPath)
+                                    with open('/work/score.log') as f:
                                         testPointDetail.score = float("\n".join(f.readline().splitlines()))
                                     testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC
-                                    with open('message.log') as f:
+                                    with open('/work/message.log') as f:
                                         testPointDetail.message.join(f.readline().splitlines())
                                 except Exception as e:
                                     log.error(e)
@@ -186,11 +211,14 @@ class JudgeManager:
                         inputString += str(len(group.TestPoints)) + ' ' + str(group.GroupScore) + ' '
                         for testPoint in group.TestPoints:
                             inputString += str(testPoint) + ' '
-                    process = subprocess.run(dataPath + '/scorer.py', stdin = inputString, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20)
+                    with open('/work/score.in', 'w') as f:
+                        f.write(inputString)
+                    with open('/work/score.in', 'r') as f:
+                        process = subprocess.run(['python', 'scorer.py'], stdin = f, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20, cwd = dataPath)
                 except subprocess.TimeoutExpired:
                     judgeResult = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'Scorer timeout.\n') for testcase in problemConfig.Details], problemConfig)
                 else:
-                    score = process.stdout.decode()
+                    score = float(process.stdout.decode())
                     log.info(process.stderr.decode())
                     judgeResult = JudgerResult(status, score, totalTime, maxMem, Details, problemConfig)
         #print("One",judgeResult.Status,judgeResult.TimeUsed,judgeResult.MemUsed)

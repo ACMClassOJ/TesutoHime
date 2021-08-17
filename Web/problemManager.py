@@ -9,8 +9,8 @@ class ProblemManager:
         cursor = db.cursor()
         try:
             cursor.execute(
-                "INSERT INTO Problem(Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)",
-                (title, description, problem_input, problem_output, example_input, example_output, data_range,
+                "INSERT INTO Problem(ID, Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (self.get_max_id() + 1, title, description, problem_input, problem_output, example_input, example_output, data_range,
                  release_time))
             db.commit()
         except pymysql.Error:
@@ -98,6 +98,16 @@ class ProblemManager:
         return int(data[0]) != 0
 
     def get_max_id(self) -> int:
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT MAX(ID) FROM Problem WHERE ID < 11000")
+        data = cursor.fetchone()
+        db.close()
+        if data[0] is None:
+            return 0
+        return int(data[0])
+
+    def get_real_max_id(self) -> int:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT MAX(ID) FROM Problem")

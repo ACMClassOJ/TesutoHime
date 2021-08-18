@@ -181,12 +181,18 @@ def problem_list():
     page = int(page) if page is not None else 1
     max_page = int(
         (Problem_Manager.get_max_id() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
-    page = max(min(max_page, page), 1)
-    start_id = (page - 1) * WebConfig.Problems_Each_Page + 1 + 999
-    end_id = page * WebConfig.Problems_Each_Page + 999
+    real_max_page = max_page + int(
+        (Problem_Manager.get_real_max_id() - 10999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
+    page = max(min(real_max_page, page), 1)
+    if page <= max_page:
+        start_id = (page - 1) * WebConfig.Problems_Each_Page + 1 + 999
+        end_id = page * WebConfig.Problems_Each_Page + 999
+    else:
+        start_id = (page - max_page - 1) * WebConfig.Problems_Each_Page + 1 + 10999
+        end_id = (page - max_page) * WebConfig.Problems_Each_Page + 10999
     problems = Problem_Manager.problem_in_range(start_id, end_id, unix_nano(),
                                                 Login_Manager.get_privilege() >= Privilege.ADMIN)
-    return render_template('problem_list.html', Problems=problems, Pages=gen_page(page, max_page),
+    return render_template('problem_list.html', Problems=problems, Pages=gen_page(page, real_max_page),
                            friendlyName=Login_Manager.get_friendly_name(),
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
@@ -196,7 +202,7 @@ def problem_detail():
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
     problem_id = request.args.get('problem_id')
-    if problem_id is None or int(problem_id) < 1000 or int(problem_id) > Problem_Manager.get_max_id():
+    if problem_id is None or int(problem_id) < 1000 or (int(problem_id) > Problem_Manager.get_max_id() and int(problem_id) < 11000) or int(problem_id) > Problem_Manager.get_real_max_id():
         abort(404)  # No argument fed
     if Problem_Manager.get_release_time(problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
@@ -233,7 +239,7 @@ def submit_problem():
         if Problem_Manager.in_contest(
                 id) and Login_Manager.get_privilege() < Privilege.ADMIN and share:  # invalid sharing
             return '-1'
-        if problem_id < 1000 or problem_id > Problem_Manager.get_max_id():
+        if problem_id < 1000 or (problem_id > Problem_Manager.get_max_id() and problem_id < 11000) or problem_id > Problem_Manager.get_real_max_id():
             abort(404)
         if unix_nano() < Problem_Manager.get_release_time(
                 int(problem_id)) and Login_Manager.get_privilege() < Privilege.ADMIN:

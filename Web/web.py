@@ -173,29 +173,46 @@ def register():
     return str(val)
 
 
+# @web.route('/problems')
+# def problem_list():
+#     if not Login_Manager.check_user_status():
+#         return redirect('login?next=' + request.full_path)
+#     page = request.args.get('page')
+#     page = int(page) if page is not None else 1
+#     max_page = int(
+#         (Problem_Manager.get_max_id() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
+#     real_max_page = max_page + int(
+#         (Problem_Manager.get_real_max_id() - 10999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
+#     page = max(min(real_max_page, page), 1)
+#     if page <= max_page:
+#         start_id = (page - 1) * WebConfig.Problems_Each_Page + 1 + 999
+#         end_id = page * WebConfig.Problems_Each_Page + 999
+#     else:
+#         start_id = (page - max_page - 1) * WebConfig.Problems_Each_Page + 1 + 10999
+#         end_id = (page - max_page) * WebConfig.Problems_Each_Page + 10999
+#     problems = Problem_Manager.problem_in_range(start_id, end_id, unix_nano(),
+#                                                 Login_Manager.get_privilege() >= Privilege.ADMIN)
+#     return render_template('problem_list.html', Problems=problems, Pages=gen_page(page, real_max_page),
+#                            friendlyName=Login_Manager.get_friendly_name(),
+#                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+
 @web.route('/problems')
 def problem_list():
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
+    is_admin = bool(Login_Manager.get_privilege() >= Privilege.ADMIN)
     page = request.args.get('page')
     page = int(page) if page is not None else 1
-    max_page = int(
-        (Problem_Manager.get_max_id() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
-    real_max_page = max_page + int(
-        (Problem_Manager.get_real_max_id() - 10999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
-    page = max(min(real_max_page, page), 1)
-    if page <= max_page:
-        start_id = (page - 1) * WebConfig.Problems_Each_Page + 1 + 999
-        end_id = page * WebConfig.Problems_Each_Page + 999
+    if is_admin:
+        max_page = int(int(Problem_Manager.get_problem_count_admin()) / WebConfig.Problems_Each_Page)
     else:
-        start_id = (page - max_page - 1) * WebConfig.Problems_Each_Page + 1 + 10999
-        end_id = (page - max_page) * WebConfig.Problems_Each_Page + 10999
-    problems = Problem_Manager.problem_in_range(start_id, end_id, unix_nano(),
+        max_page = int(int(Problem_Manager.get_problem_count(unix_nano())) / WebConfig.Problems_Each_Page)
+    page = max(min(max_page, page), 1)
+    problems = Problem_Manager.problem_in_page_autocalc(page, WebConfig.Problems_Each_Page, unix_nano(),
                                                 Login_Manager.get_privilege() >= Privilege.ADMIN)
-    return render_template('problem_list.html', Problems=problems, Pages=gen_page(page, real_max_page),
+    return render_template('problem_list.html', Problems=problems, Pages=gen_page(page, max_page),
                            friendlyName=Login_Manager.get_friendly_name(),
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
-
 
 @web.route('/problem')
 def problem_detail():
@@ -393,6 +410,7 @@ def status():
     data = []
     for ele in record:
         cur = {'ID': ele['ID'],
+               'Username': ele['Username'],
                'Friendly_Name': User_Manager.get_friendly_name(ele['Username']),
                'Problem_ID': ele['Problem_ID'],
                'Problem_Title': Problem_Manager.get_title(ele['Problem_ID']),

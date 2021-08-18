@@ -56,16 +56,16 @@
         <form id="formProblem">
             <div class="form-row">
                 <div class="form-group col-md-3">
+                    <label for="iptProblemID"> Problem ID </label>
+                    <input class="form-control" type="number" name="id" id="iptProblemID">
+                </div>
+                <div class="form-group col-md-3">
                     <label for="iptTitle"> Title </label>
                     <input class="form-control" type="text" name="title" id="iptTitle">
                 </div>
                 <div class="form-group col-md-3">
                     <label for="iptReleaseTime"> Release Time (YYYY-MM-DDThh:mm:ss) </label>
                     <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime">
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptProblemID"> Problem ID </label>
-                    <input class="form-control" type="number" name="id" id="iptProblemID">
                 </div>
             </div>
             <div class="form-row">
@@ -94,7 +94,7 @@
                     <textarea class="form-control" name="range" id="iptDataRange"></textarea>
                 </div>
                 <div class="float-right d-flex mb-3 ml-auto pr-1">
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnGetProblemDetails">Add Problem
+                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetProblemDetails">Get Problem Details
                     </button>
                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblem">Add Problem
                     </button>
@@ -300,6 +300,18 @@
         }
     </script>
     <script>
+        function formatDate(date) 
+        {
+            var date = new Date(date);
+            var YY = date.getFullYear() + '-';
+            var MM = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+            var DD = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate());
+            var hh = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
+            var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
+            var ss = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
+            return YY + MM + DD +"T"+ hh + mm + ss;
+        }
+
         let op;
         $(function () {
 
@@ -330,16 +342,18 @@
                 });
             });
 
-
             $("#btnGetProblemDetails").click(function(){
                 $.ajax({
                     type: "POST",
                     dataType: "text",
-                    data: {problem_id: $("#iptProblemID").text()},
-                    url: "/api/get_detail",
+                    data: {problem_id: $("#iptProblemID").val()},
+                    url: "/OnlineJudge/api/get_detail",
                     success: function (response_text)
                     {
+                        alert(response_text);
                         var main_json = JSON.parse(response_text);
+                        $("#iptTitle").val(main_json['Title']);
+                        $("#iptReleaseTime").val(formatDate(main_json['Release_Time'] * 1000));
                         $("#iptDescription").val(main_json['Description']);
                         $("#iptInput").val(main_json['Input']);
                         $("#iptOutput").val(main_json['Output']);

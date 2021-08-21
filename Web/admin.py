@@ -108,7 +108,7 @@ def problem_manager():
     try:
         op = int(form[String.TYPE])
         if op == 0:
-            Problem_Manager.add_problem(form[String.TITLE], form[String.DESCRIPTION],
+            Problem_Manager.add_problem(form[String.PROBLEM_ID], form[String.TITLE], form[String.DESCRIPTION],
                                         form[String.INPUT], form[String.OUTPUT], form[String.EXAMPLE_INPUT],
                                         form[String.EXAMPLE_OUTPUT], form[String.DATA_RANGE], form[String.RELEASE_TIME])
             return ReturnCode.SUC_ADD_PROBLEM

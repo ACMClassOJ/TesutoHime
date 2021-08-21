@@ -3,14 +3,14 @@ from utils import *
 
 
 class ProblemManager:
-    def add_problem(self, title: str, description: str, problem_input: str, problem_output: str, example_input: str,
+    def add_problem(self, problem_id: str, title: str, description: str, problem_input: str, problem_output: str, example_input: str,
                     example_output: str, data_range: str, release_time: int):
         db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute(
                 "INSERT INTO Problem(ID, Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (self.get_max_id() + 1, title, description, problem_input, problem_output, example_input, example_output, data_range,
+                (problem_id, title, description, problem_input, problem_output, example_input, example_output, data_range,
                  release_time))
             db.commit()
         except pymysql.Error:

@@ -82,6 +82,9 @@ def index2():
 def get_username():
     return Login_Manager.get_friendly_name()
 
+@web.route('/api/get_problem_id_autoinc', methods=['POST'])
+def get_problem_id_autoinc():
+    return str(Problem_Manager.get_max_id() + 1)
 
 @web.route('/api/get_detail', methods=['POST'])
 def get_detail():

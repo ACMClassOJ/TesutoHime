@@ -9,306 +9,316 @@
 {% block content %}
     <div class="card card-body">
         <h1 class="text-center"> Management </h1>
+        <div class="nav-wrapper">
+            <ul class="nav nav-pills nav-fill flex-column flex-md-row" id="main_tab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link mb-sm-2 mb-md-0 active" id="problem_tab_btn" data-toggle="tab" href="#problem_tab" role="tab" aria-controls="problem_tab" aria-selected="false">题面</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link mb-sm-2 mb-md-0" id="contest_tab_btn" data-toggle="tab" href="#contest_tab" role="tab" aria-controls="contest_tab" aria-selected="false">比赛与作业</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link mb-sm-2 mb-md-0" id="data_zip_tab_btn" data-toggle="tab" href="#data_zip_tab" role="tab" aria-controls="data_zip_tab" aria-selected="false">数据（ZIP）</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link mb-sm-2 mb-md-0" id="data_tab_btn" data-toggle="tab" href="#data_tab" role="tab" aria-controls="data_tab" aria-selected="false">数据（GUI）</a>
+                </li>
+                {% if privilege>=Privilege.SUPER %}
+                <li class="nav-item">
+                    <a class="nav-link mb-sm-2 mb-md-0" id="user_tab_btn" data-toggle="tab" href="#user_tab" role="tab" aria-controls="user_tab" aria-selected="true">用户</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
-    {% if privilege>=Privilege.SUPER %}
-        <div class="card card-body">
-            <div>
-                <h3> User Management </h3>
-                <form id="formUser">
-                    <div class="form-row">
-                        <div class="form-group col-md-3">
-                            <label for="iptUsername"> Username </label>
-                            <input class="form-control" type="text" name="username" id="iptUsername">
+        <div class="card">
+            <div class="card-body">
+                <div class="tab-content" id="main_tab_content">
+                    {% if privilege>=Privilege.SUPER %}
+                    <div class="tab-pane fade" id="user_tab" role="tabpanel" aria-labelledby="user_tab-tab">
+                        <form id="formUser">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label for="iptUsername"> Username </label>
+                                    <input class="form-control" type="text" name="username" id="iptUsername">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptStudentId"> Student ID </label>
+                                    <input class="form-control" type="number" name="id" id="iptStudentId">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptFriendlyName"> Friendly Name </label>
+                                    <input class="form-control" type="text" name="name" id="iptFriendlyName">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptPassword"> Password </label>
+                                    <input class="form-control" type="password" name="password" id="iptPassword">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptPrivilege"> Privilege </label>
+                                    <input class="form-control" type="number" name="privilege" id="iptPrivilege">
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUser"> Add User </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyUser"> Modify User </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUser"> Remove User </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                    <div class="tab-pane fade" id="contest_tab" role="tabpanel" aria-labelledby="contest_tab-tab">
+                        <form id="formContest">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label for="iptContestId"> Contest ID </label>
+                                    <input class="form-control" type="number" name="contest_id" id="iptContestId">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptContestName"> Contest Name </label>
+                                    <input class="form-control" type="text" name="name" id="iptContestName">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptStartTime"> Start Time (YYYY-MM-DDThh:mm:ss) </label>
+                                    <input class="form-control" type="datetime-local" name="start_time" id="iptStartTime">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptEndTime"> End Time (YYYY-MM-DDThh:mm:ss) </label>
+                                    <input class="form-control" type="datetime-local" name="end_time" id="iptEndTime">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptContestProblemId"> Problem ID(s) </label>
+                                    <textarea class="form-control" name="id" id="iptContestProblemId"></textarea>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptContestStudentUsername"> Student Username(s) </label>
+                                    <textarea class="form-control" name="username" id="iptContestStudentUsername"></textarea>
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnCreateContest"> Create Contest </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyContest"> Modify Contest </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveContest"> Remove Contest </button>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="custom-control custom-checkbox col-md-3">
+                                    <input class="custom-control-input" type="checkbox" name="contest_type" id="iptIsHomework">
+                                    <label class="custom-control-label" for="iptIsHomework"> Is Homework </label>
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemToContest"> Add Problem
+                                    </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblemFromContest"> Remove Problem
+                                    </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUserToContest"> Add User
+                                    </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUserFromContest"> Remove User
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade show active" id="problem_tab" role="tabpanel" aria-labelledby="problem_tab-tab">
+                        <form id="formProblem">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label for="iptProblemID"> Problem ID <span class="badge" id="iptProblemStatusBadge"></span></label>
+                                    <input class="form-control" type="number" name="id" id="iptProblemID">
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetProblemAutoIncreseID"> 获取最新空题号 </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetProblemDetails"> 查看题目状态 </button>
+                                </div>
+                            </div>
+                            <div class="form-row" id="divProblemHidden">
+                                <div class="form-group col-md-3">
+                                    <label for="iptTitle"> Title </label>
+                                    <input class="form-control" type="text" name="title" id="iptTitle">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptReleaseTime"> Release Time (YYYY-MM-DDThh:mm:ss) </label>
+                                    <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptDescription"> Description </label>
+                                    <textarea class="form-control" name="description" id="iptDescription"></textarea>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptInput"> Input </label>
+                                    <textarea class="form-control" name="input" id="iptInput"></textarea>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptOutput"> Output </label>
+                                    <textarea class="form-control" name="output" id="iptOutput"></textarea>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptExampleInput"> Example Input </label>
+                                    <textarea class="form-control" name="example_input" id="iptExampleInput"></textarea>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptExampleOutput"> Example Output </label>
+                                    <textarea class="form-control" name="example_output" id="iptExampleOutput"></textarea>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptDataRange"> Data Range </label>
+                                    <textarea class="form-control" name="range" id="iptDataRange"></textarea>
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblem">Add Problem
+                                    </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyProblem">Modify
+                                        Problem
+                                    </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblem">Remove
+                                        Problem
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="data_zip_tab" role="tabpanel" aria-labelledby="data_zip_tab-tab">
+                        <div class="card card-body">
+                            <h3> Upload Data Zip </h3>
+                            <form id="formDataZipUpload">
+                                <div class="form-row">
+                                    <div class="form-group custom-file col-md-3 mb-3">
+                                        <label class="custom-file-label ml-1 mr-1" for="iptDataZipUpload"> Data Zip </label>
+                                        <input class="custom-file-input" type="file" name="file" id="iptDataZipUpload" accept=".zip" required="required">
+                                    </div>
+                                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipUpload"> Upload Data Zip </button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                        <div class="form-group col-md-3">
-                            <label for="iptStudentId"> Student ID </label>
-                            <input class="form-control" type="number" name="id" id="iptStudentId">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="iptFriendlyName"> Friendly Name </label>
-                            <input class="form-control" type="text" name="name" id="iptFriendlyName">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="iptPassword"> Password </label>
-                            <input class="form-control" type="password" name="password" id="iptPassword">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="iptPrivilege"> Privilege </label>
-                            <input class="form-control" type="number" name="privilege" id="iptPrivilege">
-                        </div>
-                        <div class="float-right d-flex mb-3 ml-auto pr-1">
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUser"> Add User
-                            </button>
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyUser"> Modify
-                                User
-                            </button>
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUser"> Remove
-                                User
-                            </button>
+                        <div class="card card-body">
+                            <h3> Download Data Zip </h3>
+                            <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3 mb-3">
+                                        <label for="iptDataZipDownload"> Problem ID </label>
+                                        <input class="form-control" type="number" name="id" id="iptDataZipDownloadProblemID" required="required" min="1">
+                                    </div>
+                                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipDownload"> Download Data Zip </button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                </form>
+                    <div class="tab-pane fade" id="data_tab" role="tabpanel" aria-labelledby="data_tab-tab">
+                        <form id="formData">
+                            <div class="form-row">
+                                <div class="form-group col-md-3 mb-3">
+                                    <label for="iptDataProblemID"> Problem ID </label>
+                                    <input class="form-control" type="number" name="id" id="iptDataProblemID">
+                                </div>
+                                <div class="form-group col-md-3 mb-3">
+                                    <label for="iptCompileTime"> Compile Time Limit (ms) </label>
+                                    <input class="form-control" type="number" name="time" id="iptCompileTime">
+                                </div>
+                                <div class="form-group col-md-3 mb-3">
+                                    <label for="iptCompileTime"> Problem Type </label>
+                                    <select class="form-control selectpicker" name="type" id="type"
+                                            data-style="form-control font-weight-normal border-grey shadow-none">
+                                        <option value="0">Classic</option>
+                                        <option value="1">Special Judge</option>
+                                        <option value="2">Interaction</option>
+                                        <option value="3">Scorer</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group custom-file col-md-3 mb-3">
+                                    <label class="custom-file-label ml-1 mr-1" for="iptData"> Test Data </label>
+                                    <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans,.out"
+                                           multiple>
+                                </div>
+                                <div class="form-group custom-file col-md-3 mb-3">
+                                    <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge </label>
+                                    <input class="custom-file-input" type="file" name="data" id="iptSpj">
+                                </div>
+                                <div class="form-group custom-file col-md-3 mb-3">
+                                    <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
+                                    <input class="custom-file-input" type="file" name="data" id="iptScorer" accept=".py">
+                                </div>
+                                <div class="form-group custom-file col-md-3 mb-3">
+                                    <label class="custom-file-label ml-1 mr-1" for="iptConfig"> Config </label>
+                                    <input class="custom-file-input" type="file" name="config" id="iptConfig" accept=".json">
+                                </div>
+                                <div class="float-right d-flex ml-auto pr-1 mb-3">
+                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnClearConfig">Clear Config
+                                    </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemData">
+                                        Add Problem Data
+                                    </button>
+                                </div>
+                            </div>
+                            <h5 class="mt-2"> Configuration (If <code>config.json</code> not provided) </h5>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-bordered">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">Group ID</th>
+                                        <th scope="col">Group Name</th>
+                                        <th scope="col">Group Score</th>
+                                        <th scope="col">Test Points (separated by ",")</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody contenteditable="true" id="tableGroups">
+                                    <tr>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>10</td>
+                                        <td>1</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                                <div class="float-right">
+                                    <button class="btn btn-outline-primary" type="button" id="btnAddGroupsRow">Add Row</button>
+                                    <button class="btn btn-outline-primary" type="button" id="btnRemoveGroupsRow">Remove Row
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-bordered">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">Dependency</th>
+                                        <th scope="col">Time Limit (ms)</th>
+                                        <th scope="col">Memory Limit (Byte)</th>
+                                        <th scope="col">Disk Limit (Byte)</th>
+                                        <th scope="col">Valgrind</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody contenteditable="true" id="tableDetails">
+                                    <tr>
+                                        <td>1</td>
+                                        <td>0</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td>0</td>
+                                        <td contenteditable="false">
+                                            <div class="custom-checkbox ml-3">
+                                                <input class="form-check-input" type="checkbox" id="iptValgrind1">
+                                                <label class="form-check-label" for="iptValgrind1"></label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                                <div class="float-right">
+                                    <button class="btn btn-outline-primary" type="button" id="btnAddDetailsRow">Add Row</button>
+                                    <button class="btn btn-outline-primary" type="button" id="btnRemoveDetailsRow">Remove Row
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
-    {% endif %}
-    <div class="card card-body">
-        <h3> Problem Management </h3>
-        <form id="formProblem">
-            <div class="form-row">
-                <div class="form-group col-md-3">
-                    <label for="iptProblemID"> Problem ID </label>
-                    <input class="form-control" type="number" name="id" id="iptProblemID">
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptTitle"> Title </label>
-                    <input class="form-control" type="text" name="title" id="iptTitle">
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptReleaseTime"> Release Time (YYYY-MM-DDThh:mm:ss) </label>
-                    <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group col-md-3">
-                    <label for="iptDescription"> Description </label>
-                    <textarea class="form-control" name="description" id="iptDescription"></textarea>
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptInput"> Input </label>
-                    <textarea class="form-control" name="input" id="iptInput"></textarea>
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptOutput"> Output </label>
-                    <textarea class="form-control" name="output" id="iptOutput"></textarea>
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptExampleInput"> Example Input </label>
-                    <textarea class="form-control" name="example_input" id="iptExampleInput"></textarea>
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptExampleOutput"> Example Output </label>
-                    <textarea class="form-control" name="example_output" id="iptExampleOutput"></textarea>
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptDataRange"> Data Range </label>
-                    <textarea class="form-control" name="range" id="iptDataRange"></textarea>
-                </div>
-                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetProblemDetails">Get Problem Details
-                    </button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblem">Add Problem
-                    </button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyProblem">Modify
-                        Problem
-                    </button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblem">Remove
-                        Problem
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-    <div class="card card-body">
-        <h3> Contest Management </h3>
-        <form id="formContest">
-            <div class="form-row">
-                <div class="form-group col-md-3">
-                    <label for="iptContestId"> Contest ID </label>
-                    <input class="form-control" type="number" name="contest_id" id="iptContestId">
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptContestName"> Contest Name </label>
-                    <input class="form-control" type="text" name="name" id="iptContestName">
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptStartTime"> Start Time (YYYY-MM-DDThh:mm:ss) </label>
-                    <input class="form-control" type="datetime-local" name="start_time" id="iptStartTime">
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptEndTime"> End Time (YYYY-MM-DDThh:mm:ss) </label>
-                    <input class="form-control" type="datetime-local" name="end_time" id="iptEndTime">
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptContestProblemId"> Problem ID(s) </label>
-                    <textarea class="form-control" name="id" id="iptContestProblemId"></textarea>
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="iptContestStudentUsername"> Student Username(s) </label>
-                    <textarea class="form-control" name="username" id="iptContestStudentUsername"></textarea>
-                </div>
-                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnCreateContest"> Create
-                        Contest
-                    </button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyContest"> Modify
-                        Contest
-                    </button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveContest"> Remove
-                        Contest
-                    </button>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="custom-control custom-checkbox col-md-3">
-                    <input class="custom-control-input" type="checkbox" name="contest_type" id="iptIsHomework">
-                    <label class="custom-control-label" for="iptIsHomework"> Is Homework </label>
-                </div>
-                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemToContest"> Add
-                        Problem
-                    </button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblemFromContest">
-                        Remove Problem
-                    </button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUserToContest"> Add
-                        User
-                    </button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUserFromContest">
-                        Remove User
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-    <div class="card card-body">
-        <h3> Upload Data Zip </h3>
-        <form id="formDataZipUpload">
-            <div class="form-row">
-                <div class="form-group custom-file col-md-3 mb-3">
-                    <label class="custom-file-label ml-1 mr-1" for="iptDataZipUpload"> Data Zip </label>
-                    <input class="custom-file-input" type="file" name="file" id="iptDataZipUpload" accept=".zip">
-                </div>
-                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipUpload">Upload Data Zip</button>
-                </div>
-            </div>
-        </form>
-    </div>
-    <div class="card card-body">
-        <h3> Download Data Zip </h3>
-        <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
-            <div class="form-row">
-                <div class="form-group col-md-3 mb-3">
-                    <label for="iptDataZipDownload"> Problem ID </label>
-                    <input class="form-control" type="number" name="id" id="iptDataZipDownloadProblemID">
-                </div>
-                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipDownload">Download Data Zip</button>
-                </div>
-            </div>
-        </form>
-    </div>
-    <div class="card card-body">
-        <h3> Data Management </h3>
-        <form id="formData">
-            <div class="form-row">
-                <div class="form-group col-md-3 mb-3">
-                    <label for="iptDataProblemID"> Problem ID </label>
-                    <input class="form-control" type="number" name="id" id="iptDataProblemID">
-                </div>
-                <div class="form-group col-md-3 mb-3">
-                    <label for="iptCompileTime"> Compile Time Limit (ms) </label>
-                    <input class="form-control" type="number" name="time" id="iptCompileTime">
-                </div>
-                <div class="form-group col-md-3 mb-3">
-                    <label for="iptCompileTime"> Problem Type </label>
-                    <select class="form-control selectpicker" name="type" id="type"
-                            data-style="form-control font-weight-normal border-grey shadow-none">
-                        <option value="0">Classic</option>
-                        <option value="1">Special Judge</option>
-                        <option value="2">Interaction</option>
-                        <option value="3">Scorer</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group custom-file col-md-3 mb-3">
-                    <label class="custom-file-label ml-1 mr-1" for="iptData"> Test Data </label>
-                    <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans,.out"
-                           multiple>
-                </div>
-                <div class="form-group custom-file col-md-3 mb-3">
-                    <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge </label>
-                    <input class="custom-file-input" type="file" name="data" id="iptSpj">
-                </div>
-                <div class="form-group custom-file col-md-3 mb-3">
-                    <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
-                    <input class="custom-file-input" type="file" name="data" id="iptScorer" accept=".py">
-                </div>
-                <div class="form-group custom-file col-md-3 mb-3">
-                    <label class="custom-file-label ml-1 mr-1" for="iptConfig"> Config </label>
-                    <input class="custom-file-input" type="file" name="config" id="iptConfig" accept=".json">
-                </div>
-                <div class="float-right d-flex ml-auto pr-1 mb-3">
-                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnClearConfig">Clear Config
-                    </button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemData">
-                        Add Problem Data
-                    </button>
-                </div>
-            </div>
-            <h5 class="mt-2"> Configuration (If <code>config.json</code> not provided) </h5>
-            <div class="table-responsive mb-3">
-                <table class="table table-bordered">
-                    <thead>
-                    <tr>
-                        <th scope="col">Group ID</th>
-                        <th scope="col">Group Name</th>
-                        <th scope="col">Group Score</th>
-                        <th scope="col">Test Points (separated by ",")</th>
-                    </tr>
-                    </thead>
-                    <tbody contenteditable="true" id="tableGroups">
-                    <tr>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>10</td>
-                        <td>1</td>
-                    </tr>
-                    </tbody>
-                </table>
-                <div class="float-right">
-                    <button class="btn btn-outline-primary" type="button" id="btnAddGroupsRow">Add Row</button>
-                    <button class="btn btn-outline-primary" type="button" id="btnRemoveGroupsRow">Remove Row
-                    </button>
-                </div>
-            </div>
-            <div class="table-responsive mb-3">
-                <table class="table table-bordered">
-                    <thead>
-                    <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">Dependency</th>
-                        <th scope="col">Time Limit (ms)</th>
-                        <th scope="col">Memory Limit (Byte)</th>
-                        <th scope="col">Disk Limit (Byte)</th>
-                        <th scope="col">Valgrind</th>
-                    </tr>
-                    </thead>
-                    <tbody contenteditable="true" id="tableDetails">
-                    <tr>
-                        <td>1</td>
-                        <td>0</td>
-                        <td></td>
-                        <td></td>
-                        <td>0</td>
-                        <td contenteditable="false">
-                            <div class="custom-checkbox ml-3">
-                                <input class="form-check-input" type="checkbox" id="iptValgrind1">
-                                <label class="form-check-label" for="iptValgrind1"></label>
-                            </div>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-                <div class="float-right">
-                    <button class="btn btn-outline-primary" type="button" id="btnAddDetailsRow">Add Row</button>
-                    <button class="btn btn-outline-primary" type="button" id="btnRemoveDetailsRow">Remove Row
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
     </div>
 {% endblock %}
 {% block script %}
@@ -326,8 +336,7 @@
             });
             return data;
         }
-    </script>
-    <script>
+
         function formatDate(date) 
         {
             var date = new Date(date);
@@ -335,9 +344,8 @@
             var MM = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
             var DD = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate());
             var hh = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
-            var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
-            var ss = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
-            return YY + MM + DD +"T"+ hh + mm + ss;
+            var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
+            return YY + MM + DD +"T"+ hh + mm;
         }
 
         let op;
@@ -370,7 +378,33 @@
                 });
             });
 
+            $("#divProblemHidden").hide();
+
+            $("#btnGetProblemAutoIncreseID").click(function(){
+                $.ajax({
+                    type: "POST",
+                    dataType: "text",
+                    url: "/OnlineJudge/api/get_problem_id_autoinc",
+                    success: function (response_text)
+                    {
+                        $("#iptProblemID").val(parseInt(response_text));
+                        document.getElementById('btnGetProblemDetails').click();
+                    }
+                });
+            });
+
             $("#btnGetProblemDetails").click(function(){
+                $("#btnAddProblem").attr("disabled","disabled");
+                $("#btnModifyProblem").attr("disabled","disabled");
+                $("#btnRemoveProblem").attr("disabled","disabled");
+                $("#iptTitle").val("");
+                $("#iptReleaseTime").val(formatDate(new Date()));
+                $("#iptDescription").val("");
+                $("#iptInput").val("");
+                $("#iptOutput").val("");
+                $("#iptExampleInput").val("");
+                $("#iptExampleOutput").val("");
+                $("#iptDataRange").val("");
                 $.ajax({
                     type: "POST",
                     dataType: "text",
@@ -378,18 +412,33 @@
                     url: "/OnlineJudge/api/get_detail",
                     success: function (response_text)
                     {
-                        alert(response_text);
-                        var main_json = JSON.parse(response_text);
-                        $("#iptTitle").val(main_json['Title']);
-                        $("#iptReleaseTime").val(formatDate(main_json['Release_Time'] * 1000));
-                        $("#iptDescription").val(main_json['Description']);
-                        $("#iptInput").val(main_json['Input']);
-                        $("#iptOutput").val(main_json['Output']);
-                        $("#iptExampleInput").val(main_json['Example_Input']);
-                        $("#iptExampleOutput").val(main_json['Example_Output']);
-                        $("#iptDataRange").val(main_json['Data_Range']);
+                        if(response_text == "{}")
+                        {
+                            $("#btnAddProblem").removeAttr("disabled");
+                            $("#iptProblemStatusBadge").removeClass();
+                            $("#iptProblemStatusBadge").addClass("badge badge-secondary");
+                            $("#iptProblemStatusBadge").text("空");
+                        }
+                        else
+                        {
+                            $("#btnModifyProblem").removeAttr("disabled");
+                            $("#btnRemoveProblem").removeAttr("disabled");
+                            $("#iptProblemStatusBadge").removeClass();
+                            $("#iptProblemStatusBadge").addClass("badge badge-success");
+                            $("#iptProblemStatusBadge").text("已存在");
+                            var main_json = JSON.parse(response_text);
+                            $("#iptTitle").val(main_json['Title']);
+                            $("#iptReleaseTime").val(formatDate(main_json['Release_Time'] * 1000));
+                            $("#iptDescription").val(main_json['Description']);
+                            $("#iptInput").val(main_json['Input']);
+                            $("#iptOutput").val(main_json['Output']);
+                            $("#iptExampleInput").val(main_json['Example_Input']);
+                            $("#iptExampleOutput").val(main_json['Example_Output']);
+                            $("#iptDataRange").val(main_json['Data_Range']);
+                        }
                     }
                 });
+                $("#divProblemHidden").slideDown(500);
             });
             $("#btnAddProblem").click(function () {
                 op = 0;
@@ -415,6 +464,7 @@
                     data: JSON.stringify(data),
                     complete: function (ret) {
                         alert(JSON.stringify(ret));
+                        document.getElementById('btnGetProblemDetails').click();
                     }
                 });
             });

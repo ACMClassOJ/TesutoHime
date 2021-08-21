@@ -25,6 +25,12 @@
         <a href="/OnlineJudge/status?problem_id={{ ID }}" class="btn btn-info"> 评测状态 </a> {% if not In_Contest -%}
         <a href="/OnlineJudge/discuss?problem_id={{ ID }}" class="btn btn-success"> 讨论 </a>
         <a href="/OnlineJudge/rank?problem_id={{ ID }}" class="btn btn-light"> 排行榜 </a> {%- endif %}
+        {% if is_Admin %}
+        <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
+            <button class="btn btn-warning" type="submit" id="btn_problem_details_datazip_download"> 下载本题数据 </button>
+            <input type="hidden" name="id" id="problem_details_datazip_download_problem_ID" value="{{ ID }}">    
+        </form>
+        {%- endif %}
     </div>
 </div>
 {% endblock %} {% block script %}

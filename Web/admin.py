@@ -1,4 +1,6 @@
-from flask import request, render_template, Blueprint, abort
+from flask import request, render_template, Blueprint, abort, Response, stream_with_context
+import requests
+from requests.models import Request
 from const import *
 from sessionManager import Login_Manager
 from userManager import User_Manager
@@ -7,6 +9,7 @@ from contestManager import Contest_Manager
 from requests import post
 from requests.exceptions import RequestException
 from config import DataConfig
+import json
 
 admin = Blueprint('admin', __name__, static_folder='static')
 
@@ -186,3 +189,17 @@ def data_upload():
         except RequestException:
             return ReturnCode.ERR_NETWORK_FAILURE
     return ReturnCode.ERR_BAD_DATA
+
+
+@admin.route('/data_download', methods=['POST'])
+def data_download():
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(404)
+    id = request.form['id']
+    try:
+        r = requests.get(DataConfig.server + '/' + DataConfig.key + '/' + str(id) + '.zip', stream=True)
+        resp = Response(stream_with_context(r.iter_content(chunk_size = 512)), content_type = 'application/octet-stream')
+        resp.headers["Content-disposition"] = 'attachment; filename=' + str(id) +'.zip'
+        return resp
+    except RequestException:
+        return ReturnCode.ERR_NETWORK_FAILURE

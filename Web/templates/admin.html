@@ -171,6 +171,34 @@
         </form>
     </div>
     <div class="card card-body">
+        <h3> Upload Data Zip </h3>
+        <form id="formDataZipUpload">
+            <div class="form-row">
+                <div class="form-group custom-file col-md-3 mb-3">
+                    <label class="custom-file-label ml-1 mr-1" for="iptDataZipUpload"> Data Zip </label>
+                    <input class="custom-file-input" type="file" name="file" id="iptDataZipUpload" accept=".zip">
+                </div>
+                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipUpload">Upload Data Zip</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="card card-body">
+        <h3> Download Data Zip </h3>
+        <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
+            <div class="form-row">
+                <div class="form-group col-md-3 mb-3">
+                    <label for="iptDataZipDownload"> Problem ID </label>
+                    <input class="form-control" type="number" name="id" id="iptDataZipDownloadProblemID">
+                </div>
+                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipDownload">Download Data Zip</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="card card-body">
         <h3> Data Management </h3>
         <form id="formData">
             <div class="form-row">
@@ -523,6 +551,22 @@
                             alert(ret.responseText);
                         }
                     });
+                });
+            });
+            $("#formDataZipUpload").submit(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                let data = new FormData(this);
+                $.ajax({
+                    url: "/OnlineJudge/admin/data",
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    dataType: "json",
+                    complete: function (ret) {
+                        alert(ret.responseText);
+                    }
                 });
             });
         });

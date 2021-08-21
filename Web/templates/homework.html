@@ -24,7 +24,7 @@
             <table class="table table-striped table-bordered table-hover" id="homework">
                 <thead>
                 <tr>
-                    <th>用户</th>
+                    <th>用户昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
                     {% for problem in Problems -%}
                         <th><a href="/OnlineJudge/problem?problem_id={{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
                     {%- endfor %}
@@ -34,7 +34,11 @@
                 {% for i in range(0, len) -%}
                     <tr>
                         <td>
+                            {% if is_Admin -%}
+                            <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ Data[i][len2+3] }}">{{ Data[i][1] }}</span>
+                            {% else -%}
                             <span>{{ Data[i][1] }}</span>
+                            {%- endif %}
                             {% if is_Admin %}
                                 <span class="text-black-50 float-right"><small>{{ Data[i][len2 + 2] }}</small></span>
                             {% endif %}
@@ -43,9 +47,17 @@
                             <td>
                                 {% if Data[i][j + 2][1] -%}
                                     {%- if not Data[i][j+2][0] -%}
-                                        <span class="text-red">(-{{ Data[i][j + 2][1] }})</span>
+                                        {% if is_Admin -%}
+                                        <a class="text-red" href="/OnlineJudge/status?submitter={{ Data[i][len2 + 3] }}&problem_id={{ Problems[j][0] }}">(-{{ Data[i][j+2][1] }})</a>
+                                        {% else -%}
+                                        <span class="text-red">(-{{ Data[i][j+2][1] }})</span>
+                                        {%- endif %}
                                     {%- else -%}
+                                        {% if is_Admin -%}
+                                        <a class="text-green" href="/OnlineJudge/status?submitter={{ Data[i][len2 + 3] }}&problem_id={{ Problems[j][0] }}&status=2">({{ Data[i][j + 2][1] }}Y)</a>
+                                        {% else -%}
                                         <span class="text-green">({{ Data[i][j + 2][1] }}Y)</span>
+                                        {%- endif %}
                                     {%- endif -%}
                                 {%- endif %}
                             </td>
@@ -56,4 +68,11 @@
             </table>
         </div>
     </div>
+{% endblock %}
+{% block script %}
+<script>
+    $(function(){
+        $("[data-toggle='popover']").popover();
+    });
+</script>
 {% endblock %}

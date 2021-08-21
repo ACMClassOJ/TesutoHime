@@ -297,10 +297,12 @@ def problem_rank():
     else:
         sort_parameter = 'time'
         record = sorted(record, key=lambda x: x[2])
+    in_contest = Problem_Manager.in_contest(problem_id) and Login_Manager.get_privilege() < Privilege.ADMIN
     return render_template('problem_rank.html', Problem_ID=problem_id, Title=Problem_Manager.get_title(problem_id),
                            Data=record, Sorting=sort_parameter, friendlyName=Login_Manager.get_friendly_name(),
                            readable_lang=readable_lang, readable_time=readable_time,
-                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN,
+                           In_Contest=in_contest)
 
 
 @web.route('/discuss', methods=['GET', 'POST'])
@@ -316,7 +318,8 @@ def discuss():
             return render_template('problem_discussion.html', Problem_ID=problem_id,
                                    Title=Problem_Manager.get_title(problem_id), Blocked=True,
                                    friendlyName=Login_Manager.get_friendly_name(),
-                                   is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)  # Discussion Closed
+                                   is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN,
+                                   In_Contest=True)  # Discussion Closed
         username = Login_Manager.get_username()  # for whether to display edit or delete
         privilege = Login_Manager.get_privilege()
         data = Discuss_Manager.get_discuss_for_problem(problem_id)
@@ -331,7 +334,8 @@ def discuss():
         return render_template('problem_discussion.html', Problem_ID=problem_id,
                                Title=Problem_Manager.get_title(problem_id), Discuss=discussion,
                                friendlyName=Login_Manager.get_friendly_name(),
-                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN,
+                               In_Contest=False)
     else:
         if not Login_Manager.check_user_status():
             return ReturnCode.ERR_USER_NOT_LOGGED_IN
@@ -514,7 +518,9 @@ def contest():
                 tmp.append([max_score, submit_time, is_ac])  # AC try time or failed times
             if is_admin:
                 tmp.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(Player)))
+                tmp.append(Player[0])
             else:
+                tmp.append("")
                 tmp.append("")
             tmp[1] //= 60
             data.append(tmp)
@@ -586,7 +592,9 @@ def homework():
                 tmp.append([is_ac, try_time])  # AC try time or failed times
             if is_admin:
                 tmp.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(Player)))
+                tmp.append(Player[0])
             else:
+                tmp.append("")
                 tmp.append("")
             data.append(tmp)
 

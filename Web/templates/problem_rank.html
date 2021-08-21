@@ -2,12 +2,37 @@
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}"> {% endblock %} {% block content %}
 <div class="card card-body">
     <h1 class="text-center">{{ Problem_ID }}. {{ Title }}</h1>
-    <div class="btn-group mx-auto mb-3">
-        <a href="/OnlineJudge/problem?problem_id={{ Problem_ID }}" class="btn btn-warning"> 题面 </a>
-        <a href="/OnlineJudge/submit?problem_id={{ Problem_ID }}" class="btn btn-primary"> 提交 </a>
-        <a href="/OnlineJudge/status?problem_id={{ Problem_ID }}" class="btn btn-info"> 评测状态 </a>
-        <a href="/OnlineJudge/discuss?problem_id={{ Problem_ID }}" class="btn btn-success"> 讨论 </a>
+    <div class="nav-wrapper">
+        <ul class="nav nav-pills nav-fill flex-column flex-md-row">
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem?problem_id={{ Problem_ID }}">题面</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/submit?problem_id={{ Problem_ID }}">提交</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ Problem_ID }}">评测状态</a>
+            </li>
+            {% if not In_Contest -%}
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/discuss?problem_id={{ Problem_ID }}">讨论</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/rank?problem_id={{ Problem_ID }}">排行榜</a>
+            </li>
+            {% endif %}
+            {% if is_Admin %}
+            <li class="nav-item">
+                <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
+                    <input type="hidden" name="id" id="datazip_download_problem_ID" value="{{ Problem_ID }}">    
+                </form>
+                <a class="nav-link mb-sm-2 mb-md-0" href="javascript:document.getElementById('formDataZipDownload').submit();"> 下载本题数据 </a>
+            </li>
+            {% endif %}
+        </ul>
     </div>
+</div>
+<div class="card card-body">
     <div class="table-responsive">
         <table class="table table-striped table-bordered table-hover" id="status_list">
             <thead>

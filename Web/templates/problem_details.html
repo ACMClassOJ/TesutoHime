@@ -3,6 +3,37 @@
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}"> {% endblock %} {% block content %}
 <div class="card card-body">
     <h1 class="text-center"><span id="problem_id">{{ ID }}</span><span>. {{ Title }}</span></h1>
+    <div class="nav-wrapper">
+        <ul class="nav nav-pills nav-fill flex-column flex-md-row">
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem?problem_id={{ ID }}">题面</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/submit?problem_id={{ ID }}">提交</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ ID }}">评测状态</a>
+            </li>
+            {% if not In_Contest -%}
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/discuss?problem_id={{ ID }}">讨论</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/rank?problem_id={{ ID }}">排行榜</a>
+            </li>
+            {% endif %}
+            {% if is_Admin %}
+            <li class="nav-item">
+                <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
+                    <input type="hidden" name="id" id="datazip_download_problem_ID" value="{{ ID }}">    
+                </form>
+                <a class="nav-link mb-sm-2 mb-md-0" href="javascript:document.getElementById('formDataZipDownload').submit();"> 下载本题数据 </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+<div class="card card-body">
     <div id="content">
         <h3>题目描述</h3>
         <p id="problem_details_description"></p>
@@ -26,10 +57,7 @@
         <a href="/OnlineJudge/discuss?problem_id={{ ID }}" class="btn btn-success"> 讨论 </a>
         <a href="/OnlineJudge/rank?problem_id={{ ID }}" class="btn btn-light"> 排行榜 </a> {%- endif %}
         {% if is_Admin %}
-        <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
-            <button class="btn btn-warning" type="submit" id="btn_problem_details_datazip_download"> 下载本题数据 </button>
-            <input type="hidden" name="id" id="problem_details_datazip_download_problem_ID" value="{{ ID }}">    
-        </form>
+        <a href="javascript:document.getElementById('formDataZipDownload').submit();" class="btn btn-warning"> 下载本题数据 </a>
         {%- endif %}
     </div>
 </div>

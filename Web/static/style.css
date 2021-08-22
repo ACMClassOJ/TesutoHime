@@ -115,7 +115,7 @@ h6 {
 
 p {
     margin-top: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 abbr[title],
@@ -1627,7 +1627,7 @@ pre code {
 
 .table th,
 .table td {
-    padding: 1rem;
+    padding: 0.8rem;
     vertical-align: top;
     border-top: 0.0625rem solid #dee2e6;
 }
@@ -20740,8 +20740,8 @@ textarea[resize="horizontal"] {
 
 p {
     font-size: 1rem;
-    font-weight: 300;
-    line-height: 1.7;
+    font-weight: 400;
+    line-height: 1.5;
 }
 
 .lead {

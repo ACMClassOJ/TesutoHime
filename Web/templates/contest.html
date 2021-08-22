@@ -79,5 +79,10 @@
     $(function(){
         $("[data-toggle='popover']").popover();
     });
+    $("[data-toggle='popover']").click(function(){
+        setTimeout(function(){
+            $("[data-toggle='popover']").popover('hide')
+        }, 2000);
+    });
 </script>
 {% endblock %}

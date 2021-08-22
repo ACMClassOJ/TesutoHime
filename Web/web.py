@@ -208,12 +208,20 @@ def problem_list():
     page = int(page) if page is not None else 1
     if is_admin:
         max_page = int(int(Problem_Manager.get_problem_count_admin()) / WebConfig.Problems_Each_Page)
+        problem_count_under_11000 = (Problem_Manager.get_problem_count_under_11000_admin())
+        latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))
+        if problem_count_under_11000 % WebConfig.Problems_Each_Page != 0:
+            latest_page_under_11000 += 1
     else:
         max_page = int(int(Problem_Manager.get_problem_count(unix_nano())) / WebConfig.Problems_Each_Page)
+        problem_count_under_11000 = (Problem_Manager.get_problem_count_under_11000(unix_nano()))
+        latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))
+        if problem_count_under_11000 % WebConfig.Problems_Each_Page != 0:
+            latest_page_under_11000 += 1
     page = max(min(max_page, page), 1)
     problems = Problem_Manager.problem_in_page_autocalc(page, WebConfig.Problems_Each_Page, unix_nano(),
                                                 Login_Manager.get_privilege() >= Privilege.ADMIN)
-    return render_template('problem_list.html', Problems=problems, Pages=gen_page(page, max_page),
+    return render_template('problem_list.html', Problems=problems, Pages=gen_page_for_problem_list(page, max_page, latest_page_under_11000),
                            friendlyName=Login_Manager.get_friendly_name(),
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 

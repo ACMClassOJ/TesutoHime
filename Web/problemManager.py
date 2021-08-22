@@ -117,10 +117,30 @@ class ProblemManager:
             return 0
         return int(data[0])
 
+    def get_problem_count_under_11000(self, now_time: int) -> int:
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(ID) FROM Problem WHERE Problem.Release_Time <= " + str(now_time) + " AND Problem.ID < 11000")
+        data = cursor.fetchone()
+        db.close()
+        if data[0] is None:
+            return 0
+        return int(data[0])
+
     def get_problem_count_admin(self) -> int:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT COUNT(ID) FROM Problem")
+        data = cursor.fetchone()
+        db.close()
+        if data[0] is None:
+            return 0
+        return int(data[0])
+
+    def get_problem_count_under_11000_admin(self) -> int:
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(ID) FROM Problem WHERE Problem.ID < 11000")
         data = cursor.fetchone()
         db.close()
         if data[0] is None:
@@ -163,7 +183,7 @@ class ProblemManager:
     def problem_in_page_autocalc(self, page: int, problem_num_per_page: int, time_now: int, is_admin: bool):
         db = db_connect()
         cursor = db.cursor()
-        problem_num_start = (page - 1) * problem_num_per_page + 1
+        problem_num_start = (page - 1) * problem_num_per_page
         if not is_admin:
             cursor.execute("SELECT ID, Title FROM Problem WHERE Release_Time <= " + str(time_now) + " LIMIT "
                            + str(problem_num_start) + "," + str(problem_num_per_page))

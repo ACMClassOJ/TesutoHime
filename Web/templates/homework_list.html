@@ -27,15 +27,15 @@
                         <td>
                             {% if cur['Blocked'] -%}
                                 {%- if cur['Joined'] -%}
-                                    <button disabled class="btn btn-primary">已报名参赛</button>
+                                    <button disabled class="btn btn-primary btn-sm">已报名参赛</button>
                                 {%- else -%}
-                                    <button disabled class="btn btn-primary">报名参赛</button>
+                                    <button disabled class="btn btn-primary btn-sm">报名参赛</button>
                                 {%- endif -%}
                             {% else -%}
                                 {%- if cur['Joined'] -%}
-                                    <button disabled class="btn btn-primary">已报名参赛</button>
+                                    <button disabled class="btn btn-primary btn-sm">已报名参赛</button>
                                 {%- else -%}
-                                    <button onclick="post_join({{ cur['ID'] }})" class="btn btn-primary">报名参赛
+                                    <button onclick="post_join({{ cur['ID'] }})" class="btn btn-primary btn-sm">报名参赛
                                     </button>
                                 {%- endif -%}
                             {%- endif %}

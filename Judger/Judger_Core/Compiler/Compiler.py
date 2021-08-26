@@ -9,7 +9,7 @@ from ..util import log # cxy 2021 6 28
 from config import Performance_Rate
 import os
 import shutil
-
+import copy
 
 class Compiler(CompilerInterface):
     def __init__(self) -> None:
@@ -64,17 +64,17 @@ class Compiler(CompilerInterface):
         language = code_config.language
         time_limit = code_config.compileTimeLimit / 1000.0 * Performance_Rate
 
-        if self.lastCompileConfig != None and code_config.__dict__ == self.lastCompileConfig.__dict__:
+        if self.lastCompileConfig != None and code_config.__dict__ == self.lastCompileConfig:
             log.info("Compiler: the same code we have already compiled, just return the last compilation result")
             return self.lastCompileResult
 
         self.clear()
         
         if language == "c++" or language == "cpp" or language == "C++":
-            self.lastCompileConfig = code_config
+            self.lastCompileConfig = copy.deepcopy(code_config.__dict__)
             self.lastCompileResult = self.compile_cpp(source_code, time_limit, code_config.sandboxOn)
         elif language == "Verilog" or language == "verilog":
-            self.lastCompileConfig = code_config
+            self.lastCompileConfig = copy.deepcopy(code_config.__dict__)
             self.lastCompileResult = self.compile_verilog(source_code, time_limit, code_config.sandboxOn)
         elif language == "git" or language == "Git":
             # git would change for every compilation

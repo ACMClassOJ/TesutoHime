@@ -71,6 +71,7 @@
                 </tr>
             </table>
         </div>
+        {% if Data != None -%}
         <div class="row">
             <div class="m-auto">
                 {% for group in Data %}
@@ -104,6 +105,7 @@
                 {%- endfor %}
             </div>
         </div>
+        {%- endif %}
         <hr>
         <h5>代码：<button id="copy_button" class="btn btn-primary btn-sm float-right" data-clipboard-target="#judge_detail_code_highlighted">复制</button></h5>
         <pre><code id="judge_detail_code_highlighted">Waiting for code</code></pre>

@@ -7,12 +7,18 @@ $(function(){
         success: function (response_text)
         {
             var main_json = JSON.parse(response_text);
-            $("#problem_details_description").html(marked(main_json['Description']));
-            $("#problem_details_input").html(marked(main_json['Input']));
-            $("#problem_details_output").html(marked(main_json['Output']));
-            $("#problem_details_example_input").html(marked(main_json['Example_Input']));
-            $("#problem_details_example_output").html(marked(main_json['Example_Output']));
-            $("#problem_details_data_range").html(marked(main_json['Data_Range']));
+            if (main_json['Description'] == "None") $("#problem_details_description_header").html("");
+            else $("#problem_details_description").html(marked(main_json['Description']));
+            if (main_json['Input'] == "None") $("#problem_details_input_header").html("");
+            else $("#problem_details_input").html(marked(main_json['Input']));
+            if (main_json['Output'] == "None") $("#problem_details_output_header").html("");
+            else $("#problem_details_output").html(marked(main_json['Output']));
+            if (main_json['Example_Input'] == "None") $("#problem_details_example_input_header").html("");
+            else $("#problem_details_example_input").html(marked(main_json['Example_Input']));
+            if (main_json['Example_Output'] == "None") $("#problem_details_example_output_header").html("");
+            else $("#problem_details_example_output").html(marked(main_json['Example_Output']));
+            if (main_json['Data_Range'] == "None") $("#problem_details_data_range_header").html("");
+            else $("#problem_details_data_range").html(marked(main_json['Data_Range']));
             renderMathInElement(document.body,
                 {
                     delimiters: [

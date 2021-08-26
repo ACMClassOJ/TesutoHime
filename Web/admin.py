@@ -108,9 +108,11 @@ def problem_manager():
     try:
         op = int(form[String.TYPE])
         if op == 0:
-            Problem_Manager.add_problem(form[String.PROBLEM_ID], form[String.TITLE], form[String.DESCRIPTION],
-                                        form[String.INPUT], form[String.OUTPUT], form[String.EXAMPLE_INPUT],
-                                        form[String.EXAMPLE_OUTPUT], form[String.DATA_RANGE], form[String.RELEASE_TIME])
+            Problem_Manager.add_problem(int(form[String.PROBLEM_ID]), form.get(String.TITLE, None),
+                                        form.get(String.DESCRIPTION, None), form.get(String.INPUT, None),
+                                        form.get(String.OUTPUT, None), form.get(String.EXAMPLE_INPUT, None),
+                                        form.get(String.EXAMPLE_OUTPUT, None), form.get(String.DATA_RANGE, None),
+                                        form.get(String.RELEASE_TIME, None))
             return ReturnCode.SUC_ADD_PROBLEM
         elif op == 1:
             Problem_Manager.modify_problem(int(form[String.PROBLEM_ID]), form.get(String.TITLE, None),

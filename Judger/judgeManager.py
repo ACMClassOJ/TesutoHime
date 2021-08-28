@@ -140,7 +140,7 @@ class JudgeManager:
                                         testPointDetail.score = float("\n".join(f.readline().splitlines()))
                                     testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC
                                     with open('/work/message.log') as f:
-                                        testPointDetail.message.join(f.readline().splitlines())
+                                        testPointDetail.message = testPointDetail.message.join(f.readline().splitlines())
                                 except Exception as e:
                                     log.error(e)
                                     testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while running SPJ.', ResultType.SYSERR

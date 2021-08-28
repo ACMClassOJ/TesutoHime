@@ -23,6 +23,9 @@
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" id="data_tab_btn" data-toggle="tab" href="#data_tab" role="tab" aria-controls="data_tab" aria-selected="false">数据（GUI）</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link mb-sm-2 mb-md-0" id="pic_tab_btn" data-toggle="tab" href="#pic_tab" role="tab" aria-controls="pic_tab" aria-selected="false">图床</a>
+                </li>
                 {% if privilege>=Privilege.SUPER %}
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" id="user_tab_btn" data-toggle="tab" href="#user_tab" role="tab" aria-controls="user_tab" aria-selected="true">用户</a>
@@ -205,6 +208,21 @@
                                 </div>
                             </form>
                         </div>
+                    </div>
+                    <div class="tab-pane fade" id="pic_tab" role="tabpanel" aria-labelledby="pic_tab-tab">
+                        <h3> Upload pic </h3>
+                        <form id="formPicUpload" enctype="multipart/form-data">
+                            <div class="form-row">
+                                <div class="form-group custom-file col-md-3 mb-3">
+                                    <label class="custom-file-label ml-1 mr-1" for="iptPicUpload"> gif，jpg/jpeg，png </label>
+                                    <input class="custom-file-input" type="file" name="file" id="iptPicUpload" accept="image/gif,image/jpeg,image/jpg,image/png" required="required">
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnPicUpload"> Upload Picture </button>
+                                </div>
+                            </div>
+                        </form>
+                        <p id="InfoPicUpload"></p>
                     </div>
                     <div class="tab-pane fade" id="data_tab" role="tabpanel" aria-labelledby="data_tab-tab">
                         <form id="formData">
@@ -603,6 +621,7 @@
                     });
                 });
             });
+
             $("#formDataZipUpload").submit(function (e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -616,6 +635,22 @@
                     dataType: "json",
                     complete: function (ret) {
                         alert(ret.responseText);
+                    }
+                });
+            });
+
+            $("#formPicUpload").submit(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                let data = new FormData(this);
+                $.ajax({
+                    url: "/OnlineJudge/admin/pic",
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    complete: function (ret) {
+                        $("#InfoPicUpload").html(ret.responseText);
                     }
                 });
             });

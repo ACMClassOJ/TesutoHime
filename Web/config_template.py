@@ -27,3 +27,7 @@ class LogConfig:
     path = 'PATH/tracker.log'
     maxBytes = 536870912
 
+class PicConfig:
+    server = ''  # 请填写可从公网访问的图片服务url
+    key = ''
+

@@ -1,22 +1,22 @@
-{% extends 'base.html' %}
-
-{% set page='Index' %}
-
-{% block content %}
-    <div class="jumbotron bg-white">
-        <h1>Welcome to ACM Class OnlineJudge</h1>
+{% extends 'base.html' %} {% set page='Index' %} {% block content %}
+<div class="jumbotron bg-white">
+    <h1>Welcome to ACM Class OnlineJudge</h1>
+    <hr class="my-4">
+    <h4>Compiler Options:</h4>
+    <p>C++：<code>g++ code.cpp -o code -fmax-errors=10 -O2 -DONLINE_JUDGE -lm -std=c++17</code></p>
+    <p>Git：<code>cmake . && make</code></p>
+    <p>Verilog：<code>iverlog answer.v -o code</code></p>
+    <hr class="my-4">
+    <p><a href="/OnlineJudge-old/">Legacy OnlineJudge</a>所有题库与测试数据已完成迁移，即日起可在本OJ评测老OJ题目。2021.8.18</p>
+    <p>老OJ题号加10000即为新OJ题号，如，老OJ 1000 -> 新OJ 11000。</p>
+    <p>已知迁移后题面与数据的兼容性问题详情见<a href="/OnlineJudge/about#migration">此链接</a></p>
         <hr class="my-4">
-        <h4>Compiler Options:</h4>
-        <p>C++：<code>g++ code.cpp -o code -fmax-errors=10 -O2 -DONLINE_JUDGE -lm -std=c++17</code></p>
-        <p>Git：<code>cmake . && make</code></p>
-        <p>Verilog：<code>iverlog answer.v -o code</code></p>
-        <hr class="my-4">
-        <p><a href="/OnlineJudge-old/">Legacy OnlineJudge</a>所有题库与测试数据已完成迁移，即日起可在本OJ评测老OJ题目。2021.8.18</p>
-        <p>老OJ题号加10000即为新OJ题号，如，老OJ 1000 -> 新OJ 11000。</p>
-        <p>已知迁移后题面与数据的兼容性问题详情见<a href="/OnlineJudge/about#migration">此链接</p>
+        <p>联系管理组：<a href="mailto:acmclassoj@googlegroups.com">acmclassoj@googlegroups.com</a></p>
         <hr class="my-4">
         <a class="btn btn-lg btn-primary mb-3" href="/OnlineJudge/problems">Challenge</a>
         <a class="btn btn-lg btn-warning mb-3" href="/OnlineJudge/about">About</a>
         <a class="btn btn-lg btn-default mb-3" href="/OnlineJudge-old/">Legacy OnlineJudge</a>
-    </div>
+        <hr class="my-4">
+        <p>友情链接：<a href="https://acmsekai.com/">ACM Sekai</a></p>
+</div>
 {% endblock %}

@@ -31,6 +31,21 @@ class JudgeManager:
         db.close()
         return
 
+
+    # def add_quiz(self, user: str, problem_id: int, status: str, score: str, time: str, time_used: str, mem_used: str, detail: str):
+    #     db = db_connect()
+    #     cursor = db.cursor()
+    #     try:
+    #         cursor.execute("INSERT INTO Judge(Code, User, Problem_ID, Language, Status, Score, Time, Time_Used, Mem_Used, Detail, Share) VALUES('Quiz', %s, %s, '3', %s, %s, %s, %s, %s, '%s', '0')",
+    #             (user, str(problem_id), str(status), str(score), str(time), str(time_used), str(mem_used), str(detail)))
+    #         db.commit()
+    #     except pymysql.Error:
+    #         db.rollback()
+    #         sys.stderr.write("SQL Error in JudgeManager: Add_Quiz\n")
+    #     db.close()
+    #     return
+
+
     def update_status(self, judge_id: int, new_status: int):
         db = db_connect()
         cursor = db.cursor()

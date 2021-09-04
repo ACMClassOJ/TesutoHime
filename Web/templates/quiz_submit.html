@@ -42,6 +42,7 @@
     <div class="card card-body">
         <form method="post" id="quiz_submit_form">
             <input type="hidden" name="problem_id" value="{{ Problem_ID }}">
+            <input type="hidden" name="lang" value="quiz">
             {% if Main_Json["e"] < 0 %}
                 <p>{{ Main_Json["msg"] }}</p>
             {% else %}

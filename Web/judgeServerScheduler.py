@@ -46,6 +46,8 @@ class JudgeServerScheduler:
             data['Lang'] = 'git'
         elif lang_digit == 2:
             data['Lang'] = 'Verilog'
+        elif lang_digit == 3:
+            data['Lang'] = 'quiz'
         data['Code'] = Record[2]
         for i in range(0, 3):
             re = requests.post(Server[0] + '/judge', data = data).content.decode() # Fixme: check self-signed SSL

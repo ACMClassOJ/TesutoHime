@@ -35,6 +35,35 @@ class JudgeManager:
         # spj 4 hpp with spj
         # spj 5 output only
 
+        if language == 'quiz':
+            log.info("JudgeManager: Judging Quiz")
+            with open(dataPath + "/quiz.json") as f:
+                right_ans_json = json.load(f)
+            student_ans_json = json.load(sourceCode)
+            quiz_correct_cnt = 0
+            Details = []
+            Groups_Details = []
+            for i in right_ans_json["problems"]:
+                print(i["answer"])    
+                print(student_ans_json[i["id"]])
+                if i["answer"] == "":
+                    quiz_correct_cnt += 1
+                    testPointDetail = DetailResult(int(i["id"]), ResultType.AC, 1, 0, 0, 0, "主观题不加判断先记为正确，请等待助教手动给分。")
+                    groupPointDetail = Group(int(i["id"]), "", 1, [int(i["id"])])
+                elif i["answer"] == student_ans_json[i["id"]]
+                    quiz_correct_cnt += 1
+                    testPointDetail = DetailResult(int(i["id"]), ResultType.AC, 1, 0, 0, 0, "Accepted")
+                    groupPointDetail = Group(int(i["id"]), "", 1, [int(i["id"])])
+                else:
+                    testPointDetail = DetailResult(int(i["id"]), ResultType.WA, 0, 0, 0, 0, "Wrong Answer")
+                    groupPointDetail = Group(int(i["id"]), "", 0, [int(i["id"])])
+                Details.append(testPointDetail)
+                Groups_Details.append(groupPointDetail)
+            print(quiz_correct_cnt)
+            if quiz_correct_cnt == len(right_ans_json["problems"])
+                judgeResult = JudgerResult(ResultType.AC, quiz_correct_cnt, 0, 0, Details, ProblemConfig(Groups_Details, Details, 0, 0, 0))
+            return judgeResult
+
         if problemConfig.SPJ in [1, 4, 5]:
             log.info("JudgeManager: compile once for spj")
             subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))

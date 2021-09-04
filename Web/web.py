@@ -49,7 +49,8 @@ def readable_lang(lang: int) -> str:
     lang_str = {
         0: 'C++',
         1: 'Git',
-        2: 'Verilog'
+        2: 'Verilog',
+        3: 'Quiz'
     }
     try:
         return lang_str[lang]
@@ -289,12 +290,41 @@ def submit_problem():
             lang = 1
         elif lang_request_str == 'Verilog':
             lang = 2
-        # cpp or git or Verilog
-        user_code = request.form.get('code')
+        elif lang_request_str == 'quiz':
+            lang = 3
+        # cpp or git or Verilog or quiz
+        if lang == 3:
+            user_code = json.dumps(request.form.to_dict())
+        else:
+            user_code = request.form.get('code')
         if len(str(user_code)) > ProblemConfig.Max_Code_Length:
             return '-1'
         JudgeServer_Scheduler.Start_Judge(problem_id, username, user_code, lang, share)
         return '0'
+
+
+@web.route('/submit_quiz', methods=['POST'])
+def submit_quiz():
+    if not Login_Manager.check_user_status():
+        return redirect('login?next=' + request.full_path)
+    problem_id = int(request.form.get('problem_id'))
+    if Problem_Manager.get_release_time(
+            problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
+        return '-1'
+    if Problem_Manager.in_contest(id) and Login_Manager.get_privilege() < Privilege.ADMIN:
+        return '-1'
+    if problem_id < 1000 or (problem_id > Problem_Manager.get_max_id() and problem_id < 11000) or problem_id > Problem_Manager.get_real_max_id():
+        abort(404)
+    if unix_nano() < Problem_Manager.get_release_time(
+            int(problem_id)) and Login_Manager.get_privilege() < Privilege.ADMIN:
+        return '-1'
+    username = Login_Manager.get_username()
+    right_json = Quiz_Manager.get_json_from_data_service_by_id(problem_id)
+    main_json['problem']
+    for i in main_json['problems']:
+        i["id"]
+    Judge_Manager.add_quiz(username, )
+    return '0'
 
 
 @web.route('/rank')

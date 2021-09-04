@@ -127,7 +127,7 @@ def get_code():
     if run_id < 0 or run_id > Judge_Manager.max_id():
         return '-1'
     detail = Judge_Manager.query_judge(run_id)
-    if detail['User'] != Login_Manager.get_username() and Login_Manager.get_privilege() < Privilege.SUPER and (
+    if detail['User'] != Login_Manager.get_username() and Login_Manager.get_privilege() < Privilege.ADMIN and (
             not detail['Share'] or Problem_Manager.in_contest(detail['Problem_ID'])):
         return '-1'
     return detail['Code']
@@ -492,7 +492,7 @@ def code():
     if run_id < 0 or run_id > Judge_Manager.max_id():
         abort(404)
     detail = Judge_Manager.query_judge(run_id)
-    if detail['User'] != Login_Manager.get_username() and Login_Manager.get_privilege() < Privilege.SUPER and (
+    if detail['User'] != Login_Manager.get_username() and Login_Manager.get_privilege() < Privilege.ADMIN and (
             not detail['Share'] or Problem_Manager.in_contest(detail['Problem_ID'])):
         return abort(403)
     else:

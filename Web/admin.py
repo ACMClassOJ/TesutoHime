@@ -113,14 +113,14 @@ def problem_manager():
                                         form.get(String.DESCRIPTION, None), form.get(String.INPUT, None),
                                         form.get(String.OUTPUT, None), form.get(String.EXAMPLE_INPUT, None),
                                         form.get(String.EXAMPLE_OUTPUT, None), form.get(String.DATA_RANGE, None),
-                                        form.get(String.RELEASE_TIME, None))
+                                        form.get(String.RELEASE_TIME, None), form.get(String.PROBLEM_TYPE, None))
             return ReturnCode.SUC_ADD_PROBLEM
         elif op == 1:
             Problem_Manager.modify_problem(int(form[String.PROBLEM_ID]), form.get(String.TITLE, None),
                                            form.get(String.DESCRIPTION, None), form.get(String.INPUT, None),
                                            form.get(String.OUTPUT, None), form.get(String.EXAMPLE_INPUT, None),
                                            form.get(String.EXAMPLE_OUTPUT, None), form.get(String.DATA_RANGE, None),
-                                           form.get(String.RELEASE_TIME, None))
+                                           form.get(String.RELEASE_TIME, None), form.get(String.PROBLEM_TYPE, None))
             return ReturnCode.SUC_MOD_PROBLEM
         elif op == 2:
             Problem_Manager.delete_problem(form[String.PROBLEM_ID])

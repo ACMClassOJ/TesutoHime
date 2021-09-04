@@ -5,6 +5,7 @@ from typing import Optional
 from sessionManager import Login_Manager
 from userManager import User_Manager
 from problemManager import Problem_Manager
+from quizManager import Quiz_Manager
 from discussManager import Discuss_Manager
 from judgeManager import Judge_Manager
 from contestManager import Contest_Manager
@@ -252,10 +253,17 @@ def submit_problem():
                 problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
             abort(404)
         title = Problem_Manager.get_title(problem_id)
+        problem_type = Problem_Manager.get_problem_type(problem_id)
         in_contest = Problem_Manager.in_contest(id) and Login_Manager.get_privilege() < Privilege.ADMIN
-        return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Contest=in_contest,
+        if problem_type == 0:
+            return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Contest=in_contest,
                                friendlyName=Login_Manager.get_friendly_name(),
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+        elif problem_type == 1:
+            return render_template('quiz_submit.html', Problem_ID=problem_id, Title=title, In_Contest=in_contest,
+                               friendlyName=Login_Manager.get_friendly_name(),
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN, 
+                               Main_Json=Quiz_Manager.get_json_from_data_service_by_id(QuizTempDataConfig, problem_id))
     else:
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.full_path)

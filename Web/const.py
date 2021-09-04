@@ -8,6 +8,7 @@ class String:
     PRIVILEGE = 'privilege'
     PROBLEM_ID = 'id'
     TITLE = 'title'
+    PROBLEM_TYPE = 'problem_type'
     DESCRIPTION = 'description'
     INPUT = 'input'
     OUTPUT = 'output'
@@ -41,6 +42,7 @@ class ReturnCode:
     SUC_DEL_PROBLEMS_FROM_CONTEST = {'e': 0, 'msg': 'problem(s) removed from contest successfully'}
     SUC_ADD_USERS_TO_CONTEST = {'e': 0, 'msg': 'user(s) added to contest successfully'}
     SUC_DEL_USERS_FROM_CONTEST = {'e': 0, 'msg': 'user(s) removed from contest successfully'}
+    SUC_QUIZ_JSON_DECODE = {'e': 0, 'msg': 'quiz.json decoded successfully'}
 
     ERR_BAD_DATA = {'e': -1, 'msg': 'bad data'}
     ERR_NETWORK_FAILURE = {'e': -2, 'msg': 'network failure'}
@@ -66,6 +68,7 @@ class ReturnCode:
     ERR_ADDS_USER_TO_CONTEST = {'e': -311, 'msg': 'failed to add user(s) to contest'}
     ERR_DEL_USERS_FROM_CONTEST = {'e': -312, 'msg': 'failed to remove user(s) from contest'}
 
+    ERR_QUIZ_JSON_DECODE = {'e': -400, 'msg': 'failed to decode quiz.json'}
 
 class Privilege:
     GUEST = 0

@@ -34,7 +34,9 @@ echo "文件大小: " . ($_FILES["file"]["size"] / 1024) . " KB <br>";
 
 if (!move_uploaded_file($_FILES['file']['tmp_name'], $dir . $_FILES["file"]["name"])) 
 {
-    echo "系统错误，上传失败！";
+    echo "系统错误，上传失败！0";
     die();
 }
+else
+    echo "上传成功！1";
 ?>

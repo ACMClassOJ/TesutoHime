@@ -20,14 +20,19 @@ class ProblemConfig:
     Max_Code_Length = 16384 * 8
 
 class DataConfig:
-    server = ''
+    server = 'http://localhost:8080'
     key = ''
+
+class QuizTempDataConfig:
+    server = 'http://localhost:8080'
+    key = ''
+    cache_dir = '/home/rbq/cache'
 
 class LogConfig:
     path = 'PATH/tracker.log'
     maxBytes = 536870912
 
 class PicConfig:
-    server = ''  # 请填写可从公网访问的图片服务url
+    server = 'https://acm.sjtu.edu.cn/OnlineJudge-pic'  # 请填写可从公网访问的图片服务url
     key = ''
 

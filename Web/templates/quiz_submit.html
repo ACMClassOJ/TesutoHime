@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% set page='Submit' %}
+{% set page='Quiz' %}
 
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
@@ -40,49 +40,32 @@
         </div>
     </div>
     <div class="card card-body">
-        <form method="post" id="problem_submit_form">
-            <div class="form-group">
-                <label for="lang">语言</label>
-                <select id="lang" name="lang" class="form-control input-group py-0 selectpicker"
-                        data-style="form-control rounded border-grey shadow-none font-weight-normal">
-                    <option value="auto_detect" selected="selected">自动检测</option>
-                    <option value="cpp">C++</option>
-                    <option value="git">Git</option>
-                    <option value="Verilog">Verilog</option>
-                </select>
-            </div>
-            <div class="row mx-0">
-                <label for="code">代码</label>
-                {% if not In_Contest -%}
-                    <div class="form-group ml-auto">
-                        <div class="custom-control custom-switch">
-                            <input class="custom-control-input" type="checkbox" name="shared" id="shared"
-                                   value="shared">
-                            <label class="custom-control-label" for="shared">代码对他人可见</label>
-                        </div>
-                    </div>
-                {%- endif %}
-            </div>
-            <textarea class="form-control mb-3" rows="18" id="code" name="code" required="required"></textarea>
+        <form method="post" id="quiz_submit_form">
             <input type="hidden" name="problem_id" value="{{ Problem_ID }}">
-            <input type="submit" class="btn btn-block btn-primary" value="提交评测">
+            {% if Main_Json["e"] < 0 %}
+                <p>{{ Main_Json["msg"] }}</p>
+            {% else %}
+            {% for problem in Main_Json['problems'] -%}
+                <p>{{ problem["id"] }}. {{ problem["title"] }}</p>
+                {% if problem["type"] == "SELECT" %}
+                    {% for option in problem["options"] -%}
+                        <div class="custom-control custom-radio mb-3">
+                            <input id="{{ problem['id'] }}__{{ option['value'] }}" name="{{ problem['id'] }}" class="custom-control-input" value="{{ option['value'] }}" type="radio">
+                            <label class="custom-control-label" for="{{ problem['id'] }}__{{ option['value'] }}">{{ option["text"] }}</label>
+                      </div>
+                    {%- endfor %}
+                {% elif problem["type"] == "FILL" %}
+                    <textarea class="form-control" rows="1" name = "{{ problem['id'] }}"></textarea>
+                {% endif %}
+            {%- endfor %}
+            {% endif %}
+            <hr>
+            <input type="submit" class="btn btn-block btn-primary" value="提交">
         </form>
     </div>
 {% endblock %}
 
 {% block script %}
     <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}"></script>
-    {% if not In_Contest -%}
-        <script>
-            $(function () {
-                let share = localStorage.getItem("share");
-                if (share == null) {
-                    localStorage.setItem("share", "false");
-                    share = "false";
-                }
-                $("#shared").prop("checked", share === "true");
-            });
-        </script>
-    {%- endif %}
+    <script src="{{ url_for('.static', filename = 'js/quiz_submit.js') }}"></script>
 {% endblock %}

@@ -4,14 +4,14 @@ from utils import *
 
 class ProblemManager:
     def add_problem(self, problem_id: str, title: str, description: str, problem_input: str, problem_output: str, example_input: str,
-                    example_output: str, data_range: str, release_time: int):
+                    example_output: str, data_range: str, release_time: int, problem_type: int):
         db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute(
-                "INSERT INTO Problem(ID, Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO Problem(ID, Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time, Problem_Type) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (problem_id, title, description, problem_input, problem_output, example_input, example_output, data_range,
-                 release_time))
+                 release_time, problem_type))
             db.commit()
         except pymysql.Error:
             db.rollback()
@@ -20,14 +20,14 @@ class ProblemManager:
         return
 
     def modify_problem(self, problem_id: int, title: str, description: str, problem_input: str, problem_output: str,
-                       example_input: str, example_output: str, data_range: str, release_time: int):
+                       example_input: str, example_output: str, data_range: str, release_time: int, problem_type: int):
         db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute(
-                "UPDATE Problem SET Title = %s, Description = %s, Input = %s, Output = %s, Example_Input = %s, Example_Output = %s, Data_Range = %s, Release_Time = %s WHERE ID = %s",
+                "UPDATE Problem SET Title = %s, Description = %s, Input = %s, Output = %s, Example_Input = %s, Example_Output = %s, Data_Range = %s, Release_Time = %s, Problem_Type = %s WHERE ID = %s",
                 (title, description, problem_input, problem_output, example_input, example_output, data_range,
-                 release_time, problem_id))
+                 release_time, problem_type, problem_id))
             db.commit()
         except pymysql.Error:
             db.rollback()
@@ -52,7 +52,8 @@ class ProblemManager:
                'Example_Output': str(data[6]),
                'Data_Range': str(data[7]),
                'Release_Time': int(data[8]),
-               'Flag_Count': int(data[9])}
+               'Flag_Count': int(data[9]),
+               'Problem_Type': int(data[10])}
         return ret
 
     def lock_problem(self, problem_id: int):
@@ -86,6 +87,16 @@ class ProblemManager:
         if data is None:
             return ""
         return str(data[0])
+
+    def get_problem_type(self, problem_id: int) -> int:
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Problem_Type FROM Problem WHERE ID = %s", (str(problem_id)))
+        data = cursor.fetchone()
+        db.close()
+        if data is None:
+            return ""
+        return int(data[0])
 
     def in_contest(self, problem_id: int) -> bool:  # return True when this Problem is in a Contest or Homework
         db = db_connect()
@@ -172,10 +183,10 @@ class ProblemManager:
         db = db_connect()
         cursor = db.cursor()
         if not is_admin:
-            cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= %s and ID <= %s and Release_Time <= %s",
+            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem WHERE ID >= %s and ID <= %s and Release_Time <= %s",
                            (str(start_id), str(end_id), str(time_now)))
         else:
-            cursor.execute("SELECT ID, Title FROM Problem WHERE ID >= %s and ID <= %s", (str(start_id), str(end_id)))
+            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem WHERE ID >= %s and ID <= %s", (str(start_id), str(end_id)))
         ret = cursor.fetchall()
         db.close()
         return ret
@@ -185,10 +196,10 @@ class ProblemManager:
         cursor = db.cursor()
         problem_num_start = (page - 1) * problem_num_per_page
         if not is_admin:
-            cursor.execute("SELECT ID, Title FROM Problem WHERE Release_Time <= " + str(time_now) + " LIMIT "
+            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem WHERE Release_Time <= " + str(time_now) + " LIMIT "
                            + str(problem_num_start) + "," + str(problem_num_per_page))
         else:
-            cursor.execute("SELECT ID, Title FROM Problem LIMIT " + str(problem_num_start) + "," + str(problem_num_per_page))
+            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem LIMIT " + str(problem_num_start) + "," + str(problem_num_per_page))
         ret = cursor.fetchall()
         db.close()
         return ret

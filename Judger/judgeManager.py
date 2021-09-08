@@ -8,6 +8,7 @@ from Judger_Core.util import log
 import multiprocessing
 import subprocess
 import os.path
+import json
 
 class JudgeManager:
     def judge(self,
@@ -39,18 +40,16 @@ class JudgeManager:
             log.info("JudgeManager: Judging Quiz")
             with open(dataPath + "/quiz.json") as f:
                 right_ans_json = json.load(f)
-            student_ans_json = json.load(sourceCode)
+            student_ans_json = json.loads(sourceCode)
             quiz_correct_cnt = 0
             Details = []
             Groups_Details = []
             for i in right_ans_json["problems"]:
-                print(i["answer"])    
-                print(student_ans_json[i["id"]])
                 if i["answer"] == "":
                     quiz_correct_cnt += 1
                     testPointDetail = DetailResult(int(i["id"]), ResultType.AC, 1, 0, 0, 0, "主观题不加判断先记为正确，请等待助教手动给分。")
                     groupPointDetail = Group(int(i["id"]), "", 1, [int(i["id"])])
-                elif i["answer"] == student_ans_json[i["id"]]
+                elif i["id"] in student_ans_json and i["answer"] == student_ans_json[i["id"]]:
                     quiz_correct_cnt += 1
                     testPointDetail = DetailResult(int(i["id"]), ResultType.AC, 1, 0, 0, 0, "Accepted")
                     groupPointDetail = Group(int(i["id"]), "", 1, [int(i["id"])])
@@ -60,7 +59,7 @@ class JudgeManager:
                 Details.append(testPointDetail)
                 Groups_Details.append(groupPointDetail)
             print(quiz_correct_cnt)
-            if quiz_correct_cnt == len(right_ans_json["problems"])
+            if quiz_correct_cnt == len(right_ans_json["problems"]):
                 judgeResult = JudgerResult(ResultType.AC, quiz_correct_cnt, 0, 0, Details, ProblemConfig(Groups_Details, Details, 0, 0, 0))
             return judgeResult
 

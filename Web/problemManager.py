@@ -121,7 +121,7 @@ class ProblemManager:
     def get_problem_count(self, now_time: int) -> int:
         db = db_connect()
         cursor = db.cursor()
-        cursor.execute("SELECT COUNT(ID) FROM Problem WHERE Problem.Release_Time <= " + str(now_time))
+        cursor.execute("SELECT COUNT(ID) FROM Problem WHERE Problem.Release_Time <= %s", (str(now_time)))
         data = cursor.fetchone()
         db.close()
         if data[0] is None:
@@ -131,7 +131,7 @@ class ProblemManager:
     def get_problem_count_under_11000(self, now_time: int) -> int:
         db = db_connect()
         cursor = db.cursor()
-        cursor.execute("SELECT COUNT(ID) FROM Problem WHERE Problem.Release_Time <= " + str(now_time) + " AND Problem.ID < 11000")
+        cursor.execute("SELECT COUNT(ID) FROM Problem WHERE Problem.Release_Time <= %s AND Problem.ID < 11000", (str(now_time)))
         data = cursor.fetchone()
         db.close()
         if data[0] is None:
@@ -196,10 +196,9 @@ class ProblemManager:
         cursor = db.cursor()
         problem_num_start = (page - 1) * problem_num_per_page
         if not is_admin:
-            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem WHERE Release_Time <= " + str(time_now) + " LIMIT "
-                           + str(problem_num_start) + "," + str(problem_num_per_page))
+            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem WHERE Release_Time <= %s LIMIT %s, %s" , (str(time_now), int(problem_num_start), int(problem_num_per_page)))
         else:
-            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem LIMIT " + str(problem_num_start) + "," + str(problem_num_per_page))
+            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem LIMIT %s, %s", (int(problem_num_start), int(problem_num_per_page)))
         ret = cursor.fetchall()
         db.close()
         return ret

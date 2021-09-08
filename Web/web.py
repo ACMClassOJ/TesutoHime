@@ -372,7 +372,7 @@ def discuss():
         discussion = []
         for ele in data:
             tmp = [ele[0], User_Manager.get_friendly_name(ele[1]), ele[2], readable_time(int(ele[3]))]
-            if ele[1] == username or privilege == 2:  # ele[4]: editable?
+            if ele[1] == username or privilege >= Privilege.SUPER:  # ele[4]: editable?
                 tmp.append(True)
             else:
                 tmp.append(False)
@@ -471,7 +471,7 @@ def status():
                'Time_Used': ele['Time_Used'],
                'Mem_Used': ele['Mem_Used'],
                'Lang': readable_lang(ele['Lang']),
-               'Visible': username == ele['Username'] or privilege == 2 or (
+               'Visible': username == ele['Username'] or privilege >= Privilege.ADMIN or (
                        bool(ele['Share']) and not Problem_Manager.in_contest(ele['Problem_ID'])),
                'Time': readable_time(ele['Time'])}
         if is_admin:

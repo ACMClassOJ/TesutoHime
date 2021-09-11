@@ -43,6 +43,7 @@ class ReturnCode:
     SUC_ADD_USERS_TO_CONTEST = {'e': 0, 'msg': 'user(s) added to contest successfully'}
     SUC_DEL_USERS_FROM_CONTEST = {'e': 0, 'msg': 'user(s) removed from contest successfully'}
     SUC_QUIZ_JSON_DECODE = {'e': 0, 'msg': 'quiz.json decoded successfully'}
+    SUC_PIC_SERVICE_UPLOAD = {'e': 0, 'msg': 'picture uploaded successfully'}
 
     ERR_BAD_DATA = {'e': -1, 'msg': 'bad data'}
     ERR_NETWORK_FAILURE = {'e': -2, 'msg': 'network failure'}
@@ -69,6 +70,13 @@ class ReturnCode:
     ERR_DEL_USERS_FROM_CONTEST = {'e': -312, 'msg': 'failed to remove user(s) from contest'}
 
     ERR_QUIZ_JSON_DECODE = {'e': -400, 'msg': 'failed to decode quiz.json'}
+
+    ERR_PIC_SERIVCE_TOO_BIG = {'e': -500, 'msg': 'size of the picture should be no more than 10MB!'}
+    ERR_PIC_SERIVCE_WRONG_EXT = {'e': -501, 'msg': 'acceptable file extension for picture service: gif, jpg, jpeg, png'}
+    ERR_PIC_SERIVCE_SYSTEM_ERROR = {'e': -502, 'msg': 'picture service system error'}
+    
+
+
 
 class Privilege:
     GUEST = 0

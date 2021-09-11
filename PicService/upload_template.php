@@ -17,26 +17,26 @@ $ext = end($temp);
 
 if($_FILES["file"]["size"] > 10240000)
 {
-    echo "图片大小不能超过10M！";
+    echo "-500";
     die();
 }
 
 if(!in_array($ext, $allowed_exts))
 {
-    echo "文件后缀名不正确！";
+    echo "-501";
     die();
 }
 
-echo "From upload.php: <br>";
-echo "文件名: " . $_FILES["file"]["name"] . "<br>";
-echo "文件类型: " . $ext . "<br>";
-echo "文件大小: " . ($_FILES["file"]["size"] / 1024) . " KB <br>";
+// echo "From upload.php: <br>";
+// echo "文件名: " . $_FILES["file"]["name"] . "<br>";
+// echo "文件类型: " . $ext . "<br>";
+// echo "文件大小: " . ($_FILES["file"]["size"] / 1024) . " KB <br>";
 
 if (!move_uploaded_file($_FILES['file']['tmp_name'], $dir . $_FILES["file"]["name"])) 
 {
-    echo "系统错误，上传失败！0";
+    echo "-502";
     die();
 }
 else
-    echo "上传成功！1";
+    echo "0";
 ?>

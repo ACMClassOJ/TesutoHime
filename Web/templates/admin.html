@@ -4,6 +4,11 @@
 
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
+    <style type="text/css">
+    .swal-modal {
+        width: 70%;
+    }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -341,6 +346,7 @@
 {% block script %}
     <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/jszip.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
     <script>
         $.fn.serializeObject = function () {
             let data = {};
@@ -651,6 +657,40 @@
                     contentType: false,
                     data: data,
                     complete: function (ret) {
+                        var ret_json = JSON.parse(ret.responseText);
+                        if(ret_json['e'] < 0)
+                            swal("Error " + ret_json['e'], ret_json['msg'], "error");
+                        else
+                        {
+                            var swal_content = document.createElement("p");
+                            swal_content.innerHTML = '<img src="' + ret_json['link'] + '" style="width: 33%"><br>';
+                            swal_content.innerHTML += "<xmp id='swal_content_url'>" + ret_json['link'] + "</xmp>";
+                            swal_content.innerHTML += '<xmp id="swal_content_html"><img src="' + ret_json['link'] + '" style="width: 100%"></xmp>';
+                            swal_config = {
+                                title: ret_json['msg'],
+                                icon: "success",
+                                content: swal_content,
+                                buttons: {
+                                    copy_url: {
+                                        text: "复制链接",
+                                        value: "copy_url",
+                                        className: "copy_url",
+                                        closeModal: false
+                                    },
+                                    copy_html: {
+                                        text: "复制html",
+                                        value: "copy_html",
+                                        className: "copy_html",
+                                        closeModal: false
+                                    }
+                                }
+                            };
+                            swal(swal_config);
+                            document.getElementsByClassName('copy_url')[0].setAttribute("data-clipboard-target", "#swal_content_url");
+                            var clipboard1 = new ClipboardJS(document.getElementsByClassName('copy_url')[0]);
+                            document.getElementsByClassName('copy_html')[0].setAttribute("data-clipboard-target", "#swal_content_html");
+                            var clipboard2 = new ClipboardJS(document.getElementsByClassName('copy_html')[0]);
+                        }
                         $("#InfoPicUpload").html(ret.responseText);
                     }
                 });

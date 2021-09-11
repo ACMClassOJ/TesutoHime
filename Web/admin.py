@@ -217,14 +217,20 @@ def pic_upload():
         try:
             hasher = hashlib.md5()
             hasher.update(f.filename.encode('utf-8'))
-            filenamehashed = str(hasher.hexdigest()) + f.filename
+            filenamehashed = str(hasher.hexdigest()) + f.filename[f.filename.rindex("."):].lower()
             r = post(PicConfig.server + '/' + PicConfig.key + '/upload.php', files={'file': (filenamehashed, f)})
             response_text = r.content.decode('utf-8')
-            if response_text[-1] == '0':
-                notify_text = '''<br>From Python：<br>上传失败！'''
-            else:
-                notify_text = '<br>From Python：<br>上传成功！可以通过<a href="' + PicConfig.server + '/' + filenamehashed + '">此链接</a>获取图片！'
-            return response_text + notify_text
+            notify_text = 'Unknown Error'
+            if response_text == '0':
+                ret_notify = ReturnCode.SUC_PIC_SERVICE_UPLOAD
+                ret_notify['link'] = PicConfig.server + '/' + filenamehashed
+                return ret_notify
+            elif response_text == '-500':
+                return ReturnCode.ERR_PIC_SERIVCE_TOO_BIG
+            elif response_text == '-501':
+                return ReturnCode.ERR_PIC_SERIVCE_WRONG_EXT
+            elif response_text == '-502':
+                return ReturnCode.ERR_PIC_SERIVCE_SYSTEM_ERROR
         except RequestException:
             return ReturnCode.ERR_NETWORK_FAILURE
     return ReturnCode.ERR_BAD_DATA

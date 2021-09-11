@@ -80,13 +80,16 @@ def index():
 def index2():
     return redirect('/')
 
+
 @web.route('/api/get_username', methods=['POST'])
 def get_username():
     return Login_Manager.get_friendly_name()
 
+
 @web.route('/api/get_problem_id_autoinc', methods=['POST'])
 def get_problem_id_autoinc():
     return str(Problem_Manager.get_max_id() + 1)
+
 
 @web.route('/api/get_detail', methods=['POST'])
 def get_detail():
@@ -131,6 +134,27 @@ def get_code():
             not detail['Share'] or Problem_Manager.in_contest(detail['Problem_ID'])):
         return '-1'
     return detail['Code']
+
+
+@web.route('/api/quiz', methods=['POST'])
+def get_quiz():
+    if not Login_Manager.check_user_status():
+        return ReturnCode.ERR_USER_NOT_LOGGED_IN
+    problem_id = request.form.get('problem_id')
+    if problem_id is None:
+        return ReturnCode.ERR_BAD_DATA
+    if not str(problem_id).isdigit():  # bad argument
+        return ReturnCode.ERR_BAD_DATA
+    problem_id = int(problem_id)
+    if Problem_Manager.get_release_time(problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
+        return ReturnCode.ERR_PERMISSION_DENIED
+    problem_type = Problem_Manager.get_problem_type(problem_id)
+    if problem_type != 1:
+        return ReturnCode.ERR_PROBLEM_NOT_QUIZ
+    quiz_json = Quiz_Manager.get_json_from_data_service_by_id(QuizTempDataConfig, problem_id)
+    for i in quiz_json["problems"]:
+        i["answer"] = ""
+    return json.dumps(quiz_json)
 
 
 @web.route('/login', methods=['GET', 'POST'])
@@ -263,8 +287,7 @@ def submit_problem():
         elif problem_type == 1:
             return render_template('quiz_submit.html', Problem_ID=problem_id, Title=title, In_Contest=in_contest,
                                friendlyName=Login_Manager.get_friendly_name(),
-                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN, 
-                               Main_Json=Quiz_Manager.get_json_from_data_service_by_id(QuizTempDataConfig, problem_id))
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     else:
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.full_path)
@@ -301,30 +324,6 @@ def submit_problem():
             return '-1'
         JudgeServer_Scheduler.Start_Judge(problem_id, username, user_code, lang, share)
         return '0'
-
-
-@web.route('/submit_quiz', methods=['POST'])
-def submit_quiz():
-    if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
-    problem_id = int(request.form.get('problem_id'))
-    if Problem_Manager.get_release_time(
-            problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
-        return '-1'
-    if Problem_Manager.in_contest(id) and Login_Manager.get_privilege() < Privilege.ADMIN:
-        return '-1'
-    if problem_id < 1000 or (problem_id > Problem_Manager.get_max_id() and problem_id < 11000) or problem_id > Problem_Manager.get_real_max_id():
-        abort(404)
-    if unix_nano() < Problem_Manager.get_release_time(
-            int(problem_id)) and Login_Manager.get_privilege() < Privilege.ADMIN:
-        return '-1'
-    username = Login_Manager.get_username()
-    right_json = Quiz_Manager.get_json_from_data_service_by_id(problem_id)
-    main_json['problem']
-    for i in main_json['problems']:
-        i["id"]
-    Judge_Manager.add_quiz(username, )
-    return '0'
 
 
 @web.route('/rank')

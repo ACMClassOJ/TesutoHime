@@ -4,11 +4,13 @@
 
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.css">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
 {% endblock %}
 
 {% block content %}
     <div class="card card-body">
-        <h1 class="text-center"> {{ Problem_ID }}. {{ Title }}</h1>
+        <h1 class="text-center"> <span id="problem_id">{{ Problem_ID }}</span>. {{ Title }}</h1>
         <div class="nav-wrapper">
             <ul class="nav nav-pills nav-fill flex-column flex-md-row">
                 <li class="nav-item">
@@ -43,23 +45,7 @@
         <form method="post" id="quiz_submit_form">
             <input type="hidden" name="problem_id" value="{{ Problem_ID }}">
             <input type="hidden" name="lang" value="quiz">
-            {% if Main_Json["e"] < 0 %}
-                <p>{{ Main_Json["msg"] }}</p>
-            {% else %}
-            {% for problem in Main_Json['problems'] -%}
-                <p>{{ problem["id"] }}. {{ problem["title"] }}</p>
-                {% if problem["type"] == "SELECT" %}
-                    {% for option in problem["options"] -%}
-                        <div class="custom-control custom-radio mb-3">
-                            <input id="{{ problem['id'] }}__{{ option['value'] }}" name="{{ problem['id'] }}" class="custom-control-input" value="{{ option['value'] }}" type="radio">
-                            <label class="custom-control-label" for="{{ problem['id'] }}__{{ option['value'] }}">{{ option["text"] }}</label>
-                      </div>
-                    {%- endfor %}
-                {% elif problem["type"] == "FILL" %}
-                    <textarea class="form-control" rows="1" name = "{{ problem['id'] }}"></textarea>
-                {% endif %}
-            {%- endfor %}
-            {% endif %}
+            <div id="quiz_rendering"></div>
             <hr>
             <input type="submit" class="btn btn-block btn-primary" value="提交">
         </form>
@@ -68,5 +54,9 @@
 
 {% block script %}
     <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.js"></script>
+    <script src="{{ url_for('.static', filename = 'lib/auto-render.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'js/quiz_submit.js') }}"></script>
 {% endblock %}

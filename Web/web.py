@@ -537,6 +537,8 @@ def contest():
             data.append(cur)
         return render_template('contest_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name(),
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+    elif not contest_id.isdigit():
+        abort(404)
     else:
         contest_id = int(contest_id)
         start_time, end_time = Contest_Manager.get_time(contest_id)
@@ -613,13 +615,15 @@ def homework():
             data.append(cur)
         return render_template('homework_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name(),
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+    elif not contest_id.isdigit():
+        abort(404)
     else:
         contest_id = int(contest_id)
         start_time, end_time = Contest_Manager.get_time(contest_id)
-        problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= unix_nano() else []
+        is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+        problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= unix_nano() or is_admin else []
         players = Contest_Manager.list_player_for_contest(contest_id)
         data = []
-        is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         for Player in players:
             tmp = [0, User_Manager.get_friendly_name(Player)]
             for Problem in problems:

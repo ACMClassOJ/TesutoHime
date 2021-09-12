@@ -31,8 +31,8 @@ $(function(){
                                 + '" name="' + problem["id"] + '" class="custom-control-input" value="' 
                                 + option["value"] + '" type="radio">';
                             option_div_word += '<label class="custom-control-label" for="' 
-                                + problem["id"] + '__' + option["value"] + '">' + option["text"] + '</label>';
-                            option_div.innerHTML = marked(option_div_word);
+                                + problem["id"] + '__' + option["value"] + '">' + marked(option["text"]) + '</label>';
+                            option_div.innerHTML = option_div_word;
                             quiz_rendering_node.appendChild(option_div);
                         }
                     }

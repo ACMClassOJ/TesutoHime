@@ -1,0 +1,251 @@
+# Web服务器部署方法
+
+by cong258258, Amagi_Yukisaki
+
+1. **不建议评测机与Web服务器在同一运行环境中。**
+
+2. 安装必备环境，终端输入
+
+   ```
+   sudo apt install -y python3 python3-pip git wget curl mariadb-server
+   ```
+
+3. 获取项目源代码，或将服务器ssh公钥加入github ssh key 或 deploy key后输入
+
+   ```
+   git clone git@github.com:ACMClassOJ/TesutoHime.git
+   ```
+
+4. 建立数据库（具体参考Database_Structure.md）
+
+   - 命令行输入：
+
+     ```
+     sudo mysql
+     ```
+
+   - **数据库**名称为OJ，root密码为Progynova。
+
+       ```sql
+       UPDATE mysql.user SET authentication_string = PASSWORD ("Progynova") WHERE User = "root" AND Host="localhost";
+       UPDATE mysql.user SET plugin='mysql_native_password' WHERE user='root';
+       FLUSH PRIVILEGES;
+       
+       CREATE DATABASE OJ;
+       USE OJ;
+       ```
+      
+   - **Problem：**
+
+       ```sql
+       CREATE TABLE `Problem` (
+         `ID` int(11) NOT NULL AUTO_INCREMENT,
+         `Title` text DEFAULT NULL,
+         `Description` text DEFAULT NULL,
+         `Input` text DEFAULT NULL,
+         `Output` text DEFAULT NULL,
+         `Example_Input` text DEFAULT NULL,
+         `Example_Output` text DEFAULT NULL,
+         `Data_Range` text DEFAULT NULL,
+         `Release_Time` bigint(20) NOT NULL,
+         `Flag_Count` int(11) DEFAULT 0,
+         `Problem_Type` int(11) NOT NULL DEFAULT 0,
+         PRIMARY KEY (`ID`)
+       ) ENGINE=InnoDB AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8mb4;
+       ```
+
+   - **User：**
+
+       ```sql
+       CREATE TABLE `User` (
+         `tempID` int(11) NOT NULL AUTO_INCREMENT,
+         `Username` varchar(20) DEFAULT NULL,
+         `Student_ID` bigint(20) DEFAULT NULL,
+         `Friendly_Name` tinytext DEFAULT NULL,
+         `Password` tinytext DEFAULT NULL,
+         `Salt` int(11) DEFAULT NULL,
+         `Privilege` int(11) DEFAULT NULL,
+         PRIMARY KEY (`tempID`),
+         UNIQUE KEY `Username` (`Username`)
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+       ```
+
+   - **Judge:**
+
+       ```sql
+       CREATE TABLE `Judge` (
+         `ID` int(11) NOT NULL AUTO_INCREMENT,
+         `Code` mediumtext DEFAULT NULL,
+         `User` tinytext DEFAULT NULL,
+         `Problem_ID` int(11) DEFAULT NULL,
+         `Language` int(11) DEFAULT NULL,
+         `Status` int(11) DEFAULT NULL,
+         `Score` int(11) DEFAULT -1,
+         `Time` bigint(20) DEFAULT NULL,
+         `Time_Used` int(11) DEFAULT -1,
+         `Mem_Used` int(11) DEFAULT -1,
+         `Detail` mediumtext DEFAULT NULL,
+         `Share` boolean DEFAULT FALSE,
+         PRIMARY KEY (`ID`),
+         KEY `User` (`User`(30),`Problem_ID`,`Time`)
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+       ```
+
+   - **Contest:**
+
+       ```sql
+       CREATE TABLE `Contest` (
+         `ID` int(11) NOT NULL AUTO_INCREMENT,
+         `Name` tinytext DEFAULT NULL,
+         `Start_Time` bigint(20) DEFAULT NULL,
+         `End_Time` bigint(20) DEFAULT NULL,
+         `Type` int(11) DEFAULT NULL,
+         PRIMARY KEY (`ID`)
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+       ```
+
+   - **Contest_Problem:**
+
+       ```sql
+       CREATE TABLE `Contest_Problem` (
+         `tempID` int(11) NOT NULL AUTO_INCREMENT,
+         `Belong` int(11) DEFAULT NULL,
+         `Problem_ID` int(11) DEFAULT NULL,
+         PRIMARY KEY (`tempID`)
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+       ```
+
+   - **Contest_Player:**
+
+       ```sql
+       CREATE TABLE `Contest_Player` (
+         `tempID` int(11) NOT NULL AUTO_INCREMENT,
+         `Belong` int(11) DEFAULT NULL,
+         `Username` tinytext DEFAULT NULL,
+         PRIMARY KEY (`tempID`)
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+       ```
+
+   - **Discuss:**
+
+       ```sql
+       CREATE TABLE `Discuss` (
+         `ID` int(11) NOT NULL AUTO_INCREMENT,
+         `Problem_ID` int(11) DEFAULT NULL,
+         `Username` tinytext DEFAULT NULL,
+         `Data` text DEFAULT NULL,
+         `Time` bigint(20) DEFAULT NULL,
+         PRIMARY KEY (`ID`)
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+       ```
+
+   - **Judge_Server:**
+
+       ```sql
+       CREATE TABLE `Judge_Server` (
+         `ID` int(11) NOT NULL AUTO_INCREMENT,
+         `Address` tinytext DEFAULT NULL,
+         `Secret_Key` tinytext DEFAULT NULL,
+         `Last_Seen_Time` bigint(20) DEFAULT 0,
+         `Busy` boolean DEFAULT FALSE,
+         `Current_Task` int(11) DEFAULT -1,
+         `Friendly_Name` tinytext DEFAULT NULL,
+         `Detail` tinytext DEFAULT NULL,
+         PRIMARY KEY (`ID`)
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+       ```
+
+   - **Realname_Reference:**
+
+       ```sql
+       CREATE TABLE `Realname_Reference` (
+         `ID` int(11) NOT NULL AUTO_INCREMENT,
+         `Student_ID` tinytext DEFAULT NULL,
+         `Real_Name` tinytext DEFAULT NULL,
+         PRIMARY KEY (`ID`)
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+       ```
+
+5. 在数据库中添加必要的初始化数据。
+
+   - Judge_Server表中添加至少一台评测机：（重要，否则可能导致oj部分功能崩溃，如果希望web standalone运行调试也请填一条假信息进去）
+     - ID：自增
+     - Address：``http://judger_url:judger_port``，可以是内网地址
+     - Secret_Key：``judger_secret``
+     - Friendly_Name：显示在关于中的评测机名称
+     - Detail：``[CPU]\n[Provider]``，**请务必不要缺少回车**
+     - 其他项目保持默认
+
+6. 安装python运行库，命令行输入
+
+   ```
+   pip3 install flask pymysql
+   ```
+
+7. 创建Web运行日志目录、填选服务缓存目录，（路径可自定义） 下文分别称其路径为``web_log_url``、``quiz_cache_dir``
+
+   ```
+   mkdir /home/rbq/TesutoHime_log
+   mkdir /home/rbq/TesutoHime_quiz_tmp
+   ```
+
+8. 编写Web配置文件，输入
+
+   ```
+   cd TesutoHime/Web
+   cp config_template.py config.py
+   ```
+
+   使用编辑器打开config.py，填写对应参数
+
+   ```python
+   class DataBaseConfig:                     #数据库主要配置文件，一般在localhost
+       mysql_Host = 'localhost'
+       mysql_User = 'root'
+       mysql_Password = 'Progynova'
+       mysql_Database = 'OJ'
+   
+   class LoginConfig:                        #登陆过期时间，单位s
+       Login_Life_Time = 24 * 60 * 60 * 60 
+   
+   class WebConfig:
+       Problems_Each_Page = 20               #题库界面每页显示多少题目
+       Block_Register = False                #暂停OJ注册
+   
+   class JudgeConfig:
+       Judge_Each_Page = 15                  #评测详情界面每页显示多少题目
+       Max_Duration = 120                    #judger上次向web发送心跳超过这个时间判定为下线，单位s
+       Web_Server_Secret = 'web_secret'      #web_secret，judger需要此密钥来向web服务器通信
+                                             #建议生成随机字符串构成一个较强的密钥
+   
+   class ProblemConfig:
+       Max_Code_Length = 16384 * 8           #代码提交最多接受长度上限
+                                             #这里为后端限制，请注意在前端js中还有限制，请一并修改
+   
+   class DataConfig:
+       server = 'http://192.168.1.230:8000/' #data_service_url，数据服务地址，可以是内网
+                                             #一定要有http://
+       key = 'data_service_key'              #data_service_key，数据服务密钥
+   
+   class QuizTempDataConfig:
+       server = 'http://192.168.1.230:8000/'        #quiz_service_url，填选服务地址，大多情况下与数据服务地址保持一致，可以是内网
+       key = 'quiz_service_key'                     #quiz_service_key，填选服务密钥，大多情况下与数据服务密钥保持一致
+       cache_dir = '/home/rbq/TesutoHime_quiz_tmp'  #quiz_cache_dir，用于解压存放填选临时文件的本地目录
+   
+   class LogConfig:
+       path = '/home/rbq/TesutoHime_log/tracker.log'       #web_log_url，Web服务日志存放的本地目录
+       maxBytes = 536870912                                #Web服务日志保存的最大空间
+   
+   class PicConfig:
+       server = 'http://192.168.1.230:8080/' #pic_service_url_public，请填写可从*公网*访问的图片服务地址
+       key = 'pic_service_key'               #pic_service_key，图片服务密钥
+   ```
+
+9. 测试Web服务+是否可以运行，输入
+
+   ```
+   python3 TesutoHime/Web/run.py
+   ```
+
+10. 在浏览器中访问 ``http://web_url:web_port/OnlineJudge/``查看是否可以运行
+

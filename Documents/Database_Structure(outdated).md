@@ -32,6 +32,7 @@ GRANT ALL PRIVILEGES ON database_name.* TO 'oj'@'localhost';
 * Data_Range: TEXT
 * Release_Time: BIGINT // unix nano
 * Flag_Count: INT DEFAULT 0// 在比赛或作业中的次数
+* Problem_Type: INT DEFAULT 0 NOT NULL // 题目类型，0为代码，1为填选
 
 ```sql
 CREATE TABLE Problem(ID INT NOT NULL AUTO_INCREMENT, Title TEXT, Description TEXT, Input Text, Output Text, Example_Input Text, Example_Output Text, Data_Range Text, Release_Time BIGINT, Flag_Count INT DEFAULT 0, PRIMARY KEY(ID))ENGINE=InnoDB AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8mb4;
@@ -54,7 +55,7 @@ CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username VARCHAR(20), Stud
 #### Judge:
 
 * ID: INT, auto_increment, PRIMARY KEY
-* Code: TEXT
+* Code: MEDIUMTEXT
 * User: TINYTEXT
 * Problem_ID: INT
 * Language: INT // 0 for C++, 1 for git, 2 for python3(Not Supported Yet)
@@ -67,7 +68,7 @@ CREATE TABLE User(tempID INT NOT NULL AUTO_INCREMENT, Username VARCHAR(20), Stud
 * Share: BOOLEAN Default False
 
 ```sql
-CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code TEXT, User TINYTEXT, Problem_ID INT, Language INT, Status INT, Score INT DEFAULT -1, Time BIGINT, Time_Used INT DEFAULT -1, Mem_Used INT DEFAULT -1, Detail MEDIUMTEXT, PRIMARY KEY(ID), Share BOOLEAN DEFAULT FALSE)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE Judge(ID INT NOT NULL AUTO_INCREMENT, Code MEDIUMTEXT, User TINYTEXT, Problem_ID INT, Language INT, Status INT, Score INT DEFAULT -1, Time BIGINT, Time_Used INT DEFAULT -1, Mem_Used INT DEFAULT -1, Detail MEDIUMTEXT, PRIMARY KEY(ID), Share BOOLEAN DEFAULT FALSE)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 #### Contest:

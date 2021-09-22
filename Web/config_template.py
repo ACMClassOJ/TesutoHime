@@ -22,12 +22,12 @@ class ProblemConfig:
                                           #这里为后端限制，请注意在前端js中还有限制，请一并修改
 
 class DataConfig:
-    server = 'http://192.168.1.230:8000/' #data_service_url，数据服务地址，可以是内网
+    server = 'http://192.168.1.233:8080/' #data_service_url，数据服务地址，可以是内网
                                           #一定要有http://
     key = 'data_service_key'              #data_service_key，数据服务密钥
 
 class QuizTempDataConfig:
-    server = 'http://192.168.1.230:8000/'        #quiz_service_url，填选服务地址，大多情况下与数据服务地址保持一致，可以是内网
+    server = 'http://192.168.1.233:8080/'        #quiz_service_url，填选服务地址，大多情况下与数据服务地址保持一致，可以是内网
     key = 'quiz_service_key'                     #quiz_service_key，填选服务密钥，大多情况下与数据服务密钥保持一致
     cache_dir = '/home/rbq/TesutoHime_quiz_tmp'  #quiz_cache_dir，用于解压存放填选临时文件的本地目录
 
@@ -36,5 +36,5 @@ class LogConfig:
     maxBytes = 536870912                                #Web服务日志保存的最大空间
 
 class PicConfig:
-    server = 'http://192.168.1.230:8080/' #pic_service_url_public，请填写可从*公网*访问的图片服务地址
+    server = 'http://192.168.1.233:8080/' #pic_service_url_public，请填写可从*公网*访问的图片服务地址
     key = 'pic_service_key'               #pic_service_key，图片服务密钥

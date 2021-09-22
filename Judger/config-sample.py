@@ -1,7 +1,7 @@
 class DataConfig:
-    server = 'http://192.168.1.230:8000/'   #data_service_url，数据服务地址，可以是内网
-    key = '233'                             #data_service_key，数据服务密钥
-    cache_dir = '/home/rbq/TesutoHime_data' #judger_cache_dir，数据会被缓存本地的哪个文件夹
+    server = 'http://192.168.1.233:8080/'         #data_service_url，数据服务地址，可以是内网
+    key = '233'                                   #data_service_key，数据服务密钥
+    cache_dir = '/home/rbq/TesutoHime_data_cache' #judger_cache_dir，数据会被缓存本地的哪个文件夹
 
 Path = '/work'
 My_Web_Server_Secret = "crazy_cloud"        #web_secret，与web服务器通信用密钥，由web给出

@@ -90,6 +90,9 @@ def get_username():
 def get_problem_id_autoinc():
     return str(Problem_Manager.get_max_id() + 1)
 
+@web.route('/api/get_contest_id_autoinc', methods=['POST'])
+def get_contest_id_autoinc():
+    return str(Contest_Manager.get_max_id() + 1)
 
 @web.route('/api/get_detail', methods=['POST'])
 def get_detail():
@@ -100,6 +103,12 @@ def get_detail():
         return '-1'
     return json.dumps(Problem_Manager.get_problem(problem_id))
 
+@web.route('/api/get_contest_detail', methods=['POST'])
+def get_contest_detail():
+    if not Login_Manager.check_user_status():
+        return '-1'
+    contest_id = request.form.get('contest_id')
+    return json.dumps(Contest_Manager.get_contest(contest_id))
 
 @web.route('/api/join', methods=['POST'])
 def join_contest():

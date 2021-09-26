@@ -158,5 +158,29 @@ class ContestManager:
         db.close()
         return ret
 
+    def get_contest(self, contest_id: int) -> dict:
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM Contest WHERE ID = %s", (str(contest_id)))
+        data = cursor.fetchone()
+        db.close()
+        if data is None:
+            return {}
+        ret = {'ID': int(data[0]),
+               'Name': str(data[1]),
+               'Start_Time': int(data[2]),
+               'End_Time': int(data[3]),
+               'Type': int(data[4])}
+        return ret
+
+    def get_max_id(self) -> int:
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT MAX(ID) FROM Contest")
+        data = cursor.fetchone()
+        db.close()
+        if data[0] is None:
+            return 0
+        return int(data[0])
 
 Contest_Manager = ContestManager()

@@ -13,7 +13,7 @@
 
 {% block content %}
     <div class="card card-body">
-        <h1 class="text-center"> Management </h1>
+        <h1 class="text-center"> 管理 </h1>
         <div class="nav-wrapper">
             <ul class="nav nav-pills nav-fill flex-column flex-md-row" id="main_tab" role="tablist">
                 <li class="nav-item">
@@ -189,36 +189,36 @@
                     </div>
                     <div class="tab-pane fade" id="data_zip_tab" role="tabpanel" aria-labelledby="data_zip_tab-tab">
                         <div class="card card-body">
-                            <h3> Upload Data Zip </h3>
+                            <h3> 上传数据压缩包 </h3>
                             <form id="formDataZipUpload">
                                 <div class="form-row">
                                     <div class="form-group custom-file col-md-3 mb-3">
-                                        <label class="custom-file-label ml-1 mr-1" for="iptDataZipUpload"> Data Zip </label>
+                                        <label class="custom-file-label ml-1 mr-1" for="iptDataZipUpload"> 请选择数据压缩包 </label>
                                         <input class="custom-file-input" type="file" name="file" id="iptDataZipUpload" accept=".zip" required="required">
                                     </div>
                                     <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipUpload"> Upload Data Zip </button>
+                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipUpload"> 点击上传 </button>
                                     </div>
                                 </div>
                             </form>
                         </div>
                         <div class="card card-body">
-                            <h3> Download Data Zip </h3>
+                            <h3>下载数据压缩包 </h3>
                             <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
                                 <div class="form-row">
                                     <div class="form-group col-md-3 mb-3">
-                                        <label for="iptDataZipDownload"> Problem ID </label>
+                                        <label for="iptDataZipDownload"> 题号 </label>
                                         <input class="form-control" type="number" name="id" id="iptDataZipDownloadProblemID" required="required" min="1">
                                     </div>
                                     <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipDownload"> Download Data Zip </button>
+                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipDownload"> 点击下载 </button>
                                     </div>
                                 </div>
                             </form>
                         </div>
                     </div>
                     <div class="tab-pane fade" id="pic_tab" role="tabpanel" aria-labelledby="pic_tab-tab">
-                        <h3> Upload pic </h3>
+                        <h3> 上传图片到 ACM OJ 图床 </h3>
                         <form id="formPicUpload" enctype="multipart/form-data">
                             <div class="form-row">
                                 <div class="form-group custom-file col-md-3 mb-3">
@@ -226,7 +226,7 @@
                                     <input class="custom-file-input" type="file" name="file" id="iptPicUpload" accept="image/gif,image/jpeg,image/jpg,image/png" required="required">
                                 </div>
                                 <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnPicUpload"> Upload Picture </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnPicUpload"> 点击上传 </button>
                                 </div>
                             </div>
                         </form>
@@ -236,16 +236,16 @@
                         <form id="formData">
                             <div class="form-row">
                                 <div class="form-group col-md-3 mb-3">
-                                    <label for="iptDataProblemID"> Problem ID </label>
+                                    <label for="iptDataProblemID"> 题号 </label>
                                     <input class="form-control" type="number" name="id" id="iptDataProblemID">
                                 </div>
                                 <div class="form-group col-md-3 mb-3">
-                                    <label for="iptCompileTime"> Compile Time Limit (ms) </label>
+                                    <label for="iptCompileTime"> 编译时长限制 (ms) </label>
                                     <input class="form-control" type="number" name="time" id="iptCompileTime">
                                 </div>
                                 <div class="form-group col-md-3 mb-3">
-                                    <label for="iptCompileTime"> Problem Type </label>
-                                    <select class="form-control selectpicker" name="type" id="type"
+                                    <label for="iptSpjType"> SPJ类型 </label>
+                                    <select class="form-control selectpicker" name="type" id="iptSpjType"
                                             data-style="form-control font-weight-normal border-grey shadow-none">
                                         <option value="0">Classic</option>
                                         <option value="1">Special Judge</option>
@@ -256,89 +256,101 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group custom-file col-md-3 mb-3">
-                                    <label class="custom-file-label ml-1 mr-1" for="iptData"> Test Data </label>
+                                    <label class="custom-file-label ml-1 mr-1" for="iptDescriptionMd"> 题面 (md doc(x) txt) </label>
+                                    <input class="custom-file-input" type="file" name="description_md" id="iptDescriptionMd" 
+                                            accept=".md,.doc,.docx,.txt">
+                                </div>
+                                <div class="form-group custom-file col-md-3 mb-3">
+                                    <label class="custom-file-label ml-1 mr-1" for="iptData"> 测试数据 (in out ans 多选) </label>
                                     <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans,.out"
                                            multiple>
                                 </div>
                                 <div class="form-group custom-file col-md-3 mb-3">
-                                    <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge </label>
+                                    <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge (cpp) </label>
                                     <input class="custom-file-input" type="file" name="data" id="iptSpj">
-                                </div>
+                                </div>                           
                                 <div class="form-group custom-file col-md-3 mb-3">
                                     <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
                                     <input class="custom-file-input" type="file" name="data" id="iptScorer" accept=".py">
                                 </div>
+                                <!--  
                                 <div class="form-group custom-file col-md-3 mb-3">
-                                    <label class="custom-file-label ml-1 mr-1" for="iptConfig"> Config </label>
+                                    <label class="custom-file-label ml-1 mr-1" for="iptConfig"> Config (json) </label>
                                     <input class="custom-file-input" type="file" name="config" id="iptConfig" accept=".json">
                                 </div>
-                                <div class="float-right d-flex ml-auto pr-1 mb-3">
-                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnClearConfig">Clear Config
-                                    </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemData">
-                                        Add Problem Data
-                                    </button>
+                                -->
+                            </div>
+                            <p>*此处的题面上传仅会留在数据包中，暂不会修改数据库中题面，请切换至题面选项卡手动修改。</p>
+                            <div class="card card-body">
+                                <h5 class="mt-2"> 评测组配置（新增行会自动复制上一行内容） </h5>
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col">Group ID</th>
+                                            <th scope="col">Group Name</th>
+                                            <th scope="col">Group Score</th>
+                                            <th scope="col">Test Points (separated by ",")</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody contenteditable="true" id="tableGroups">
+                                        <tr>
+                                            <td>1</td>
+                                            <td>1</td>
+                                            <td>10</td>
+                                            <td>1</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="float-right">
+                                        <button class="btn btn-outline-primary" type="button" id="btnAddGroupsRow">Add Row</button>
+                                        <button class="btn btn-outline-primary" type="button" id="btnRemoveGroupsRow">Remove Row
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <h5 class="mt-2"> Configuration (If <code>config.json</code> not provided) </h5>
-                            <div class="table-responsive mb-3">
-                                <table class="table table-bordered">
-                                    <thead>
-                                    <tr>
-                                        <th scope="col">Group ID</th>
-                                        <th scope="col">Group Name</th>
-                                        <th scope="col">Group Score</th>
-                                        <th scope="col">Test Points (separated by ",")</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody contenteditable="true" id="tableGroups">
-                                    <tr>
-                                        <td>1</td>
-                                        <td>1</td>
-                                        <td>10</td>
-                                        <td>1</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                                <div class="float-right">
-                                    <button class="btn btn-outline-primary" type="button" id="btnAddGroupsRow">Add Row</button>
-                                    <button class="btn btn-outline-primary" type="button" id="btnRemoveGroupsRow">Remove Row
-                                    </button>
+                            <div class="card card-body">
+                                <h5 class="mt-2"> 数据点配置（新增行会自动复制上一行内容） </h5>
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col">ID</th>
+                                            <th scope="col">Dependency</th>
+                                            <th scope="col">Time Limit (ms)</th>
+                                            <th scope="col">Memory Limit (Byte)</th>
+                                            <th scope="col">Disk Limit (Byte)</th>
+                                            <th scope="col">Valgrind</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody contenteditable="true" id="tableDetails">
+                                        <tr>
+                                            <td>1</td>
+                                            <td>0</td>
+                                            <td>1000</td>
+                                            <td>256000000</td>
+                                            <td>0</td>
+                                            <td contenteditable="false">
+                                                <div class="custom-checkbox ml-3">
+                                                    <input class="form-check-input" type="checkbox" id="iptValgrind1">
+                                                    <label class="form-check-label" for="iptValgrind1"></label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="float-right">
+                                        <button class="btn btn-outline-primary" type="button" id="btnAddDetailsRow">Add Row</button>
+                                        <button class="btn btn-outline-primary" type="button" id="btnRemoveDetailsRow">Remove Row
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="table-responsive mb-3">
-                                <table class="table table-bordered">
-                                    <thead>
-                                    <tr>
-                                        <th scope="col">ID</th>
-                                        <th scope="col">Dependency</th>
-                                        <th scope="col">Time Limit (ms)</th>
-                                        <th scope="col">Memory Limit (Byte)</th>
-                                        <th scope="col">Disk Limit (Byte)</th>
-                                        <th scope="col">Valgrind</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody contenteditable="true" id="tableDetails">
-                                    <tr>
-                                        <td>1</td>
-                                        <td>0</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td>0</td>
-                                        <td contenteditable="false">
-                                            <div class="custom-checkbox ml-3">
-                                                <input class="form-check-input" type="checkbox" id="iptValgrind1">
-                                                <label class="form-check-label" for="iptValgrind1"></label>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                                <div class="float-right">
-                                    <button class="btn btn-outline-primary" type="button" id="btnAddDetailsRow">Add Row</button>
-                                    <button class="btn btn-outline-primary" type="button" id="btnRemoveDetailsRow">Remove Row
-                                    </button>
-                                </div>
+                            <div class="float-right d-flex ml-auto pr-1 mb-3">
+                                <!-- <button class="btn btn-outline-primary mt-auto" type="button" id="btnClearConfig"> 清除数据配置表格
+                                </button> -->
+                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemData"> 打包上传所有数据
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -585,7 +597,7 @@
                         `"TimeLimit":${d[2].innerHTML.replace("<br>", "")},"MemoryLimit":${d[3].innerHTML.replace("<br>", "")},` +
                         `"DiskLimit":${d[4].innerHTML.replace("<br>", "")},"ValgrindTestOn":${$(d[5]).find("input").is(":checked") ? "true" : "false"}}`;
                 });
-                let type = $("#type");
+                let type = $("#iptSpjType");
                 config += `],"CompileTimeLimit":${$("#iptCompileTime").val()},"SPJ":${type.val()},` +
                     `"Scorer":${type.val() === 3 ? 1 : 0}}`;
                 return config;
@@ -599,7 +611,12 @@
                 $(files).each(function (index, file) {
                     folder.file(file.name, file);
                 });
-                let type = $("#type"), spj = $("#iptSpj"), scorer = $("#iptScorer"), config = $("#iptConfig");
+                let description_md = $("#iptDescriptionMd"), type = $("#iptSpjType"), spj = $("#iptSpj"), scorer = $("#iptScorer");
+                // let config = $("#iptConfig");
+                if (description_md.val() !== null && description_md.val() !== "") {
+                    description_md = description_md[0].files[0];
+                    folder.file(description_md.name, description_md);
+                }
                 if (type.val() === 1 || type.val() === 2 && spj.val() !== null && spj.val() !== "") {
                     spj = spj[0].files[0];
                     folder.file(spj.name, spj);
@@ -608,12 +625,12 @@
                     scorer = scorer[0].files[0];
                     folder.file(scorer.name, scorer);
                 }
-                if (config.val() !== null && config.val() !== "") {
-                    config = config[0].files[0];
-                    folder.file("config.json", config);
-                } else {
+                // if (config.val() !== null && config.val() !== "") {
+                //     config = config[0].files[0];
+                //     folder.file("config.json", config);
+                // } else {
                     folder.file("config.json", generateConfig());
-                }
+                // }
                 zip.generateAsync({
                     type: "blob"
                 }).then(function (blob) {

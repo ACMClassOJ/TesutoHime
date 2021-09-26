@@ -11,8 +11,11 @@ class QuizManager:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
         shutil.rmtree(config.cache_dir + '/' + str(id), ignore_errors=True)
-        with zipfile.ZipFile(config.cache_dir + '/' + str(id) + '.zip', 'r') as zip_file:
-            zip_file.extractall(config.cache_dir)
+        try:
+            with zipfile.ZipFile(config.cache_dir + '/' + str(id) + '.zip', 'r') as zip_file:
+                zip_file.extractall(config.cache_dir)
+        except zipfile.BadZipFile:
+            return ReturnCode.ERR_QUIZ_ZIP_NOT_FOUND
         os.remove(config.cache_dir + '/' + str(id) + '.zip')
         with open(config.cache_dir + '/' + str(id) + '/quiz.json') as f:
             try:

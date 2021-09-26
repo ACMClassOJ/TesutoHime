@@ -71,6 +71,7 @@ class ReturnCode:
 
     ERR_QUIZ_JSON_DECODE = {'e': -400, 'msg': 'failed to decode quiz.json'}
     ERR_PROBLEM_NOT_QUIZ = {'e': -401, 'msg': 'this problem is not a quiz'}
+    ERR_QUIZ_ZIP_NOT_FOUND = {'e': -402, 'msg': 'zip of this quiz not found'}
 
     ERR_PIC_SERIVCE_TOO_BIG = {'e': -500, 'msg': 'size of the picture should be no more than 10MB!'}
     ERR_PIC_SERIVCE_WRONG_EXT = {'e': -501, 'msg': 'acceptable file extension for picture service: gif, jpg, jpeg, png'}

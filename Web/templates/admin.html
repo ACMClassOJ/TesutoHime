@@ -17,7 +17,7 @@
         <div class="nav-wrapper">
             <ul class="nav nav-pills nav-fill flex-column flex-md-row" id="main_tab" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0 active" id="problem_tab_btn" data-toggle="tab" href="#problem_tab" role="tab" aria-controls="problem_tab" aria-selected="false">题面</a>
+                    <a class="nav-link mb-sm-2 mb-md-0 active" id="problem_tab_btn" data-toggle="tab" href="#problem_tab" role="tab" aria-controls="problem_tab" aria-selected="true">题面</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" id="contest_tab_btn" data-toggle="tab" href="#contest_tab" role="tab" aria-controls="contest_tab" aria-selected="false">比赛与作业</a>
@@ -33,7 +33,7 @@
                 </li>
                 {% if privilege>=Privilege.SUPER %}
                 <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" id="user_tab_btn" data-toggle="tab" href="#user_tab" role="tab" aria-controls="user_tab" aria-selected="true">用户</a>
+                    <a class="nav-link mb-sm-2 mb-md-0" id="user_tab_btn" data-toggle="tab" href="#user_tab" role="tab" aria-controls="user_tab" aria-selected="false">用户</a>
                 </li>
                 {% endif %}
             </ul>
@@ -148,8 +148,12 @@
                                     <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime">
                                 </div>
                                 <div class="form-group col-md-3">
-                                    <label for="iptProblemType"> 题目标签 </label>
-                                    <input class="form-control" type="number" name="problem_type" id="iptProblemType">
+                                    <label for="iptProblemType"> 题目类型 </label>
+                                    <select class="form-control selectpicker" name="problem_type" id="iptProblemType"
+                                            data-style="form-control font-weight-normal border-grey shadow-none">
+                                        <option value="0">代码题</option>
+                                        <option value="1">填选题</option>
+                                    </select>
                                 </div>
                                 <div class="form-group col-md-3">
                                     <label for="iptDescription"> 题目描述 </label>
@@ -428,7 +432,7 @@
                 $("#iptExampleInput").val("");
                 $("#iptExampleOutput").val("");
                 $("#iptDataRange").val("");
-                $("#iptProblemType").val("");
+                $("#iptProblemType").selectpicker("val", "0");
                 $.ajax({
                     type: "POST",
                     dataType: "text",
@@ -460,6 +464,7 @@
                             $("#iptExampleInput").val(main_json['Example_Input']);
                             $("#iptExampleOutput").val(main_json['Example_Output']);
                             $("#iptDataRange").val(main_json['Data_Range']);
+                            $("#iptProblemType").selectpicker("val", main_json['Problem_Type']);
                         }
                     }
                 });

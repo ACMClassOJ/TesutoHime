@@ -152,8 +152,9 @@ def get_quiz():
     if problem_type != 1:
         return ReturnCode.ERR_PROBLEM_NOT_QUIZ
     quiz_json = Quiz_Manager.get_json_from_data_service_by_id(QuizTempDataConfig, problem_id)
-    for i in quiz_json["problems"]:
-        i["answer"] = ""
+    if quiz_json['e'] == 0:
+        for i in quiz_json["problems"]:
+            i["answer"] = ""
     return json.dumps(quiz_json)
 
 

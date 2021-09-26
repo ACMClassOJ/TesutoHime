@@ -58,7 +58,6 @@ class JudgeManager:
                     groupPointDetail = Group(int(i["id"]), "", 0, [int(i["id"])])
                 Details.append(testPointDetail)
                 Groups_Details.append(groupPointDetail)
-            print(quiz_correct_cnt)
             if quiz_correct_cnt == len(right_ans_json["problems"]):
                 judgeResult = JudgerResult(ResultType.AC, quiz_correct_cnt, 0, 0, Details, ProblemConfig(Groups_Details, Details, 0, 0, 0))
             else:

@@ -303,13 +303,20 @@ $(function () {
     $("#formData").submit(function (e) {
         e.preventDefault();
         e.stopPropagation();
-        let zip = new JSZip(), folder = zip.folder($("#iptDataProblemID").val()),
-            files = $("#iptData")[0].files;
-        $(files).each(function (index, file) {
-            folder.file(file.name, file);
-        });
-        let description_md = $("#iptDescriptionMd"), type = $("#iptSpjType"), spj = $("#iptSpj"), scorer = $("#iptScorer");
+        let zip = new JSZip();
+        let folder = zip.folder($("#iptDataProblemID").val());
+        let data_files = $("#iptData");
+        let description_md = $("#iptDescriptionMd");
+        let type = $("#iptSpjType");
+        let spj = $("#iptSpj");
+        let scorer = $("#iptScorer");
         // let config = $("#iptConfig");
+        if (data_files.val() !== null && data_files.val() !== "") {
+            data_files = data_files[0].files;
+            $(data_files).each(function (index, file) {
+                folder.file(file.name, file);
+            });
+        }
         if (description_md.val() !== null && description_md.val() !== "") {
             description_md = description_md[0].files[0];
             folder.file(description_md.name, description_md);

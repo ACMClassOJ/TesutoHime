@@ -270,11 +270,16 @@
                                 <div class="form-group custom-file col-md-3 mb-3">
                                     <label class="custom-file-label ml-1 mr-1" for="iptDescriptionMd"> 题面 (md doc(x) txt) </label>
                                     <input class="custom-file-input" type="file" name="description_md" id="iptDescriptionMd" 
-                                            accept=".md,.doc,.docx,.txt">
+                                           accept=".md,.doc,.docx,.txt">
                                 </div>
                                 <div class="form-group custom-file col-md-3 mb-3">
                                     <label class="custom-file-label ml-1 mr-1" for="iptData"> 测试数据 (in out ans 多选) </label>
                                     <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans,.out"
+                                           multiple>
+                                </div>
+                                <div class="form-group custom-file col-md-3 mb-3">
+                                    <label class="custom-file-label ml-1 mr-1" for="iptSolution"> 标答 std (cpp hpp v 多选) </label>
+                                    <input class="custom-file-input" type="file" name="solution" id="iptSolution" accept=".cpp, .hpp, .v"
                                            multiple>
                                 </div>
                                 <div class="form-group custom-file col-md-3 mb-3">
@@ -285,7 +290,7 @@
                                     <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
                                     <input class="custom-file-input" type="file" name="data" id="iptScorer" accept=".py">
                                 </div>
-                                <!--  
+                                <!--
                                 <div class="form-group custom-file col-md-3 mb-3">
                                     <label class="custom-file-label ml-1 mr-1" for="iptConfig"> Config (json) </label>
                                     <input class="custom-file-input" type="file" name="config" id="iptConfig" accept=".json">

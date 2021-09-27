@@ -65,6 +65,12 @@ class JudgeServerScheduler:
         self.Check_Queue()
         return
 
+    def ReJudge(self, Problem_ID):
+        self.Check_System_Error()
+
+        Judge_Manager.update_status(Problem_ID, 0)
+        self.Check_Queue()
+        return
     """
     [
         Problem_Status, Problem_Score, Mem_Used, Time_Used,

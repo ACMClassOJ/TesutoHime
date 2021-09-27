@@ -29,6 +29,9 @@
                     <a class="nav-link mb-sm-2 mb-md-0" id="data_tab_btn" data-toggle="tab" href="#data_tab" role="tab" aria-controls="data_tab" aria-selected="false">数据（GUI）</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link mb-sm-2 mb-md-0" id="judge_tab_btn" data-toggle="tab" href="#judge_tab" role="tab" aria-controls="judge_tab" aria-selected="false">评测</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" id="pic_tab_btn" data-toggle="tab" href="#pic_tab" role="tab" aria-controls="pic_tab" aria-selected="false">图床</a>
                 </li>
                 {% if privilege>=Privilege.SUPER %}
@@ -228,6 +231,20 @@
                                 </div>
                             </form>
                         </div>
+                    </div>
+                    <div class="tab-pane fade" id="judge_tab" role="tabpanel" aria-labelledby="judge_tab-tab">
+                        <form id="formRejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+                            <div class="form-row">
+                                <div class="form-group col-md-3 mb-3">
+                                    <label for="iptRejudgeJudgeID"> 评测编号 </label>
+                                    <input class="form-control" type="number" name="judge_id" id="iptRejudgeJudgeID" required="required" min="1">
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRejudge"> 重测 </button>
+                                </div>
+                            </div>
+                        </form>
+                        <p id="InfoPicUpload"></p>
                     </div>
                     <div class="tab-pane fade" id="pic_tab" role="tabpanel" aria-labelledby="pic_tab-tab">
                         <h3> 上传图片到 ACM OJ 图床 </h3>

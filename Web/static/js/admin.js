@@ -421,4 +421,8 @@ $(function () {
             }
         });
     });
+
+    $("#formRejudge").ajaxForm(function (response_text) {
+        alert(response_text);
+    });
 });

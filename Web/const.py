@@ -44,6 +44,7 @@ class ReturnCode:
     SUC_DEL_USERS_FROM_CONTEST = {'e': 0, 'msg': 'user(s) removed from contest successfully'}
     SUC_QUIZ_JSON_DECODE = {'e': 0, 'msg': 'quiz.json decoded successfully'}
     SUC_PIC_SERVICE_UPLOAD = {'e': 0, 'msg': 'picture uploaded successfully'}
+    SUC_REJUDGE = {'e': 0, 'msg': 'Rejudge successfully'}
 
     ERR_BAD_DATA = {'e': -1, 'msg': 'bad data'}
     ERR_NETWORK_FAILURE = {'e': -2, 'msg': 'network failure'}

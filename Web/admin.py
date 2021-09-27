@@ -6,6 +6,7 @@ from sessionManager import Login_Manager
 from userManager import User_Manager
 from problemManager import Problem_Manager
 from contestManager import Contest_Manager
+from judgeServerScheduler import JudgeServer_Scheduler
 from requests import post
 from requests.exceptions import RequestException
 from config import DataConfig, PicConfig
@@ -235,3 +236,10 @@ def pic_upload():
             return ReturnCode.ERR_NETWORK_FAILURE
     return ReturnCode.ERR_BAD_DATA
 
+@admin.route('/rejudge', methods=['POST'])
+def rejudge():
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(404)
+    id = request.form['judge_id']
+    JudgeServer_Scheduler.ReJudge(id)
+    return ReturnCode.SUC_REJUDGE

@@ -190,7 +190,7 @@ class ProblemManager:
         ret = cursor.fetchall()
         db.close()
         return ret
-        
+
     def problem_in_page_autocalc(self, page: int, problem_num_per_page: int, time_now: int, is_admin: bool):
         db = db_connect()
         cursor = db.cursor()
@@ -202,6 +202,57 @@ class ProblemManager:
         ret = cursor.fetchall()
         db.close()
         return ret
+
+    def search_problem(self, time_now: int, is_admin: bool,
+                       arg_problem_id, arg_problem_name_keyword, arg_problem_type, arg_contest_id):
+        db = db_connect()
+        cursor = db.cursor()
+        com = 'SELECT ID, Title, Problem_Type FROM Problem WHERE '
+        pre = []
+
+        if is_admin:
+            com = com + 'Release_Time <= %s'
+            pre.append(str(time_now))
+        if arg_problem_id is not None:
+            if len(pre):
+                com = com + ' AND '
+            com = com + 'ID = %s'
+            pre.append(str(arg_problem_id))
+        if arg_problem_type is not None:
+            if len(pre):
+                com = com + ' AND '
+            com = com + 'Problem_Type = %s'
+            pre.append(str(arg_problem_type))
+        if arg_problem_name_keyword is not None:
+            if len(pre):
+                com = com + ' AND '
+            com = com + 'INSTR(TITLE, %s) > 0' 
+            pre.append(str(arg_problem_name_keyword))
+        com = com + ' ORDER BY ID'
+        
+        cursor.execute(com, tuple(pre))
+        problem_list = cursor.fetchall()
+        ret = []
+        db.close()        
+        
+        contest_problem_table = dict()
+
+        if arg_contest_id is not None:
+            db = db_connect()
+            cursor = db.cursor()
+            cursor.execute("SELECT Problem_ID FROM Contest_Problem WHERE Belong = %s", (str(arg_contest_id)))
+            contest_problem_id_list = cursor.fetchall()
+            db.close()
+
+            for sql_row in contest_problem_id_list:
+                contest_problem_table[sql_row[0]] = True
+
+        for problem in problem_list:
+            if arg_contest_id is None or problem[0] in contest_problem_table:
+                ret.append(problem)
+
+        return ret        
+
 
     def delete_problem(self, problem_id: int):
         db = db_connect()

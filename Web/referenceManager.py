@@ -22,7 +22,7 @@ class ReferenceManager:
     def Query_Realname(self, Student_ID):
         db = db_connect()
         cur = db.cursor()
-        cur.execute("SELECT Real_Name FROM Realname_Reference WHERE Student_ID = %s", (Student_ID, ))
+        cur.execute("SELECT Real_Name FROM Realname_Reference WHERE Student_ID = %s ORDER BY ID DESC", (Student_ID, ))
         ret = cur.fetchone()
         if ret == None or len(ret) == 0:
             return 'Unknown'

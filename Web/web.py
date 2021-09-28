@@ -257,7 +257,7 @@ def problem_list():
         contest_id = None        
 
     if problem_id is None and problem_name_keyword is None and problem_type is None and contest_id is None:
-        if is_admin:
+        if not is_admin:
             max_page = int(int(Problem_Manager.get_problem_count_admin()) / WebConfig.Problems_Each_Page)
             problem_count_under_11000 = (Problem_Manager.get_problem_count_under_11000_admin())
             latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))

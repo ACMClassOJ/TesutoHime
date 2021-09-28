@@ -242,24 +242,52 @@ def problem_list():
     is_admin = bool(Login_Manager.get_privilege() >= Privilege.ADMIN)
     page = request.args.get('page')
     page = int(page) if page is not None else 1
-    if is_admin:
-        max_page = int(int(Problem_Manager.get_problem_count_admin()) / WebConfig.Problems_Each_Page)
-        problem_count_under_11000 = (Problem_Manager.get_problem_count_under_11000_admin())
-        latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))
-        if problem_count_under_11000 % WebConfig.Problems_Each_Page != 0:
-            latest_page_under_11000 += 1
-    else:
-        max_page = int(int(Problem_Manager.get_problem_count(unix_nano())) / WebConfig.Problems_Each_Page)
-        problem_count_under_11000 = (Problem_Manager.get_problem_count_under_11000(unix_nano()))
-        latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))
-        if problem_count_under_11000 % WebConfig.Problems_Each_Page != 0:
-            latest_page_under_11000 += 1
+
+    problem_id = request.args.get('problem_id')
+    if problem_id == '':
+        problem_id = None
+    problem_name_keyword = request.args.get('problem_name_keyword')
+    if problem_name_keyword == '':
+        problem_name_keyword = None
+    problem_type = request.args.get('problem_type')
+    if problem_type == '-1' or problem_type == '':
+        problem_type = None    
+    contest_id = request.args.get('contest_id')
+    if contest_id == '':
+        contest_id = None        
+
+    if problem_id is None and problem_name_keyword is None and problem_type is None and contest_id is None:
+        if is_admin:
+            max_page = int(int(Problem_Manager.get_problem_count_admin()) / WebConfig.Problems_Each_Page)
+            problem_count_under_11000 = (Problem_Manager.get_problem_count_under_11000_admin())
+            latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))
+            if problem_count_under_11000 % WebConfig.Problems_Each_Page != 0:
+                latest_page_under_11000 += 1
+        else:
+            max_page = int(int(Problem_Manager.get_problem_count(unix_nano())) / WebConfig.Problems_Each_Page)
+            problem_count_under_11000 = (Problem_Manager.get_problem_count_under_11000(unix_nano()))
+            latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))
+            if problem_count_under_11000 % WebConfig.Problems_Each_Page != 0:
+                latest_page_under_11000 += 1
+        page = max(min(max_page, page), 1)
+        problems = Problem_Manager.problem_in_page_autocalc(page, WebConfig.Problems_Each_Page, unix_nano(),
+                                                    Login_Manager.get_privilege() >= Privilege.ADMIN)
+        return render_template('problem_list.html', Problems=problems, 
+                            Pages=gen_page_for_problem_list(page, max_page, latest_page_under_11000),
+                            Args=dict(),
+                            friendlyName=Login_Manager.get_friendly_name(),
+                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+
+    problems = Problem_Manager.search_problem(unix_nano(), is_admin, problem_id, problem_name_keyword, problem_type, contest_id)
+    max_page = int (len(problems) / WebConfig.Problems_Each_Page)
     page = max(min(max_page, page), 1)
-    problems = Problem_Manager.problem_in_page_autocalc(page, WebConfig.Problems_Each_Page, unix_nano(),
-                                                Login_Manager.get_privilege() >= Privilege.ADMIN)
-    return render_template('problem_list.html', Problems=problems, Pages=gen_page_for_problem_list(page, max_page, latest_page_under_11000),
-                           friendlyName=Login_Manager.get_friendly_name(),
-                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+    start_index = (page - 1) * WebConfig.Problems_Each_Page
+    end_index = min(len(problems), page * WebConfig.Problems_Each_Page)
+    return render_template('problem_list.html', Problems=problems[start_index:end_index],
+                            Pages=gen_page_for_problem_list(page, max_page, 1),    
+                            Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
+                            friendlyName=Login_Manager.get_friendly_name(),
+                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)                        
 
 @web.route('/problem')
 def problem_detail():

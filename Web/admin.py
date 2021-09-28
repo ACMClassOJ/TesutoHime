@@ -145,9 +145,8 @@ def contest_manager():
     try:
         op = int(form[String.TYPE])
         if op == 0:
-            Contest_Manager.create_contest(form[String.CONTEST_NAME], int(form[String.START_TIME]),
-                                           int(form[String.END_TIME]),
-                                           int(form[String.CONTEST_TYPE]))
+            Contest_Manager.create_contest(int(form[String.CONTEST_ID]), form[String.CONTEST_NAME], int(form[String.START_TIME]),
+                                           int(form[String.END_TIME]), int(form[String.CONTEST_TYPE]))
             return ReturnCode.SUC_ADD_CONTEST
         elif op == 1:
             Contest_Manager.modify_contest(int(form[String.CONTEST_ID]), form.get(String.CONTEST_NAME, None),

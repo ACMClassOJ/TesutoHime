@@ -3,12 +3,12 @@ from utils import *
 
 
 class ContestManager:
-    def create_contest(self, name: str, start_time: int, end_time: int, contest_type: int):
+    def create_contest(self, id: int, name: str, start_time: int, end_time: int, contest_type: int):
         db = db_connect()
         cursor = db.cursor()
         try:
-            cursor.execute("INSERT INTO Contest (Name, Start_Time, End_Time, Type) VALUES (%s, %s, %s, %s)",
-                           (name, start_time, end_time, contest_type))
+            cursor.execute("INSERT INTO Contest (ID, Name, Start_Time, End_Time, Type) VALUES (%s, %s, %s, %s, %s)",
+                           (id, name, start_time, end_time, contest_type))
             db.commit()
         except pymysql.Error:
             db.rollback()

@@ -69,6 +69,7 @@ class ReturnCode:
     ERR_DEL_PROBLEMS_FROM_CONTEST = {'e': -310, 'msg': 'failed to remove problem(s) from contest'}
     ERR_ADDS_USER_TO_CONTEST = {'e': -311, 'msg': 'failed to add user(s) to contest'}
     ERR_DEL_USERS_FROM_CONTEST = {'e': -312, 'msg': 'failed to remove user(s) from contest'}
+    ERR_CONTEST_ENDTIME_BEFORE_START_TIME = {'e': -313, 'msg': 'it is not allowed that a contest\'s end time comes before start time'}
 
     ERR_QUIZ_JSON_DECODE = {'e': -400, 'msg': 'failed to decode quiz.json'}
     ERR_PROBLEM_NOT_QUIZ = {'e': -401, 'msg': 'this problem is not a quiz'}

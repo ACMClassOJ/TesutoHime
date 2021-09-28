@@ -53,6 +53,11 @@ $(function () {
 
     $("#divProblemHidden").hide();
 
+    $("#btnGoToProblemPage").click(function(){
+        if($("#iptProblemID").val() != "")
+            window.location.replace('/OnlineJudge/problem?problem_id=' + $("#iptProblemID").val());
+    });
+
     $("#btnGetProblemAutoIncreseID").click(function(){
         $.ajax({
             type: "POST",

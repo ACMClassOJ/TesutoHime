@@ -42,21 +42,24 @@ def _validate_problem_data(form):
 
 
 def _validate_contest_data(form):
-    if String.TYPE not in form:
-        return ReturnCode.ERR_BAD_DATA
+    # if String.TYPE not in form:
+        # return ReturnCode.ERR_BAD_DATA
     op = int(form[String.TYPE])
-    if 1 <= op < 6:
+    if 0 <= op <= 1:
+        if int(form[String.START_TIME]) > int(form[String.END_TIME]):
+            return ReturnCode.ERR_CONTEST_ENDTIME_BEFORE_START_TIME
+    # if 1 <= op < 6:
         # TODO: validate contest ID
-        return None
-    if 0 <= op < 2:
+        # return None
+    # if 0 <= op < 2:
         # TODO: validate
-        return None
-    elif 3 <= op < 5:
+        # return None
+    # elif 3 <= op < 5:
         # TODO: validate problem ID
-        return None
-    elif 5 <= op < 6:
+        # return None
+    # elif 5 <= op < 6:
         # TODO: validate username
-        return None
+        # return None
     return None
 
 
@@ -139,9 +142,9 @@ def contest_manager():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
     form = request.json
-    # err = _validate_contest_data(form)
-    # if err is not None:
-    #     return err
+    err = _validate_contest_data(form)
+    if err is not None:
+        return err
     try:
         op = int(form[String.TYPE])
         if op == 0:

@@ -3,6 +3,7 @@ from utils import unix_nano
 class ContestCache:
 
     expire_time = 14
+    max_table_size = 10
     
     # table: contest_id -> [time(int), data(list)]
 
@@ -25,6 +26,8 @@ class ContestCache:
         return []
 
     def put(self, contest_id: int, data: list):
+        if len(self.table) >= self.max_table_size:
+            return
         self.table[contest_id] = [unix_nano(), data]
 
 Contest_Cache = ContestCache()

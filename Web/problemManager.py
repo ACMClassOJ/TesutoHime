@@ -227,6 +227,8 @@ class ProblemManager:
                 com = com + ' AND '
             com = com + 'INSTR(TITLE, %s) > 0' 
             pre.append(str(arg_problem_name_keyword))
+        if is_admin and len(pre) == 0:
+            com = 'SELECT ID, Title, Problem_Type FROM Problem'    
         com = com + ' ORDER BY ID'
         
         cursor.execute(com, tuple(pre))

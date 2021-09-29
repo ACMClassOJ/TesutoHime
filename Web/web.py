@@ -212,29 +212,6 @@ def register():
     return str(val)
 
 
-# @web.route('/problems')
-# def problem_list():
-#     if not Login_Manager.check_user_status():
-#         return redirect('login?next=' + request.full_path)
-#     page = request.args.get('page')
-#     page = int(page) if page is not None else 1
-#     max_page = int(
-#         (Problem_Manager.get_max_id() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
-#     real_max_page = max_page + int(
-#         (Problem_Manager.get_real_max_id() - 10999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
-#     page = max(min(real_max_page, page), 1)
-#     if page <= max_page:
-#         start_id = (page - 1) * WebConfig.Problems_Each_Page + 1 + 999
-#         end_id = page * WebConfig.Problems_Each_Page + 999
-#     else:
-#         start_id = (page - max_page - 1) * WebConfig.Problems_Each_Page + 1 + 10999
-#         end_id = (page - max_page) * WebConfig.Problems_Each_Page + 10999
-#     problems = Problem_Manager.problem_in_range(start_id, end_id, unix_nano(),
-#                                                 Login_Manager.get_privilege() >= Privilege.ADMIN)
-#     return render_template('problem_list.html', Problems=problems, Pages=gen_page(page, real_max_page),
-#                            friendlyName=Login_Manager.get_friendly_name(),
-#                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
-
 @web.route('/problems')
 def problem_list():
     if not Login_Manager.check_user_status():
@@ -257,7 +234,7 @@ def problem_list():
         contest_id = None        
 
     if problem_id is None and problem_name_keyword is None and problem_type is None and contest_id is None:
-        if not is_admin:
+        if is_admin:
             max_page = int(int(Problem_Manager.get_problem_count_admin()) / WebConfig.Problems_Each_Page)
             problem_count_under_11000 = (Problem_Manager.get_problem_count_under_11000_admin())
             latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))
@@ -272,6 +249,7 @@ def problem_list():
         page = max(min(max_page, page), 1)
         problems = Problem_Manager.problem_in_page_autocalc(page, WebConfig.Problems_Each_Page, unix_nano(),
                                                     Login_Manager.get_privilege() >= Privilege.ADMIN)
+
         return render_template('problem_list.html', Problems=problems, 
                             Pages=gen_page_for_problem_list(page, max_page, latest_page_under_11000),
                             Args=dict(),
@@ -583,32 +561,71 @@ def contest():
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= unix_nano() or is_admin else []
         players = Contest_Manager.list_player_for_contest(contest_id)
+
+        # data is a table as follows
+        # Player 1: total_score total_time friendly_name [problem1_info...] [problem2_info...] ... Realname_Reference player_name
+        # in which problem_info: [max_score, submit_time, is_ac]
+
         data = []
-        for Player in players:
-            tmp = [0, 0, User_Manager.get_friendly_name(Player)]
-            for Problem in problems:
-                submits = Judge_Manager.get_contest_judge(int(Problem[0]), Player[0], start_time, end_time)
-                max_score = 0
-                is_ac = False
-                submit_time = 0
-                if submits is not None:
-                    for Submit in submits:
-                        max_score = max(max_score, int(Submit[2]))
-                        submit_time += 1
-                        if int(Submit[1]) == 2:
-                            is_ac = True
-                            tmp[1] += int(Submit[3]) - start_time + (submit_time - 1) * 1200
-                            break
-                tmp[0] += max_score
-                tmp.append([max_score, submit_time, is_ac])  # AC try time or failed times
+        username_to_num = dict()
+        problem_to_num = dict()
+        for i in range(len(players)):
+            row_data = [0, 0, User_Manager.get_friendly_name(players[i])]
+            username_to_num[players[i][0]] = i
+            for j in range(len(problems)):
+                row_data.append([0, 0, False])
+                problem_to_num[problems[j][0]] = j + 3
+
             if is_admin:
-                tmp.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(Player)))
-                tmp.append(Player[0])
+                row_data.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(players[i])))
+                row_data.append(players[i][0])
             else:
-                tmp.append("")
-                tmp.append("")
-            tmp[1] //= 60
-            data.append(tmp)
+                row_data.append("")
+                row_data.append("")    
+            data.append(row_data)    
+
+        submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
+        for submit in submits:
+            # ID = submit[0]
+            # User = submit[1]
+            # Problem_ID = submit[2]
+            # Status = submit[3]
+            # Score = submit[4]
+            # Time = submit[5]
+
+            # total_score = data[row_num][0]
+            # total_time = data[row_num][1]
+
+            # problem.max_score = data[row_num][problem_index][0]
+            # problem.submit_time = data[row_num][problem_index][1]
+            # problem.is_ac = data[row_num][problem_index][2]
+
+            if submit[1] not in username_to_num:
+                continue
+
+            row_num = username_to_num[submit[1]]
+            problem_index = problem_to_num[submit[2]]
+
+            max_score = data[row_num][problem_index][0]
+            if data[row_num][problem_index][2] == True:
+                continue
+            is_ac = False
+            submit_time = data[row_num][problem_index][1]
+
+            if int(submit[4]) > max_score:
+                data[row_num][0] -= max_score
+                max_score = int(submit[4])
+                data[row_num][0] += max_score
+
+            submit_time += 1
+
+            if int(submit[3]) == 2:
+                data[row_num][1] += (int(submit[5]) - start_time + (submit_time - 1) * 1200) // 60
+                is_ac = True
+
+            data[row_num][problem_index][0] = max_score
+            data[row_num][problem_index][1] = submit_time
+            data[row_num][problem_index][2] = is_ac
 
         cur_time = unix_nano()
         if cur_time < start_time:
@@ -661,29 +678,63 @@ def homework():
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= unix_nano() or is_admin else []
         players = Contest_Manager.list_player_for_contest(contest_id)
+
+        # data is a table as follows
+        # Player 1: try_time friendly_name [problem1_info...] [problem2_info...] ... Realname_Reference player_name
+        # in which problem_info: [is_ac, submit_time]
+
         data = []
-        for Player in players:
-            tmp = [0, User_Manager.get_friendly_name(Player)]
-            for Problem in problems:
-                submits = Judge_Manager.get_contest_judge(int(Problem[0]), Player[0], start_time, end_time)
-                is_ac = False
-                try_time = 0
-                if submits is not None:
-                    for Submit in submits:
-                        try_time += 1
-                        if int(Submit[1]) == 2:
-                            is_ac = True
-                            break
-                if is_ac:
-                    tmp[0] += 1
-                tmp.append([is_ac, try_time])  # AC try time or failed times
+        username_to_num = dict()
+        problem_to_num = dict()
+        for i in range(len(players)):
+            row_data = [0, User_Manager.get_friendly_name(players[i])]
+            username_to_num[players[i][0]] = i
+            for j in range(len(problems)):
+                row_data.append([False, 0])
+                problem_to_num[problems[j][0]] = j + 2
+
             if is_admin:
-                tmp.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(Player)))
-                tmp.append(Player[0])
+                row_data.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(players[i])))
+                row_data.append(players[i][0])
             else:
-                tmp.append("")
-                tmp.append("")
-            data.append(tmp)
+                row_data.append("")
+                row_data.append("")    
+            data.append(row_data)    
+        
+        submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
+
+        for submit in submits:
+            # ID = submit[0]
+            # User = submit[1]
+            # Problem_ID = submit[2]
+            # Status = submit[3]
+            # Score = submit[4]
+            # Time = submit[5]
+
+            # try_time = data[row_num][0]
+
+            # problem.is_ac = data[row_num][problem_index][0]
+            # problem.submit_time = data[row_num][problem_index][1]
+
+            if submit[1] not in username_to_num:
+                continue
+
+            row_num = username_to_num[submit[1]]
+            problem_index = problem_to_num[submit[2]]
+
+            if data[row_num][problem_index][0] == True:
+                continue
+            is_ac = False
+            submit_time = data[row_num][problem_index][1]
+
+            submit_time += 1
+
+            if int(submit[3]) == 2:
+                is_ac = True
+                data[row_num][0] += 1
+
+            data[row_num][problem_index][0] = is_ac
+            data[row_num][problem_index][1] = submit_time
 
         cur_time = unix_nano()
         if cur_time < start_time:

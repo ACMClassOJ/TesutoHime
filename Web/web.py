@@ -21,6 +21,7 @@ import json
 import os
 from const import Privilege, ReturnCode
 from tracker import tracker
+from contestCache import Contest_Cache
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -566,66 +567,71 @@ def contest():
         # Player 1: total_score total_time friendly_name [problem1_info...] [problem2_info...] ... Realname_Reference player_name
         # in which problem_info: [max_score, submit_time, is_ac]
 
-        data = []
-        username_to_num = dict()
-        problem_to_num = dict()
-        for i in range(len(players)):
-            row_data = [0, 0, User_Manager.get_friendly_name(players[i])]
-            username_to_num[players[i][0]] = i
-            for j in range(len(problems)):
-                row_data.append([0, 0, False])
-                problem_to_num[problems[j][0]] = j + 3
+        Contest_Cache.expire()
+        data = Contest_Cache.get(contest_id)
 
-            if is_admin:
-                row_data.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(players[i])))
-                row_data.append(players[i][0])
-            else:
-                row_data.append("")
-                row_data.append("")    
-            data.append(row_data)    
+        if len(data) == 0:
+            username_to_num = dict()
+            problem_to_num = dict()
+            for i in range(len(players)):
+                row_data = [0, 0, User_Manager.get_friendly_name(players[i])]
+                username_to_num[players[i][0]] = i
+                for j in range(len(problems)):
+                    row_data.append([0, 0, False])
+                    problem_to_num[problems[j][0]] = j + 3
 
-        submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
-        for submit in submits:
-            # ID = submit[0]
-            # User = submit[1]
-            # Problem_ID = submit[2]
-            # Status = submit[3]
-            # Score = submit[4]
-            # Time = submit[5]
+                if is_admin:
+                    row_data.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(players[i])))
+                    row_data.append(players[i][0])
+                else:
+                    row_data.append("")
+                    row_data.append("")    
+                data.append(row_data)    
 
-            # total_score = data[row_num][0]
-            # total_time = data[row_num][1]
+            submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
+            for submit in submits:
+                # ID = submit[0]
+                # User = submit[1]
+                # Problem_ID = submit[2]
+                # Status = submit[3]
+                # Score = submit[4]
+                # Time = submit[5]
 
-            # problem.max_score = data[row_num][problem_index][0]
-            # problem.submit_time = data[row_num][problem_index][1]
-            # problem.is_ac = data[row_num][problem_index][2]
+                # total_score = data[row_num][0]
+                # total_time = data[row_num][1]
 
-            if submit[1] not in username_to_num:
-                continue
+                # problem.max_score = data[row_num][problem_index][0]
+                # problem.submit_time = data[row_num][problem_index][1]
+                # problem.is_ac = data[row_num][problem_index][2]
 
-            row_num = username_to_num[submit[1]]
-            problem_index = problem_to_num[submit[2]]
+                if submit[1] not in username_to_num:
+                    continue
 
-            max_score = data[row_num][problem_index][0]
-            if data[row_num][problem_index][2] == True:
-                continue
-            is_ac = False
-            submit_time = data[row_num][problem_index][1]
+                row_num = username_to_num[submit[1]]
+                problem_index = problem_to_num[submit[2]]
 
-            if int(submit[4]) > max_score:
-                data[row_num][0] -= max_score
-                max_score = int(submit[4])
-                data[row_num][0] += max_score
+                max_score = data[row_num][problem_index][0]
+                if data[row_num][problem_index][2] == True:
+                    continue
+                is_ac = False
+                submit_time = data[row_num][problem_index][1]
 
-            submit_time += 1
+                if int(submit[4]) > max_score:
+                    data[row_num][0] -= max_score
+                    max_score = int(submit[4])
+                    data[row_num][0] += max_score
 
-            if int(submit[3]) == 2:
-                data[row_num][1] += (int(submit[5]) - start_time + (submit_time - 1) * 1200) // 60
-                is_ac = True
+                submit_time += 1
 
-            data[row_num][problem_index][0] = max_score
-            data[row_num][problem_index][1] = submit_time
-            data[row_num][problem_index][2] = is_ac
+                if int(submit[3]) == 2:
+                    data[row_num][1] += (int(submit[5]) - start_time + (submit_time - 1) * 1200) // 60
+                    is_ac = True
+
+                data[row_num][problem_index][0] = max_score
+                data[row_num][problem_index][1] = submit_time
+                data[row_num][problem_index][2] = is_ac
+            
+            Contest_Cache.put(contest_id, data)    
 
         cur_time = unix_nano()
         if cur_time < start_time:
@@ -683,58 +689,63 @@ def homework():
         # Player 1: try_time friendly_name [problem1_info...] [problem2_info...] ... Realname_Reference player_name
         # in which problem_info: [is_ac, submit_time]
 
-        data = []
-        username_to_num = dict()
-        problem_to_num = dict()
-        for i in range(len(players)):
-            row_data = [0, User_Manager.get_friendly_name(players[i])]
-            username_to_num[players[i][0]] = i
-            for j in range(len(problems)):
-                row_data.append([False, 0])
-                problem_to_num[problems[j][0]] = j + 2
-
-            if is_admin:
-                row_data.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(players[i])))
-                row_data.append(players[i][0])
-            else:
-                row_data.append("")
-                row_data.append("")    
-            data.append(row_data)    
+        Contest_Cache.expire()
+        data = Contest_Cache.get(contest_id)
         
-        submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
+        if len(data) == 0:
+            username_to_num = dict()
+            problem_to_num = dict()
+            for i in range(len(players)):
+                row_data = [0, User_Manager.get_friendly_name(players[i])]
+                username_to_num[players[i][0]] = i
+                for j in range(len(problems)):
+                    row_data.append([False, 0])
+                    problem_to_num[problems[j][0]] = j + 2
 
-        for submit in submits:
-            # ID = submit[0]
-            # User = submit[1]
-            # Problem_ID = submit[2]
-            # Status = submit[3]
-            # Score = submit[4]
-            # Time = submit[5]
+                if is_admin:
+                    row_data.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(players[i])))
+                    row_data.append(players[i][0])
+                else:
+                    row_data.append("")
+                    row_data.append("")    
+                data.append(row_data)    
+            
+            submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
 
-            # try_time = data[row_num][0]
+            for submit in submits:
+                # ID = submit[0]
+                # User = submit[1]
+                # Problem_ID = submit[2]
+                # Status = submit[3]
+                # Score = submit[4]
+                # Time = submit[5]
 
-            # problem.is_ac = data[row_num][problem_index][0]
-            # problem.submit_time = data[row_num][problem_index][1]
+                # try_time = data[row_num][0]
 
-            if submit[1] not in username_to_num:
-                continue
+                # problem.is_ac = data[row_num][problem_index][0]
+                # problem.submit_time = data[row_num][problem_index][1]
 
-            row_num = username_to_num[submit[1]]
-            problem_index = problem_to_num[submit[2]]
+                if submit[1] not in username_to_num:
+                    continue
 
-            if data[row_num][problem_index][0] == True:
-                continue
-            is_ac = False
-            submit_time = data[row_num][problem_index][1]
+                row_num = username_to_num[submit[1]]
+                problem_index = problem_to_num[submit[2]]
 
-            submit_time += 1
+                if data[row_num][problem_index][0] == True:
+                    continue
+                is_ac = False
+                submit_time = data[row_num][problem_index][1]
 
-            if int(submit[3]) == 2:
-                is_ac = True
-                data[row_num][0] += 1
+                submit_time += 1
 
-            data[row_num][problem_index][0] = is_ac
-            data[row_num][problem_index][1] = submit_time
+                if int(submit[3]) == 2:
+                    is_ac = True
+                    data[row_num][0] += 1
+
+                data[row_num][problem_index][0] = is_ac
+                data[row_num][problem_index][1] = submit_time
+
+            Contest_Cache.put(contest_id, data)    
 
         cur_time = unix_nano()
         if cur_time < start_time:

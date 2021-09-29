@@ -8,7 +8,7 @@ from Judger_Core.util import log
 import multiprocessing
 import subprocess
 import os.path
-import json
+import json, shutil, stat
 
 class JudgeManager:
     def judge(self,
@@ -65,8 +65,14 @@ class JudgeManager:
             return judgeResult
 
         if problemConfig.SPJ in [1, 4, 5]:
-            log.info("JudgeManager: compile once for spj")
-            subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
+            if os.path.isfile(dataPath + '/spj_bin'):
+                log.info('JudgeManager: binary spj found')
+                print('JudgeManager: binary spj found')
+                shutil.copy(dataPath + '/spj_bin', dataPath + '/spj')
+                os.chmod(dataPath + '/spj', stat.S_IXUSR)
+            else:
+                log.info("JudgeManager: compile once for spj")
+                subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
 
         if problemConfig.SPJ == 5:
             with open(outputFilePath, "w") as f:
@@ -169,7 +175,7 @@ class JudgeManager:
                                         testPointDetail.score = float("\n".join(f.readline().splitlines()))
                                     testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC
                                     with open('/work/message.log') as f:
-                                        testPointDetail.message = testPointDetail.message.join(f.readline().splitlines())
+                                        testPointDetail.message = f.read()
                                 except Exception as e:
                                     log.error(e)
                                     testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while running SPJ.', ResultType.SYSERR

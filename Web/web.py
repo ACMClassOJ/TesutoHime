@@ -579,13 +579,9 @@ def contest():
                 for j in range(len(problems)):
                     row_data.append([0, 0, False])
                     problem_to_num[problems[j][0]] = j + 3
-
-                if is_admin:
-                    row_data.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(players[i])))
-                    row_data.append(players[i][0])
-                else:
-                    row_data.append("")
-                    row_data.append("")    
+                    
+                row_data.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(players[i])))
+                row_data.append(players[i][0])  
                 data.append(row_data)    
 
             submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
@@ -702,12 +698,8 @@ def homework():
                     row_data.append([False, 0])
                     problem_to_num[problems[j][0]] = j + 2
 
-                if is_admin:
-                    row_data.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(players[i])))
-                    row_data.append(players[i][0])
-                else:
-                    row_data.append("")
-                    row_data.append("")    
+                row_data.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(players[i])))
+                row_data.append(players[i][0])   
                 data.append(row_data)    
             
             submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)

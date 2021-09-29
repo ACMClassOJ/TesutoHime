@@ -212,29 +212,6 @@ def register():
     return str(val)
 
 
-# @web.route('/problems')
-# def problem_list():
-#     if not Login_Manager.check_user_status():
-#         return redirect('login?next=' + request.full_path)
-#     page = request.args.get('page')
-#     page = int(page) if page is not None else 1
-#     max_page = int(
-#         (Problem_Manager.get_max_id() - 999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
-#     real_max_page = max_page + int(
-#         (Problem_Manager.get_real_max_id() - 10999 + WebConfig.Problems_Each_Page - 1) / WebConfig.Problems_Each_Page)
-#     page = max(min(real_max_page, page), 1)
-#     if page <= max_page:
-#         start_id = (page - 1) * WebConfig.Problems_Each_Page + 1 + 999
-#         end_id = page * WebConfig.Problems_Each_Page + 999
-#     else:
-#         start_id = (page - max_page - 1) * WebConfig.Problems_Each_Page + 1 + 10999
-#         end_id = (page - max_page) * WebConfig.Problems_Each_Page + 10999
-#     problems = Problem_Manager.problem_in_range(start_id, end_id, unix_nano(),
-#                                                 Login_Manager.get_privilege() >= Privilege.ADMIN)
-#     return render_template('problem_list.html', Problems=problems, Pages=gen_page(page, real_max_page),
-#                            friendlyName=Login_Manager.get_friendly_name(),
-#                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
-
 @web.route('/problems')
 def problem_list():
     if not Login_Manager.check_user_status():
@@ -584,35 +561,6 @@ def contest():
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= unix_nano() or is_admin else []
         players = Contest_Manager.list_player_for_contest(contest_id)
-        
-        """
-        data = []
-        for Player in players:
-            tmp = [0, 0, User_Manager.get_friendly_name(Player)]
-            for Problem in problems:
-                submits = Judge_Manager.get_contest_judge(int(Problem[0]), Player[0], start_time, end_time)
-                max_score = 0
-                is_ac = False
-                submit_time = 0
-                if submits is not None:
-                    for Submit in submits:
-                        max_score = max(max_score, int(Submit[2]))
-                        submit_time += 1
-                        if int(Submit[1]) == 2:
-                            is_ac = True
-                            tmp[1] += int(Submit[3]) - start_time + (submit_time - 1) * 1200
-                            break
-                tmp[0] += max_score
-                tmp.append([max_score, submit_time, is_ac])  # AC try time or failed times
-            if is_admin:
-                tmp.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(Player)))
-                tmp.append(Player[0])
-            else:
-                tmp.append("")
-                tmp.append("")
-            tmp[1] //= 60
-            data.append(tmp)
-        """  
 
         # data is a table as follows
         # Player 1: total_score total_time friendly_name [problem1_info...] [problem2_info...] ... Realname_Reference player_name
@@ -730,31 +678,6 @@ def homework():
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= unix_nano() or is_admin else []
         players = Contest_Manager.list_player_for_contest(contest_id)
-        """
-        data = []
-        for Player in players:
-            tmp = [0, User_Manager.get_friendly_name(Player)]
-            for Problem in problems:
-                submits = Judge_Manager.get_contest_judge(int(Problem[0]), Player[0], start_time, end_time)
-                is_ac = False
-                try_time = 0
-                if submits is not None:
-                    for Submit in submits:
-                        try_time += 1
-                        if int(Submit[1]) == 2:
-                            is_ac = True
-                            break
-                if is_ac:
-                    tmp[0] += 1
-                tmp.append([is_ac, try_time])  # AC try time or failed times
-            if is_admin:
-                tmp.append(Reference_Manager.Query_Realname(User_Manager.get_student_id(Player)))
-                tmp.append(Player[0])
-            else:
-                tmp.append("")
-                tmp.append("")
-            data.append(tmp)
-        """
 
         # data is a table as follows
         # Player 1: try_time friendly_name [problem1_info...] [problem2_info...] ... Realname_Reference player_name
@@ -798,9 +721,6 @@ def homework():
 
             row_num = username_to_num[submit[1]]
             problem_index = problem_to_num[submit[2]]
-            
-            # print("Log: ", "Submit_ID: ", submit[0], "User: ", submit[1], "Problem_ID: ", submit[2])
-            # print("Log: ", "row_num: ", row_num, "problem_index: ", problem_index)
 
             if data[row_num][problem_index][0] == True:
                 continue
@@ -815,11 +735,7 @@ def homework():
 
             data[row_num][problem_index][0] = is_ac
             data[row_num][problem_index][1] = submit_time
-        """
-        print("data table")
-        for row in data:
-            print(row)
-        """
+
         cur_time = unix_nano()
         if cur_time < start_time:
             contest_status = 'Pending'

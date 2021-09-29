@@ -170,7 +170,6 @@ class ProblemManager:
 
     def get_release_time(self, problem_id: int) -> int:
         db = db_connect()
-        db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Release_Time FROM Problem WHERE ID = %s", (str(problem_id)))
         ret = cursor.fetchone()
@@ -210,7 +209,7 @@ class ProblemManager:
         com = 'SELECT ID, Title, Problem_Type FROM Problem WHERE '
         pre = []
 
-        if is_admin:
+        if not is_admin:
             com = com + 'Release_Time <= %s'
             pre.append(str(time_now))
         if arg_problem_id is not None:

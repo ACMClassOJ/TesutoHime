@@ -128,6 +128,7 @@ class JudgeManager:
         db.close()
         return ret
 
+    """
     def get_contest_judge(self, problem_id: int, username: str, start_time: int, end_time: int):
         db = db_connect()
         cursor = db.cursor()
@@ -137,6 +138,27 @@ class JudgeManager:
         ret = cursor.fetchall()
         db.close()
         return ret
+    """
+
+    def get_contest_judge(self, problems: list, start_time: int, end_time: int):
+        if len(problems) == 0:
+            return []
+        db = db_connect()
+        cursor = db.cursor()
+        com = 'SELECT ID, User, Problem_ID, Status, Score, Time FROM Judge WHERE (Time >= %s AND Time <= %s) AND ('
+        args = [str(start_time), str(end_time)]
+        for i in range(len(problems)):
+            if i > 0:
+                com += ' OR '
+            com += 'Problem_ID = %s'
+            args.append(problems[i])                
+
+        com = com + ')'
+        cursor.execute(com, tuple(args))
+
+        ret = cursor.fetchall()
+        db.close()
+        return ret  
 
     def search_judge(self, arg_submitter, arg_problem_id, arg_status, arg_lang, arg_param=None):
         db = db_connect()

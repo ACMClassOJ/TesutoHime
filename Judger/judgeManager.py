@@ -67,7 +67,6 @@ class JudgeManager:
         if problemConfig.SPJ in [1, 4, 5]:
             if os.path.isfile(dataPath + '/spj_bin'):
                 log.info('JudgeManager: binary spj found')
-                print('JudgeManager: binary spj found')
                 shutil.copy(dataPath + '/spj_bin', dataPath + '/spj')
                 os.chmod(dataPath + '/spj', stat.S_IXUSR)
             else:
@@ -162,7 +161,7 @@ class JudgeManager:
                             testPointDetail.ID = testcase.ID
                         if testPointDetail.result == ResultType.UNKNOWN:
                             if problemConfig.SPJ == 1 or problemConfig.SPJ == 4 or problemConfig.SPJ == 5:
-                                print('start spj')
+                                log.info('JudgeManager: start spj')
                                 try:
                                     # upd, I guess that this line can be moved to the top, and excuted once for a judge
                                     # subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))

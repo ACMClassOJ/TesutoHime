@@ -180,6 +180,7 @@ def login():
     if not User_Manager.check_login(username, password):  # no need to avoid sql injection
         return '-1'
     lid = str(uuid4())
+    username = User_Manager.get_username(username)
     Login_Manager.new_session(username, lid)
     ret = make_response('0')
     ret.set_cookie(key='Login_ID', value=lid, max_age=LoginConfig.Login_Life_Time)

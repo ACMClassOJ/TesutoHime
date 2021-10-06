@@ -21,6 +21,13 @@ def unix_nano_float() -> float:  # float point time in Second
 def readable_time(nano) -> str:
     return str(time.strftime("%b-%d-%Y %H:%M:%S", datetime.datetime.fromtimestamp(nano).timetuple()))
 
+
+def regularize_string(raw_str: str) -> str:
+    raw_str = raw_str.lower() # lower_case 
+    raw_str = raw_str.replace(' ', '') # eliminate the blank
+    return raw_str
+
+
 def gen_page(cur_page: int, max_page: int):
     ret = []
     if cur_page != 1:

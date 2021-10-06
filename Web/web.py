@@ -575,7 +575,7 @@ def contest():
             problem_to_num = dict()
             for i in range(len(players)):
                 row_data = [0, 0, User_Manager.get_friendly_name(players[i])]
-                username_to_num[players[i][0]] = i
+                username_to_num[regularize_string(players[i][0])] = i
                 for j in range(len(problems)):
                     row_data.append([0, 0, False])
                     problem_to_num[problems[j][0]] = j + 3
@@ -600,10 +600,10 @@ def contest():
                 # problem.submit_time = data[row_num][problem_index][1]
                 # problem.is_ac = data[row_num][problem_index][2]
 
-                if submit[1] not in username_to_num:
+                if regularize_string(submit[1]) not in username_to_num:
                     continue
 
-                row_num = username_to_num[submit[1]]
+                row_num = username_to_num[regularize_string(submit[1])]
                 problem_index = problem_to_num[submit[2]]
 
                 max_score = data[row_num][problem_index][0]
@@ -693,7 +693,7 @@ def homework():
             problem_to_num = dict()
             for i in range(len(players)):
                 row_data = [0, User_Manager.get_friendly_name(players[i])]
-                username_to_num[players[i][0]] = i
+                username_to_num[regularize_string(players[i][0])] = i
                 for j in range(len(problems)):
                     row_data.append([False, 0])
                     problem_to_num[problems[j][0]] = j + 2
@@ -717,10 +717,10 @@ def homework():
                 # problem.is_ac = data[row_num][problem_index][0]
                 # problem.submit_time = data[row_num][problem_index][1]
 
-                if submit[1] not in username_to_num:
+                if regularize_string(submit[1]) not in username_to_num:
                     continue
 
-                row_num = username_to_num[submit[1]]
+                row_num = username_to_num[regularize_string(submit[1])]
                 problem_index = problem_to_num[submit[2]]
 
                 if data[row_num][problem_index][0] == True:

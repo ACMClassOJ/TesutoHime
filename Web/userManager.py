@@ -93,6 +93,16 @@ class UserManager:
         db.close()
         return data[0]
 
+    def get_username(self, username: str) -> Optional[str]:  # Username must exist.
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Username FROM User WHERE Username = %s", username)
+        data = cursor.fetchone()
+        db.close()
+        if data is None:
+            return None
+        return str(data[0])
+
     def get_student_id(self, username: str) -> Optional[str]:  # Username must exist.
         db = db_connect()
         cursor = db.cursor()

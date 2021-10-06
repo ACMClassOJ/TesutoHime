@@ -163,7 +163,7 @@
                                                         {% if group[j][4] != -1 -%}
                                                             Disk Usage: {{ group[j][4] / 1024 }}MiB<br>
                                                         {%- endif %}
-                                                        Info: {{ group[j][5] }}
+							Info:<pre> {{ group[j][5] }} </pre>
                                                     </td>
                                                 <tr>
                                             {%- endfor %}

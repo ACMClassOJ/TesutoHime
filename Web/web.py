@@ -571,7 +571,8 @@ def contest():
         Contest_Cache.expire()
         data = Contest_Cache.get(contest_id)
 
-        if len(data) == 0:
+        if len(data) == 0 or len(data) != len(players):
+            data = []
             username_to_num = dict()
             problem_to_num = dict()
             for i in range(len(players)):
@@ -688,8 +689,9 @@ def homework():
 
         Contest_Cache.expire()
         data = Contest_Cache.get(contest_id)
-        
-        if len(data) == 0:
+
+        if len(data) == 0 or len(data) != len(players):  
+            data = []
             username_to_num = dict()
             problem_to_num = dict()
             for i in range(len(players)):

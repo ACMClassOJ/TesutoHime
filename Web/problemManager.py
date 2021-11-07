@@ -195,9 +195,9 @@ class ProblemManager:
         cursor = db.cursor()
         problem_num_start = (page - 1) * problem_num_per_page
         if not is_admin:
-            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem WHERE Release_Time <= %s LIMIT %s, %s" , (str(time_now), int(problem_num_start), int(problem_num_per_page)))
+            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem WHERE Release_Time <= %s ORDER BY ID LIMIT %s, %s" , (str(time_now), int(problem_num_start), int(problem_num_per_page)))
         else:
-            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem LIMIT %s, %s", (int(problem_num_start), int(problem_num_per_page)))
+            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem ORDER BY ID LIMIT %s, %s", (int(problem_num_start), int(problem_num_per_page)))
         ret = cursor.fetchall()
         db.close()
         return ret

@@ -12,6 +12,8 @@ from requests.exceptions import RequestException
 from config import DataConfig, PicConfig
 import json
 import hashlib
+import time
+import random
 
 admin = Blueprint('admin', __name__, static_folder='static')
 
@@ -218,12 +220,14 @@ def pic_upload():
     if 'file' in request.files:
         f = request.files['file']
         try:
-            hasher = hashlib.md5()
-            hasher.update(f.filename.encode('utf-8'))
-            filenamehashed = str(hasher.hexdigest()) + f.filename[f.filename.rindex("."):].lower()
+            # hasher = hashlib.md5()
+            # hasher.update(f.filename.encode('utf-8'))
+            # filenamehashed = str(hasher.hexdigest()) + f.filename[f.filename.rindex("."):].lower()
+            filenamehashed = time.strftime('%Y%m%d-%H%M%S', time.localtime())
+            filenamehashed += "-" + str(random.randint(100000, 999999))
+            filenamehashed += f.filename[f.filename.rindex("."):].lower()
             r = post(PicConfig.server + '/' + PicConfig.key + '/upload.php', files={'file': (filenamehashed, f)})
             response_text = r.content.decode('utf-8')
-            notify_text = 'Unknown Error'
             if response_text == '0':
                 ret_notify = ReturnCode.SUC_PIC_SERVICE_UPLOAD
                 ret_notify['link'] = PicConfig.server + '/' + filenamehashed

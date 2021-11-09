@@ -381,6 +381,7 @@ $(function () {
         e.preventDefault();
         e.stopPropagation();
         let data = new FormData(this);
+        $("#btnPicUpload").attr("disabled", "disabled");
         $.ajax({
             url: "/OnlineJudge/admin/pic",
             type: "POST",
@@ -422,7 +423,10 @@ $(function () {
                     document.getElementsByClassName('copy_html')[0].setAttribute("data-clipboard-target", "#swal_content_html");
                     var clipboard2 = new ClipboardJS(document.getElementsByClassName('copy_html')[0]);
                 }
-                $("#InfoPicUpload").html(ret.responseText);
+                var upload_input_bar = $("#iptPicUpload");
+                upload_input_bar.after(upload_input_bar.clone().val(""));
+                upload_input_bar.remove();
+                $("#btnPicUpload").removeAttr("disabled");
             }
         });
     });

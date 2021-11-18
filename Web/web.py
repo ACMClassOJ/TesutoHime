@@ -561,7 +561,8 @@ def contest():
         contest_id = int(contest_id)
         start_time, end_time = Contest_Manager.get_time(contest_id)
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
-        problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= unix_nano() or is_admin else []
+        problems = Contest_Manager.list_problem_for_contest(contest_id)
+        visible_problems_len = len(problems) if is_admin or unix_nano() >= start_time else 0
         players = Contest_Manager.list_player_for_contest(contest_id)
 
         # data is a table as follows
@@ -642,7 +643,7 @@ def contest():
         title = Contest_Manager.get_title(contest_id)[0][0]
         return render_template('contest.html', id=contest_id, Title=title, Status=contest_status,
                                StartTime=readable_time(start_time), EndTime=readable_time(end_time), Problems=problems,
-                               Data=data, len=len(players), len2=len(problems), is_Admin=is_admin,
+                               Data=data, len=len(players), len2=visible_problems_len, is_Admin=is_admin,
                                Percentage=min(
                                    max(int(100 * float(unix_nano() - start_time) / float(end_time - start_time)), 0),
                                    100), friendlyName=Login_Manager.get_friendly_name())
@@ -680,7 +681,8 @@ def homework():
         contest_id = int(contest_id)
         start_time, end_time = Contest_Manager.get_time(contest_id)
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
-        problems = Contest_Manager.list_problem_for_contest(contest_id) if start_time <= unix_nano() or is_admin else []
+        problems = Contest_Manager.list_problem_for_contest(contest_id)
+        visible_problems_len = len(problems) if is_admin or unix_nano() >= start_time else 0
         players = Contest_Manager.list_player_for_contest(contest_id)
 
         # data is a table as follows
@@ -752,7 +754,7 @@ def homework():
         title = Contest_Manager.get_title(contest_id)[0][0]
         return render_template('homework.html', id=contest_id, Title=title, Status=contest_status,
                                StartTime=readable_time(start_time), EndTime=readable_time(end_time), Problems=problems,
-                               Players=players, Data=data, len=len(players), len2=len(problems), is_Admin=is_admin,
+                               Players=players, Data=data, len=len(players), len2=visible_problems_len, is_Admin=is_admin,
                                Percentage=min(
                                    max(int(100 * float(unix_nano() - start_time) / float(end_time - start_time)), 0),
                                    100), friendlyName=Login_Manager.get_friendly_name())

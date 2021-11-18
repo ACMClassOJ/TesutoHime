@@ -27,8 +27,8 @@
                 <tr>
                     <th>排名</th>
                     <th>用户昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
-                    {% for problem in Problems -%}
-                        <th><a href="/OnlineJudge/problem?problem_id={{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
+                    {% for i in range(0, len2) -%}
+                        <th><a href="/OnlineJudge/problem?problem_id={{ Problems[i][0] }}" target="_blank">{{ Problems[i][0] }}</a></th>
                     {%- endfor %}
                     <th>总得分</th>
                     <th>罚时</th>

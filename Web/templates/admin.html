@@ -114,7 +114,7 @@
                                 <div class="float-right d-flex mb-3 ml-auto pr-1">
                                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnCreateContest"> 创建比赛 </button>
                                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyContest"> 修改比赛 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveContest"> 删除比赛 </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveContest" onclick="return confirm('确认要删除吗？');"> 删除比赛 </button>
                                     <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowProblemList"> 修改比赛题号列表 </button>
                                     <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowUserList"> 修改参赛学生列表 </button>
                                 </div>
@@ -126,7 +126,7 @@
                                 </div>
                                 <div class="float-right d-flex mb-3 ml-auto pr-1">
                                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemToContest"> 添加题号 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblemFromContest"> 删除题号 </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblemFromContest" onclick="return confirm('确认要删除吗？');"> 删除题号 </button>
                                 </div>
                             </div>
                             <div class="form-row" id="divContestUserListHidden">
@@ -136,7 +136,7 @@
                                 </div>
                                 <div class="float-right d-flex mb-3 ml-auto pr-1">
                                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUserToContest"> 添加用户 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUserFromContest"> 删除用户 </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUserFromContest" onclick="return confirm('确认要删除吗？');"> 删除用户 </button>
                                 </div>
                             </div>
                         </form>
@@ -198,7 +198,7 @@
                                 <div class="float-right d-flex mb-3 ml-auto pr-1">
                                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblem"> 添加问题 </button>
                                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyProblem"> 修改问题 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblem"> 删除问题 </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblem" onclick="return confirm('确认要删除吗？');"> 删除问题 </button>
                                 </div>
                             </div>
                         </form>

@@ -1,33 +1,18 @@
-from utils import unix_nano
+from utils import *
 
 class ContestCache:
 
     expire_time = 14
-    max_table_size = 10
-    
-    # table: contest_id -> [time(int), data(list)]
 
     def __init__(self):
-        self.table = dict()
-
-    def expire(self):
-        expire_list = []
-        for contest_id_in_table in self.table:
-            if unix_nano() - self.table[contest_id_in_table][0] > self.expire_time:
-                expire_list.append(contest_id_in_table)
-
-        for expire_id in expire_list:
-            self.table.pop(expire_id)
+        self.redis = redis_connect()
+        self.prefix = RedisConfig.prefix + "ContestCache_"
 
     def get(self, contest_id: int):
-        if contest_id in self.table:
-            return self.table[contest_id][1]
-
-        return []
+        rst = self.redis.get(self.prefix + str(contest_id))
+        return eval(rst) if rst != None else []
 
     def put(self, contest_id: int, data: list):
-        if len(self.table) >= self.max_table_size:
-            return
-        self.table[contest_id] = [unix_nano(), data]
+        self.redis.set(self.prefix + str(contest_id), str(data), ex = self.expire_time)
 
 Contest_Cache = ContestCache()

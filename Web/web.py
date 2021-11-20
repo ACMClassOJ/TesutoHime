@@ -569,10 +569,9 @@ def contest():
         # Player 1: total_score total_time friendly_name [problem1_info...] [problem2_info...] ... Realname_Reference player_name
         # in which problem_info: [max_score, submit_time, is_ac]
 
-        Contest_Cache.expire()
         data = Contest_Cache.get(contest_id)
 
-        if len(data) == 0 or len(data) != len(players):
+        if len(data) == 0:
             data = []
             username_to_num = dict()
             problem_to_num = dict()
@@ -643,7 +642,7 @@ def contest():
         title = Contest_Manager.get_title(contest_id)[0][0]
         return render_template('contest.html', id=contest_id, Title=title, Status=contest_status,
                                StartTime=readable_time(start_time), EndTime=readable_time(end_time), Problems=problems,
-                               Data=data, len=len(players), len2=visible_problems_len, is_Admin=is_admin,
+                               Data=data, len=len(data), len2=visible_problems_len, is_Admin=is_admin,
                                Percentage=min(
                                    max(int(100 * float(unix_nano() - start_time) / float(end_time - start_time)), 0),
                                    100), friendlyName=Login_Manager.get_friendly_name())
@@ -689,10 +688,9 @@ def homework():
         # Player 1: try_time friendly_name [problem1_info...] [problem2_info...] ... Realname_Reference player_name
         # in which problem_info: [is_ac, submit_time]
 
-        Contest_Cache.expire()
         data = Contest_Cache.get(contest_id)
 
-        if len(data) == 0 or len(data) != len(players):  
+        if len(data) == 0:  
             data = []
             username_to_num = dict()
             problem_to_num = dict()
@@ -754,7 +752,7 @@ def homework():
         title = Contest_Manager.get_title(contest_id)[0][0]
         return render_template('homework.html', id=contest_id, Title=title, Status=contest_status,
                                StartTime=readable_time(start_time), EndTime=readable_time(end_time), Problems=problems,
-                               Players=players, Data=data, len=len(players), len2=visible_problems_len, is_Admin=is_admin,
+                               Players=players, Data=data, len=len(data), len2=visible_problems_len, is_Admin=is_admin,
                                Percentage=min(
                                    max(int(100 * float(unix_nano() - start_time) / float(end_time - start_time)), 0),
                                    100), friendlyName=Login_Manager.get_friendly_name())

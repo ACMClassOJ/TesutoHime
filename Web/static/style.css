@@ -158,6 +158,9 @@ dd {
 
 blockquote {
     margin: 0 0 1rem;
+    padding: 0 1em;
+	color: #777;
+	border-left: 0.25em solid #ddd;
 }
 
 b,

@@ -4,6 +4,13 @@ class DataBaseConfig:                     #数据库主要配置文件，一般�
     mysql_Password = 'Progynova'
     mysql_Database = 'OJ'
 
+class RedisConfig:
+    host = 'localhost'
+    port = 6379
+    password = 'Progynova'
+    db = 0
+    prefix = 'OJ_'
+
 class LoginConfig:                        #登陆过期时间，单位s
     Login_Life_Time = 24 * 60 * 60 * 60 
 

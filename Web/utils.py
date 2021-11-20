@@ -2,12 +2,17 @@ import pymysql
 import requests
 import datetime
 import time
+import redis
 from config import *
 
 
 def db_connect():
     return pymysql.connect(host = DataBaseConfig.mysql_Host, user = DataBaseConfig.mysql_User, password = DataBaseConfig.mysql_Password,
                            database = DataBaseConfig.mysql_Database, autocommit=True)
+
+
+def redis_connect():
+    return redis.StrictRedis(host=RedisConfig.host, port=RedisConfig.port, password=RedisConfig.password, db=RedisConfig.db, decode_responses=True)
 
 
 def unix_nano() -> int:  # Integer Unix Nano

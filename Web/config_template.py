@@ -38,3 +38,8 @@ class LogConfig:
 class PicConfig:
     server = 'http://192.168.1.233:8080/' #pic_service_url_public，请填写可从*公网*访问的图片服务地址
     key = 'pic_service_key'               #pic_service_key，图片服务密钥
+
+class RedisConfig:
+    host='localhost'
+    port=6379
+    db=0

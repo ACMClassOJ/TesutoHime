@@ -247,5 +247,8 @@ def rejudge():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
     id = request.form['judge_id']
-    JudgeServer_Scheduler.ReJudge(id)
-    return ReturnCode.SUC_REJUDGE
+    try:
+        JudgeServer_Scheduler.ReJudge(id)
+        return ReturnCode.SUC_REJUDGE
+    except RequestException:
+        return ReturnCode.ERR_NETWORK_FAILURE

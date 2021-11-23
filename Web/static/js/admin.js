@@ -46,7 +46,11 @@ $(function () {
             dataType: "json",
             data: JSON.stringify(data),
             complete: function (ret) {
-                alert(JSON.stringify(ret));
+                var ret_json = JSON.parse(ret.responseText);
+                if(ret_json['e'] < 0)
+                    swal("Error " + ret_json['e'], ret_json['msg'], "error");
+                else
+                    swal("Success", ret_json['msg'], "success");
             }
         });
     });
@@ -143,7 +147,11 @@ $(function () {
             dataType: "json",
             data: JSON.stringify(data),
             complete: function (ret) {
-                alert(JSON.stringify(ret));
+                var ret_json = JSON.parse(ret.responseText);
+                if(ret_json['e'] < 0)
+                    swal("Error " + ret_json['e'], ret_json['msg'], "error");
+                else
+                    swal("Success", ret_json['msg'], "success");
                 document.getElementById('btnGetProblemDetails').click();
             }
         });
@@ -251,7 +259,11 @@ $(function () {
             dataType: "json",
             data: JSON.stringify(data),
             complete: function (ret) {
-                alert(ret.responseText);
+                var ret_json = JSON.parse(ret.responseText);
+                if(ret_json['e'] < 0)
+                    swal("Error " + ret_json['e'], ret_json['msg'], "error");
+                else
+                    swal("Success", ret_json['msg'], "success");
                 document.getElementById('btnGetContestDetails').click();
             }
         });
@@ -354,7 +366,11 @@ $(function () {
                 data: data,
                 dataType: "json",
                 complete: function (ret) {
-                    alert(ret.responseText);
+                    var ret_json = JSON.parse(ret.responseText);
+                    if(ret_json['e'] < 0)
+                        swal("Error " + ret_json['e'], ret_json['msg'], "error");
+                    else
+                        swal("Success", ret_json['msg'], "success");
                 }
             });
         });
@@ -372,7 +388,11 @@ $(function () {
             data: data,
             dataType: "json",
             complete: function (ret) {
-                alert(ret.responseText);
+                var ret_json = JSON.parse(ret.responseText);
+                if(ret_json['e'] < 0)
+                    swal("Error " + ret_json['e'], ret_json['msg'], "error");
+                else
+                    swal("Success", ret_json['msg'], "success");
             }
         });
     });
@@ -418,6 +438,7 @@ $(function () {
                         }
                     };
                     swal(swal_config);
+                    $(".swal-modal").css("width", "70%");
                     document.getElementsByClassName('copy_url')[0].setAttribute("data-clipboard-target", "#swal_content_url");
                     var clipboard1 = new ClipboardJS(document.getElementsByClassName('copy_url')[0]);
                     document.getElementsByClassName('copy_html')[0].setAttribute("data-clipboard-target", "#swal_content_html");
@@ -431,7 +452,10 @@ $(function () {
         });
     });
 
-    $("#formRejudge").ajaxForm(function (response_text) {
-        alert(response_text);
+    $("#formRejudge").ajaxForm(function (ret_json) {
+        if(ret_json['e'] < 0)
+            swal("Error " + ret_json['e'], ret_json['msg'], "error");
+        else
+            swal("Success", ret_json['msg'], "success");
     });
 });

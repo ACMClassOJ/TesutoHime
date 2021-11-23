@@ -243,7 +243,40 @@ svg {
 }
 
 table {
+    margin: auto;
     border-collapse: collapse;
+    margin-bottom: 1rem;
+    color: #525f7f;
+    background-color: transparent;
+    border: 0.0625rem solid #dee2e6;
+    border-spacing: 2px;
+}
+
+table th,
+table td {
+    padding: 0.2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    vertical-align: top;
+    border: 0.0625rem solid #dee2e6;
+}
+
+table thead th {
+    vertical-align: bottom;
+    border-bottom: 0.125rem solid #dee2e6;
+}
+
+table tbody + tbody {
+    border-top: 0.125rem solid #dee2e6;
+}
+
+table tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+table tbody tr:hover {
+    color: #525f7f;
+    background-color: rgba(0, 0, 0, 0.075);
 }
 
 caption {

@@ -1,6 +1,8 @@
 {% extends 'base.html' %} {% set page=Title %} {% block head %}
 <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.css">
-<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}"> {% endblock %} {% block content %}
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
+{% endblock %} {% block content %}
 <div class="card card-body">
     <h1 class="text-center"><span id="problem_id">{{ ID }}</span><span>. {{ Title }}</span></h1>
     <div class="nav-wrapper">

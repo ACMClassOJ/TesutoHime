@@ -1,7 +1,9 @@
 {% extends 'base.html' %} {% set page='Discussion' %} {% block head %}
 <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.css">
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
-<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/editor.md/css/editormd.min.css') }}"> {% endblock %} {% block content %}
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/editor.md/css/editormd.min.css') }}"> 
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
+{% endblock %} {% block content %}
 <div class="card card-body mb-3">
     <div class="row mx-md-1">
         <h1 class="my-auto"> {{ Problem_ID }}. {{ Title }} </h1>

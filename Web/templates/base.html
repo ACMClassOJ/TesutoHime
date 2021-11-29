@@ -34,18 +34,18 @@
                     </div>
                 </div>
                 <ul class="navbar-nav" style="line-height: 1;">
-                    <li class="nav-item"><a href="/OnlineJudge/problems" class="nav-link">题库</a></li>
-                    <li class="nav-item"><a href="/OnlineJudge/contest" class="nav-link">比赛</a></li>
-                    <li class="nav-item"><a href="/OnlineJudge/homework" class="nav-link">作业</a></li>
-                    <li class="nav-item"><a href="/OnlineJudge/status" class="nav-link">评测状态</a></li>
+                    <!-- <li class="nav-item"><a href="/OnlineJudge/problems" class="nav-link">题库</a></li> -->
+                    <!-- <li class="nav-item"><a href="/OnlineJudge/contest" class="nav-link">比赛</a></li> -->
+                    <!-- <li class="nav-item"><a href="/OnlineJudge/homework" class="nav-link">作业</a></li> -->
+                    <!-- <li class="nav-item"><a href="/OnlineJudge/status" class="nav-link">评测状态</a></li> -->
                     {% if is_Admin %}
                     <li class="nav-item"><a href="/OnlineJudge/admin" class="nav-link">管理</a></li>
                     {% endif %}
-                    <li class="nav-item"><a href="/OnlineJudge/about" class="nav-link">关于</a></li>
+                    <!-- <li class="nav-item"><a href="/OnlineJudge/about" class="nav-link">关于</a></li> -->
                     {% if friendlyName=='' -%}
                     <li class="dropdown-divider"></li>
                     <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/login">登录</a></li>
-                    <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/register">注册</a></li>
+                    <!-- <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/register">注册</a></li> -->
                     {%- endif %}
                 </ul>
                 <ul class="navbar-nav ml-lg-auto" style="line-height: 1;">
@@ -61,7 +61,7 @@
                     {% else -%}
                     <li class="d-none d-lg-block">
                         <a class="btn btn-neutral" href="/OnlineJudge/login">登录</a>
-                        <a class="btn btn-neutral" href="/OnlineJudge/register">注册</a>
+                        <!-- <a class="btn btn-neutral" href="/OnlineJudge/register">注册</a> -->
                     </li>
                     {%- endif %}
                 </ul>

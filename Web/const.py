@@ -44,7 +44,8 @@ class ReturnCode:
     SUC_DEL_USERS_FROM_CONTEST = {'e': 0, 'msg': 'user(s) removed from contest successfully'}
     SUC_QUIZ_JSON_DECODE = {'e': 0, 'msg': 'quiz.json decoded successfully'}
     SUC_PIC_SERVICE_UPLOAD = {'e': 0, 'msg': 'picture uploaded successfully'}
-    SUC_REJUDGE = {'e': 0, 'msg': 'Rejudge successfully'}
+    SUC_REJUDGE = {'e': 0, 'msg': 'rejudge successfully'}
+    SUC_ADD_JUDGE = {'e': 0, 'msg': 'add judge successfully'}
 
     ERR_BAD_DATA = {'e': -1, 'msg': 'bad data'}
     ERR_NETWORK_FAILURE = {'e': -2, 'msg': 'network failure'}
@@ -70,6 +71,9 @@ class ReturnCode:
     ERR_ADDS_USER_TO_CONTEST = {'e': -311, 'msg': 'failed to add user(s) to contest'}
     ERR_DEL_USERS_FROM_CONTEST = {'e': -312, 'msg': 'failed to remove user(s) from contest'}
     ERR_CONTEST_ENDTIME_BEFORE_START_TIME = {'e': -313, 'msg': 'it is not allowed that a contest\'s end time comes before start time'}
+    ERR_ADD_JUDGE_PROBLEM_ID = {'e': -314, 'msg': 'wrong problem id when adding judge'}
+    ERR_ADD_JUDGE_USERNAME = {'e': -315, 'msg': 'wrong username when adding judge'}
+    ERR_ADD_JUDGE_CODE_LENGTH = {'e': -315, 'msg': 'code too long when adding judge'}
 
     ERR_QUIZ_JSON_DECODE = {'e': -400, 'msg': 'failed to decode quiz.json'}
     ERR_PROBLEM_NOT_QUIZ = {'e': -401, 'msg': 'this problem is not a quiz'}

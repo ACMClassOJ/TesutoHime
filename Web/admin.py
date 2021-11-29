@@ -1,3 +1,4 @@
+import re
 from flask import request, render_template, Blueprint, abort, Response, stream_with_context
 import requests
 from requests.models import Request
@@ -9,7 +10,7 @@ from contestManager import Contest_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
 from requests import post
 from requests.exceptions import RequestException
-from config import DataConfig, PicConfig
+from config import DataConfig, PicConfig, ProblemConfig
 import json
 import hashlib
 import time
@@ -251,4 +252,38 @@ def rejudge():
         JudgeServer_Scheduler.ReJudge(id)
         return ReturnCode.SUC_REJUDGE
     except RequestException:
-        return ReturnCode.ERR_NETWORK_FAILURE
+        return ReturnCode.ERR_BAD_DATA
+
+@admin.route('/add_judge', methods=['POST'])
+def add_judge():
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(404)
+    problem_id = int(request.form['problem_id'])
+    if problem_id < 1000 or (problem_id > Problem_Manager.get_max_id() and problem_id < 11000) or problem_id > Problem_Manager.get_real_max_id():
+        return ReturnCode.ERR_ADD_JUDGE_PROBLEM_ID
+    username = str(request.form['username'])
+    if User_Manager.validate_username(username):
+        return ReturnCode.ERR_ADD_JUDGE_USERNAME
+    lang = -1
+    lang_request_str = str(request.form['lang'])
+    if lang_request_str == 'cpp': 
+        lang = 0
+    elif lang_request_str == 'git':
+        lang = 1
+    elif lang_request_str == 'Verilog':
+        lang = 2
+    elif lang_request_str == 'quiz':
+        lang = 3
+    user_code = request.form['user_code']
+    if len(str(user_code)) > ProblemConfig.Max_Code_Length:
+        return ReturnCode.ERR_ADD_JUDGE_CODE_LENGTH
+    share = request.form['share']
+    if(share == '1'):
+        share = True
+    else:
+        share = False
+    try:
+        JudgeServer_Scheduler.Start_Judge(problem_id, username, user_code, lang, share)
+        return ReturnCode.SUC_ADD_JUDGE
+    except RequestException:
+        return ReturnCode.ERR_BAD_DATA

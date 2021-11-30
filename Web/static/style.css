@@ -270,15 +270,6 @@ table tbody + tbody {
     border-top: 0.125rem solid #dee2e6;
 }
 
-table tbody tr:nth-of-type(odd) {
-    background-color: rgba(0, 0, 0, 0.05);
-}
-
-table tbody tr:hover {
-    color: #525f7f;
-    background-color: rgba(0, 0, 0, 0.075);
-}
-
 caption {
     padding-top: 1rem;
     padding-bottom: 1rem;

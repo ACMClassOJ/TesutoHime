@@ -229,17 +229,59 @@
                         </div>
                     </div>
                     <div class="tab-pane fade" id="judge_tab" role="tabpanel" aria-labelledby="judge_tab-tab">
-                        <form id="formRejudge" action="/OnlineJudge/admin/rejudge" method="POST">
-                            <div class="form-row">
-                                <div class="form-group col-md-3 mb-3">
-                                    <label for="iptRejudgeJudgeID"> 评测编号 </label>
-                                    <input class="form-control" type="number" name="judge_id" id="iptRejudgeJudgeID" required="required" min="1">
+                        <div class="card card-body">
+                            <h3> 重测 </h3>
+                            <form id="formRejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3 mb-3">
+                                        <label for="iptRejudgeJudgeID"> 评测编号 </label>
+                                        <input class="form-control" type="number" name="judge_id" id="iptRejudgeJudgeID" required="required" min="1">
+                                    </div>
+                                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRejudge"> 重测 </button>
+                                    </div>
                                 </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRejudge"> 重测 </button>
+                            </form>
+                        </div>
+                        <div class="card card-body">
+                            <h3> 添加一条评测 </h3>
+                            <form id="formAddJudge" action="/OnlineJudge/admin/add_judge" method="POST">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3 mb-3">
+                                        <label for="iptAddJudgeProblemID"> 题目编号 </label>
+                                        <input class="form-control" type="number" name="problem_id" id="iptAddJudgeProblemID" required="required" min="1000">
+                                    </div>
+                                    <div class="form-group col-md-3 mb-3">
+                                        <label for="iptAddJudgeUsername"> 用户名 </label>
+                                        <input class="form-control" type="text" name="username" id="iptAddJudgeUsername" required="required">
+                                    </div>
+                                    <div class="form-group col-md-3 mb-3">
+                                        <label for="iptAddJudgeLang"> 语言 </label>
+                                        <select id="iptAddJudgeLang" name="lang" class="form-control input-group py-0 selectpicker"
+                                                data-style="form-control rounded border-grey shadow-none font-weight-normal">
+                                            <option value="cpp" selected="selected">C++</option>
+                                            <option value="git">Git</option>
+                                            <option value="Verilog">Verilog</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-3 mb-3">
+                                        <label for="iptAddJudgeShare"> 代码对他人是否可见 </label>
+                                        <select id="iptAddJudgeShare" name="share" class="form-control input-group py-0 selectpicker"
+                                                data-style="form-control rounded border-grey shadow-none font-weight-normal">
+                                            <option value="0" selected="selected">不可见</option>
+                                            <option value="1">可见</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="iptAddJudgeCode"> 代码 </label>
+                                        <textarea class="form-control" name="user_code" id="iptAddJudgeCode" required="required"></textarea>
+                                    </div>
+                                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddJudge"> 添加评测 </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
                     <div class="tab-pane fade" id="pic_tab" role="tabpanel" aria-labelledby="pic_tab-tab">
                         <h3> 上传图片到 ACM OJ 图床 </h3>

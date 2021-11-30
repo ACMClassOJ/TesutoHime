@@ -71,7 +71,6 @@ class UserManager:
         cursor.execute("SELECT * FROM User WHERE Username = %s", username)
         data = cursor.fetchone()
         db.close()
-        print(data)
         return data is None
 
     def check_login(self, username: str, password: str) -> bool:

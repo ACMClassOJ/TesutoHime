@@ -7,6 +7,10 @@ import json
 import redis_lock
 
 class JudgeServerScheduler:
+    def __init__(self):
+        scheduler_lock = redis_lock.Lock(redis_connect(), RedisConfig.prefix + 'scheduler.lock')
+        scheduler_lock.reset()
+
     def Heart_Beat(self, Secret) -> bool:
         self.Check_System_Error()
 
@@ -44,12 +48,13 @@ class JudgeServerScheduler:
         elif lang_digit == 3:
             data['Lang'] = 'quiz'
         data['Code'] = Record[2]
-        for i in range(0, 3):
-            re = requests.post(Server[0] + '/judge', data = data).content.decode() # Fixme: check self-signed SSL
+        try:
+            re = requests.post(Server[0] + '/judge', data = data, timeout = 5).content.decode()
             if re == '0':
                 Judge_Manager.update_status(int(Record[0]), 1)
                 JudgeServer_Manager.Flush_Busy(Server[1], True, int(Record[0]))
-                break
+        except requests.exceptions.RequestException:
+            pass
         scheduler_lock.release()
         return
 

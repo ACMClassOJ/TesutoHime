@@ -7,9 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ACMOJ · {{ page }}</title>
     <link rel="shortcut icon" href="favicon.ico">
-    <link href="{{ url_for('.static', filename = 'lib/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('.static', filename = 'style.css') }}" rel="stylesheet"> 
-    <link href="{{ url_for('.static', filename = 'dark.css') }}" rel="stylesheet"> {% block head %}{% endblock %}
+    <link href="https://acm.sjtu.edu.cn/OnlineJudge/static/lib/bootstrap.min.css" rel="stylesheet">
+    <link href="https://acm.sjtu.edu.cn/OnlineJudge/static/style.css" rel="stylesheet"> 
+    <link href="https://acm.sjtu.edu.cn/OnlineJudge/static/dark.css" rel="stylesheet"> {% block head %}{% endblock %}
 </head>
 
 <body class="bg-secondary">
@@ -80,11 +80,11 @@
     </footer>
 </body>
 
-<script src="{{ url_for('.static', filename = 'lib/jquery.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/popper.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/bootstrap.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/jquery.form.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/sweetalert.min.js') }}"></script>
+<script src="https://acm.sjtu.edu.cn/OnlineJudge/static/lib/jquery.min.js"></script>
+<script src="https://acm.sjtu.edu.cn/OnlineJudge/static/lib/popper.min.js"></script>
+<script src="https://acm.sjtu.edu.cn/OnlineJudge/static/lib/bootstrap.min.js"></script>
+<script src="https://acm.sjtu.edu.cn/OnlineJudge/static/lib/jquery.form.js"></script>
+<script src="https://acm.sjtu.edu.cn/OnlineJudge/static/lib/sweetalert.min.js"></script>
 {% block script %}{% endblock %}
 
 </html>

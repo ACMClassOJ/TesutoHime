@@ -3,8 +3,8 @@
 {% set page='Detail' %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
+    <link rel="stylesheet" href="https://acm.sjtu.edu.cn/OnlineJudge/static/lib/github.min.css">
+    <link rel="stylesheet" href="https://acm.sjtu.edu.cn/OnlineJudge/static/dark.css">
 {% endblock %}
 
 {% block content %}
@@ -180,7 +180,7 @@
 {% endblock %}
 
 {% block script %}
-    <script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
+    <script src="https://acm.sjtu.edu.cn/OnlineJudge/static/lib/clipboard.min.js"></script>
     <script>
         var clipboard = new ClipboardJS(document.getElementById('copy_button'));
         $(function(){
@@ -192,7 +192,7 @@
             }, 2000);
         });
     </script>
-    <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
+    <script src="https://acm.sjtu.edu.cn/OnlineJudge/static/lib/highlight.min.js"></script>
     <script>
         $(function () {
             $.ajax({

@@ -7,6 +7,7 @@ from sessionManager import Login_Manager
 from userManager import User_Manager
 from problemManager import Problem_Manager
 from contestManager import Contest_Manager
+from referenceManager import Reference_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
 from requests import post
 from requests.exceptions import RequestException
@@ -285,5 +286,20 @@ def add_judge():
     try:
         JudgeServer_Scheduler.Start_Judge(problem_id, username, user_code, lang, share)
         return ReturnCode.SUC_ADD_JUDGE
+    except RequestException:
+        return ReturnCode.ERR_BAD_DATA
+
+@admin.route('/add_realname', methods=['POST'])
+def add_realname():
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(404)
+    student_id = request.form['student_id']
+    student_id_list = student_id.strip().splitlines()
+    year_course_name = request.form['year_course_name']
+    year_course_name_list = year_course_name.strip().splitlines()
+    try:
+        for i in range(0, len(student_id_list)):
+            Reference_Manager.Add_Student(student_id_list[i], year_course_name_list[i])
+        return ReturnCode.SUC_ADD_REALNAME
     except RequestException:
         return ReturnCode.ERR_BAD_DATA

@@ -465,4 +465,11 @@ $(function () {
         else
             swal("Success", ret_json['msg'], "success");
     });
+
+    $("#formRealname").ajaxForm(function (ret_json) {
+        if(ret_json['e'] < 0)
+            swal("Error " + ret_json['e'], ret_json['msg'], "error");
+        else
+            swal("Success", ret_json['msg'], "success");
+    });
 });

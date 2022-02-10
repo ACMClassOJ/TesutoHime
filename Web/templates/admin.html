@@ -33,6 +33,9 @@
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" id="user_tab_btn" data-toggle="tab" href="#user_tab" role="tab" aria-controls="user_tab" aria-selected="false">用户</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link mb-sm-2 mb-md-0" id="realname_tab_btn" data-toggle="tab" href="#realname_tab" role="tab" aria-controls="realname_tab" aria-selected="false">实名管理</a>
+                </li>
                 {% endif %}
             </ul>
         </div>
@@ -418,6 +421,25 @@
                             </div>
                             <div class="float-right d-flex ml-auto pr-1 mb-3">
                                 <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemData"> 打包上传所有数据 </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="realname_tab" role="tabpanel" aria-labelledby="realname_tab-tab">
+                        <h3> 批量添加实名信息 </h3>
+                        <p> 左右一一对应，文本框请均以回车分割，实名建议格式为年份-课程-名字，如 22-IEEE算法-张三。如果同一学号出现了多条实名信息，系统将以最后一条导入的为准。 </p>
+                        <form id="formRealname" action="/OnlineJudge/admin/add_realname" method="POST">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label for="iptRealnameStudentID"> 学号 </label>
+                                    <textarea class="form-control" name="student_id" id="iptRealnameStudentID"></textarea>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="iptRealnameYearCourseName"> 实名 </label>
+                                    <textarea class="form-control" name="year_course_name" id="iptRealnameYearCourseName"></textarea>
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddRealname"> 添加实名信息 </button>
+                                </div>
                             </div>
                         </form>
                     </div>

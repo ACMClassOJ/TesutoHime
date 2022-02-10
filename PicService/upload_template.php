@@ -1,6 +1,6 @@
 <?php
 $dir = 'data_directory';
-$allowed_exts = array("gif", "jpg", "jpeg", "png");
+$allowed_exts = array("gif", "jpg", "jpeg", "png", "svg");
 $temp = explode(".", $_FILES["file"]["name"]);
 $ext = end($temp);
 

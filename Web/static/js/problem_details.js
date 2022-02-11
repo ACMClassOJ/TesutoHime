@@ -29,6 +29,15 @@ $(function(){
                 }
             );
             hljs.initHighlighting();
+            $("pre").wrap('<div style="position: relative;"></div>');
+            $("pre").each(function(index, element){
+                $(this).find("code").eq(0).attr('id', 'code_highlighted_' + index);
+                var copy_button = $('<button class="btn btn-primary btn-sm" style="position: absolute; top: 0; right: 0;">复制</button>');
+                copy_button.attr('id', 'copy_button_' + index);
+                copy_button.attr('data-clipboard-target', '#code_highlighted_' + index);
+                copy_button.appendTo($(this));
+                new ClipboardJS(document.getElementById('copy_button_' + index));
+            });
         },
     });
 });

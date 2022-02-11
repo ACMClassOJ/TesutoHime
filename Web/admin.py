@@ -75,6 +75,26 @@ def index():
     return render_template('admin.html', privilege=privilege, Privilege=Privilege, is_Admin=True,
                            friendlyName=Login_Manager.get_friendly_name())
 
+@admin.route('/admin_doc')
+def admin_doc():
+    privilege = Login_Manager.get_privilege()
+    if privilege < Privilege.ADMIN:
+        abort(404)
+    return render_template('admin_doc.html')
+
+@admin.route('/problem_format_doc')
+def problem_format_doc():
+    privilege = Login_Manager.get_privilege()
+    if privilege < Privilege.ADMIN:
+        abort(404)
+    return render_template('problem_format_doc.html')
+
+@admin.route('/data_doc')
+def data_doc():
+    privilege = Login_Manager.get_privilege()
+    if privilege < Privilege.ADMIN:
+        abort(404)
+    return render_template('data_doc.html')
 
 @admin.route('/user', methods=['post'])
 def user_manager():

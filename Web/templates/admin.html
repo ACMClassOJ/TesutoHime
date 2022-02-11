@@ -35,7 +35,10 @@
                 </li>
                 {% endif %}
                 <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" id="realname_tab_btn" data-toggle="tab" href="#realname_tab" role="tab" aria-controls="realname_tab" aria-selected="false">实名管理</a>
+                    <a class="nav-link mb-sm-2 mb-md-0" id="realname_tab_btn" data-toggle="tab" href="#realname_tab" role="tab" aria-controls="realname_tab" aria-selected="false">实名</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link mb-sm-2 mb-md-0" id="document_tab_btn" data-toggle="tab" href="#document_tab" role="tab" aria-controls="document_tab" aria-selected="false">文档</a>
                 </li>
             </ul>
         </div>
@@ -442,6 +445,12 @@
                                 </div>
                             </div>
                         </form>
+                    </div>
+                    <div class="tab-pane fade" id="document_tab" role="tabpanel" aria-labelledby="document_tab-tab">
+                        <h3> 管理员文档 </h3>
+                        <p><a href="/OnlineJudge/admin/admin_doc"> 100. 管理界面使用指南 </a></p>
+                        <p><a href="/OnlineJudge/admin/problem_format_doc"> 200. 题面格式规范 </a></p>
+                        <p><a href="/OnlineJudge/admin/data_doc"> 300. 数据格式规范 </a></p>
                     </div>
                 </div>
             </div>

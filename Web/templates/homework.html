@@ -34,8 +34,8 @@
                 <tr>
                     <th>昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
                     {% if is_Admin -%}<th>实名</th>{%- endif %}
-                    {% for problem in Problems -%}
-                        <th><a href="/OnlineJudge/problem?problem_id={{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
+                    {% for i in range(0, len2) -%}
+                        <th><a href="/OnlineJudge/problem?problem_id={{ Problems[i][0] }}" target="_blank">{{ Problems[i][0] }}</a></th>
                     {%- endfor %}
                     <th>总通过数</th>
                 </tr>

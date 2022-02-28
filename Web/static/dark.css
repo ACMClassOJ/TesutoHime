@@ -488,4 +488,8 @@ code.hljs {
   text-decoration: underline;
 }
 
+pre {
+  color: rgba(255, 255, 255, .8);
+}
+
 }

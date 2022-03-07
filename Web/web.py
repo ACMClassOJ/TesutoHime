@@ -409,8 +409,12 @@ def discuss():
             if action == 'post':
                 text = form.get('text')
                 username = Login_Manager.get_username()
-                Discuss_Manager.add_discuss(problem_id, username, text)
-                return ReturnCode.SUC
+                if Login_Manager.get_privilege() >= Privilege.ADMIN:    # administrator
+                    Discuss_Manager.add_discuss(problem_id, username, text)
+                    return ReturnCode.SUC
+                else:
+                    print('Access Dined in Discuss: Add')
+                    return ReturnCode.ERR_PERMISSION_DENIED
             if action == 'edit':
                 discuss_id = form.get('discuss_id')
                 text = form.get('text')

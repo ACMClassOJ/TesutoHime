@@ -35,7 +35,7 @@
                                 {%- if cur['Joined'] -%}
                                     <button disabled class="btn btn-primary btn-sm">已报名参赛</button>
                                 {%- else -%}
-                                    <button onclick="post_join({{ cur['ID'] }})" class="btn btn-primary btn-sm">报名参赛
+                                    <button id="join_button_{{ cur['ID'] }}" onclick="post_join({{ cur['ID'] }})" class="btn btn-primary btn-sm">报名参赛
                                     </button>
                                 {%- endif -%}
                             {%- endif %}

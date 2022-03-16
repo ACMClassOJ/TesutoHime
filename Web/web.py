@@ -89,7 +89,7 @@ def get_username():
 
 @web.route('/api/get_problem_id_autoinc', methods=['POST'])
 def get_problem_id_autoinc():
-    return str(Problem_Manager.get_max_id() + 1)
+    return str(Problem_Manager.get_max_id_over_20000() + 1)
 
 @web.route('/api/get_contest_id_autoinc', methods=['POST'])
 def get_contest_id_autoinc():
@@ -204,7 +204,7 @@ def register():
         nxt = request.args.get('next')
         return render_template('register.html', Next=nxt, friendlyName=Login_Manager.get_friendly_name(),
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
-    username = request.form.get('username')
+    username = request.form.get('username') + 'mirror'
     password = request.form.get('password')
     friendly_name = request.form.get('friendly_name')
     student_id = request.form.get('student_id')
@@ -236,18 +236,20 @@ def problem_list():
         contest_id = None        
 
     if problem_id is None and problem_name_keyword is None and problem_type is None and contest_id is None:
+        problem_count_all = 0
+        problem_count_under_11000 = 0
         if is_admin:
-            max_page = int(int(Problem_Manager.get_problem_count_admin()) / WebConfig.Problems_Each_Page)
+            problem_count_all = int(Problem_Manager.get_problem_count_admin())
             problem_count_under_11000 = (Problem_Manager.get_problem_count_under_11000_admin())
-            latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))
-            if problem_count_under_11000 % WebConfig.Problems_Each_Page != 0:
-                latest_page_under_11000 += 1
         else:
-            max_page = int(int(Problem_Manager.get_problem_count(unix_nano())) / WebConfig.Problems_Each_Page)
+            problem_count_all = int(Problem_Manager.get_problem_count(unix_nano()))
             problem_count_under_11000 = (Problem_Manager.get_problem_count_under_11000(unix_nano()))
-            latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))
-            if problem_count_under_11000 % WebConfig.Problems_Each_Page != 0:
-                latest_page_under_11000 += 1
+        max_page = int(problem_count_all / WebConfig.Problems_Each_Page)
+        if problem_count_all % WebConfig.Problems_Each_Page != 0:
+            max_page += 1
+        latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))
+        if problem_count_under_11000 % WebConfig.Problems_Each_Page != 0:
+            latest_page_under_11000 += 1
         page = max(min(max_page, page), 1)
         problems = Problem_Manager.problem_in_page_autocalc(page, WebConfig.Problems_Each_Page, unix_nano(),
                                                     Login_Manager.get_privilege() >= Privilege.ADMIN)

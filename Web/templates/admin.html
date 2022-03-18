@@ -250,6 +250,25 @@
                             </form>
                         </div>
                         <div class="card card-body">
+                            <h3> 取消一条评测 </h3>
+                            <p> 
+                                将指定的评测记录内容设置为 System Error 并判零分。请注意，对于一条已在 Running and Judging 状态的评测任务，设置为 System Error 状态后，
+                                评测机仍有可能返回评测结果，此时 System Error 状态将被真实的评测记录覆盖。
+                                因此，建议在如下情况使用此功能：需要作废一条已经出了结果的评测记录；因评测列表积压等待的评测任务过多，需要手动取消一部分任务；因评测机故障需要取消一条极长时间卡 running 的评测任务（请管理员留意是否还需要清空 busy_flag）。
+                            </p>
+                            <form id="formDisableJudge" action="/OnlineJudge/admin/disable_judge" method="POST">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3 mb-3">
+                                        <label for="iptDisableJudgeJudgeID"> 评测编号 </label>
+                                        <input class="form-control" type="number" name="judge_id" id="iptDisableJudgeJudgeID" required="required" min="1">
+                                    </div>
+                                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge"> 取消评测 </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="card card-body">
                             <h3> 添加一条评测 </h3>
                             <form id="formAddJudge" action="/OnlineJudge/admin/add_judge" method="POST">
                                 <div class="form-row">

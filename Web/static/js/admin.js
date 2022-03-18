@@ -459,7 +459,14 @@ $(function () {
             swal("Success", ret_json['msg'], "success");
     });
 
-    $("#formAddJudge").ajaxForm(function (ret_json) {
+    $("#formRejudge").ajaxForm(function (ret_json) {
+        if(ret_json['e'] < 0)
+            swal("Error " + ret_json['e'], ret_json['msg'], "error");
+        else
+            swal("Success", ret_json['msg'], "success");
+    });
+
+    $("#formDisableJudge").ajaxForm(function (ret_json) {
         if(ret_json['e'] < 0)
             swal("Error " + ret_json['e'], ret_json['msg'], "error");
         else

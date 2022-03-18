@@ -46,6 +46,7 @@ class ReturnCode:
     SUC_PIC_SERVICE_UPLOAD = {'e': 0, 'msg': 'picture uploaded successfully'}
     SUC_REJUDGE = {'e': 0, 'msg': 'rejudge successfully'}
     SUC_ADD_JUDGE = {'e': 0, 'msg': 'add judge successfully'}
+    SUC_DISABLE_JUDGE = {'e': 0, 'msg': 'disable judge successfully'}
     SUC_ADD_REALNAME = {'e': 0, 'msg': "add realname successfully"}
 
     ERR_BAD_DATA = {'e': -1, 'msg': 'bad data'}

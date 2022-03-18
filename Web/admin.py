@@ -9,6 +9,7 @@ from problemManager import Problem_Manager
 from contestManager import Contest_Manager
 from referenceManager import Reference_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
+from judgeManager import Judge_Manager
 from requests import post
 from requests.exceptions import RequestException
 from config import DataConfig, PicConfig, ProblemConfig
@@ -242,9 +243,6 @@ def pic_upload():
     if 'file' in request.files:
         f = request.files['file']
         try:
-            # hasher = hashlib.md5()
-            # hasher.update(f.filename.encode('utf-8'))
-            # filenamehashed = str(hasher.hexdigest()) + f.filename[f.filename.rindex("."):].lower()
             filenamehashed = time.strftime('%Y%m%d-%H%M%S', time.localtime())
             filenamehashed += "-" + str(random.randint(100000, 999999))
             filenamehashed += f.filename[f.filename.rindex("."):].lower()
@@ -272,6 +270,17 @@ def rejudge():
     try:
         JudgeServer_Scheduler.ReJudge(id)
         return ReturnCode.SUC_REJUDGE
+    except RequestException:
+        return ReturnCode.ERR_BAD_DATA
+
+@admin.route('/disable_judge', methods=['POST'])
+def disable_judge():
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(404)
+    id = request.form['judge_id']
+    try:
+        Judge_Manager.update_after_judge(id, 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, -1, "Your judge result has been disabled manually by admin."]]]', 0, 0)
+        return ReturnCode.SUC_DISABLE_JUDGE
     except RequestException:
         return ReturnCode.ERR_BAD_DATA
 

@@ -90,16 +90,16 @@ class JudgeServerManager:
     def Set_Offline(self, Secret: str):
         db = db_connect()
         cursor = db.cursor()
-        try:
-            cursor.execute("UPDATE Judge_Server SET Last_Seen_Time = %s WHERE Secret_Key = %s", ('0', Secret))
-            db.commit()
-        except:
-            db.rollback()
-            sys.stderr.write("SQL Error in JudgeServerManager: Set_Offline\n")
+        # try:
+        #     cursor.execute("UPDATE Judge_Server SET Last_Seen_Time = %s WHERE Secret_Key = %s", ('0', Secret))
+        #     db.commit()
+        # except:
+        #     db.rollback()
+        #     sys.stderr.write("SQL Error in JudgeServerManager: Set_Offline\n")
         cursor.execute("SELECT Current_Task FROM Judge_Server WHERE Secret_Key = %s", (Secret))
         Current_Task = cursor.fetchone()
         if (str(Current_Task) != '-1'):
-            Judge_Manager.update_after_judge(Current_Task, 9)
+            Judge_Manager.update_after_judge(Current_Task, 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, 0, "Lost connection with judge, please submit your code again."]]]', 0, 0)
         db.close()
         return
 

@@ -132,6 +132,6 @@ def ping(url: str) -> bool:
             ret = requests.get(url).content.decode()  # Fixme: trust self-signed SSL
             if ret == '0':
                 return True
-        except requests.exceptions:
+        except requests.exceptions.RequestException:
             pass
     return False

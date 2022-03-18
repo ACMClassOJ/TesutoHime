@@ -1,3 +1,11 @@
+$(function(){
+    $("input").on('keypress', function(e){
+        var key = window.event ? e.keyCode : e.which;
+        if(key.toString() == "13")
+            return false;
+    });
+});
+
 $.fn.serializeObject = function () {
     let data = {};
     this.serializeArray().forEach(function (e) {

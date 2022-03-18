@@ -99,7 +99,7 @@ class JudgeServerManager:
         cursor.execute("SELECT Current_Task FROM Judge_Server WHERE Secret_Key = %s", (Secret))
         Current_Task = cursor.fetchone()
         if (str(Current_Task) != '-1'):
-            Judge_Manager.update_after_judge(Current_Task, 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, 0, "Lost connection with judge, please submit your code again."]]]', 0, 0)
+            Judge_Manager.update_after_judge(Current_Task, 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, -1, "Lost connection with judge, please submit your code again."]]]', 0, 0)
         db.close()
         return
 

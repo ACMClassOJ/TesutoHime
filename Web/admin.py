@@ -267,8 +267,10 @@ def rejudge():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
     id = request.form['judge_id']
+    id_list = id.strip().splitlines()
     try:
-        JudgeServer_Scheduler.ReJudge(id)
+        for i in id_list:
+            JudgeServer_Scheduler.ReJudge(i)
         return ReturnCode.SUC_REJUDGE
     except RequestException:
         return ReturnCode.ERR_BAD_DATA
@@ -278,8 +280,10 @@ def disable_judge():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
     id = request.form['judge_id']
+    id_list = id.strip().splitlines()
     try:
-        Judge_Manager.update_after_judge(id, 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, -1, "Your judge result has been disabled manually by admin."]]]', 0, 0)
+        for i in id_list:
+            Judge_Manager.update_after_judge(id, 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, -1, "Your judge result has been disabled manually by admin."]]]', 0, 0)
         return ReturnCode.SUC_DISABLE_JUDGE
     except RequestException:
         return ReturnCode.ERR_BAD_DATA

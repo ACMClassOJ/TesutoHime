@@ -5,6 +5,7 @@
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'countdown_svg.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -107,6 +108,23 @@
             </div>
         </div>
         {%- endif %}
+        {% if Detail['Status'] == '0' or Detail['Status'] == '1' -%}
+        <div class="row">
+            <div class="m-auto">
+                <div id="judge_detail_auto_refresh_svgcontainer">
+                    <svg width="66" height="66" VIEWBOX="0 0 66 66">
+                        <circle cx="33" cy="33" r="15" stroke-width="2" stroke="#d1d3d7" fill="none"></circle>
+                        <circle id="judge_detail_auto_refresh_circle" cx="33" cy="33" r="15" stroke-width="6" stroke="#e77c8e" fill="none" transform="matrix(0,-1,1,0,0,66)" stroke-dasharray="100,0"></circle>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="m-auto">
+                <p>auto refresh in <span id="judge_detail_auto_refresh_timeleft">?</span> second(s)</p>
+            </div>
+        </div>
+        {%- endif %}
         <hr>
         <h5>代码：<button id="copy_button" class="btn btn-primary btn-sm float-right" data-clipboard-target="#judge_detail_code_highlighted">复制</button></h5>
         <pre class="cpp"><code id="judge_detail_code_highlighted">Waiting for code</code></pre>
@@ -205,6 +223,25 @@
                     hljs.initHighlighting();
                 },
             });
+        });
+
+        $(function () {
+            var count_down_time = 3;
+            if({{ Detail['Status'] }} == '0' || {{ Detail['Status'] }} == '1')
+            {
+                var r = 15;
+                var origin_interval = 15;
+                var interval = origin_interval;
+                setInterval(function() {
+                    interval--;
+                    var percent = interval / origin_interval;
+                    var perimeter = 2 * Math.PI * r;
+                    $("#judge_detail_auto_refresh_circle").attr('stroke-dasharray', perimeter * percent + ',' + perimeter * (1 - percent));
+                    $("#judge_detail_auto_refresh_timeleft").html(parseInt(count_down_time * interval / origin_interval))
+                    if(interval == 0)
+                        window.location.reload();
+                }, count_down_time * 1000 / origin_interval); 
+            }
         });
     </script>
 {% endblock %}

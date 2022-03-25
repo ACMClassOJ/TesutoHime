@@ -39,8 +39,13 @@ class QuizTempDataConfig:
     cache_dir = '/home/rbq/TesutoHime_quiz_tmp'  #quiz_cache_dir，用于解压存放填选临时文件的本地目录
 
 class LogConfig:
+    name = 'tracker'                                    #Web服务日志名称
     path = '/home/rbq/TesutoHime_log/tracker.log'       #web_log_url，Web服务日志存放的本地目录
-    maxBytes = 536870912                                #Web服务日志保存的最大空间
+    Syslog_Path = '/home/rbq/TesutoHime_log/syslog.log' #sys_log_url，其他系统服务日志存放的本地目录
+    Max_Bytes = 134217728                               #Web服务日志保存的最大空间
+    Backup_Count = 3                                    #Web服务需要保存多少份滚动日志。
+                                                        #例如当前日志写入tracker.log, maxBytes为128M，那么当128M被写满时，
+                                                        #最早的日志将被写入tracker.log.1；tracker.log.2等依此类推，直到最早的日志被废弃
 
 class PicConfig:
     server = 'http://192.168.1.233:8080/' #pic_service_url_public，请填写可从*公网*访问的图片服务地址

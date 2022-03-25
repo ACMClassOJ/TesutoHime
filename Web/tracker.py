@@ -7,10 +7,6 @@ from config import LogConfig
 from utils import *
 
 class Tracker:
-    def __init__(self):
-        logging.basicConfig(filename=LogConfig.path, level=logging.INFO)
-        logging.handlers.RotatingFileHandler(filename=LogConfig.path, maxBytes=LogConfig.maxBytes)
-
     def log(self):
         everything = {}
         everything['IP'] = request.remote_addr
@@ -25,6 +21,23 @@ class Tracker:
         if 'code' in everything['post_args']:
             del everything['post_args']['code']
         everything['args'] = request.args
-        logging.info(json.dumps(everything))
+        self.tracker.info(json.dumps(everything))
+    
+    def __init__(self):                                  #经测试，先运行init，再运行下面的setup_log
+        self.tracker = logging.getLogger(LogConfig.name)
+        self.syslog = logging.getLogger()
+
+def setup_tracker(logger_name, log_file, max_bytes, backup_count, level=logging.INFO, enable_formatter=False):
+    l = logging.getLogger(logger_name)
+    file_handler = logging.handlers.RotatingFileHandler(filename=log_file, maxBytes=max_bytes, backupCount=backup_count)
+    if enable_formatter:
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)s - %(message)s')
+        file_handler.setFormatter(formatter)
+    l.setLevel(level)
+    l.addHandler(file_handler)
+
+def setup_log():
+    setup_tracker(LogConfig.name, LogConfig.path, LogConfig.Max_Bytes, LogConfig.Backup_Count, logging.INFO)
+    setup_tracker(None, LogConfig.Syslog_Path, LogConfig.Max_Bytes, LogConfig.Backup_Count, logging.INFO, True)
 
 tracker = Tracker()

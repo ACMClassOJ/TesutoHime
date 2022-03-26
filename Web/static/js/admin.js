@@ -63,6 +63,42 @@ $(function () {
         });
     });
 
+    var editors = {};
+    function new_or_modify_content_in_editormd(editormd_name, content)
+    {
+        var new_editor = editormd(editormd_name, {
+            width: "100%",
+            height: 400,
+            path: "/OnlineJudge/static/lib/editor.md/lib/",
+            toolbarIcons: function() {
+                return [
+                    "undo", "redo", "|",
+                    "bold", "del", "italic", "quote", "|",
+                    "h1", "h2", "h3", "h4", "h5", "h6", "|",
+                    "list-ul", "list-ol", "hr", "|",
+                    "link", "reference-link", "image", "code", "preformatted-text", "code-block", "table", "html-entities", "pagebreak", "|",
+                    "watch", "preview", "fullscreen", "clear", "search", "||",
+                    "help", "info"
+                ];
+            },
+            markdown: content,
+            autoFocus: false,
+            placeholder: "支持 Markdown 及 HTML 格式，支持留空。",
+            codeFold: true,
+            searchReplace: true,
+            htmlDecode: "style,script,iframe|onclick,title,onmouseover,onmouseout,style",
+            taskList: true,
+            tocm: true,
+            tex: false,
+            flowChart: true,
+            sequenceDiagram: true,
+            atLink: false,
+            emailLink: true,
+            pageBreak: true
+        });
+        editors[editormd_name] = new_editor;           
+    }
+
     $("#divProblemHidden").hide();
 
     $("#btnGoToProblemPage").click(function(){
@@ -89,13 +125,13 @@ $(function () {
         $("#btnRemoveProblem").attr("disabled","disabled");
         $("#iptTitle").val("");
         $("#iptReleaseTime").val(formatDate(new Date()));
-        $("#iptDescription").val("");
-        $("#iptInput").val("");
-        $("#iptOutput").val("");
-        $("#iptExampleInput").val("");
-        $("#iptExampleOutput").val("");
-        $("#iptDataRange").val("");
         $("#iptProblemType").selectpicker("val", "0");
+        if($("#iptProblemID").val() == "")
+        {
+            $("#divProblemHidden").slideUp(500);
+            return;
+        }
+        $("#divProblemHidden").slideDown(500);
         $.ajax({
             type: "POST",
             dataType: "text",
@@ -103,8 +139,11 @@ $(function () {
             url: "/OnlineJudge/api/get_detail",
             success: function (response_text)
             {
+                var is_empty;
+                var main_json;
                 if(response_text == "{}")
                 {
+                    is_empty = 1;
                     $("#btnAddProblem").removeAttr("disabled");
                     $("#iptProblemStatusBadge").removeClass();
                     $("#iptProblemStatusBadge").addClass("badge badge-secondary");
@@ -112,27 +151,54 @@ $(function () {
                 }
                 else
                 {
+                    is_empty = 0;
                     $("#btnModifyProblem").removeAttr("disabled");
                     $("#btnRemoveProblem").removeAttr("disabled");
                     $("#iptProblemStatusBadge").removeClass();
                     $("#iptProblemStatusBadge").addClass("badge badge-success");
                     $("#iptProblemStatusBadge").text("已存在");
-                    var main_json = JSON.parse(response_text);
+                    main_json = JSON.parse(response_text);
                     $("#iptTitle").val(main_json['Title']);
                     $("#iptReleaseTime").val(formatDate(main_json['Release_Time'] * 1000));
                     $("#iptProblemType").val(main_json['Problem_Type']);
-                    $("#iptDescription").val(main_json['Description']);
-                    $("#iptInput").val(main_json['Input']);
-                    $("#iptOutput").val(main_json['Output']);
-                    $("#iptExampleInput").val(main_json['Example_Input']);
-                    $("#iptExampleOutput").val(main_json['Example_Output']);
-                    $("#iptDataRange").val(main_json['Data_Range']);
                     $("#iptProblemType").selectpicker("val", main_json['Problem_Type']);
                 }
+                new_or_modify_content_in_editormd("iptDescription", is_empty ? "None" : main_json['Description']);
+                new_or_modify_content_in_editormd("iptInput", is_empty ? "None" : main_json['Input']);
+                new_or_modify_content_in_editormd("iptOutput", is_empty ? "None" : main_json['Output']);
+                new_or_modify_content_in_editormd("iptExampleInput", is_empty ? "None" : main_json['Example_Input']);
+                new_or_modify_content_in_editormd("iptExampleOutput", is_empty ? "None" : main_json['Example_Output']);
+                new_or_modify_content_in_editormd("iptDataRange", is_empty ? "None" : main_json['Data_Range']);
+                
+                // $("#iptDescription").val(main_json['Description']);
+                // $("#iptInput").val(main_json['Input']);
+                // $("#iptOutput").val(main_json['Output']);
+                // $("#iptExampleInput").val(main_json['Example_Input']);
+                // $("#iptExampleOutput").val(main_json['Example_Output']);
+                // $("#iptDataRange").val(main_json['Data_Range']);
+            },
+            error: function () {
+                $("#divProblemHidden").slideUp(500);
             }
         });
-        $("#divProblemHidden").slideDown(500);
     });
+
+    $(function(){
+        setInterval(function(){
+            $(".markdown-body").each(function(){
+                renderMathInElement($(this)[0],
+                    {
+                        delimiters: [
+                            {left: "$$", right: "$$", display: true},
+                            {left: "$", right: "$", display: false},
+                            {left: "\\(", right: "\\)", display: false}
+                        ]
+                    });
+            });
+        }, 1000);
+    });
+    
+
     $("#btnAddProblem").click(function () {
         op = 0;
     });

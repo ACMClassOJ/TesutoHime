@@ -4,6 +4,10 @@
 
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/katex.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/editor.md/css/editormd.min.css') }}"> 
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -155,46 +159,50 @@
                                     <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetProblemDetails"> 查看题目状态 </button>
                                 </div>
                             </div>
-                            <div class="form-row" id="divProblemHidden">
-                                <div class="form-group col-md-3">
-                                    <label for="iptTitle"> 题目标题 </label>
-                                    <input class="form-control" type="text" name="title" id="iptTitle">
+                            <div id="divProblemHidden">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label for="iptTitle"> 题目标题 </label>
+                                        <input class="form-control" type="text" name="title" id="iptTitle">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="iptReleaseTime"> 发布时间 (YYYY-MM-DDThh:mm:ss) </label>
+                                        <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="iptProblemType"> 题目类型 </label>
+                                        <select class="form-control selectpicker" name="problem_type" id="iptProblemType"
+                                                data-style="form-control font-weight-normal border-grey shadow-none">
+                                            <option value="0">代码题</option>
+                                            <option value="1">填选题</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="form-group col-md-3">
-                                    <label for="iptReleaseTime"> 发布时间 (YYYY-MM-DDThh:mm:ss) </label>
-                                    <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime">
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label for="iptProblemType"> 题目类型 </label>
-                                    <select class="form-control selectpicker" name="problem_type" id="iptProblemType"
-                                            data-style="form-control font-weight-normal border-grey shadow-none">
-                                        <option value="0">代码题</option>
-                                        <option value="1">填选题</option>
-                                    </select>
-                                </div>
-                                <div class="form-group col-md-3">
+                                <div>
                                     <label for="iptDescription"> 题目描述 </label>
-                                    <textarea class="form-control" name="description" id="iptDescription"></textarea>
-                                </div>
-                                <div class="form-group col-md-3">
+                                    <div class="init_editormd" id="iptDescription">
+                                        <textarea name="description" style="display: none" autocomplete="off"></textarea>
+                                    </div>
                                     <label for="iptInput"> 输入格式 </label>
-                                    <textarea class="form-control" name="input" id="iptInput"></textarea>
-                                </div>
-                                <div class="form-group col-md-3">
+                                    <div class="init_editormd" id="iptInput">
+                                        <textarea name="input" style="display: none"></textarea>
+                                    </div>
                                     <label for="iptOutput"> 输出格式 </label>
-                                    <textarea class="form-control" name="output" id="iptOutput"></textarea>
-                                </div>
-                                <div class="form-group col-md-3">
+                                    <div class="init_editormd" id="iptOutput">
+                                        <textarea name="output" style="display: none"></textarea>
+                                    </div>
                                     <label for="iptExampleInput"> 样例输入 </label>
-                                    <textarea class="form-control" name="example_input" id="iptExampleInput"></textarea>
-                                </div>
-                                <div class="form-group col-md-3">
+                                    <div class="init_editormd" id="iptExampleInput">
+                                        <textarea name="example_input" style="display: none"></textarea>
+                                    </div>
                                     <label for="iptExampleOutput"> 样例输出 </label>
-                                    <textarea class="form-control" name="example_output" id="iptExampleOutput"></textarea>
-                                </div>
-                                <div class="form-group col-md-3">
+                                    <div class="init_editormd" id="iptExampleOutput">
+                                        <textarea name="example_output" style="display: none"></textarea>
+                                    </div>
                                     <label for="iptDataRange"> 数据范围 </label>
-                                    <textarea class="form-control" name="range" id="iptDataRange"></textarea>
+                                    <div class="init_editormd" id="iptDataRange">
+                                        <textarea name="range" style="display: none"></textarea>
+                                    </div>
                                 </div>
                                 <div class="float-right d-flex mb-3 ml-auto pr-1">
                                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblem"> 添加问题 </button>
@@ -473,5 +481,11 @@
     <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/jszip.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/admin.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/katex.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/auto-render.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=2"></script>
 {% endblock %}

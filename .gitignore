@@ -138,3 +138,6 @@ dmypy.json
 # Jetbrains
 /cmake-build-debug/
 /.idea/
+
+# .DS_Store
+/**/.DS_Store

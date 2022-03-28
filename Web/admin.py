@@ -266,27 +266,55 @@ def pic_upload():
 def rejudge():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
-    id = request.form['judge_id']
-    id_list = id.strip().splitlines()
-    try:
-        for i in id_list:
-            JudgeServer_Scheduler.ReJudge(i)
-        return ReturnCode.SUC_REJUDGE
-    except RequestException:
-        return ReturnCode.ERR_BAD_DATA
+
+    type = request.form['type']
+
+    if type == "by_judge_id":
+        id = request.form['judge_id']
+        id_list = id.strip().splitlines()
+        try:
+            for i in id_list:
+                JudgeServer_Scheduler.ReJudge(i)
+            return ReturnCode.SUC_REJUDGE
+        except RequestException:
+            return ReturnCode.ERR_BAD_DATA
+    elif type == "by_problem_id":
+        ids = request.form['problem_id'].strip().splitlines()
+        try:
+            for id in ids:
+                record = Judge_Manager.search_judge(None, id, None, None)
+                for i in record:
+                    JudgeServer_Scheduler.ReJudge(i['ID'])
+            return ReturnCode.SUC_REJUDGE
+        except RequestException:
+            return ReturnCode.ERR_BAD_DATA
 
 @admin.route('/disable_judge', methods=['POST'])
 def disable_judge():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
-    id = request.form['judge_id']
-    id_list = id.strip().splitlines()
-    try:
-        for i in id_list:
-            Judge_Manager.update_after_judge(id, 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, -1, "Your judge result has been disabled manually by admin."]]]', 0, 0)
-        return ReturnCode.SUC_DISABLE_JUDGE
-    except RequestException:
-        return ReturnCode.ERR_BAD_DATA
+
+    type = request.form['type']
+
+    if type == "by_judge_id":
+        id = request.form['judge_id']
+        id_list = id.strip().splitlines()
+        try:
+            for i in id_list:
+                Judge_Manager.update_after_judge(i, 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, -1, "Your judge result has been disabled manually by admin."]]]', 0, 0)
+            return ReturnCode.SUC_DISABLE_JUDGE
+        except RequestException:
+            return ReturnCode.ERR_BAD_DATA
+    elif type == "by_problem_id":
+        ids = request.form['problem_id'].strip().splitlines()
+        try:
+            for id in ids:
+                record = Judge_Manager.search_judge(None, id, None, None)
+                for i in record:
+                    Judge_Manager.update_after_judge(i['ID'], 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, -1, "Your judge result has been disabled manually by admin."]]]', 0, 0)
+            return ReturnCode.SUC_DISABLE_JUDGE
+        except RequestException:
+            return ReturnCode.ERR_BAD_DATA
 
 @admin.route('/add_judge', methods=['POST'])
 def add_judge():

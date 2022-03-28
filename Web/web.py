@@ -89,7 +89,7 @@ def get_username():
 
 @web.route('/api/get_problem_id_autoinc', methods=['POST'])
 def get_problem_id_autoinc():
-    return str(Problem_Manager.get_max_id_over_20000() + 1)
+    return str(Problem_Manager.get_max_id() + 1)
 
 @web.route('/api/get_contest_id_autoinc', methods=['POST'])
 def get_contest_id_autoinc():
@@ -204,7 +204,7 @@ def register():
         nxt = request.args.get('next')
         return render_template('register.html', Next=nxt, friendlyName=Login_Manager.get_friendly_name(),
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
-    username = request.form.get('username') + 'mirror'
+    username = request.form.get('username')
     password = request.form.get('password')
     friendly_name = request.form.get('friendly_name')
     student_id = request.form.get('student_id')

@@ -242,9 +242,10 @@
                     <div class="tab-pane fade" id="judge_tab" role="tabpanel" aria-labelledby="judge_tab-tab">
                         <h3> 批量重测 </h3>
                         <form id="formRejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+                            <input type="hidden" name="type" value="by_judge_id">
                             <div class="form-row">
                                 <div class="form-group col-md-3">
-                                    <label for="iptRejudgeJudgeID"> 评测编号 （回车分隔） </label>
+                                    <label for="iptRejudgeJudgeID"> 评测编号（回车分隔） </label>
                                     <textarea class="form-control" name="judge_id" id="iptRejudgeJudgeID"></textarea>
                                 </div>
                                 <div class="float-right d-flex mb-3 ml-auto pr-1">
@@ -252,6 +253,23 @@
                                 </div>
                             </div>
                         </form>
+
+                        <hr>
+
+                        <h3> 批量题目重测 </h3>
+                        <form id="formRejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+                            <input type="hidden" name="type" value="by_problem_id">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label for="iptRejudgeJudgeID"> 题目编号（回车分隔） </label>
+                                    <textarea class="form-control" name="problem_id" id="iptRejudgeJudgeID"></textarea>
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRejudge"> 批量题目重测 </button>
+                                </div>
+                            </div>
+                        </form>
+
                         <hr>
                         <h3> 批量取消评测 </h3>
                         <p> 
@@ -261,12 +279,27 @@
                         </p>
                         <form id="formDisableJudge" action="/OnlineJudge/admin/disable_judge" method="POST">
                             <div class="form-row">
+                                <input type="hidden" name="type" value="by_judge_id">
                                 <div class="form-group col-md-3 mb-3">
                                     <label for="iptDisableJudgeJudgeID"> 评测编号（回车分隔） </label>
                                     <textarea class="form-control" name="judge_id" id="iptDisableJudgeJudgeID"></textarea>
                                 </div>
                                 <div class="float-right d-flex mb-3 ml-auto pr-1">
                                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge"> 批量取消评测 </button>
+                                </div>
+                            </div>
+                        </form>
+                        <hr>
+                        <h3> 批量题目取消评测 </h3>
+                        <form id="formDisableJudge" action="/OnlineJudge/admin/disable_judge" method="POST">
+                            <div class="form-row">
+                                <input type="hidden" name="type" value="by_problem_id">
+                                <div class="form-group col-md-3 mb-3">
+                                    <label for="iptDisableJudgeJudgeID"> 题目编号（回车分隔） </label>
+                                    <textarea class="form-control" name="problem_id" id="iptDisableJudgeJudgeID"></textarea>
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge"> 批量题目取消评测 </button>
                                 </div>
                             </div>
                         </form>

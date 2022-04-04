@@ -22,7 +22,7 @@
     <div class="card card-body mb-2 pb-2">
         <p class="mb-2">{{ row[1] }}<small class="text-muted float-right">{{ row[3] }}</small></p>
         <hr class="mt-0 mb-4">
-        <div class="md-render" {% if row[4] %}id="discuss{{ row[0] }}" {% endif %}>{{ row[2] }}</div>
+        <div class="md-render" {% if row[4] %}id="discuss{{ row[0] }}" {% endif %}>{{ row[2]|safe }}</div>
         {% if row[4] -%}
         <hr class="my-2 ">
         <div class="btn-group ml-auto mb-0">

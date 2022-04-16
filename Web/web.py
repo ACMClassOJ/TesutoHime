@@ -66,7 +66,7 @@ def error_500():
 
 @web.before_request
 def log():
-    if request.full_path.startswith(('/OnlineJudge/static', '/OnlineJudge/api/heartBeat')):
+    if request.full_path.startswith(('/OnlineJudge/static', '/OnlineJudge/api/heartBeat')) or request.full_path.endswith(('.js', '.css', '.ico')):
         return
     tracker.log()
 

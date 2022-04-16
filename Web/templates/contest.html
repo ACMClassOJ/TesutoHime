@@ -13,7 +13,15 @@
 {% block content %}
     <div class="card card-body">
         <h1 class="text-center"> {{ id }}.{{ Title }} </h1>
-        <h5 class="text-center"> {{ StartTime }} ~ {{ EndTime }} {{ Status }}</h5>
+        <h5 class="text-center"> {{ StartTime }} ~ {{ EndTime }} {{ Status }} 
+            {% if is_Admin %}
+            <button class="btn btn-primary">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/admin/?contest_id={{ id }}">
+                    管理
+                </a>
+            </button>
+            {%- endif %}    
+        </h5>
         <div class="progress-wrapper">
             <div class="progress-info">
                 <div class="progress-label">

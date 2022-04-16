@@ -29,6 +29,34 @@ function formatDate(date)
     return YY + MM + DD +"T"+ hh + mm;
 }
 
+function getUrlArg(arg)
+{
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i=0;i<vars.length;i++) {
+        var pair = vars[i].split("=");
+        if(pair[0] == arg){
+            return pair[1];
+        }
+    }
+    return false;
+}
+
+window.onload = function() {
+    problem_id = getUrlArg('problem_id');
+    contest_id = getUrlArg('contest_id');
+
+    if (problem_id != false) {
+        $("#iptProblemID").val(problem_id);
+        document.getElementById('btnGetProblemDetails').click();
+    }
+    else if (contest_id != false) {
+        document.getElementById('contest_tab_btn').click();
+        $("#iptContestID").val(contest_id);
+        document.getElementById('btnGetContestDetails').click();
+    }
+}
+
 let op;
 $(function () {
 
@@ -234,6 +262,12 @@ $(function () {
     $("#divContestHidden").hide();
     $("#divContestProblemListHidden").hide();
     $("#divContestUserListHidden").hide();
+
+    $("#btnGoToContestPage").click(function(){
+        if($("#iptContestID").val() != "")
+            window.location.replace('/OnlineJudge/contest?contest_id=' + $("#iptContestID").val());
+    });
+
     $("#btnGetContestAutoIncreseID").click(function(){
         $.ajax({
             type: "POST",

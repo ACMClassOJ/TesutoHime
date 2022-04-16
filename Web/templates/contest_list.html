@@ -25,20 +25,24 @@
                         <td>{{ cur['End_Time'] }}</td>
                         <td>{{ cur['Status'] }}</td>
                         <td>
-                            {% if cur['Blocked'] -%}
-                                {%- if cur['Joined'] -%}
-                                    <button disabled class="btn btn-primary btn-sm">已报名参赛</button>
-                                {%- else -%}
-                                    <button disabled class="btn btn-primary btn-sm">报名参赛</button>
+                            {% if cur['Exam_Blocked'] -%}
+                                <button disabled class="btn btn-primary btn-sm">已于考试中</button>
+                            {%- else -%}
+                                {% if cur['Blocked'] -%}
+                                    {%- if cur['Joined'] -%}
+                                        <button disabled class="btn btn-primary btn-sm">已报名参赛</button>
+                                    {%- else -%}
+                                        <button disabled class="btn btn-primary btn-sm">报名参赛</button>
+                                    {%- endif %}
+                                {% else -%}
+                                    {%- if cur['Joined'] -%}
+                                        <button disabled class="btn btn-primary btn-sm">已报名参赛</button>
+                                    {%- else -%}
+                                        <button id="join_button_{{ cur['ID'] }}" onclick="post_join({{ cur['ID'] }})" class="btn btn-primary btn-sm">报名参赛
+                                        </button>
+                                    {%- endif -%}
                                 {%- endif %}
-                            {% else -%}
-                                {%- if cur['Joined'] -%}
-                                    <button disabled class="btn btn-primary btn-sm">已报名参赛</button>
-                                {%- else -%}
-                                    <button id="join_button_{{ cur['ID'] }}" onclick="post_join({{ cur['ID'] }})" class="btn btn-primary btn-sm">报名参赛
-                                    </button>
-                                {%- endif -%}
-                            {%- endif %}
+                        {%- endif %}
                         </td>
                     </tr>
                 {%- endfor %}

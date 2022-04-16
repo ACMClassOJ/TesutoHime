@@ -103,6 +103,19 @@ class ContestManager:
         ret = cursor.fetchall()
         db.close()
         return len(ret) != 0
+    
+    def check_player_in_unfinished_exam(self, username: str, cur_time: int) -> int:
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT ID FROM Contest WHERE Type = 2 AND %s <= End_Time ORDER BY ID DESC", (str(cur_time)))
+        unfinished_exam = cursor.fetchall()
+        db.close()
+        
+        for exam in unfinished_exam:
+            if self.check_player_in_contest(exam[0], username):
+            	return exam[0]
+
+        return -1
 
     def delete_player_from_contest(self, contest_id: int, username: str):
         db = db_connect()
@@ -120,8 +133,16 @@ class ContestManager:
     def list_contest(self, contest_type: int):
         db = db_connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, Name, Start_Time, End_Time FROM Contest WHERE Type = %s ORDER BY ID DESC",
+        cursor.execute("SELECT ID, Name, Start_Time, End_Time, Type FROM Contest WHERE Type = %s ORDER BY ID DESC",
                        (contest_type))
+        ret = cursor.fetchall()
+        db.close()
+        return ret
+
+    def list_contest_and_exam(self):
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT ID, Name, Start_Time, End_Time, Type FROM Contest WHERE Type = 0 OR Type = 2 ORDER BY ID DESC")
         ret = cursor.fetchall()
         db.close()
         return ret
@@ -181,6 +202,9 @@ class ContestManager:
         db.close()
         if data[0] is None:
             return 0
-        return int(data[0])
+        return int(data[0]) 
+
+        db.close()
+
 
 Contest_Manager = ContestManager()

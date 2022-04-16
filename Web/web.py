@@ -484,6 +484,16 @@ def status():
         start_id = max(end_id - JudgeConfig.Judge_Each_Page + 1, 1)
         record = reversed(record[start_id - 1: end_id])
     data = []
+
+    exam_id = Contest_Manager.check_player_in_unfinished_exam(username, unix_nano())
+    # if not None, only problems in here are visible to user
+    exam_visible_problems = None
+    if exam_id != -1: 
+        exam_visible_problems = list()
+        exam_problems_raw = Contest_Manager.list_problem_for_contest(exam_id)
+        for raw_tuple in exam_problems_raw:
+	        exam_visible_problems.append(raw_tuple[0])
+
     for ele in record:
         cur = {'ID': ele['ID'],
                'Username': ele['Username'],
@@ -494,8 +504,16 @@ def status():
                'Time_Used': ele['Time_Used'],
                'Mem_Used': ele['Mem_Used'],
                'Lang': readable_lang(ele['Lang']),
-               'Visible': username == ele['Username'] or privilege >= Privilege.ADMIN or (
-                       bool(ele['Share']) and not Problem_Manager.in_contest(ele['Problem_ID'])),
+               'Visible': 
+                       # admin: always visible
+                       is_admin or (
+                           # user's problem or shared problem
+                           # shared problems are banned if user is in exam (exam_id != -1)
+                           (username == ele['Username'] or (exam_id == -1 and bool(ele['Share']))) 
+                           # and exam visible check for problems
+                            and (exam_id == -1 or ele['Problem_ID'] in exam_visible_problems)
+                       )
+                       ,
                'Time': readable_time(ele['Time'])}
         if is_admin:
             cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.get_student_id(ele['Username']))
@@ -542,16 +560,20 @@ def contest():
     contest_id = request.args.get('contest_id')
     username = Login_Manager.get_username()
     if contest_id is None:  # display contest list
-        contest_list = Contest_Manager.list_contest(0)
+        contest_list = Contest_Manager.list_contest_and_exam()
         data = []
         cur_time = unix_nano()
+        is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+        exam_id = Contest_Manager.check_player_in_unfinished_exam(username, cur_time)
+
         for ele in contest_list:
             cur = {'ID': int(ele[0]),
                    'Title': str(ele[1]),
                    'Start_Time': readable_time(int(ele[2])),
                    'End_Time': readable_time(int(ele[3])),
                    'Joined': Contest_Manager.check_player_in_contest(ele[0], username),
-                   'Blocked': unix_nano() > int(ele[3])}
+                   'Blocked': unix_nano() > int(ele[3]),
+                   'Exam_Blocked': (exam_id != -1 and ele[4] == 2 and exam_id != int(ele[0]))}
             if cur_time < int(ele[2]):
                 cur['Status'] = 'Pending'
             elif cur_time > int(ele[3]):
@@ -559,8 +581,9 @@ def contest():
             else:
                 cur['Status'] = 'Going On'
             data.append(cur)
+        
         return render_template('contest_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name(),
-                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+                               is_Admin=is_admin, in_Exam = exam_id != -1)
     elif not contest_id.isdigit():
         abort(404)
     else:

@@ -104,18 +104,22 @@ class ContestManager:
         db.close()
         return len(ret) != 0
     
-    def check_player_in_unfinished_exam(self, username: str, cur_time: int) -> int:
+    def get_unfinished_exam_info_for_player(self, username: str, cur_time: int) -> (int, bool):
+        """
+            return exam_id, is_exam_started 
+        """
+
         db = db_connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID FROM Contest WHERE Type = 2 AND %s <= End_Time ORDER BY ID DESC", (str(cur_time)))
+        cursor.execute("SELECT ID, Start_Time FROM Contest WHERE Type = 2 AND %s <= End_Time ORDER BY ID DESC", (str(cur_time)))
         unfinished_exam = cursor.fetchall()
         db.close()
         
         for exam in unfinished_exam:
             if self.check_player_in_contest(exam[0], username):
-            	return exam[0]
+            	return exam[0], (cur_time >= int(exam[1]))
 
-        return -1
+        return -1, False
 
     def delete_player_from_contest(self, contest_id: int, username: str):
         db = db_connect()

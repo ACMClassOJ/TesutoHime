@@ -485,10 +485,12 @@ def status():
         record = reversed(record[start_id - 1: end_id])
     data = []
 
-    exam_id = Contest_Manager.check_player_in_unfinished_exam(username, unix_nano())
+    exam_id, is_exam_started = Contest_Manager.get_unfinished_exam_info_for_player(username, unix_nano())
     # if not None, only problems in here are visible to user
     exam_visible_problems = None
-    if exam_id != -1: 
+
+    # only change the visibility when the exam started
+    if exam_id != -1 and is_exam_started: 
         exam_visible_problems = list()
         exam_problems_raw = Contest_Manager.list_problem_for_contest(exam_id)
         for raw_tuple in exam_problems_raw:
@@ -509,9 +511,9 @@ def status():
                        is_admin or (
                            # user's problem or shared problem
                            # shared problems are banned if user is in exam (exam_id != -1)
-                           (username == ele['Username'] or (exam_id == -1 and bool(ele['Share']))) 
+                           (username == ele['Username'] or (exam_visible_problems is None and bool(ele['Share']))) 
                            # and exam visible check for problems
-                            and (exam_id == -1 or ele['Problem_ID'] in exam_visible_problems)
+                            and (exam_visible_problems is None or ele['Problem_ID'] in exam_visible_problems)
                        )
                        ,
                'Time': readable_time(ele['Time'])}
@@ -564,7 +566,7 @@ def contest():
         data = []
         cur_time = unix_nano()
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
-        exam_id = Contest_Manager.check_player_in_unfinished_exam(username, cur_time)
+        exam_id, _ = Contest_Manager.get_unfinished_exam_info_for_player(username, cur_time)
 
         for ele in contest_list:
             cur = {'ID': int(ele[0]),

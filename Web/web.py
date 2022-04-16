@@ -583,7 +583,7 @@ def contest():
             data.append(cur)
         
         return render_template('contest_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name(),
-                               is_Admin=is_admin, in_Exam = exam_id != -1)
+                               is_Admin=is_admin)
     elif not contest_id.isdigit():
         abort(404)
     else:

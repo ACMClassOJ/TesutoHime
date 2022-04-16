@@ -204,7 +204,5 @@ class ContestManager:
             return 0
         return int(data[0]) 
 
-        db.close()
-
 
 Contest_Manager = ContestManager()

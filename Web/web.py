@@ -354,7 +354,10 @@ def problem_rank():
     if problem_id is None:
         abort(404)
     sort_parameter = request.args.get('sort')
-    record = Judge_Manager.search_ac(problem_id)
+    record = list(Judge_Manager.search_ac(problem_id))
+    for i in range(len(record)):
+        record[i] = list(record[i])
+        record[i].append(User_Manager.get_friendly_name(record[i][1]))
     if sort_parameter == 'memory':
         record = sorted(record, key=lambda x: x[3])
     elif sort_parameter == 'submit_time':

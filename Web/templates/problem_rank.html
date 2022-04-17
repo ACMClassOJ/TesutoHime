@@ -72,7 +72,13 @@
             {% for cur in Data -%}
             <tr>
                 <td><a href="/OnlineJudge/code?submit_id={{ cur[0] }}">{{ loop.index }}</a></td>
-                <td>{{ cur[1] }}</td>
+                <td>
+                {% if is_Admin -%}
+                    <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ cur[1] }}">{{ cur[6] }}</span>
+                {% else -%}
+                    {{ cur[6] }}
+                {%- endif %}
+                </td>
                 <td>{{ cur[2] }}ms</td>
                 <td>{{ cur[3] }}KiB</td>
                 <td>{{ readable_lang(cur[4]) }}</td>
@@ -82,4 +88,17 @@
         </table>
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(function(){
+        $("[data-toggle='popover']").popover();
+    });
+    $("[data-toggle='popover']").click(function(){
+        setTimeout(function(){
+            $("[data-toggle='popover']").popover('hide')
+        }, 2000);
+    });
+</script>
 {% endblock %}

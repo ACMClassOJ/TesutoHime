@@ -590,6 +590,8 @@ def contest():
         abort(404)
     else:
         contest_id = int(contest_id)
+        if contest_id < 0 or contest_id > Contest_Manager.get_max_id():
+            abort(404)  # No argument fed
         start_time, end_time = Contest_Manager.get_time(contest_id)
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         problems = Contest_Manager.list_problem_for_contest(contest_id)

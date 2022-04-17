@@ -126,6 +126,8 @@
                 }
             ]
         });
+        var manage_button = '<a class="btn btn-secondary" href="/OnlineJudge/admin/?contest_id={{ id }}"> 管理作业 </a>';
+        $(".dt-buttons").append(manage_button);
     });
 {% endif %}
 </script>

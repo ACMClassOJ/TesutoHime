@@ -404,6 +404,22 @@ $(function () {
         $("#iptConfig").val("");
     });
 
+    function extract_limit() {
+        let tableDetails = $("#tableDetails");
+        let config = {};
+        config["length"] = tableDetails.children().length;
+        config["mem"] = [];
+        config["time"] = [];
+        config["disk"] = [];
+        tableDetails.children().each(function (i, e) {
+            let d = e.children;
+            config["time"].push(parseInt(d[2].innerHTML.replace("<br>", "")));
+            config["mem"].push(parseInt(d[3].innerHTML.replace("<br>", "")));
+            config["disk"].push(parseInt(d[4].innerHTML.replace("<br>", "")));
+        });
+        return config;
+    }
+
     function generateConfig() {
         let tableGroups = $("#tableGroups"), tableDetails = $("#tableDetails"), config = "";
         config += `{"Groups":[`;
@@ -428,6 +444,20 @@ $(function () {
     $("#formData").submit(function (e) {
         e.preventDefault();
         e.stopPropagation();
+        $.ajax({
+            url: "/OnlineJudge/admin/problem_limit",
+            type: "POST",
+            data: {id: $("#iptDataProblemID").val(), data: JSON.stringify(extract_limit())},
+            dataType: "json",
+            complete: function (ret) {
+                var ret_json = JSON.parse(ret.responseText);
+                if(ret_json['e'] < 0)
+                {
+                    swal("Error " + ret_json['e'], ret_json['msg'], "error");
+                    return;
+                }
+            }
+        });
         let zip = new JSZip();
         let folder = zip.folder($("#iptDataProblemID").val());
         let data_files = $("#iptData");
@@ -487,6 +517,44 @@ $(function () {
     $("#formDataZipUpload").submit(function (e) {
         e.preventDefault();
         e.stopPropagation();
+        var long_zip_name = $("#iptDataZipUpload").val();
+        var zip_name = long_zip_name.substring(long_zip_name.lastIndexOf("\\")+1, long_zip_name.lastIndexOf("."));
+        if(isNaN(zip_name) || parseInt(zip_name) < 1000)
+        {
+            swal("Oops", "数据包名不正确！", "error");
+            return;
+        }
+        JSZip.loadAsync($("#iptDataZipUpload").prop("files")[0]).then(function (zip) {
+            zip.file(zip_name + "/config.json").async("string").then(function (config) {
+                var config_json = JSON.parse(config);
+                let limit_config = {};
+                limit_config["length"] = config_json["Details"].length;
+                limit_config["mem"] = [];
+                limit_config["time"] = [];
+                limit_config["disk"] = [];
+                config_json["Details"].forEach(function (item) {
+                    limit_config["time"].push(item["TimeLimit"]);
+                    limit_config["mem"].push(item["MemoryLimit"]);
+
+                });
+                console.log(limit_config);
+                $.ajax({
+                    url: "/OnlineJudge/admin/problem_limit",
+                    type: "POST",
+                    data: {id: zip_name, data: JSON.stringify(limit_config)},
+                    dataType: "json",
+                    complete: function (ret) {
+                        var ret_json = JSON.parse(ret.responseText);
+                        if(ret_json['e'] < 0)
+                        {
+                            swal("Error " + ret_json['e'], ret_json['msg'], "error");
+                            return;
+                        }
+                    }
+                });
+            });
+        });
+    
         let data = new FormData(this);
         $.ajax({
             url: "/OnlineJudge/admin/data",

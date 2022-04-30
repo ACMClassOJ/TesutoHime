@@ -161,6 +161,22 @@ def problem_manager():
     except TypeError:
         return ReturnCode.ERR_BAD_DATA
 
+@admin.route('/problem_limit', methods=['post'])
+def problem_limit():
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(404)
+    form = request.form
+    # err = _validate_problem_data(form)
+    # if err is not None:
+    #     return err
+    try:
+        Problem_Manager.modify_problem_limit(form["id"], form["data"])
+        return ReturnCode.SUC_ADD_PROBLEM
+    except KeyError:
+        return ReturnCode.ERR_BAD_DATA
+    except TypeError:
+        return ReturnCode.ERR_BAD_DATA
+
 
 @admin.route('/contest', methods=['post'])
 def contest_manager():

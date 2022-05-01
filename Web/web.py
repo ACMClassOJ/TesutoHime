@@ -34,16 +34,17 @@ def validate(username: Optional['str'] = None, password: Optional['str'] = None,
     friendly_name_reg = '([a-zA-Z0-9_]{1,60})$'
     student_id_reg = '([0-9]{12})$'
     if username is not None and re.match(username_reg, username) is None:
-        return -1
+        return ReturnCode.ERR_VALIDATE_INVALID_USERNAME
     if password is not None and re.match(password_reg, password) is None:
-        return -1
+        return ReturnCode.ERR_VALIDATE_INVALID_PASSWD
     if friendly_name is not None and re.match(friendly_name_reg, friendly_name) is None:
-        return -1
+        return ReturnCode.ERR_VALIDATE_INVALID_FRIENDLY_NAME
     if student_id is not None and re.match(student_id_reg, student_id) is None:
-        return -1
+        return ReturnCode.ERR_VALIDATE_INVALID_STUDENT_ID
     if username is not None and not User_Manager.validate_username(username):
-        return -1
-    return 0
+        print("12121")
+        return ReturnCode.ERR_VALIDATE_USERNAME_EXISTS
+    return ReturnCode.SUC_VALIDATE
 
 
 def readable_lang(lang: int) -> str:
@@ -177,12 +178,14 @@ def login():
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     username = request.form.get('username')
     password = request.form.get('password')
+    if username.endswith("mirror"):
+        return ReturnCode.ERR_LOGIN_MIRROR
     if not User_Manager.check_login(username, password):  # no need to avoid sql injection
-        return '-1'
+        return ReturnCode.ERR_LOGIN
     lid = str(uuid4())
     username = User_Manager.get_username(username)
     Login_Manager.new_session(username, lid)
-    ret = make_response('0')
+    ret = make_response(ReturnCode.SUC_LOGIN)
     ret.set_cookie(key='Login_ID', value=lid, max_age=LoginConfig.Login_Life_Time)
     return ret
 
@@ -209,9 +212,11 @@ def register():
     friendly_name = request.form.get('friendly_name')
     student_id = request.form.get('student_id')
     val = validate(username, password, friendly_name, student_id)
-    if val == 0:
+    if val == ReturnCode.SUC_VALIDATE:
         User_Manager.add_user(username, student_id, friendly_name, password, '0')
-    return str(val)
+        return ReturnCode.SUC_REGISTER
+    else:
+        return val
 
 
 @web.route('/problems')
@@ -807,7 +812,7 @@ def profile():
         form = request.json
         try:
             ret = validate(password=form.get('password'), friendly_name=form.get('friendly_name'))
-            if ret == 0:
+            if ret == ReturnCode.SUC_VALIDATE:
                 User_Manager.modify_user(Login_Manager.get_username(), None, form.get('friendly_name'), form.get(
                     'password'), None)
                 return ReturnCode.SUC_MOD_USER

@@ -10,16 +10,16 @@ $(function(){
 });
 
 $(function(){
-	$("#register").ajaxForm(function(response_text)
+	$("#register").ajaxForm(function(ret_json)
 	{
-		if(response_text == 0)
+		if(ret_json['e'] < 0)
+			swal("Error " + ret_json['e'], ret_json['msg'], "error");
+		else
 		{
-			swal("Success","注册成功！您现在可以登陆了","success");
+			swal("Success", ret_json['msg'], "success");
 			setTimeout(function(){
 				window.location.replace("/OnlineJudge/");
 			},500);
 		}
-		else if(response_text == -1)
-			swal("Oops","注册失败，检查您的输入信息是否合法！","error");
 	});
 });

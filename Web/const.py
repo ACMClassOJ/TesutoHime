@@ -27,8 +27,21 @@ class String:
 
 class ReturnCode:
     SUC = {'e': 0}
+
     SUC_LOGIN = {'e': 0, 'msg': 'logged in successfully'}
     SUC_LOGOUT = {'e': 0, 'msg': 'logged out successfully'}
+    ERR_LOGIN = {'e': -10, 'msg': 'login failed'}
+    ERR_LOGOUT = {'e': -11, 'msg': 'logout failed'}
+    ERR_LOGIN_MIRROR = {'e': -12, 'msg': 'login with account from mirror is prohibited'}
+
+    SUC_VALIDATE = {'e': 0, 'msg': '用户信息通过验证！'}
+    SUC_REGISTER = {'e': 0, 'msg': '注册成功！'}
+    ERR_VALIDATE_INVALID_USERNAME = {'e': -20, 'msg': '用户名不符合注册要求。用户名要求：20位以内的大小写字母或数字（第一位必须是字母）。'}
+    ERR_VALIDATE_INVALID_PASSWD = {'e': -21, 'msg': '密码不符合注册要求。密码要求：6-30位的大小写字母、数字、下划线。'}
+    ERR_VALIDATE_INVALID_FRIENDLY_NAME = {'e': -22, 'msg': '昵称不符合注册要求。昵称要求：60位以内的大小写字母、数字、下划线。'}
+    ERR_VALIDATE_INVALID_STUDENT_ID = {'e': -23, 'msg': '学号不符合注册要求。学号要求：12位数字（如果不够可以用0补全）。'}
+    ERR_VALIDATE_USERNAME_EXISTS = {'e': -24, 'msg': '用户名已被注册。'}
+
     SUC_ADD_USER = {'e': 0, 'msg': 'user added successfully'}
     SUC_MOD_USER = {'e': 0, 'msg': 'user modified successfully'}
     SUC_DEL_USER = {'e': 0, 'msg': 'user removed successfully'}
@@ -51,9 +64,7 @@ class ReturnCode:
 
     ERR_BAD_DATA = {'e': -1, 'msg': 'bad data'}
     ERR_NETWORK_FAILURE = {'e': -2, 'msg': 'network failure'}
-    ERR_LOGIN = {'e': -10, 'msg': 'login failed'}
-    ERR_LOGOUT = {'e': -11, 'msg': 'logout failed'}
-
+    
     ERR_USER_NOT_LOGGED_IN = {'e': -100, 'msg': 'user not logged in'}
     ERR_PERMISSION_DENIED = {'e': -101, 'msg': 'permission denied'}
 
@@ -85,8 +96,6 @@ class ReturnCode:
     ERR_PIC_SERIVCE_WRONG_EXT = {'e': -501, 'msg': 'acceptable file extension for picture service: gif, jpg, jpeg, png'}
     ERR_PIC_SERIVCE_SYSTEM_ERROR = {'e': -502, 'msg': 'picture service system error'}
     
-
-
 
 class Privilege:
     GUEST = 0

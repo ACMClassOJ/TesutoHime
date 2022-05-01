@@ -10,11 +10,13 @@ $(function(){
 });
 
 $(function(){
-	$("#login").ajaxForm(function(response_text)
+	$("#login").ajaxForm(function(ret_json)
 	{
-		if(response_text == 0)
+		if(ret_json['e'] < 0)
+			swal("Error " + ret_json['e'], ret_json['msg'], "error");
+		else
 		{
-			swal("Success","登录成功","success");
+			swal("Success", ret_json['msg'], "success");
 			setTimeout(function(){
 				if(result['next'])
 					window.location.replace(result['next']);
@@ -22,7 +24,5 @@ $(function(){
 					window.location.replace('/OnlineJudge/');
 			},500);
 		}
-		else
-			swal("Oops","用户名或密码错误","error");
 	});
 });

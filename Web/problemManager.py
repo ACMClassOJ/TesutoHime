@@ -53,8 +53,20 @@ class ProblemManager:
                'Data_Range': str(data[7]),
                'Release_Time': int(data[8]),
                'Flag_Count': int(data[9]),
-               'Problem_Type': int(data[10])}
+               'Problem_Type': int(data[10]),
+               'Limits': str(data[11])}
         return ret
+
+    def modify_problem_limit(self, problem_id: int, limit: str):
+        db = db_connect()
+        cursor = db.cursor()
+        try:
+            cursor.execute("UPDATE Problem SET Limits = %s WHERE ID = %s", (limit, str(problem_id)))
+            db.commit()
+        except pymysql.Error:
+            db.rollback()
+            sys.stderr.write("SQL Error in ProblemManager: Modify_Problem_Limit\n")
+        db.close()
 
     def lock_problem(self, problem_id: int):
         db = db_connect()

@@ -9,9 +9,9 @@ class ProblemManager:
         cursor = db.cursor()
         try:
             cursor.execute(
-                "INSERT INTO Problem(ID, Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time, Problem_Type) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO Problem(ID, Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time, Flag_Count, Problem_Type) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (problem_id, title, description, problem_input, problem_output, example_input, example_output, data_range,
-                 release_time, problem_type))
+                 release_time, 0, problem_type))
             db.commit()
         except pymysql.Error:
             db.rollback()
@@ -67,6 +67,7 @@ class ProblemManager:
             db.rollback()
             sys.stderr.write("SQL Error in ProblemManager: Modify_Problem_Limit\n")
         db.close()
+
 
     def lock_problem(self, problem_id: int):
         db = db_connect()
@@ -124,6 +125,16 @@ class ProblemManager:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT MAX(ID) FROM Problem WHERE ID < 11000")
+        data = cursor.fetchone()
+        db.close()
+        if data[0] is None:
+            return 0
+        return int(data[0])
+    
+    def get_max_id_over_20000(self) -> int:
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT MAX(ID) FROM Problem WHERE ID >= 20000")
         data = cursor.fetchone()
         db.close()
         if data[0] is None:

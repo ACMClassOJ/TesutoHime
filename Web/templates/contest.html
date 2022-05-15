@@ -134,6 +134,11 @@
         });
         var manage_button = '<a class="btn btn-secondary" href="/OnlineJudge/admin/?contest_id={{ id }}"> 管理比赛 </a>';
         $(".dt-buttons").append(manage_button);
+        var word_wrap_button = '<button class="btn btn-secondary" id="word_wrap_button"> 禁用自动换行 </button>';
+        $(".dt-buttons").append(word_wrap_button);
+        $("#word_wrap_button").click(function(){
+            $("#contest").attr("style", "white-space: nowrap;");
+        });
     });
 {% endif %}
 </script>

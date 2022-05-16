@@ -96,6 +96,14 @@ class ContestManager:
         db.close()
         return
 
+    def check_problem_in_contest(self, contest_id: int, problem_id: int):
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Problem_ID FROM Contest_Problem WHERE Belong = %s AND Problem_ID = %s", (contest_id, problem_id))
+        ret = cursor.fetchall()
+        db.close()
+        return len(ret) != 0
+
     def check_player_in_contest(self, contest_id: int, username: str):
         db = db_connect()
         cursor = db.cursor()

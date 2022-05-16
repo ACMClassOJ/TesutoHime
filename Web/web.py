@@ -27,6 +27,7 @@ web = Blueprint('web', __name__, static_folder='static', template_folder='templa
 web.register_blueprint(admin, url_prefix='/admin')
 web.register_blueprint(api, url_prefix='/api')
 
+
 def validate(username: Optional['str'] = None, password: Optional['str'] = None, friendly_name: Optional['str'] = None,
              student_id: Optional['str'] = None) -> int:
     username_reg = '([a-zA-Z][a-zA-Z0-9_]{0,19})$'
@@ -59,6 +60,38 @@ def readable_lang(lang: int) -> str:
     except KeyError:
         return 'UNKNOWN'
 
+"""
+    The exam visibility part.
+"""
+
+def problem_in_exam(problem_id):
+    # in exam means: 1. user is not admin. 2. the problem is in a running exam.
+    # this is mainly for closing the discussion & rank part
+    exam_id, is_exam_started = Contest_Manager.get_unfinished_exam_info_for_player(Login_Manager.get_username(), unix_nano())
+    
+    if exam_id == -1 or is_exam_started == False:
+        return False
+
+    return Login_Manager.get_privilege() < Privilege.ADMIN and Contest_Manager.check_problem_in_contest(exam_id, problem_id)
+
+
+def is_code_visible(code_owner, problem_id, shared):
+    # check whether the code is visible
+
+    # admin always visible
+    if Login_Manager.get_privilege() >= Privilege.ADMIN:
+        return True
+    
+    username = Login_Manager.get_username()
+    # exam first
+    exam_id, is_exam_started = Contest_Manager.get_unfinished_exam_info_for_player(username, unix_nano())
+
+    if exam_id != -1 and is_exam_started:
+        # if the user is in a running exam, he can only see his own problems in exam.
+        return code_owner == username and Contest_Manager.check_problem_in_contest(exam_id, problem_id)
+    else:
+        # otherwise, the user can see his own and shared problems
+        return code_owner == username or shared
 
 @web.errorhandler(500)
 def error_500():
@@ -141,8 +174,7 @@ def get_code():
     if run_id < 0 or run_id > Judge_Manager.max_id():
         return '-1'
     detail = Judge_Manager.query_judge(run_id)
-    if detail['User'] != Login_Manager.get_username() and Login_Manager.get_privilege() < Privilege.ADMIN and (
-            not detail['Share'] or Problem_Manager.in_contest(detail['Problem_ID'])):
+    if not is_code_visible(detail['User'], detail['Problem_ID'], detail['Share']):
         return '-1'
     return detail['Code']
 
@@ -285,9 +317,11 @@ def problem_detail():
         abort(404)  # No argument fed
     if Problem_Manager.get_release_time(problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
-    in_contest = Problem_Manager.in_contest(problem_id) and Login_Manager.get_privilege() < Privilege.ADMIN
+    
+    in_exam = problem_in_exam(problem_id)
+
     return render_template('problem_details.html', ID=problem_id, Title=Problem_Manager.get_title(problem_id),
-                           In_Contest=in_contest, friendlyName=Login_Manager.get_friendly_name(),
+                           In_Exam=in_exam, friendlyName=Login_Manager.get_friendly_name(),
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
@@ -304,13 +338,13 @@ def submit_problem():
             abort(404)
         title = Problem_Manager.get_title(problem_id)
         problem_type = Problem_Manager.get_problem_type(problem_id)
-        in_contest = Problem_Manager.in_contest(id) and Login_Manager.get_privilege() < Privilege.ADMIN
+        in_exam = problem_in_exam(problem_id)
         if problem_type == 0:
-            return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Contest=in_contest,
+            return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam,
                                friendlyName=Login_Manager.get_friendly_name(),
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
         elif problem_type == 1:
-            return render_template('quiz_submit.html', Problem_ID=problem_id, Title=title, In_Contest=in_contest,
+            return render_template('quiz_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam,
                                friendlyName=Login_Manager.get_friendly_name(),
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     else:
@@ -321,9 +355,7 @@ def submit_problem():
                 problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
             return '-1'
         share = bool(request.form.get('shared', 0))  # 0 or 1
-        if Problem_Manager.in_contest(
-                id) and Login_Manager.get_privilege() < Privilege.ADMIN and share:  # invalid sharing
-            return '-1'
+        
         if problem_id < 1000 or (problem_id > Problem_Manager.get_max_id() and problem_id < 11000) or problem_id > Problem_Manager.get_real_max_id():
             abort(404)
         if unix_nano() < Problem_Manager.get_release_time(
@@ -370,12 +402,14 @@ def problem_rank():
     else:
         sort_parameter = 'time'
         record = sorted(record, key=lambda x: x[2])
-    in_contest = Problem_Manager.in_contest(problem_id) and Login_Manager.get_privilege() < Privilege.ADMIN
+    
+    in_exam = problem_in_exam(problem_id)
+    
     return render_template('problem_rank.html', Problem_ID=problem_id, Title=Problem_Manager.get_title(problem_id),
                            Data=record, Sorting=sort_parameter, friendlyName=Login_Manager.get_friendly_name(),
                            readable_lang=readable_lang, readable_time=readable_time,
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN,
-                           In_Contest=in_contest)
+                           In_Exam=in_exam)
 
 
 @web.route('/discuss', methods=['GET', 'POST'])
@@ -386,13 +420,15 @@ def discuss():
         problem_id = request.args.get('problem_id')
         if problem_id is None:
             abort(404)
-        if Problem_Manager.in_contest(
-                problem_id) and Login_Manager.get_privilege() < Privilege.ADMIN:  # Problem in Contest or Homework and Current User is NOT administrator
+        
+        in_exam = problem_in_exam(problem_id)
+
+        if in_exam:  # Problem in Contest or Homework and Current User is NOT administrator
             return render_template('problem_discussion.html', Problem_ID=problem_id,
                                    Title=Problem_Manager.get_title(problem_id), Blocked=True,
                                    friendlyName=Login_Manager.get_friendly_name(),
                                    is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN,
-                                   In_Contest=True)  # Discussion Closed
+                                   In_Exam=True)  # Discussion Closed
         username = Login_Manager.get_username()  # for whether to display edit or delete
         privilege = Login_Manager.get_privilege()
         data = Discuss_Manager.get_discuss_for_problem(problem_id)
@@ -408,7 +444,7 @@ def discuss():
                                Title=Problem_Manager.get_title(problem_id), Discuss=discussion,
                                friendlyName=Login_Manager.get_friendly_name(),
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN,
-                               In_Contest=False)
+                               In_Exam=False)
     else:
         if not Login_Manager.check_user_status():
             return ReturnCode.ERR_USER_NOT_LOGGED_IN
@@ -515,13 +551,15 @@ def status():
                'Mem_Used': ele['Mem_Used'],
                'Lang': readable_lang(ele['Lang']),
                'Visible': 
+                       # This visible check is more effient than call "is_code_visible" each time.
+
                        # admin: always visible
                        is_admin or (
-                           # user's problem or shared problem
-                           # shared problems are banned if user is in exam (exam_id != -1)
+                           # user's own problem: username == ele['Username']
+                           # shared problems are always banned if exam_visible_problems is None (this means user in exam)
                            (username == ele['Username'] or (exam_visible_problems is None and bool(ele['Share']))) 
                            # and exam visible check for problems
-                            and (exam_visible_problems is None or ele['Problem_ID'] in exam_visible_problems)
+                           and (exam_visible_problems is None or ele['Problem_ID'] in exam_visible_problems)
                        )
                        ,
                'Time': readable_time(ele['Time'])}
@@ -543,8 +581,7 @@ def code():
     if run_id < 0 or run_id > Judge_Manager.max_id():
         abort(404)
     detail = Judge_Manager.query_judge(run_id)
-    if detail['User'] != Login_Manager.get_username() and Login_Manager.get_privilege() < Privilege.ADMIN and (
-            not detail['Share'] or Problem_Manager.in_contest(detail['Problem_ID'])):
+    if not is_code_visible(detail['User'], detail['Problem_ID'], detail['Share']):
         return abort(403)
     else:
         detail['Friendly_Name'] = User_Manager.get_friendly_name(detail['User'])
@@ -838,3 +875,4 @@ def favicon():
 oj = Flask('WEB')
 oj.register_blueprint(web, url_prefix='/OnlineJudge')
 oj.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400
+

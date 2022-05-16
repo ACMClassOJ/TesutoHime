@@ -16,7 +16,7 @@
             <li class="nav-item">
                 <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ ID }}">评测状态</a>
             </li>
-            {% if not In_Contest -%}
+            {% if not In_Exam -%}
             <li class="nav-item">
                 <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/discuss?problem_id={{ ID }}">讨论</a>
             </li>
@@ -74,7 +74,7 @@
 <div class="row">
     <div class="btn-group m-auto">
         <a href="/OnlineJudge/submit?problem_id={{ ID }}" class="btn btn-primary"> 提交 </a>
-        <a href="/OnlineJudge/status?problem_id={{ ID }}" class="btn btn-info"> 评测状态 </a> {% if not In_Contest -%}
+        <a href="/OnlineJudge/status?problem_id={{ ID }}" class="btn btn-info"> 评测状态 </a> {% if not In_Exam -%}
         <a href="/OnlineJudge/discuss?problem_id={{ ID }}" class="btn btn-success"> 讨论 </a>
         <a href="/OnlineJudge/rank?problem_id={{ ID }}" class="btn btn-light"> 排行榜 </a> {%- endif %}
         {% if is_Admin %}

@@ -22,7 +22,7 @@
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ Problem_ID }}">评测状态</a>
                 </li>
-                {% if not In_Contest -%}
+                {% if not In_Exam -%}
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/discuss?problem_id={{ Problem_ID }}">讨论</a>
                 </li>
@@ -36,6 +36,9 @@
                         <input type="hidden" name="id" id="datazip_download_problem_ID" value="{{ Problem_ID }}">    
                     </form>
                     <a class="nav-link mb-sm-2 mb-md-0" href="javascript:document.getElementById('formDataZipDownload').submit();"> 下载本题数据 </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/admin/?problem_id={{ ID }}"> 管理 </a>
                 </li>
                 {% endif %}
             </ul>

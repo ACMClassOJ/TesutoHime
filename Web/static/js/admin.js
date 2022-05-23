@@ -532,10 +532,14 @@ $(function () {
                 limit_config["mem"] = [];
                 limit_config["time"] = [];
                 limit_config["disk"] = [];
+                limit_config["file"] = [];
                 config_json["Details"].forEach(function (item) {
                     limit_config["time"].push(item["TimeLimit"]);
                     limit_config["mem"].push(item["MemoryLimit"]);
-
+                    if("DiskLimit" in item)
+                        limit_config["disk"].push(item["DiskLimit"]);
+                    if("FileNumberLimit" in item)
+                        limit_config["file"].push(item["FileNumberLimit"]);
                 });
                 console.log(limit_config);
                 $.ajax({

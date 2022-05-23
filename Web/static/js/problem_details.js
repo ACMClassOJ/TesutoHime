@@ -22,32 +22,113 @@ $(function(){
             if (main_json['Limits'] == "None") $("#problem_details_time_mem_disk_limit_header").html("");
             else
             {
-                var str = "";
+                var raw_config_str = main_json['Limits'];
                 var limit_lst = JSON.parse(main_json['Limits']);
                 var limit_lst_length = limit_lst["length"];
+
+                var limit_time_str = "";
                 var limit_list_min_time = Math.min(...limit_lst["time"]);
                 var limit_list_max_time = Math.max(...limit_lst["time"]);
                 if(limit_list_max_time == limit_list_min_time)
-                    str += "<p> 时间限制： " + limit_list_min_time + " ms</p>";
+                    limit_time_str = "<p> 时间限制： " + limit_list_min_time + " ms</p>";
                 else
-                    str += "<p> 时间限制： " + limit_list_min_time + " ms min, " + limit_list_max_time + " ms max </p>";
+                    limit_time_str = "<p> 时间限制： " + limit_list_min_time + " ms min, " + limit_list_max_time + " ms max</p>";
 
+                var limit_mem_str = "";
                 var limit_list_min_mem = parseInt(Math.min(...limit_lst["mem"]) / 1024 / 1024);
                 var limit_list_max_mem = parseInt(Math.max(...limit_lst["mem"]) / 1024 / 1024);
                 if(limit_list_max_mem == limit_list_min_mem)
-                    str += "<p> 空间限制： " + limit_list_min_mem + " MiB</p>";
+                    limit_mem_str = "<p> 内存空间限制： " + limit_list_min_mem + " MiB</p>";
                 else
-                    str += "<p> 空间限制： " + limit_list_min_mem + " MiB min, " + limit_list_max_mem + " MiB max </p>";
+                    limit_mem_str = "<p> 内存空间限制： " + limit_list_min_mem + " MiB min, " + limit_list_max_mem + " MiB max</p>";
                 
-                // if("disk" in limit_lst)
-                // {
-                //     str += "<p> 空间限制： " + limit_list_min_mem + " MB min, " + limit_list_max_mem + " MB max </p>";
-                // }
+                var limit_disk_str = "";
+                var limit_disk_flag = 0;
+                if("disk" in limit_lst)
+                {
+                    if(limit_lst["disk"].length == 0)
+                        limit_disk_str = "";
+                    else
+                    {
+                        var limit_lst_disk_abs = Array.from(limit_lst["disk"], (n) => Math.abs(n));
+                        var limit_list_min_disk = parseInt(Math.min(...limit_lst_disk_abs) / 1024 / 1024);
+                        var limit_list_max_disk = parseInt(Math.max(...limit_lst_disk_abs) / 1024 / 1024);
+                        if(limit_list_max_disk == 0 && limit_list_min_disk == 0)
+                            limit_disk_str = "<p> 磁盘空间限制： 无限制</p>";
+                        else if(limit_list_max_disk == limit_list_min_disk)
+                        {
+                            limit_disk_str = "<p> 磁盘空间限制： " + limit_list_min_disk + " MiB</p>";
+                            limit_disk_flag = 1;
+                        }
+                        else
+                        {
+                            limit_disk_str = "<p> 磁盘空间限制： " + limit_list_min_disk + " MiB min, " + limit_list_max_disk + " MiB max </p>";
+                            limit_disk_flag = 1;
+                        }
+                    }
+                }
+                else
+                    limit_disk_str = "";
+
+                var limit_file_str = "";
+                var limit_file_flag = 0;
+                if("file" in limit_lst)
+                {
+                    if(limit_lst["file"].length == 0)
+                        limit_file_str = "";
+                    else
+                    {
+                        var limit_list_min_file = parseInt(Math.min(...limit_lst["file"]));
+                        var limit_list_max_file = parseInt(Math.max(...limit_lst["file"]));
+                        if(limit_list_max_file == limit_list_min_file == 0)
+                            limit_file_str = "<p> 文件数量限制： 无限制</p>";
+                        else if(limit_list_max_file == limit_list_min_file)
+                        {
+                            limit_file_str = "<p> 文件数量限制： " + limit_list_min_file + " 个</p>";
+                            limit_file_flag = 1;
+                        }
+                        else
+                        {
+                            limit_file_str = "<p> 文件数量限制： " + limit_list_min_file + " 个 min, " + limit_list_max_file + " 个 max </p>";
+                            limit_file_flag = 1;
+                        }
+                    }
+                }
+                else
+                    limit_file_num_str = "";
+                var str = limit_time_str + limit_mem_str + limit_disk_str + limit_file_str;
                 str += "<details><summary>单个测试点时空限制详情</summary><table>";
-                str += "<thead><tr> <th>测试点编号</th> <th>时间限制 (ms)</th> <th>空间限制 (MiB)</th> </tr></thead>";
+                str += "<thead><tr>";
+                str += "<th>测试点编号</th> <th>时间限制 (ms)</th> <th>内存空间限制 (MiB)</th>";
+                if(limit_disk_flag)
+                    str += "<th>磁盘空间限制 (MiB)</th>";
+                if(limit_file_flag)
+                    str += "<th>文件数量限制</th>";
+                str += "</tr></thead>";
                 for(var i = 0; i < limit_lst_length; i++)
-                    str += "<tr> <td>" + (i+1) + "</td> <td>" + limit_lst["time"][i] + "</td>  <td>" + parseInt(limit_lst["mem"][i] / 1024 / 1024) + "</td> </tr>";
-                str += "</table></details>";
+                {
+                    str += "<tr>";
+                    str += "<td>" + (i+1) + "</td> <td>" + limit_lst["time"][i] + "</td>  <td>" + parseInt(limit_lst["mem"][i] / 1024 / 1024) + "</td>";
+                    if(limit_disk_flag)
+                    {
+                        str += "<td>";
+                        var dd = parseInt(limit_lst["disk"][i] / 1024 / 1024);
+                        if(dd == 0)
+                            str += "无限制";
+                        else if(dd < 0)
+                            str += Math.abs(dd) + " （新开空间）";
+                        else
+                            str += dd;
+                        str += "</td>";
+                    }
+                    if(limit_file_flag)
+                        str += "<td>" + parseInt(limit_lst["file"][i]) + "</td>";
+                    str += "</tr>";
+                }
+                str += "</table>";
+                str += "<p>raw config data:<p>";
+                str += "<code>" + raw_config_str + "</code>";
+                str += "</details>";
                 $("#problem_details_time_mem_disk_limit").html(str);
             }
             renderMathInElement(document.body,

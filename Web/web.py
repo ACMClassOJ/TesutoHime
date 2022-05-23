@@ -612,7 +612,11 @@ def contest():
         cur_time = unix_nano()
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         exam_id, _ = Contest_Manager.get_unfinished_exam_info_for_player(username, cur_time)
+        # here exam_id is an *arbitary* unfinished exam in which the player is in 
 
+        # Blocked: indicate whether the join button should be disabled because time is over
+        # Joined: indicate whether the user has joined the contest, join button should also be disabled
+        # Exam_Blocked: indicate that the user is in an *arbitary* exam, so even if there are available contests, join button should be disabled
         for ele in contest_list:
             cur = {'ID': int(ele[0]),
                    'Title': str(ele[1]),

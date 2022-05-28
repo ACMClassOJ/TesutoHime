@@ -395,6 +395,7 @@ def problem_rank():
     for i in range(len(record)):
         record[i] = list(record[i])
         record[i].append(User_Manager.get_friendly_name(record[i][1]))
+        record[i].append(Reference_Manager.Query_Realname(User_Manager.get_student_id(record[i][1])))
     if sort_parameter == 'memory':
         record = sorted(record, key=lambda x: x[3])
     elif sort_parameter == 'submit_time':

@@ -41,7 +41,10 @@
             <thead>
                 <tr>
                     <th><span>#</span></th>
-                    <th><span>用户</span></th>
+                    <th><span>昵称</span></th>
+                    {% if is_Admin -%}
+                    <th><span>实名</span></th>
+                    {%- endif %}
                     <th>
                         <a class="nav-link p-0" href="/OnlineJudge/rank?problem_id={{ Problem_ID }}&sort=time">
                             <span>运行时间</span>
@@ -82,6 +85,9 @@
                     {{ cur[6] }}
                 {%- endif %}
                 </td>
+                {% if is_Admin -%}
+                <td>{{ cur[7] }}</td>
+                {%- endif %}
                 <td>{{ cur[2] }}ms</td>
                 <td>{{ cur[3] }}KiB</td>
                 <td>{{ readable_lang(cur[4]) }}</td>

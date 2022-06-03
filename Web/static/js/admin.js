@@ -521,7 +521,7 @@ $(function () {
         var zip_name = long_zip_name.substring(long_zip_name.lastIndexOf("\\")+1, long_zip_name.lastIndexOf("."));
         if(isNaN(zip_name) || parseInt(zip_name) < 1000)
         {
-            swal("Oops", "数据包名不正确！", "error");
+            swal("Error", "数据包名不正确！", "error");
             return;
         }
         JSZip.loadAsync($("#iptDataZipUpload").prop("files")[0]).then(function (zip) {
@@ -549,13 +549,33 @@ $(function () {
                     dataType: "json",
                     complete: function (ret) {
                         var ret_json = JSON.parse(ret.responseText);
-                        if(ret_json['e'] < 0)
-                        {
+                        if(ret_json['e'] < 0) {
                             swal("Error " + ret_json['e'], ret_json['msg'], "error");
                             return;
                         }
                     }
                 });
+            });
+        }, function (err) {
+            var jszip_error_text = document.createElement("p");
+            jszip_error_text.innerHTML = err.message + '<br> 无法从压缩包中提取 config.json，因此无法更新网页上的时空磁盘限制（运行时）。'
+                                                     + '<br> 参考下方链接来测试压缩包是否符合规范。'
+                                                     + '<br> 此警告不会影响数据包上传与评测。';
+            swal({
+                icon: "warning",
+                title: "压缩包不符合规范",
+                content: jszip_error_text,
+                buttons: {
+                    test_zip: {
+                      text: "测试链接",
+                      value: "test_zip",
+                    },
+                    confirm: true
+                },
+                timer: 5000
+            }).then((value) => {
+                if(value == "test_zip")
+                    window.open("https://stuk.github.io/jszip/documentation/examples/read-local-file-api.html");
             });
         });
     

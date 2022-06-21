@@ -243,15 +243,6 @@ def data_download():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
     id = request.form['id']
-    ban_list = ['520021910274', '520030910138', '520030910142', '520030910143', '520030910312', '520030910313', 
-    '520030910314', '520030910315', '520030910316', '520030910320', '520030910321', '520030910322', 
-    '520030910323', '520030910324', '520030910325', '520030910326', '520030910327', '520030910328', 
-    '520030910329', '520070910040', '520021911042', '520030910137', '520030910319', '520021910598', 
-    '520021910667', '520021910671', '520021910863', '520021911400', '520030910139', '520030910140', 
-    '520030910141', '520030910144', '520030910283']
-    if User_Manager.get_student_id(Login_Manager.get_username()) in ban_list:
-        if id == "1596":
-            abort(404)
     try:
         r = requests.get(DataConfig.server + '/' + DataConfig.key + '/' + str(id) + '.zip', stream=True)
         resp = Response(stream_with_context(r.iter_content(chunk_size = 512)), content_type = 'application/octet-stream')

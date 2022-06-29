@@ -144,7 +144,7 @@
                                         <tr>
                                             <th>
                                                 <span>Subtask{{ group[0] }}: {{ group[1] }}</span>
-                                                <span class="ml-2">Score:{{ group[3] }}</span>
+                                                <span class="ml-2">Score: {{ group[3] }}</span>
                                             </th>
                                         <tr>
                                             {% for j in range(4, group|length) -%}
@@ -177,11 +177,14 @@
                                                             <span class="text-black" id="{{ group[0] }}_{{ j }}">Skipped</span>
                                                         {%- endif -%}</b>
                                                         <br>
-                                                        Time Used: {{ group[j][3]|int }}ms Mem
-                                                        Used:{{ group[j][2]|int }}KiB<br>
+							<div class="row">
+						            <div class="col-3"> Time: {{ group[j][3]|int }}ms </div>
+							    <div class="col-3"> Mem: {{ group[j][2]|int }}KiB </div>
                                                         {% if group[j][4] != -1 -%}
-                                                            Disk Usage: {{ group[j][4] / 1024 }}MiB<br>
+                                                            <div class="col-3"> Disk: {{ "%.2f" | format(group[j][4] / 1024) }}MiB </div>
                                                         {%- endif %}
+							<br>
+							</div>
 							Info:<pre>{{ group[j][5] }}</pre>
                                                     </td>
                                                 <tr>

@@ -17,7 +17,7 @@
                        placeholder="题目编号" value="{{ Args["problem_id"] if "problem_id" in Args }}">
                 <select class="form-control selectpicker" name="status" id="status"
                         data-style="form-control font-weight-normal border-grey shadow-none">
-                    <option value="-1" {{ "selected" if "status" in Args and Args["status"]=="-1" }}>All</option>
+                    <option value="-1" {{ "selected" if "status" in Args and Args["status"]=="-1" }}>评测状态</option>
                     <option value="0" {{ "selected" if "status" in Args and Args["status"]=="0" }}>Pending</option>
                     <option value="1" {{ "selected" if "status" in Args and Args["status"]=="1" }}>Running</option>
                     <option value="2" {{ "selected" if "status" in Args and Args["status"]=="2" }}>Accepted</option>
@@ -32,7 +32,7 @@
                 </select>
                 <select class="form-control selectpicker" name="lang" id="lang"
                         data-style="form-control font-weight-normal border-grey shadow-none">
-                    <option value="-1" {{ "selected" if "lang" in Args and Args["lang"]=="-1" }}>All</option>
+                    <option value="-1" {{ "selected" if "lang" in Args and Args["lang"]=="-1" }}>语言</option>
                     <option value="0" {{ "selected" if "lang" in Args and Args["lang"]=="0" }}>C++</option>
                     <option value="1" {{ "selected" if "lang" in Args and Args["lang"]=="1" }}>Git</option>
                     <option value="2" {{ "selected" if "lang" in Args and Args["lang"]=="2" }}>Verilog</option>

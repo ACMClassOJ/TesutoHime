@@ -75,7 +75,7 @@
 
 {% block script %}
     <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}?v=20220707"></script>
     {% if not In_Exam -%}
         <script>
             $(function () {

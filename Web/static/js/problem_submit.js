@@ -1,4 +1,4 @@
-const max_len = 262144;
+const max_len = 1048576;
 
 $(function() {
     $("#shared").change(function() {

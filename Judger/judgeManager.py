@@ -29,6 +29,8 @@ class JudgeManager:
                     testPointDetail = DetailResult(1, ResultType.SYSERR, 0, 0, 0, -1, "\"" + fileName + '" not found in data.')            
         # end
 
+        # judge part: modified by siriusneo 2022 7.8
+
         # spj 0 single file with diff
         # spj 1 single file with spj
         # spj 2 hpp without diff
@@ -36,6 +38,7 @@ class JudgeManager:
         # spj 4 hpp with spj
         # spj 5 output only
 
+        # 0. Judging quiz
         if language == 'quiz':
             log.info("JudgeManager: Judging Quiz")
             with open(dataPath + "/quiz.json") as f:
@@ -64,6 +67,8 @@ class JudgeManager:
                 judgeResult = JudgerResult(ResultType.WA, quiz_correct_cnt, 0, 0, Details, ProblemConfig(Groups_Details, Details, 0, 0, 0))
             return judgeResult
 
+        # 1. Compiling spj: compile only once (Only 1, 4, 5 need)
+        spjBinCompiled = True
         if problemConfig.SPJ in [1, 4, 5]:
             if os.path.isfile(dataPath + '/spj_bin'):
                 log.info('JudgeManager: binary spj found')
@@ -71,8 +76,17 @@ class JudgeManager:
                 os.chmod(dataPath + '/spj', stat.S_IXUSR)
             else:
                 log.info("JudgeManager: compile once for spj")
-                subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
+                try:
+                    subprocess.run(
+                                    ['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + 
+                                    ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption),
+                                    check=True 
+                                    )
+                except Exception as e:
+                    log.error(e)
+                    spjBinCompiled = False
 
+        # 2. Load Student SRC
         if problemConfig.SPJ == 5:
             with open(outputFilePath, "w") as f:
                 f.write(sourceCode)
@@ -90,133 +104,151 @@ class JudgeManager:
                 else:
                     srcDict['src.hpp'] = sourceCode
 
-
-
+        # 3. Judge Part.
         if problemConfig.SPJ != 5 and problemConfig.SPJ != 2 and problemConfig.SPJ != 3 and problemConfig.SPJ != 4 and not compileResult.compiled:
+            # Normal Judge (no SPJ): CE
             log.error('1: Compilation Error')
-            #print(len(compileResult.msg))
             judgeResult = JudgerResult(ResultType.CE, 0, 0, 0, [DetailResult(1, ResultType.CE, 0, 0, 0, -1, compileResult.msg)], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
+        elif not spjBinCompiled:
+            judgeResult = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(1, ResultType.SYSERR, 0, 0, 0, -1, 'Compiling spj.cpp failed.')], ProblemConfig([Group(1, '', 0, [1])], [1, 0, 0, 0, 0, False], 0, 0, 0))
         else:
+            # Start Judging...
             Details = []
             manager = multiprocessing.Manager()
             return_dict = manager.dict()
+
+            # For Testcase
             for testcase in problemConfig.Details:
-                if testcase.Dependency == 0 or Details[testcase.Dependency - 1].result == ResultType.AC:
-                    Runnable = True
-                    if problemConfig.SPJ == 2 or problemConfig.SPJ == 3 or problemConfig.SPJ == 4:
-                        Runnable = False
+                # 3.1 Testcase Dependency: If has dependency and dependency not AC, Skip.
+                if testcase.Dependency != 0 and Details[testcase.Dependency - 1].result != ResultType.AC:
+                    Details.append(DetailResult(testcase.ID, ResultType.SKIPPED, 0, 0, 0, -1, 'Skipped.'))
+                    continue
+                
+                # 3.2 Check SPJ 2 3 4 Runnable.
+                Runnable = True
+                if problemConfig.SPJ == 2 or problemConfig.SPJ == 3 or problemConfig.SPJ == 4:
+                    Runnable = False
+                    try:
+                        if language == 'Verilog':
+                            with open(dataPath + '/' + str(testcase.ID) + '.v') as f:
+                                srcDict['test.v'] = f.read()
+                        else:
+                            with open(dataPath + '/' + str(testcase.ID) + '.cpp') as f:
+                                srcDict['main.cpp'] = f.read()
+                    except:
                         try:
                             if language == 'Verilog':
-                                with open(dataPath + '/' + str(testcase.ID) + '.v') as f:
+                                with open(dataPath + '/' + 'test.v') as f:
                                     srcDict['test.v'] = f.read()
                             else:
-                                with open(dataPath + '/' + str(testcase.ID) + '.cpp') as f:
+                                with open(dataPath + '/' + 'main.cpp') as f:
                                     srcDict['main.cpp'] = f.read()
                         except:
-                            try:
-                                if language == 'Verilog':
-                                    with open(dataPath + '/' + 'test.v') as f:
-                                        srcDict['test.v'] = f.read()
-                                else:
-                                    with open(dataPath + '/' + 'main.cpp') as f:
-                                        srcDict['main.cpp'] = f.read()
-                            except:
-                                testPointDetail = DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'No main function found in data.')
-                            else:
-                                Runnable = True
+                            testPointDetail = DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'No main function found in data.')
                         else:
                             Runnable = True
-                        if Runnable:
-                            #print(srcDict.keys())
-                            compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit, False))
-                            if not compileResult.compiled:
-                                log.error('2: Compilation Error')
-                                testPointDetail = DetailResult(testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg)
-                                Runnable = False
+                    else:
+                        Runnable = True
                     if Runnable:
-                        relatedFile = dataPath + '/' + str(testcase.ID)
-                        if problemConfig.SPJ == 5:
-                            testPointDetail = DetailResult(testcase.ID, ResultType.UNKNOWN, 0, 0, 0, -1, '')
-                        else:
-                            #testPointDetail, userOutput
-                            judgeProcess = multiprocessing.Process(target=ClassicJudger().JudgeInstance, args=(
-                                TestPointConfig(
-                                    'Verilog' if language == 'Verilog' else "C++",
-                                    compileResult.programPath,
-                                    None,
-                                    #'/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
-                                    '/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
-                                    testcase.TimeLimit,
-                                    testcase.MemoryLimit,
-                                    testcase.DiskLimit,
-                                    -1 if not 'FileNumberLimit' in testcase._asdict() else testcase.FileNumberLimit,
-                                    testcase.ValgrindTestOn
-                                ),
-                                    return_dict)
-                            )
-                            log.info("start judging on testcase" + str(testcase.ID))
-                            judgeProcess.start()
-                            judgeProcess.join()
-                            testPointDetail, userOutput = return_dict['testPointDetail'], return_dict['userOutput']
-                            testPointDetail.ID = testcase.ID
-                        if testPointDetail.result == ResultType.UNKNOWN:
-                            if problemConfig.SPJ == 1 or problemConfig.SPJ == 4 or problemConfig.SPJ == 5:
-                                log.info('JudgeManager: start spj')
-                                try:
-                                    # upd, I guess that this line can be moved to the top, and excuted once for a judge
-                                    # subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
+                        #print(srcDict.keys())
+                        compileResult = compiler.CompileInstance(CompilationConfig(srcDict, language, problemConfig.CompileTimeLimit, False))
+                        if not compileResult.compiled:
+                            log.error('2: Compilation Error')
+                            testPointDetail = DetailResult(testcase.ID, ResultType.CE, 0, 0, 0, -1, compileResult.msg)
+                            Runnable = False
+                
+                # 3.3 Start Running
+                if Runnable:
+                    relatedFile = dataPath + '/' + str(testcase.ID)
+                    if problemConfig.SPJ == 5:
+                        testPointDetail = DetailResult(testcase.ID, ResultType.UNKNOWN, 0, 0, 0, -1, '')
+                    else:
+                        #testPointDetail, userOutput
+                        judgeProcess = multiprocessing.Process(target=ClassicJudger().JudgeInstance, args=(
+                            TestPointConfig(
+                                'Verilog' if language == 'Verilog' else "C++",
+                                compileResult.programPath,
+                                None,
+                                #'/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
+                                '/dev/null' if not os.path.exists(relatedFile + '.in') else relatedFile + '.in',
+                                testcase.TimeLimit,
+                                testcase.MemoryLimit,
+                                testcase.DiskLimit,
+                                -1 if not 'FileNumberLimit' in testcase._asdict() else testcase.FileNumberLimit,
+                                testcase.ValgrindTestOn
+                            ),
+                                return_dict)
+                        )
+                        log.info("start judging on testcase" + str(testcase.ID))
+                        judgeProcess.start()
+                        judgeProcess.join()
+                        testPointDetail, userOutput = return_dict['testPointDetail'], return_dict['userOutput']
+                        testPointDetail.ID = testcase.ID
 
-                                    if os.path.isfile(relatedFile + '.ans'):
-                                        subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.ans', '/work/score.log', '/work/message.log'], timeout = 20, cwd = dataPath)
-                                    else:
-                                        subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.out', '/work/score.log', '/work/message.log'], timeout = 20, cwd = dataPath)
-                                    with open('/work/score.log') as f:
-                                        testPointDetail.score = float("\n".join(f.readline().splitlines()))
+                    # If not UNKNOWN, some error must happen.
+                    # Otherwise, Start Judging
+                    if testPointDetail.result == ResultType.UNKNOWN:
+                        # SPJ 1 4 5: Run ./spj
+                        if problemConfig.SPJ == 1 or problemConfig.SPJ == 4 or problemConfig.SPJ == 5:
+                            log.info('JudgeManager: start spj')
+                            try:
+                                # upd, I guess that this line can be moved to the top, and excuted once for a judge
+                                # subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
+
+                                if os.path.isfile(relatedFile + '.ans'):
+                                    subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.ans', '/work/score.log', '/work/message.log'], 
+                                    timeout = 20, cwd = dataPath, check=True)
+                                else:
+                                    subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.out', '/work/score.log', '/work/message.log'], 
+                                    timeout = 20, cwd = dataPath, check=True)
+                                with open('/work/score.log') as f:
+                                    testPointDetail.score = float("\n".join(f.readline().splitlines()))
+                                testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC
+                                with open('/work/message.log') as f:
+                                    testPointDetail.message = f.read()
+                            except Exception as e:
+                                log.error(e)
+                                testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while running ./spj.', ResultType.SYSERR
+                        elif problemConfig.SPJ == 2:
+                            try:
+                                with open(userOutput) as f:
+                                    return_list = f.read().splitlines()
+                                    testPointDetail.score = float(return_list[0])
                                     testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC
-                                    with open('/work/message.log') as f:
-                                        testPointDetail.message = f.read()
-                                except Exception as e:
-                                    log.error(e)
-                                    testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while running SPJ.', ResultType.SYSERR
-                            elif problemConfig.SPJ == 2:
-                                try:
-                                    with open(userOutput) as f:
-                                        return_list = f.read().splitlines()
-                                        testPointDetail.score = float(return_list[0])
-                                        testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC
-                                        for i in range(1, len(return_list)):
-                                            testPointDetail.message += return_list[i] + '\n'
-                                except Exception as e:
-                                    log.error(e)
-                                    testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, "Something must be wrong with main.cpp.", ResultType.SYSERR
-                            else:
-                                try:
-                                    if os.path.isfile(relatedFile + '.ans'):
-                                        runDiff = subprocess.run(['diff', '-q', '-Z', '-B', userOutput , relatedFile + '.ans'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 30)
-                                    else:
-                                        runDiff = subprocess.run(['diff', '-q', '-Z', '-B', userOutput , relatedFile + '.out'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 30)
-                                    #print(runDiff.stderr.decode() + runDiff.stdout.decode())
-                                    if runDiff.returncode == 0:
-                                        testPointDetail.score, testPointDetail.result = 1.0, ResultType.AC
-                                    else:
-                                        testPointDetail.score, testPointDetail.result = 0.0, ResultType.WA
-                                        #testPointDetail.message += runDiff.stdout.decode() + runDiff.stderr.decode()
-                                except Exception as e:
-                                    log.error(e)
-                                    testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while comparing outputs.', ResultType.SYSERR
+                                    for i in range(1, len(return_list)):
+                                        testPointDetail.message += return_list[i] + '\n'
+                            except Exception as e:
+                                log.error(e)
+                                testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, "Something must be wrong with main.cpp.", ResultType.SYSERR
                         else:
-                            testPointDetail.score = 0.
-                            if testPointDetail.result == ResultType.TLE :
-                                testPointDetail.message = "Time Limit Exceeded\n"
-                            elif testPointDetail.result == ResultType.MLE :
-                                testPointDetail.message = "Memory Limit Exceeded\n"
-                            elif testPointDetail.result == ResultType.RE :
-                                testPointDetail.message = "Runtime Error\n"
-                            elif testPointDetail.result == ResultType.MEMLEK :
-                                testPointDetail.message = "Memory Leak\n"
-                    Details.append(testPointDetail)
-                else:
-                    Details.append(DetailResult(testcase.ID, ResultType.SKIPPED, 0, 0, 0, -1, 'Skipped.'))
+                            try:
+                                if os.path.isfile(relatedFile + '.ans'):
+                                    runDiff = subprocess.run(['diff', '-q', '-Z', '-B', userOutput , relatedFile + '.ans'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 30)
+                                else:
+                                    runDiff = subprocess.run(['diff', '-q', '-Z', '-B', userOutput , relatedFile + '.out'], stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 30)
+                                #print(runDiff.stderr.decode() + runDiff.stdout.decode())
+                                if runDiff.returncode == 0:
+                                    testPointDetail.score, testPointDetail.result = 1.0, ResultType.AC
+                                else:
+                                    testPointDetail.score, testPointDetail.result = 0.0, ResultType.WA
+                                    #testPointDetail.message += runDiff.stdout.decode() + runDiff.stderr.decode()
+                            except Exception as e:
+                                log.error(e)
+                                testPointDetail.score, testPointDetail.message, testPointDetail.result = 0, 'Error occurred while comparing outputs.', ResultType.SYSERR
+                    else:
+                        testPointDetail.score = 0.
+                        if testPointDetail.result == ResultType.TLE :
+                            testPointDetail.message = "Time Limit Exceeded\n"
+                        elif testPointDetail.result == ResultType.MLE :
+                            testPointDetail.message = "Memory Limit Exceeded\n"
+                        elif testPointDetail.result == ResultType.RE :
+                            testPointDetail.message = "Runtime Error\n"
+                        elif testPointDetail.result == ResultType.MEMLEK :
+                            testPointDetail.message = "Memory Leak\n"
+
+                # Append current details.
+                Details.append(testPointDetail)
+                
             status = ResultType.AC
             totalTime = 0
             maxMem = 0

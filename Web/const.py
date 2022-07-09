@@ -64,7 +64,7 @@ class ReturnCode:
 
     ERR_BAD_DATA = {'e': -1, 'msg': 'bad data'}
     ERR_NETWORK_FAILURE = {'e': -2, 'msg': 'network failure'}
-    
+
     ERR_USER_NOT_LOGGED_IN = {'e': -100, 'msg': 'user not logged in'}
     ERR_PERMISSION_DENIED = {'e': -101, 'msg': 'permission denied'}
 
@@ -87,6 +87,9 @@ class ReturnCode:
     ERR_ADD_JUDGE_PROBLEM_ID = {'e': -314, 'msg': 'wrong problem id when adding judge'}
     ERR_ADD_JUDGE_USERNAME = {'e': -315, 'msg': 'wrong username when adding judge'}
     ERR_ADD_JUDGE_CODE_LENGTH = {'e': -315, 'msg': 'code too long when adding judge'}
+
+    ERR_ADD_JUDGE_SERVER_INVALID = {'e': -316, 'msg': 'target server name is invalid or server is not available now'}
+    ERR_ADD_JUDGE_BUSY = {'e': -317, 'msg': 'busy error'}
 
     ERR_QUIZ_JSON_DECODE = {'e': -400, 'msg': 'failed to decode quiz.json'}
     ERR_PROBLEM_NOT_QUIZ = {'e': -401, 'msg': 'this problem is not a quiz'}

@@ -336,6 +336,7 @@ def disable_judge():
 def add_judge():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
+    server_friendly_name = request.form['server']
     problem_id = int(request.form['problem_id'])
     if problem_id < 1000 or (problem_id > Problem_Manager.get_max_id() and problem_id < 11000) or problem_id > Problem_Manager.get_real_max_id():
         return ReturnCode.ERR_ADD_JUDGE_PROBLEM_ID
@@ -361,8 +362,17 @@ def add_judge():
     else:
         share = False
     try:
-        JudgeServer_Scheduler.Start_Judge(problem_id, username, user_code, lang, share)
-        return ReturnCode.SUC_ADD_JUDGE
+        if len(server_friendly_name) == 0: # no server specified. normal submit
+            JudgeServer_Scheduler.Start_Judge(problem_id, username, user_code, lang, share)
+            return ReturnCode.SUC_ADD_JUDGE
+        else:
+            exit_code = JudgeServer_Scheduler.Start_Targeted_Judge(problem_id, username, user_code, lang, share, server_friendly_name)
+            if exit_code == 0:
+                return ReturnCode.SUC_ADD_JUDGE
+            elif exit_code == -1:
+                return ReturnCode.ERR_ADD_JUDGE_SERVER_INVALID
+            else:
+                return ReturnCode.ERR_ADD_JUDGE_BUSY
     except RequestException:
         return ReturnCode.ERR_BAD_DATA
 

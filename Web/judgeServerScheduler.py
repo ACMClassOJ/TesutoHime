@@ -65,6 +65,53 @@ class JudgeServerScheduler:
         self.Check_Queue()
         return
 
+    def Start_Targeted_Judge(self, Problem_ID, User, Code, Lang, Share, Server_Friendly_Name):
+        self.Check_System_Error()
+
+        scheduler_lock = redis_lock.Lock(redis_connect(), RedisConfig.prefix + 'scheduler.lock')
+        scheduler_lock.acquire()
+
+        Server = JudgeServer_Manager.Get_Server_By_Friendly_Name(unix_nano() - JudgeConfig.Max_Duration, Server_Friendly_Name)
+
+        if Server == None or len(Server) == 0:
+            scheduler_lock.release()
+            return -1
+        
+        Judge_Manager.add_judge(Code, User, Problem_ID, Lang, unix_nano(), Share)
+        judge_id = Judge_Manager.max_id() # get max_id immediately
+        judge_record = Judge_Manager.query_judge(judge_id)
+
+        if not (judge_record['User'] == User and judge_record['Problem_ID'] == Problem_ID and 
+                judge_record['Code'] == Code and judge_record['Lang'] == Lang and judge_record['Share'] == Share):
+            Judge_Manager.delete_judge(judge_id)
+            return -2
+        
+        data = {}
+        data['Server_Secret'] = JudgeConfig.Web_Server_Secret
+        data['Problem_ID'] = Problem_ID
+        data['Judge_ID'] = judge_id
+        lang_digit = Lang
+        if lang_digit == 0:
+            data['Lang'] = 'cpp'
+        elif lang_digit == 1:
+            data['Lang'] = 'git'
+        elif lang_digit == 2:
+            data['Lang'] = 'Verilog'
+        elif lang_digit == 3:
+            data['Lang'] = 'quiz'
+        data['Code'] = Code
+        try:
+            re = requests.post(Server[0] + '/judge', data = data, timeout = 5).content.decode()
+            if re == '0':
+                Judge_Manager.update_status(judge_id, 1)
+                JudgeServer_Manager.Flush_Busy(Server[1], True, judge_id)
+        except requests.exceptions.RequestException:
+            pass
+        
+        scheduler_lock.release()
+        return 0
+
+
     def ReJudge(self, Judge_ID):
         self.Check_System_Error()
 

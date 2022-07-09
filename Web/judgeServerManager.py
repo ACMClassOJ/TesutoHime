@@ -144,6 +144,16 @@ class JudgeServerManager:
             else:
                 self.Set_Offline(ret[i % len(ret)][0])
         return None
+    
+    def Get_Server_By_Friendly_Name(self, MinTime: int, Friendly_Name: str):
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Address, Secret_Key FROM Judge_Server WHERE Friendly_Name = %s AND Last_Seen_Time >= %s AND Busy = %s", (Friendly_Name, str(MinTime), '0'))
+        ret = cursor.fetchall()
+        db.close()
+        if ret == None or len(ret) == 0:
+            return None
+        return ret[0]
 
     def Get_Failure_Task(self):
         db = db_connect()

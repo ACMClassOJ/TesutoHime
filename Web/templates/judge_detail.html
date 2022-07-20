@@ -127,7 +127,16 @@
         </div>
         {%- endif %}
         <hr>
-        <h5>代码：<button id="copy_button" class="btn btn-primary btn-sm float-right" data-clipboard-target="#judge_detail_code_highlighted">复制</button></h5>
+        <div>
+            <span class="h6"> 代码： </span>
+            {% if Detail['Share'] == True -%}
+            <span class="badge badge-success"> 公开代码 </span>
+            {% else -%}
+            <span class="badge badge-secondary"> 私有代码 </span>
+            {%- endif %}    
+            </span>
+            <button id="copy_button" class="btn btn-primary btn-sm float-right" data-clipboard-target="#judge_detail_code_highlighted">复制</button>
+        </div>
         <pre class="cpp"><code id="judge_detail_code_highlighted">Waiting for code</code></pre>
         {% if Data != None -%}
             <hr>

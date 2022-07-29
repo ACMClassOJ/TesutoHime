@@ -1,3 +1,4 @@
+import json
 from utils import *
 
 class ContestCache:
@@ -10,9 +11,13 @@ class ContestCache:
 
     def get(self, contest_id: int):
         rst = self.redis.get(self.prefix + str(contest_id))
-        return eval(rst) if rst != None else []
+        return json.loads(rst) if rst != None else []
 
     def put(self, contest_id: int, data: list):
-        self.redis.set(self.prefix + str(contest_id), str(data), ex = self.expire_time)
+        self.redis.set(
+            self.prefix + str(contest_id),
+            json.dumps(data, ensure_ascii=False),
+            ex = self.expire_time
+        )
 
 Contest_Cache = ContestCache()

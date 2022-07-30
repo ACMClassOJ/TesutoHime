@@ -51,9 +51,9 @@
                         <td>{{ i + 1 }}</td>
                         <td>
                             {% if is_Admin -%}
-                            <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ player['username'] }}">{{ player['nickname'] }}</span>
+                            <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ player['username'] }}">{{ player['friendly_name'] }}</span>
                             {% else -%}
-                            <span>{{ player['nickname'] }}</span>
+                            <span>{{ player['friendly_name'] }}</span>
                             {%- endif %}
                         </td>
                         {% if is_Admin -%}

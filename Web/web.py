@@ -654,7 +654,7 @@ def contest():
                 {
                     'score': 0,
                     'penalty': 0,
-                    'nickname': User_Manager.get_friendly_name(username),
+                    'friendly_name': User_Manager.get_friendly_name(username),
                     'problems': [
                         {
                             'score': 0,
@@ -777,7 +777,7 @@ def homework():
             data = [
                 {
                     'score': 0,
-                    'nickname': User_Manager.get_friendly_name(username),
+                    'friendly_name': User_Manager.get_friendly_name(username),
                     'problems': [
                         {
                             'accepted': False,

@@ -663,6 +663,7 @@ def contest():
                         } for _ in problems
                     ],
                     'realname': Reference_Manager.Query_Realname(User_Manager.get_student_id(username)),
+                    'student_id': User_Manager.get_student_id(username),
                     'username': username,
                 } for username in players
             ]
@@ -785,6 +786,7 @@ def homework():
                         } for _ in problems
                     ],
                     'realname': Reference_Manager.Query_Realname(User_Manager.get_student_id(username)),
+                    'student_id': User_Manager.get_student_id(username),
                     'username': username,
                 } for username in players
             ]

@@ -37,9 +37,11 @@
                     <th>排名</th>
                     <th>昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
                     {% if is_Admin -%}<th>实名</th>{%- endif %}
+                    {% if problems_visible -%}
                     {% for problem in Problems -%}
                         <th><a href="/OnlineJudge/problem?problem_id={{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
                     {%- endfor %}
+                    {%- endif %}
                     <th>总得分</th>
                     <th>罚时</th>
                 </tr>
@@ -57,6 +59,7 @@
                         {% if is_Admin -%}
                             <td>{{ player['realname'] }}</td>
                         {%- endif %}
+                        {% if problems_visible -%}
                         {% for j, problem in enumerate(player.problems) -%}
                             <td>
                                 {% if problem['count'] %}{{ problem['score'] -}}
@@ -76,6 +79,7 @@
                                 {%- endif %}
                             </td>
                         {%- endfor %}
+                        {%- endif %}
                         <td>{{ player['score'] }}</td>
                         <td>{{ player['penalty'] }}</td>
                     </tr>

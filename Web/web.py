@@ -645,6 +645,7 @@ def contest():
         start_time, end_time = Contest_Manager.get_time(contest_id)
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         problems = Contest_Manager.list_problem_for_contest(contest_id)
+        problems_visible = is_admin or unix_nano() >= start_time
         players = Contest_Manager.list_player_for_contest(contest_id)
 
         rankings = Contest_Cache.get(contest_id)
@@ -725,6 +726,7 @@ def contest():
             StartTime=readable_time(start_time),
             EndTime=readable_time(end_time),
             Problems=problems,
+            problems_visible=problems_visible,
             rankings=rankings,
             is_Admin=is_admin,
             Percentage=percentage,
@@ -766,6 +768,7 @@ def homework():
         start_time, end_time = Contest_Manager.get_time(contest_id)
         is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
         problems = Contest_Manager.list_problem_for_contest(contest_id)
+        problems_visible = is_admin or unix_nano() >= start_time
         players = Contest_Manager.list_player_for_contest(contest_id)
 
         data = Contest_Cache.get(contest_id)
@@ -834,6 +837,7 @@ def homework():
             StartTime=readable_time(start_time),
             EndTime=readable_time(end_time),
             Problems=problems,
+            problems_visible=problems_visible,
             Players=players,
             data=data,
             is_Admin=is_admin,

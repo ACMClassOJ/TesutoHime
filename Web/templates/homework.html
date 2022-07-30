@@ -34,9 +34,11 @@
                 <tr>
                     <th>昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
                     {% if is_Admin -%}<th>实名</th>{%- endif %}
-                    {% for problem in Problems -%}
-                        <th><a href="/OnlineJudge/problem?problem_id={{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
-                    {%- endfor %}
+                    {% if problems_visible -%}
+                        {% for problem in Problems -%}
+                            <th><a href="/OnlineJudge/problem?problem_id={{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
+                        {%- endfor %}
+                    {%- endif %}
                     <th>总通过数</th>
                 </tr>
                 </thead>
@@ -52,6 +54,7 @@
                             <td>{{ player['realname'] }}</td>
                         {% endif %}
                         </td>
+                        {% if problems_visible -%}
                         {% for j, problem in enumerate(player.problems) -%}
                             <td>
                                 {% if problem['count'] -%}
@@ -71,6 +74,7 @@
                                 {%- endif %}
                             </td>
                         {%- endfor %}
+                        {%- endif %}
                         <td>{{ player['score'] }}</td>
                     </tr>
                 {%- endfor %}

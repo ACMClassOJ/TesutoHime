@@ -1,3 +1,5 @@
+from judgeManager import work_file
+
 import logging
 import os
 
@@ -55,6 +57,6 @@ def logger_creator(path : str):
 
     return logger
 
-log_path = "/work/log"
+log_path = work_file('log/')
 
 log = logger_creator(log_path) # cxy 2021 6 28 暂时使用桌面作为日志保存的地方

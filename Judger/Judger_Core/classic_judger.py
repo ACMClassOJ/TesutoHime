@@ -6,15 +6,13 @@ import os
 import time
 import subprocess as sp
 import resource
-from config import Performance_Rate
-
-
+from config import Performance_Rate, execution_dir
 
 class ClassicJudger(interface.JudgerInterface):
     def __init__(self):
         self.chroot_path = '/tmp/chroot'
-        self.workspace_path = '/work/'
-        self.exe_path = '/exe/'
+        # self.workspace_path = '/work/'
+        self.exe_path = f'{execution_dir}/'
         self.output_file = conf.outputFilePath
 
     def JudgeInstance(self, sub_config: conf.TestPointConfig, return_dict):
@@ -31,14 +29,15 @@ class ClassicJudger(interface.JudgerInterface):
         try:
             # user_id=str(random.randint(99000,99999))
             # group_id=str(random.randint(99000,99999))
-            os.system('cp ' + sub_config.programPath + ' /exe')
+            os.system(f'cp {sub_config.programPath} {execution_dir}')
+            program_path = os.path.join(execution_dir, sub_config.programPath.split('/')[-1])
             if sub_config.valgrindTestOn:
                 #command = 'valgrind --tool=memcheck --leak-check=full --error-exitcode=1 --verbose' + \
                 #' /exe/' + sub_config.programPath.split('/')[-1] + ' <' + sub_config.inputFile + ' >' + self.output_file
 
                 running_time = -time.time()
                 with open(sub_config.inputFile, "r") as inputFile, open(self.output_file, "w") as outputFile:
-                    runExeCode = sp.call(['valgrind', '--tool=memcheck', '--leak-check=full', '--error-exitcode=1', '--verbose', '/exe/' + sub_config.programPath.split('/')[-1]], cwd = self.exe_path, stdin = inputFile, stdout = outputFile, stderr = sp.PIPE, timeout = int(sub_config.timeLimit / 1000 * Performance_Rate * 1.2 + 1))
+                    runExeCode = sp.call(['valgrind', '--tool=memcheck', '--leak-check=full', '--error-exitcode=1', '--verbose', program_path], cwd = self.exe_path, stdin = inputFile, stdout = outputFile, stderr = sp.PIPE, timeout = int(sub_config.timeLimit / 1000 * Performance_Rate * 1.2 + 1))
                 running_time += time.time()
                 mem = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss * 1024
                 if runExeCode != 0: 
@@ -48,7 +47,7 @@ class ClassicJudger(interface.JudgerInterface):
             else:
                 user_id = str(99942)
                 group_id = str(99958)
-                command = 'vvp /exe/' + sub_config.programPath.split('/')[-1] + ' >' + self.output_file + ' 2>/dev/null' if sub_config.language == 'Verilog' else '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1' + \
+                command = f'vvp {program_path} >{self.output_file} 2>/dev/null' if sub_config.language == 'Verilog' else '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1' + \
                         ' --rlimit_fsize ' + ('inf' if sub_config.diskLimit == 0 else str(int(abs(sub_config.diskLimit) / 1048576 * 3 + 1))) + \
                         ' --rlimit_nofile ' + ('65536' if sub_config.fileNumberLimit == -1 else str(sub_config.fileNumberLimit * 3 + 1)) + \
                         ' --rlimit_stack inf' + \
@@ -56,8 +55,9 @@ class ClassicJudger(interface.JudgerInterface):
                         ' --cgroup_mem_mount ' + str(sub_config.memoryLimit) + \
                         ' --user ' + user_id + ' --group ' + group_id + \
                         ' --cwd ' + self.exe_path + \
-                        ' -R /lib64 -R /lib  -B /exe /exe/' + sub_config.programPath.split('/')[-1] + \
-                        ' <' + sub_config.inputFile + ' >' + self.output_file + ' 2>/dev/null'
+                        f' -R /lib64 -R /lib -R /usr/lib64 -R /usr/lib  -B {execution_dir} {program_path}' + \
+                        f' <{sub_config.inputFile} >{self.output_file} 2>/dev/null'
+                print(command)
                 running_time = -time.time()
                 child = sp.Popen(command, shell=True)
                 child.wait()
@@ -86,12 +86,12 @@ class ClassicJudger(interface.JudgerInterface):
             print('!!! Unknown error', e)
             raise e
         
-        diskUsage = int(sp.check_output('du -s --exclude=' + sub_config.programPath.split('/')[-1] + ' /exe/', shell=True).decode().split()[0])
+        diskUsage = int(sp.check_output('du -s --exclude=' + sub_config.programPath.split('/')[-1] + f' {execution_dir}/', shell=True).decode().split()[0])
         if sub_config.diskLimit != 0 and diskUsage * 1024 > abs(sub_config.diskLimit):
             return_dict['testPointDetail'], return_dict['userOutput'] = jr.DetailResult(0, jr.ResultType.DLE, 0, running_time * 1000 / Performance_Rate, mem, diskUsage, 'Too much disk usage.'), self.output_file
             return
         if sub_config.fileNumberLimit != -1:
-            fileNumber = int(sp.check_output('find /exe/ -type f,d | wc -l', shell=True)) - 2
+            fileNumber = int(sp.check_output(f'find {execution_dir}/ -type f,d | wc -l', shell=True)) - 2
             if fileNumber > sub_config.fileNumberLimit:
                 return_dict['testPointDetail'], return_dict['userOutput'] = jr.DetailResult(0, jr.ResultType.DLE, 0, running_time * 1000 / Performance_Rate, mem, diskUsage, 'Too much files and directories.'), self.output_file
                 return

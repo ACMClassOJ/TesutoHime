@@ -1,4 +1,5 @@
 import os, shutil, requests, zipfile, json, sys
+from typing import Tuple
 from .ProblemConfig import *
 from collections import namedtuple
 
@@ -37,7 +38,7 @@ def get_data_from_server(config, id: int):
         ft.write(rt.text)
 
 
-def get_data(config, id: int) -> (ProblemConfig, str):
+def get_data(config, id: int) -> Tuple[ProblemConfig, str]:
     try:
         r = try_cache(config, id)
         if r == 1:

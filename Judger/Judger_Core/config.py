@@ -1,4 +1,6 @@
-outputFilePath = '/work/output.txt'
+from util import work_file
+
+outputFilePath = work_file('output.txt')
 
 class CompilationConfig:
     def __init__(self,

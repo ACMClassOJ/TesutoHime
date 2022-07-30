@@ -1,4 +1,5 @@
 import sys
+from typing import Tuple
 from utils import *
 
 
@@ -112,7 +113,7 @@ class ContestManager:
         db.close()
         return len(ret) != 0
     
-    def get_unfinished_exam_info_for_player(self, username: str, cur_time: int) -> (int, bool):
+    def get_unfinished_exam_info_for_player(self, username: str, cur_time: int) -> Tuple[int, bool]:
         """
             return exam_id, is_exam_started 
         """
@@ -125,7 +126,7 @@ class ContestManager:
         
         for exam in unfinished_exam:
             if self.check_player_in_contest(exam[0], username):
-            	return exam[0], (cur_time >= int(exam[1]))
+                return exam[0], (cur_time >= int(exam[1]))
 
         return -1, False
 
@@ -181,7 +182,7 @@ class ContestManager:
         cursor.execute("SELECT Username FROM Contest_Player WHERE Belong = %s", (str(contest_id)))
         ret = cursor.fetchall()
         db.close()
-        return ret
+        return list(map(lambda x: x[0], ret))
 
     def get_title(self, contest_id: int):
         db = db_connect()

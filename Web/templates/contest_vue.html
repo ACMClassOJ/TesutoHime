@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% set page='ContestVue' %}
+
+{% block head %}
+    <!-- <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/jquery.dataTables.min.css') }}"> -->
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/buttons.dataTables.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/buttons.bootstrap4.min.css') }}">
+    <link href="/OnlineJudge/api/get_contest_details?contest_id=507">
+
+{% endblock %}
+
+{% block content %}
+    <div class="card card-body" id="contest_main">
+        <h1 class="text-center"> {[ main.id ]}.{[ main.title ]} </h1>
+        <h5 class="text-center"> {[ main.start_time_f ]} ~ {[ main.end_time_f ]} {[ status ]} </h5>
+        <div class="progress-wrapper">
+            <div class="progress-info">
+                <div class="progress-label">
+                    {[ main.start_time_f ]} ~ {[ main.end_time_f ]}
+                </div>
+                <div class="progress-percentage">
+                    <span> {[ percentage ]}% {[ status ]} </span>
+                </div>
+            </div>
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped" v-bind:class="{ 'progress-bar-animated' : percentage != 100 }"
+                        v-bind:style="{ width: percentage + '%' }">
+                </div>
+            </div>
+        </div>
+        <table class="table table-striped table-bordered table-hover" id="contest">
+            <thead>
+            <tr>
+                <th>排名</th>
+                <th>昵称<span class="small" v-if="main.is_admin">（点击查看用户名）</span></th>
+                <th v-if="main.is_admin">实名</th>
+                <th v-for="problem in main.problems">
+                    <a v-bind:href="'/OnlineJudge/problem?problem_id=' + problem[0]" target="_blank">{[ problem[0] ]}</a>
+                </th>
+                <th>总得分</th>
+                <th>罚时</th>
+            </tr>
+            </thead>
+            <tr v-for="(player_item, index) in main.problem_data">
+                <td>{[ index + 1 ]}</td>
+                <td v-if="main.is_admin">
+                    <span data-container="body" data-toggle="popover" data-placement="left" 
+                    data-content="用户名：{[ player_item['username'] ]}">{[ player_item['friendly_name'] ]}</span>
+                </td>
+                <td v-if="!main.is_admin">{[ player_item['friendly_name'] ]}</td>
+                <td v-if="main.is_admin">{[ player_item['realname'] ]}</td>
+                <td v-for="(problem_item, index) in player_item['problem_info']">
+                    <span v-if="problem_item[1]"> 
+                        {[ problem_item[0] ]}
+                        <span v-if="!problem_item[2]">
+                            <span v-if="main.is_admin">
+                                <a class="text-red" :href="'/OnlineJudge/status?submitter=' + player_item['username'] + '&problem_id=' + main.problems[index][0]"> (-{[ problem_item[1] ]}) </a>
+                            </span>
+                            <span v-if="!main.is_admin" class="text-red"> (-{[ problem_item[1] ]}) </span>
+                        </span>
+                        <span v-if="problem_item[2]">
+                            <span v-if="main.is_admin">
+                                <a class="text-green" :href="'/OnlineJudge/status?submitter=' + player_item['username'] + '&problem_id=' + main.problems[index][0]"> ({[ problem_item[1] ]}Y) </a>
+                            </span>
+                            <span v-if="!main.is_admin" class="text-green"> (-{[ problem_item[1] ]}) </span>
+                        </span>
+                    </span>
+                </td>
+                <td>{[ player_item['total_score'] ]}</td>
+                <td>{[ player_item['total_time'] ]}</td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}
+{% block script %}
+<script src="{{ url_for('.static', filename = 'lib/vue.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/axios.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/dataTables.buttons.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/buttons.html5.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/buttons.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/jszip.min.js') }}"></script>
+<!-- <script src="{{ url_for('.static', filename = 'lib/pdfmake.min.js') }}"></script> -->
+<!-- <script src="{{ url_for('.static', filename = 'lib/vfs_fonts.js') }}"></script> -->
+
+
+<script>
+    var url = window.location.href; 
+    url = url.substr(url.indexOf("?")+1);
+    var url_param = {},
+        queryString = url || location.search.substring(1),
+        re = /([^&=]+)=([^&]*)/g,
+        m; 
+    while (m = re.exec(queryString))
+        url_param[decodeURIComponent(m[1])] = decodeURIComponent(m[2]); 
+
+    new Vue({
+        delimiters:['{[', ']}'],
+        el: '#contest_main',
+        data: () => ({
+            main: {},
+            current_time: Date.now() / 1000,
+            timeout_id: null,
+        }),
+
+        mounted: function(){
+            axios.get('/OnlineJudge/api/get_contest_details?contest_id='+url_param["contest_id"])
+            .then(response => {
+                response = response['data'];
+                if(response['e'] < 0)
+                    swal("Error " + response['e'], response['msg'], "error");
+                else
+                    this.main = response;
+            }).catch(error => {
+                console.log(error);
+            }).then(() => {
+                if(this.main.is_admin)
+                {
+                    $(function(){
+                        $("[data-toggle='popover']").popover();
+                    });
+                    $("[data-toggle='popover']").click(function(){
+                        setTimeout(function(){
+                            $("[data-toggle='popover']").popover('hide')
+                        }, 2000);
+                    });
+
+                    $(function(){
+                        var table = $("#contest").DataTable({
+                            dom: 'Bfrtip',
+                            paging: false,
+                            info: false,
+                            buttons: [
+                                {
+                                    extend: 'copy',
+                                    text: '复制到剪贴板'
+                                },
+                                {
+                                    extend: 'csv',
+                                    text: '导出 csv',
+                                    charset: 'utf-8',
+                                    extension: '.csv',
+                                    filename: '{{ Title }}',
+                                    bom: true
+                                },
+                                {
+                                    extend: 'excel',
+                                    text: '导出 excel',
+                                    charset: 'utf-8',
+                                    filename: '{{ Title }}'
+                                }
+                            ]
+                        });
+                        var manage_button = '<a class="btn btn-secondary" href="/OnlineJudge/admin/?contest_id=id"> 管理比赛 </a>';
+                        $(".dt-buttons").append(manage_button);
+                        var word_wrap_button = '<button class="btn btn-secondary" id="word_wrap_button"> 禁用自动换行 </button>';
+                        $(".dt-buttons").append(word_wrap_button);
+                        $("#word_wrap_button").click(function(){
+                            $("#contest").attr("style", "white-space: nowrap;");
+                        });
+                    });
+                }
+            });
+        },
+
+        created: function(){
+            this.timeout_id = setInterval(() => this.current_time = Date.now() / 1000, 5000);
+        },
+
+        beforeDestroy: function(){
+            clearInterval(this.timeout_id);
+        },
+
+        computed: {
+            percentage: function(){
+                var passed_time = this.current_time - this.main.start_time;
+                var duration = this.main.end_time - this.main.start_time;
+                return Math.min(Math.max(100 * passed_time / duration, 0), 100).toFixed(1);
+            },
+            status: function(){
+                if(this.percentage == 0)
+                    return "Pending";
+                if(this.percentage == 100)
+                    return "Finished";
+                return "Going On";
+            }
+        }
+    });
+</script>
+{% endblock %}

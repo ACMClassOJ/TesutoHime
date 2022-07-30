@@ -295,7 +295,7 @@ $(function () {
             type: "POST",
             dataType: "text",
             data: {contest_id: $("#iptContestID").val()},
-            url: "/OnlineJudge/api/get_contest_detail",
+            url: "/OnlineJudge/api/get_contest_info",
             success: function (response_text)
             {
                 if(response_text == "{}")

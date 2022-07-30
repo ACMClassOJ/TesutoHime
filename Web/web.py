@@ -43,7 +43,6 @@ def validate(username: Optional['str'] = None, password: Optional['str'] = None,
     if student_id is not None and re.match(student_id_reg, student_id) is None:
         return ReturnCode.ERR_VALIDATE_INVALID_STUDENT_ID
     if username is not None and not User_Manager.validate_username(username):
-        print("12121")
         return ReturnCode.ERR_VALIDATE_USERNAME_EXISTS
     return ReturnCode.SUC_VALIDATE
 
@@ -138,8 +137,8 @@ def get_detail():
         return '-1'
     return json.dumps(Problem_Manager.get_problem(problem_id))
 
-@web.route('/api/get_contest_detail', methods=['POST'])
-def get_contest_detail():
+@web.route('/api/get_contest_info', methods=['POST'])
+def get_contest_info():
     if not Login_Manager.check_user_status():
         return '-1'
     contest_id = request.form.get('contest_id')
@@ -200,6 +199,96 @@ def get_quiz():
             i["answer"] = ""
     return json.dumps(quiz_json)
 
+@web.route('/api/get_contest_details', methods=['GET'])
+def get_contest_details():
+    if not Login_Manager.check_user_status():
+        return ReturnCode.ERR_USER_NOT_LOGGED_IN
+    contest_id = request.args.get('contest_id')
+    if not contest_id.isdigit():
+        return ReturnCode.ERR_CONTEST_HEADER_INVALID_CONTEST_ID
+    else:
+        contest_id = int(contest_id)
+        if contest_id < 0 or contest_id > Contest_Manager.get_max_id():
+            return ReturnCode.ERR_CONTEST_HEADER_INVALID_CONTEST_ID
+        title = Contest_Manager.get_title(contest_id)[0][0]
+        start_time, end_time = Contest_Manager.get_time(contest_id)
+        is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+        problems = []
+        if is_admin or unix_nano() >= start_time:
+            problems = Contest_Manager.list_problem_for_contest(contest_id)
+        players = Contest_Manager.list_player_for_contest(contest_id)
+        problem_data = Contest_Cache.get_json(contest_id)
+
+        if len(problem_data) == 0:
+            problem_data = []
+            username_to_num = dict()
+            problem_to_num = dict()
+            for i in range(len(players)):
+                row_data = {}
+                if is_admin:
+                    row_data["username"] = players[i][0]
+                    row_data["student_id"] = User_Manager.get_student_id(players[i])
+                    row_data["realname"] = Reference_Manager.Query_Realname(row_data["student_id"])
+                row_data["friendly_name"] = User_Manager.get_friendly_name(players[i])
+                row_data["total_score"] = 0
+                row_data["total_time"] = 0
+                username_to_num[regularize_string(players[i][0])] = i
+                row_data["problem_info"] = []
+                for j in range(len(problems)):
+                    row_data["problem_info"].append([0, 0, False])    # in which problem_info: [max_score, submit_time, is_ac]
+                    problem_to_num[problems[j][0]] = j
+                problem_data.append(row_data)    
+
+            submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
+            for submit in submits:
+                # ID = submit[0]
+                # User = submit[1]
+                # Problem_ID = submit[2]
+                # Status = submit[3]
+                # Score = submit[4]
+                # Time = submit[5]
+
+                if regularize_string(submit[1]) not in username_to_num:
+                    continue
+
+                row_num = username_to_num[regularize_string(submit[1])]
+                problem_index = problem_to_num[submit[2]]
+
+                max_score = problem_data[row_num]["problem_info"][problem_index][0]
+                if problem_data[row_num]["problem_info"][problem_index][2] == True:
+                    continue
+                is_ac = False
+                submit_time = problem_data[row_num]["problem_info"][problem_index][1]
+
+                if int(submit[4]) > max_score:
+                    problem_data[row_num]["total_score"] -= max_score
+                    max_score = int(submit[4])
+                    problem_data[row_num]["total_score"] += max_score
+
+                submit_time += 1
+                if int(submit[3]) == 2:
+                    problem_data[row_num]["total_time"] += (int(submit[5]) - start_time + (submit_time - 1) * 1200) // 60
+                    is_ac = True
+
+                problem_data[row_num]["problem_info"][problem_index][0] = max_score
+                problem_data[row_num]["problem_info"][problem_index][1] = submit_time
+                problem_data[row_num]["problem_info"][problem_index][2] = is_ac
+            
+            Contest_Cache.put(contest_id, problem_data)    
+
+        problem_data = sorted(problem_data, key=cmp_to_key(lambda x, y: y["total_score"] - x["total_score"] if x["total_score"] != y["total_score"] else x["total_time"] - y["total_time"]))
+        main_json = {}
+        main_json["is_admin"] = is_admin
+        main_json["id"] = contest_id
+        main_json["title"] = title
+        main_json["start_time"] = start_time
+        main_json["end_time"] = end_time
+        main_json["start_time_f"] = readable_time(start_time)
+        main_json["end_time_f"] = readable_time(end_time)
+        main_json["problems"] = problems
+        main_json["problem_data"] = problem_data
+        return {**main_json, **ReturnCode.SUC_GET_CONTEST_HEADER}
+
 
 @web.route('/login', methods=['GET', 'POST'])
 def login():
@@ -210,8 +299,8 @@ def login():
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     username = request.form.get('username')
     password = request.form.get('password')
-    if username.endswith("mirror"):
-        return ReturnCode.ERR_LOGIN_MIRROR
+    # if username.endswith("mirror"):
+    #     return ReturnCode.ERR_LOGIN_MIRROR
     if not User_Manager.check_login(username, password):  # no need to avoid sql injection
         return ReturnCode.ERR_LOGIN
     lid = str(uuid4())
@@ -730,6 +819,11 @@ def contest():
                                    max(int(100 * float(unix_nano() - start_time) / float(end_time - start_time)), 0),
                                    100), friendlyName=Login_Manager.get_friendly_name())
 
+@web.route('/contest_vue')
+def contest_vue():
+    is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+    friendly_name=Login_Manager.get_friendly_name()
+    return render_template("contest_vue.html", friendlyName=friendly_name, is_Admin=is_admin)
 
 @web.route('/homework')
 def homework():

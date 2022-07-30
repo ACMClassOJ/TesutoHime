@@ -42,6 +42,9 @@ class ReturnCode:
     ERR_VALIDATE_INVALID_STUDENT_ID = {'e': -23, 'msg': '学号不符合注册要求。学号要求：12位数字（如果不够可以用0补全）。'}
     ERR_VALIDATE_USERNAME_EXISTS = {'e': -24, 'msg': '用户名已被注册。'}
 
+    SUC_GET_CONTEST_HEADER = {'e': 0, 'msg': 'get contest header successfully'}
+    ERR_CONTEST_HEADER_INVALID_CONTEST_ID = {'e': -30, 'msg': 'invalid contest id'}
+
     SUC_ADD_USER = {'e': 0, 'msg': 'user added successfully'}
     SUC_MOD_USER = {'e': 0, 'msg': 'user modified successfully'}
     SUC_DEL_USER = {'e': 0, 'msg': 'user removed successfully'}

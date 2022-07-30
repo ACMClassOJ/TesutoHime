@@ -648,9 +648,9 @@ def contest():
         problems_visible = is_admin or unix_nano() >= start_time
         players = Contest_Manager.list_player_for_contest(contest_id)
 
-        rankings = Contest_Cache.get(contest_id)
-        if len(rankings) == 0:
-            rankings = [
+        data = Contest_Cache.get(contest_id)
+        if len(data) == 0:
+            data = [
                 {
                     'score': 0,
                     'penalty': 0,
@@ -679,7 +679,7 @@ def contest():
 
                 rank = username_to_num[regularize_string(username)]
                 problem_index = problem_to_num[problem_id]
-                user_data = rankings[rank]
+                user_data = data[rank]
                 problem = user_data['problems'][problem_index]
 
                 if problem['accepted'] == True:
@@ -703,7 +703,7 @@ def contest():
                 problem['count'] = submit_count
                 problem['accepted'] = is_ac
 
-            Contest_Cache.put(contest_id, rankings)    
+            Contest_Cache.put(contest_id, data)    
 
         cur_time = unix_nano()
         if cur_time < start_time:
@@ -712,7 +712,7 @@ def contest():
             contest_status = 'Finished'
         else:
             contest_status = 'Going On'
-        rankings = sorted(rankings, key=cmp_to_key(lambda x, y: y['score'] - x['score'] if x['score'] != y['score'] else x['penalty'] - y['penalty']))
+        data = sorted(data, key=cmp_to_key(lambda x, y: y['score'] - x['score'] if x['score'] != y['score'] else x['penalty'] - y['penalty']))
         title = Contest_Manager.get_title(contest_id)[0][0]
 
         time_elapsed = float(unix_nano() - start_time)
@@ -728,7 +728,7 @@ def contest():
             EndTime=readable_time(end_time),
             Problems=problems,
             problems_visible=problems_visible,
-            rankings=rankings,
+            data=data,
             is_Admin=is_admin,
             Percentage=percentage,
             friendlyName=Login_Manager.get_friendly_name(),
@@ -777,7 +777,7 @@ def homework():
         if len(data) == 0:  
             data = [
                 {
-                    'score': 0,
+                    'ac_count': 0,
                     'friendly_name': User_Manager.get_friendly_name(username),
                     'problems': [
                         {
@@ -812,7 +812,7 @@ def homework():
                 # FIXME: magic number 2 for AC
                 if int(status) == 2:
                     problem['accepted'] = True
-                    user_data['score'] += 1
+                    user_data['ac_count'] += 1
 
                 problem['count'] += 1
 

@@ -196,7 +196,7 @@ class JudgeManager:
                                 # subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
 
                                 score_file = work_file('score.log')
-                                message_file = work_file('score.log')
+                                message_file = work_file('message.log')
                                 if os.path.isfile(relatedFile + '.ans'):
                                     subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.ans', score_file, message_file], 
                                     timeout = 20, cwd = dataPath, check=True)

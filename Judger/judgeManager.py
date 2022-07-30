@@ -1,9 +1,9 @@
-from genericpath import exists
+from util import work_file
 from Judger_Core.config import *
 from JudgerResult import *
 from Judger_Core.Compiler.Compiler import compiler
 from Judger_Core.classic_judger import ClassicJudger
-from Judger_Data import ProblemConfig, Group, Detail
+from Judger_Data import ProblemConfig, Group
 from Judger_Core.util import log
 import multiprocessing
 import subprocess
@@ -23,7 +23,7 @@ class JudgeManager:
         if "SupportedFiles" in problemConfig._asdict():
             for fileName in problemConfig.SupportedFiles:
                 try:
-                    with open(dataPath + '/' + fileName) as f:
+                    with open(os.path.join(dataPath, fileName)) as f:
                         srcDict[fileName] = f.read()
                 except:
                     testPointDetail = DetailResult(1, ResultType.SYSERR, 0, 0, 0, -1, "\"" + fileName + '" not found in data.')            
@@ -195,16 +195,18 @@ class JudgeManager:
                                 # upd, I guess that this line can be moved to the top, and excuted once for a judge
                                 # subprocess.run(['g++', '-g', '-o', dataPath + '/spj', dataPath + '/spj.cpp', '-Ofast'] + ([] if not "SPJCompiliationOption" in problemConfig._asdict() else problemConfig.SPJCompiliationOption))
 
+                                score_file = work_file('score.log')
+                                message_file = work_file('score.log')
                                 if os.path.isfile(relatedFile + '.ans'):
-                                    subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.ans', '/work/score.log', '/work/message.log'], 
+                                    subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.ans', score_file, message_file], 
                                     timeout = 20, cwd = dataPath, check=True)
                                 else:
-                                    subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.out', '/work/score.log', '/work/message.log'], 
+                                    subprocess.run(['./spj', relatedFile + '.in', userOutput, relatedFile + '.out', score_file, message_file], 
                                     timeout = 20, cwd = dataPath, check=True)
-                                with open('/work/score.log') as f:
+                                with open(score_file) as f:
                                     testPointDetail.score = float("\n".join(f.readline().splitlines()))
                                 testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC
-                                with open('/work/message.log') as f:
+                                with open(message_file) as f:
                                     testPointDetail.message = f.read()
                             except Exception as e:
                                 log.error(e)
@@ -277,9 +279,10 @@ class JudgeManager:
                         inputString += str(len(group.TestPoints)) + ' ' + str(group.GroupScore) + ' '
                         for testPoint in group.TestPoints:
                             inputString += str(testPoint) + ' '
-                    with open('/work/score.in', 'w') as f:
+                    score_file = work_file('score.in')
+                    with open(score_file, 'w') as f:
                         f.write(inputString)
-                    with open('/work/score.in', 'r') as f:
+                    with open(score_file, 'r') as f:
                         process = subprocess.run(['python', 'scorer.py'], stdin = f, stdout = subprocess.PIPE, stderr = subprocess.PIPE, timeout = 20, cwd = dataPath)
                 except subprocess.TimeoutExpired:
                     judgeResult = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(testcase.ID, ResultType.SYSERR, 0, 0, 0, -1, 'Scorer timeout.\n') for testcase in problemConfig.Details], problemConfig)

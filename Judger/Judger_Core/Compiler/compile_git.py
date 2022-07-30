@@ -50,11 +50,10 @@ def compile_git(url: str, time_limit, sandboxOn: bool):
         if "CMakeLists.txt" in os.listdir(os.path.join(path, project)):
             try:
                 print(os.path.join(path, project)[1:])
-                command = '/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1' + \
-                        ' -t ' + str(int(time_limit)) + ' --user ' + user_id + ' --group ' + group_id + \
-                        ' -R /lib64 -R /lib -R /usr/bin/cmake -R /usr/share/cmake-3.16 -R /usr/bin/g++' + \
-                        ' -B /work/compiling -B ' + os.path.join(path, project) + \
-                        ' --cwd ' + os.path.join(path, project) + \
+                command = f'/bin/nsjail -Mo --chroot /tmp/chroot --quiet --max_cpus 1' + \
+                        f' -t {str(int(time_limit))} --user {user_id} --group {group_id}' + \
+                        f' -R /lib64 -R /lib -R /usr/bin/cmake -R /usr/share/cmake-3.16 -R /usr/bin/g++' + \
+                        f' -B {WORK_DIR} -B {os.path.join(path, project)} --cwd {os.path.join(path, project)}' + \
                         ' /usr/bin/cmake CMakeLists.txt'
                         #' -R /lib/x86_64-linux-gnu/ -R /lib/x86_64-linux-gnu -R /lib64 -R /usr/bin/find -R /dev/urandom --keep_caps -- /usr/bin/find / | wc -l'
                 

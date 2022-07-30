@@ -1,4 +1,6 @@
-WORK_DIR = "/work/compiling"
+from util import work_file
+
+WORK_DIR = work_file('compiling')
 PROGRAM_NAME = "code"
 PRAGMA_WHITE_LIST = [
     "#pragma once"

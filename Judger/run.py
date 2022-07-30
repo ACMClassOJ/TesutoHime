@@ -7,9 +7,9 @@ def RunFlask(f, port):
     f(host='0.0.0.0', port=port)
 
 
-from config import Path
+from config import working_dir
 import os
-os.chdir(Path)
+os.chdir(working_dir)
 
 if os.path.exists('BusyFlag'):
    os.remove('BusyFlag')

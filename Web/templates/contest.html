@@ -37,47 +37,51 @@
                     <th>排名</th>
                     <th>昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
                     {% if is_Admin -%}<th>实名</th>{%- endif %}
-                    {% for i in range(0, len2) -%}
-                        <th><a href="/OnlineJudge/problem?problem_id={{ Problems[i][0] }}" target="_blank">{{ Problems[i][0] }}</a></th>
+                    {% if problems_visible -%}
+                    {% for problem in Problems -%}
+                        <th><a href="/OnlineJudge/problem?problem_id={{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
                     {%- endfor %}
+                    {%- endif %}
                     <th>总得分</th>
                     <th>罚时</th>
                 </tr>
                 </thead>
-                {% for i in range(0, len) -%}
+                {% for i, player in enumerate(data) -%}
                     <tr>
                         <td>{{ i + 1 }}</td>
                         <td>
                             {% if is_Admin -%}
-                            <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ Data[i][len2+4] }}">{{ Data[i][2] }}</span>
+                            <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ player['username'] }}">{{ player['friendly_name'] }}</span>
                             {% else -%}
-                            <span>{{ Data[i][2] }}</span>
+                            <span>{{ player['friendly_name'] }}</span>
                             {%- endif %}
                         </td>
                         {% if is_Admin -%}
-                            <td>{{ Data[i][len2 + 3] }}</td>
+                            <td>{{ player['realname'] }}</td>
                         {%- endif %}
-                        {% for j in range(0, len2) -%}
+                        {% if problems_visible -%}
+                        {% for j, problem in enumerate(player.problems) -%}
                             <td>
-                                {% if Data[i][j + 3][1] %}{{ Data[i][j + 3][0] -}}
-                                    {%- if not Data[i][j+3][2] -%}
+                                {% if problem['count'] %}{{ problem['score'] -}}
+                                    {%- if not problem['accepted'] -%}
                                         {% if is_Admin -%}
-                                        <a class="text-red" href="/OnlineJudge/status?submitter={{ Data[i][len2 + 4] }}&problem_id={{ Problems[j][0] }}"> (-{{ Data[i][j+3][1] }})</a>
+                                        <a class="text-red" href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ Problems[j][0] }}"> (-{{ problem['count'] }})</a>
                                         {% else -%}
-                                        <span class="text-red"> (-{{ Data[i][j+3][1] }})</span>
+                                        <span class="text-red"> (-{{ problem['count'] }})</span>
                                         {%- endif %}
                                     {%- else -%}
                                         {% if is_Admin -%}
-                                        <a class="text-green" href="/OnlineJudge/status?submitter={{ Data[i][len2 + 4] }}&problem_id={{ Problems[j][0] }}&status=2"> ({{ Data[i][j + 3][1] }}Y)</a>
+                                        <a class="text-green" href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ Problems[j][0] }}&status=2"> ({{ problem['count'] }}Y)</a>
                                         {% else -%}
-                                        <span class="text-green"> ({{ Data[i][j + 3][1] }}Y)</span>
+                                        <span class="text-green"> ({{ problem['count'] }}Y)</span>
                                         {%- endif %}
                                     {%- endif -%}
                                 {%- endif %}
                             </td>
                         {%- endfor %}
-                        <td>{{ Data[i][0] }}</td>
-                        <td>{{ Data[i][1] }}</td>
+                        {%- endif %}
+                        <td>{{ player['score'] }}</td>
+                        <td>{{ player['penalty'] }}</td>
                     </tr>
                 {%- endfor %}
             </table>

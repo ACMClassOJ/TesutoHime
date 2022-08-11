@@ -7,6 +7,11 @@ from config import *
 
 
 def db_connect():
+    host = DataBaseConfig.mysql_Host
+    if host.startswith('unix:'):
+        host = host.replace('unix:', '', 1)
+        return pymysql.connect(unix_socket=host, user=DataBaseConfig.mysql_User,
+            database=DataBaseConfig.mysql_Database, autocommit=True)
     return pymysql.connect(host = DataBaseConfig.mysql_Host, user = DataBaseConfig.mysql_User, password = DataBaseConfig.mysql_Password,
                            database = DataBaseConfig.mysql_Database, autocommit=True)
 

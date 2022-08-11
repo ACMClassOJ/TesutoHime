@@ -1,53 +1,63 @@
-import os, shutil, requests, zipfile, json, sys
+from datetime import datetime
+import os, shutil, zipfile, json, sys
+import boto3
+from botocore.exceptions import ClientError
 from typing import Tuple
+
+from config import DataConfig
 from .ProblemConfig import *
 from collections import namedtuple
 
+s3 = boto3.client(
+    's3',
+    endpoint_url=DataConfig.server,
+    aws_access_key_id=DataConfig.access_key,
+    aws_secret_access_key=DataConfig.secret_key,
+)
 
-def try_cache(config, id: int) -> int:
+def get_data_from_server(id: int):
+    zip_filename = str(id) + '.zip'
+    dir_path = os.path.join(DataConfig.cache_dir, str(id))
+    zip_path = os.path.join(DataConfig.cache_dir, zip_filename)
+
     try:
-        f = open(config.cache_dir + '/' + str(id) + '.timestamp')
-        local_timestamp = int(f.read())
-        f.close()
+        stat = os.stat(dir_path)
+        extras = {
+            'IfModifiedSince': datetime.fromtimestamp(stat.st_mtime),
+        }
     except FileNotFoundError:
-        local_timestamp = 0
+        extras = {}
+
     try:
-        r = requests.get(config.server + '/' + config.key + '/' + str(id) + '.timestamp')
-        timestamp = int(r.text)
-    except:
-        timestamp = -1
-    print(id, timestamp, local_timestamp)
-    if timestamp > local_timestamp:
-        return 1
-    if timestamp == -1 and local_timestamp == 0:
-        return -1
-    return 0
+        obj = s3.get_object(
+            Bucket=DataConfig.bucket,
+            Key=zip_filename,
+            **extras,
+        )
+    except ClientError as e:
+        # 304 Not Modified
+        if e.response['Error']['Code'] == '304':
+            return
+        raise
 
-
-def get_data_from_server(config, id: int):
-    r = requests.get(config.server + '/' + config.key + '/' + str(id) + '.zip', stream=True)
-    with open(config.cache_dir + '/' + str(id) + '.zip', 'wb') as f:
-        for chunk in r.iter_content(chunk_size=8192):
+    with open(zip_path, 'wb') as f:
+        for chunk in obj['Body'].iter_chunks():
             f.write(chunk)
-    shutil.rmtree(config.cache_dir + '/' + str(id), ignore_errors=True)
-    with zipfile.ZipFile(config.cache_dir + '/' + str(id) + '.zip', 'r') as zip_file:
-        zip_file.extractall(config.cache_dir)
-    os.remove(config.cache_dir + '/' + str(id) + '.zip')
-    rt = requests.get(config.server + '/' + config.key + '/' + str(id) + '.timestamp')
-    with open(config.cache_dir + '/' + str(id) + '.timestamp', 'w') as ft:
-        ft.write(rt.text)
+    last_modified = obj['LastModified'].timestamp()
 
+    shutil.rmtree(dir_path, ignore_errors=True)
+    with zipfile.ZipFile(zip_path, 'r') as zip_file:
+        zip_file.extractall(DataConfig.cache_dir)
+    os.utime(dir_path, (last_modified, last_modified))
+    os.remove(zip_path)
 
-def get_data(config, id: int) -> Tuple[ProblemConfig, str]:
+def get_data(id: int) -> Tuple[ProblemConfig, str]:
     try:
-        r = try_cache(config, id)
-        if r == 1:
-            get_data_from_server(config, id)
-        if r == -1:
-            raise Exception("Can't get data")
-        with open(config.cache_dir + '/' + str(id) + '/config.json') as f:
-            pconfig: ProblemConfig = json.loads(f.read(), object_hook=lambda x: namedtuple('X', x.keys())(*x.values()))
-        return pconfig, config.cache_dir + '/' + str(id)
+        get_data_from_server(id)
+        dir_path = os.path.join(DataConfig.cache_dir, str(id))
+        with open(os.path.join(dir_path, 'config.json')) as f:
+            pconfig: ProblemConfig = json.load(f, object_hook=lambda x: namedtuple('X', x.keys())(*x.values()))
+        return pconfig, dir_path
     except Exception as e:
         print(e, file=sys.stderr)
         raise

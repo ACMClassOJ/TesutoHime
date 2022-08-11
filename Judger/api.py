@@ -5,7 +5,6 @@ from judgeManager import judgeManager
 from JudgerResult import *
 from config import *
 from Judger_Data import get_data, ProblemConfig
-from types import SimpleNamespace
 from time import sleep
 from Judger_Core.util import log # cxy 2021 6 28
 
@@ -58,7 +57,7 @@ def judge():
         log.info("start judging")
         open(busyFlag, 'w').close()
         try:
-            problemConfig, dataPath = get_data(DataConfig, request.form.get('Problem_ID'))
+            problemConfig, dataPath = get_data(request.form.get('Problem_ID'))
         except Exception as e:
             result = JudgerResult(ResultType.SYSERR, 0, 0, 0, [DetailResult(0, ResultType.SYSERR, 0, 0, 0, -1, "Error occurred during fetching data: " + str(e))], ProblemConfig([], [], 0, 0, 0))
             timestampFile = DataConfig.cache_dir + '/' + request.form.get('Problem_ID') + '.timestamp'

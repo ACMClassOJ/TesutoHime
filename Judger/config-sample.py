@@ -1,7 +1,9 @@
 class DataConfig:
-    server = 'http://192.168.1.233:8080/'         #data_service_url，数据服务地址，可以是内网
-    key = '233'                                   #data_service_key，数据服务密钥
-    cache_dir = '/home/rbq/TesutoHime_data_cache' #judger_cache_dir，数据会被缓存本地的哪个文件夹
+    server = 'http://localhost:9000/' # data_service_url，数据服务地址
+    access_key = 'xxxxxxxxxxxxxxxx'
+    secret_key = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    bucket = 's3-bucket-name'
+    cache_dir = '/var/cache/oj/judge/' # judger_cache_dir，数据会被缓存本地的哪个文件夹
 
 working_dir = '/work'
 execution_dir = '/exe'

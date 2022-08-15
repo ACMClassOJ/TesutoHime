@@ -1,0 +1,24 @@
+runner-config: v1
+
+id: runner1
+relative-slowness: 1
+working-dir: /var/oj
+cache-dir: /var/cache/oj
+private-key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+worker-uid: 100001
+
+web-server:
+  public-key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  base-url: http://localhost:5000/OnlineJudge/
+
+redis:
+  queues:
+    tasks: oj-tasks
+    in-progress: oj-tasks-runner1
+    signals: oj-signals-runner1
+  connection:
+    host: localhost
+    port: 6379
+    username: runner1
+    password: xxxxxxxxxxxxxx
+    db: 1

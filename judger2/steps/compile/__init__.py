@@ -1,26 +1,23 @@
-from asyncio import as_completed
 from os import utime
 from pathlib import PosixPath
 from shutil import copy2
 from uuid import uuid4
 
-from cache import ensure_cached, upload
-from config import cache_dir
+from cache import CachedFile, ensure_cached, upload
+from config import cache_dir, exec_file_name
 from sandbox import chown_back
 from steps.compile.cpp import compile_cpp
 from steps.compile.git import compile_git
 from steps.compile.verilog import compile_verilog
 from task import InvalidTaskException
-from task_typing import CompileLocalResult, CompileResult, CompileTask
-from util import TempDir
+from task_typing import CompileLocalResult, CompileResult, CompileTask, Input
+from util import TempDir, copy_supplementary_files
 
 
 async def compile (task: CompileTask) -> CompileLocalResult:
     with TempDir() as cwd:
         # copy supplementary files
-        for f in as_completed(map(ensure_cached, task.supplementary_files)):
-            file = await f
-            copy2(file.path, cwd / file.filename)
+        await copy_supplementary_files(task.supplementary_files, cwd)
 
         # compile
         type = task.source.type
@@ -66,3 +63,14 @@ async def compile (task: CompileTask) -> CompileLocalResult:
 
         # done
         return CompileLocalResult(result=res.result, local_path=local_path)
+
+
+class NotCompiledException (Exception): pass
+
+async def ensure_input (input: Input) -> CachedFile:
+    if input.type == 'compile':
+        res = await compile(input)
+        if res.result.result != 'compiled':
+            raise NotCompiledException(res.result.message)
+        return CachedFile(res.local_path, exec_file_name)
+    return ensure_cached(input.url)

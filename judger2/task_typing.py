@@ -141,8 +141,10 @@ class CompileResult:
 class RunResult:
     error: Optional[RunError]
     message: str
-    output_path: Optional[PosixPath]
-    resource_usage: Optional[ResourceUsage]
+    code: Optional[int] = None # for runtime errors
+    resource_usage: Optional[ResourceUsage] = None
+    output_path: Optional[PosixPath] = None
+    input_path: Optional[PosixPath] = None
     type: Literal['run_result'] = 'run_result'
 
 @dataclass
@@ -160,11 +162,11 @@ class CompileLocalResult:
     @staticmethod
     def from_file (file: PosixPath):
         return CompileLocalResult(
-            CompileResult('compiled', 'Compiled.'),
+            CompileResult('compiled', 'Compiled'),
             file,
         )
 
-Output = Union[Input, RunResult]
+CheckInput = Union[Input, RunResult]
 
 
 @dataclass

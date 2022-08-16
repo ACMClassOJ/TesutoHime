@@ -1,6 +1,7 @@
 from asyncio import CancelledError
 from dataclasses import asdict
 from typing import List, Optional
+from .util import TempDir
 
 from task_typing import CompileResult, CompileTask, JudgeResult, \
                         TestpointJudgeResult, JudgeTask, Result, Task, \
@@ -67,13 +68,14 @@ async def judge_task (task: JudgeTask, task_id: str) -> JudgeResult:
                 )
                 continue
 
-            if testpoint.run != None:
-                output = await run(testpoint.input, testpoint.run)
-            else:
-                output = testpoint.input
+            with TempDir() as cwd:
+                if testpoint.run != None:
+                    output = await run(cwd, testpoint.input, testpoint.run)
+                else:
+                    output = testpoint.input
 
-            result.testpoints[i] = await check(output, testpoint.check)
-            result.testpoints[i].testpoint_id = testpoint.id
+                result.testpoints[i] = await check(output, testpoint.check)
+                result.testpoints[i].testpoint_id = testpoint.id
 
         except CancelledError:
             raise

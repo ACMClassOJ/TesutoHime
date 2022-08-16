@@ -8,30 +8,16 @@ from shutil import which
 from subprocess import DEVNULL, Popen, PIPE
 from sys import platform
 from time import time
-from typing import IO, Dict, Union, List
+from typing import IO, Union, List
 
 from config import relative_slowness, worker_uid, task_envp
-from util import TempDir, asyncrun
+from util import TempDir, asyncrun, format_args
 from task_typing import ResourceUsage, RunResult
 
 
 if platform != 'linux':
     print(f'This judger runs only on Linux systems, but your system seems to be {platform}.')
     exit(2)
-
-
-def format_args (args: Dict[str, Union[bool, str, List[str]]]) -> List[str]:
-    def format_arg (arg: tuple[str, Union[bool, str, List[str]]]):
-        k, v = arg
-        k = f'--{k}'
-        if v is True:
-            return [k]
-        if v is False:
-            return []
-        if isinstance(v, list):
-            return sum(map(lambda x: [k, x], v), [])
-        return [k, v]
-    return sum(map(format_arg, args.items()), [])
 
 
 bindmount_ro_base = ['/lib', '/lib64', '/usr/lib', '/usr/lib64']
@@ -174,14 +160,14 @@ async def run_with_limits (
             # Therefore, do not move this check down after
             # check for exit code.
             msg = 'Time limit exceeded'
-            return RunResult('time_limit_exceeded', msg, None, usage)
+            return RunResult('time_limit_exceeded', msg, usage)
         if usage_is_accurate and mem > limits.memory_bytes:
             msg = 'Memory limit exceeded'
-            return RunResult('memory_limit_exceeded', msg, None, usage)
+            return RunResult('memory_limit_exceeded', msg, usage)
         if code != 0:
             # code is ./runner's exit code, so there must be something wrong.
             msg = f'task runner exited with status {code}{errmsg}'
-            return RunResult('system_error', msg, None, usage)
+            return RunResult('system_error', msg, usage, code=code)
         if program_code != 0:
             # runner exited properly, but the program did not
             if program_code >= 256:
@@ -190,16 +176,16 @@ async def run_with_limits (
                 msg = f'program quit abnormally{errmsg}'
             else:
                 msg = f'program exited with status {program_code}{errmsg}'
-            return RunResult('runtime_error', msg, None, usage)
+            return RunResult('runtime_error', msg, usage, code=program_code)
         if file_size_bytes > limits.file_size_bytes:
             msg = 'File size too large'
-            return RunResult('disk_limit_exceeded', msg, None, usage)
+            return RunResult('disk_limit_exceeded', msg, usage)
         if file_count > limits.file_count:
             msg = 'Too many files are created'
-            return RunResult('disk_limit_exceeded', msg, None, usage)
+            return RunResult('disk_limit_exceeded', msg, usage)
 
         # done
-        return RunResult(None, 'OK', None, usage)
+        return RunResult(None, 'OK', usage)
 
 
 def chown_back (path: PosixPath):

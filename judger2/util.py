@@ -1,16 +1,18 @@
-import asyncio
+from asyncio import get_running_loop, as_completed
 from pathlib import PosixPath
-from shutil import rmtree
-from typing import Callable, TypeVar
+from shutil import copy2, rmtree
+from typing import Callable, Dict, List, TypeVar, Union
 from uuid import uuid4
 
 from config import working_dir
+from cache import ensure_cached
+from task_typing import Url
 
 
 T = TypeVar('T')
 
 async def asyncrun (func: Callable[[], T]) -> T:
-    return await asyncio.get_running_loop().run_in_executor(None, func)
+    return await get_running_loop().run_in_executor(None, func)
 
 
 class TempDir:
@@ -38,3 +40,23 @@ class TempDir:
             rmtree(self.path, ignore_errors=True)
         except Exception as e:
             print(f'error removing temp dir {self.path}:', e)
+
+
+async def copy_supplementary_files (files: List[Url], cwd: PosixPath):
+    for f in as_completed(map(ensure_cached, files)):
+        file = await f
+        copy2(file.path, cwd / file.filename)
+
+
+def format_args (args: Dict[str, Union[bool, str, List[str]]]) -> List[str]:
+    def format_arg (arg: tuple[str, Union[bool, str, List[str]]]):
+        k, v = arg
+        k = f'--{k}'
+        if v is True:
+            return [k]
+        if v is False:
+            return []
+        if isinstance(v, list):
+            return sum(map(lambda x: [k, x], v), [])
+        return [k, v]
+    return sum(map(format_arg, args.items()), [])

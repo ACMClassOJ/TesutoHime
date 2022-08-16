@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime
 from http.client import NOT_MODIFIED, OK
 from os import path, stat, utime
@@ -9,9 +10,9 @@ from uuid import uuid5, NAMESPACE_URL
 from aiohttp import request
 
 from config import cache_dir
-from task_typing import Input
 
 
+@dataclass
 class CachedFile:
     path: PosixPath = None
     filename: str = None
@@ -53,9 +54,6 @@ async def ensure_cached (url: str) -> CachedFile:
             .timestamp()
         utime(cache.path, (time(), last_modified))
         return cache
-
-async def ensure_input (input: Input):
-    pass
 
 
 async def upload (local_path: str, url: str) -> CachedFile:

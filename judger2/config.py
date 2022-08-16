@@ -57,13 +57,26 @@ task_envp = [
     'ACMOJ=true',
 ]
 
+exec_file_name = 'code'
+
 cxx = which('g++')
 cxxflags = ['-fmaxerrors=10', '-O2', '-DONLINE_JUDGE', '-std=c++17']
 cxx_file_name = 'code.cpp'
-cxx_exec_name = 'code'
+cxx_exec_name = exec_file_name
 
-git_exec_name = 'code'
+git_exec_name = exec_file_name
 
 verilog = which('iverilog')
 verilog_file_name = 'answer.v'
-verilog_exec_name = 'answer'
+verilog_exec_name = exec_file_name
+verilog_interpreter = which('vvp')
+
+valgrind = which('valgrind')
+valgrind_errexit_code = 250
+valgrind_args = [
+    '--tool=memcheck',
+    '--leak-check=full',
+    '--exit-on-first-error=yes',
+    f'--error-exitcode={valgrind_errexit_code}',
+    '--quiet',
+]

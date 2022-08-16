@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from cache import ensure_cached, upload
 from config import cache_dir
-from ...sandbox import chown_back
+from sandbox import chown_back
 from steps.compile.cpp import compile_cpp
 from steps.compile.git import compile_git
 from steps.compile.verilog import compile_verilog

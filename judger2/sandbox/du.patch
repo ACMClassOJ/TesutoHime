@@ -1,0 +1,63 @@
+diff --git a/src/du.c b/src/du.c
+index 5799533..b1f6648 100644
+--- a/src/du.c
++++ b/src/du.c
+@@ -62,6 +62,8 @@ extern bool fts_debug;
+ # define FTS_CROSS_CHECK(Fts)
+ #endif
+ 
++static long file_count;
++
+ /* A set of dev/ino pairs to help identify files and directories
+    whose sizes have already been counted.  */
+ static struct di_set *di_files;
+@@ -292,6 +294,11 @@ Summarize device usage of the set of FIL
+ 
+       emit_mandatory_arg_note ();
+ 
++      fputs("\
++THIS IS PROBABLY NOT THE 'du' EXECUTABLE YOU WANT\n\
++This du is modified for use by ACM OJ.\n\
++\n\
++", stdout);
+       fputs (_("\
+   -0, --null            end each output line with NUL, not newline\n\
+   -a, --all             write counts for all files, not just directories\n\
+@@ -412,6 +419,8 @@ print_size (const struct duinfo *pdui, c
+   print_only_size (opt_inodes
+                    ? pdui->inodes
+                    : pdui->size);
++  putchar('\n');
++  return;
+ 
+   if (opt_time)
+     {
+@@ -667,6 +676,8 @@ process_file (FTS *fts, FTSENT *ent)
+         print_size (&dui_to_print, file);
+     }
+ 
++  if (!IS_DIR_TYPE(info)) ++file_count;
++
+   return ok;
+ }
+ 
+@@ -750,6 +761,8 @@ main (int argc, char **argv)
+ 
+   exclude = new_exclude ();
+ 
++  file_count = 0;
++
+   human_options (getenv ("DU_BLOCK_SIZE"),
+                  &human_output_opts, &output_block_size);
+ 
+@@ -1136,5 +1149,7 @@ main (int argc, char **argv)
+   if (print_grand_total)
+     print_size (&tot_dui, _("total"));
+ 
++  printf("%ld\n", file_count);
++
+   return ok ? EXIT_SUCCESS : EXIT_FAILURE;
+ }
+-- 
+2.37.1
+

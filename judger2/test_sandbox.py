@@ -26,6 +26,7 @@ async def run_test ():
 #include <stdio.h>
 
 int main () {
+    // while (1);
     printf("Hello World!\n");
     return 0;
 }
@@ -39,8 +40,8 @@ add_executable(code main.c)
         limits = ResourceUsage(
             time_msecs=2000,
             memory_bytes=104857600,
-            file_count=-1,
-            file_size_bytes=-1,
+            file_count=100,
+            file_size_bytes=1048576,
         )
         bin_files = ['/bin', '/usr/bin', '/usr/include', '/usr/share/cmake']
         with open('test.out', 'w') as outfile:

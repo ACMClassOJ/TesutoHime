@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-O2 -Wall -Wextra
 
-all: runner test mem
+all: runner test mem du
 	strip runner
 	strip test
 	strip mem
@@ -13,3 +13,6 @@ test.o: test.s
 
 clean:
 	rm -f runner test test.o
+
+du:
+	./build-du

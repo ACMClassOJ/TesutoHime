@@ -1,17 +1,17 @@
 __all__ = 'run_with_limits', 'chown_back'
 
-from asyncio.subprocess import PIPE, create_subprocess_exec
+from asyncio import create_subprocess_exec, wait_for
 from dataclasses import asdict, dataclass, field
-from os import getuid
+from os import getuid, wait4, waitstatus_to_exitcode
 from pathlib import PosixPath
 from shutil import which
-from subprocess import DEVNULL, Popen
+from subprocess import DEVNULL, Popen, PIPE
 from sys import platform
 from time import time
 from typing import IO, Dict, Union, List
 
 from config import relative_slowness, worker_uid, task_envp
-from util import TempDir
+from util import TempDir, asyncrun
 from task_typing import ResourceUsage, RunResult
 
 
@@ -45,15 +45,15 @@ worker_uid_maps = [
 class NsjailArgs:
     chroot: str
     cwd: str
-
-    rlimit_fsize: str
     time_limit: str
+
+    bindmount_ro: Union[List[str], bool] = False
+    bindmount: Union[str, List[str], bool] = False
+
+    rlimit_fsize: str = 'inf'
     # cgroup_mem_max: str
 
-    bindmount_ro: List[str]
-    bindmount: Union[str, List[str]]
-
-    disable_clone_newnet: bool
+    disable_clone_newnet: bool = False
 
     mode: str = 'o'
     quiet: bool = True
@@ -87,8 +87,9 @@ async def run_with_limits (
     # memory_limit = str(limits.memory_bytes + 1048576)
     bindmount_ro = bindmount_ro_base + [str(x) for x in supplementary_paths]
     bindmount_rw = [str(cwd)] + [str(x) for x in supplementary_paths_rw]
-    # get the absolute path for ./runner
+    # get the absolute path for ./runner and ./du
     runner_path = str(PosixPath(__file__).with_name('runner'))
+    du_path = str(PosixPath(__file__).with_name('du'))
 
     with TempDir() as tmp_dir:
         # make needed files and dirs
@@ -117,16 +118,14 @@ async def run_with_limits (
 
         # execute
         time_start = time()
-        res = await create_subprocess_exec(
-            which('nsjail'),
-            *nsjail_argv,
-            stdin=infile,
-            stdout=outfile,
-            stderr=PIPE,
-            limit=4096,
+        proc = Popen(
+            [which('nsjail')] + nsjail_argv,
+            stdin=infile, stdout=outfile, stderr=PIPE,
         )
-        code = await res.wait()
+        _, status, rusage = await asyncrun(lambda: wait4(proc.pid, 0))
+        code = waitstatus_to_exitcode(status)
         approx_time = time() - time_start
+        approx_mem = rusage.ru_maxrss * 1024
 
         # parse result file
         try:
@@ -135,35 +134,49 @@ async def run_with_limits (
             params = text.split(' ')
             if len(params) < 4 or params[0] != 'run':
                 raise Exception('invalid runner output')
-            [program_code, realtime, mem] = [int(x) for x in params[1:]]
-            time_is_accurate = True
+            [program_code, realtime, mem] = [int(x) for x in params[1:4]]
+            usage_is_accurate = True
         except BaseException:
-            [program_code, realtime, mem] = [-1, int(approx_time * 1000), -1]
-            time_is_accurate = False
-        # TODO: file-related limits and rusages
-        file_count = -1
-        file_size_bytes = -1
+            program_code = -1
+            realtime = int(approx_time * 1000)
+            mem = int(approx_mem)
+            usage_is_accurate = False
+
+        du_proc = await create_subprocess_exec(
+            which('nsjail'),
+            *format_args(asdict(NsjailArgs('/', str(cwd), '9.0'))),
+            '--', du_path, '-s',
+            stdin=DEVNULL, stdout=PIPE, stderr=PIPE,
+            limit=4096,
+        )
+        du_code = await wait_for(du_proc.wait(), 10.0)
+        if du_code != 0:
+            raise Exception(f'du exited with code {du_code}')
+        du_out = (await du_proc.stdout.read(4096)).decode().split('\n')
+        [file_size_bytes, file_count] = [int(x) for x in du_out[:2]]
+        file_size_bytes *= 1024
+
         usage = ResourceUsage(
             time_msecs=int(realtime / relative_slowness),
             memory_bytes=mem,
             file_count=file_count,
             file_size_bytes=file_size_bytes,
         )
-        err = (await res.stderr.read(4096)).decode()
+        err = (await asyncrun(lambda: proc.stderr.read(4096))).decode()
         errmsg = '' if err == '' else f': {err}'
 
         # check for errors
-        if time_is_accurate and realtime > time_limit_scaled \
-            or approx_time * 1000 > time_limit_scaled + 500:
+        if usage_is_accurate and realtime > time_limit_scaled \
+        or approx_time * 1000 > time_limit_scaled + 500:
             #  ^^^^^^^^^^^ Check needed here as most TLE'd
             # programs end up being kill -9'd by nsjail;
             # the real time won't be accurate in this case.
             # Therefore, do not move this check down after
             # check for exit code.
-            msg = 'Time Limit Exceeded'
+            msg = 'Time limit exceeded'
             return RunResult('time_limit_exceeded', msg, None, usage)
-        if mem > limits.memory_bytes:
-            msg = 'Memory Limit Exceeded'
+        if usage_is_accurate and mem > limits.memory_bytes:
+            msg = 'Memory limit exceeded'
             return RunResult('memory_limit_exceeded', msg, None, usage)
         if code != 0:
             # code is ./runner's exit code, so there must be something wrong.
@@ -178,6 +191,12 @@ async def run_with_limits (
             else:
                 msg = f'program exited with status {program_code}{errmsg}'
             return RunResult('runtime_error', msg, None, usage)
+        if file_size_bytes > limits.file_size_bytes:
+            msg = 'File size too large'
+            return RunResult('disk_limit_exceeded', msg, None, usage)
+        if file_count > limits.file_count:
+            msg = 'Too many files are created'
+            return RunResult('disk_limit_exceeded', msg, None, usage)
 
         # done
         return RunResult(None, 'OK', None, usage)

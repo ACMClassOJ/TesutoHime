@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+pkgname=coreutils
+pkgver=9.1
+dir=.du-build
+srcdir="$pkgname-$pkgver"
+source_file="$srcdir.tar.xz"
+source="https://ftp.gnu.org/gnu/$pkgname/$source_file"
+sha256sum="61a1f410d78ba7e7f37a5a4f50e6d1320aca33375484a3255eddf17a38580423  $source_file"
+
+mkdir -p "$dir"
+cd "$dir"
+
+[ -e "$source_file" ] || wget "$source"
+sha256sum --check <<< "$sha256sum"
+tar Jxf "$source_file"
+
+cd "$srcdir"
+patch -p1 < ../../du.patch
+./configure --prefix=/usr --libexecdir=/usr/lib
+make -j$(nproc)
+strip src/du
+cp src/du ../../du
+
+cd ../..
+rm -rf "$dir"

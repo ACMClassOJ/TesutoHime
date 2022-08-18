@@ -5,7 +5,7 @@ from nacl.public import PublicKey, PrivateKey, Box
 from redis import StrictRedis
 import yaml
 
-from judger2.task_typing import ResourceUsage
+from task_typing import ResourceUsage
 
 
 def load_config () -> dict:
@@ -29,6 +29,7 @@ runner_id: str = config['id']
 relative_slowness: float = config['relative-slowness']
 working_dir: str = config['working-dir']
 cache_dir: str = config['cache-dir']
+log_dir: str = config['log-dir']
 cache_max_age_secs = 86400.0
 cache_clear_interval_secs = 86400.0
 private_key = PrivateKey(b64decode(config['private-key'].encode()))

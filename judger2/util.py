@@ -1,4 +1,5 @@
 from asyncio import get_running_loop, as_completed
+from logging import getLogger
 from pathlib import PosixPath
 from shutil import copy2, rmtree
 from typing import Callable, Dict, List, TypeVar, Union
@@ -7,6 +8,8 @@ from uuid import uuid4
 from config import working_dir
 from cache import ensure_cached
 from task_typing import Url
+
+logger = getLogger(__name__)
 
 
 T = TypeVar('T')
@@ -20,10 +23,12 @@ class TempDir:
     def __init__ (self):
         self.path = PosixPath(working_dir) / str(uuid4())
     def __enter__ (self) -> PosixPath:
+        logger.debug(f'entering temp dir {self.path}')
         self.path.mkdir()
         self.path.chmod(0o770)
         return self.path
     def __exit__ (self, *_args):
+        logger.debug(f'exiting temp dir {self.path}')
         # import here to avoid circular reference
         from sandbox import chown_back
         try:
@@ -39,10 +44,12 @@ class TempDir:
             chown_back(self.path)
             rmtree(self.path, ignore_errors=True)
         except Exception as e:
-            print(f'error removing temp dir {self.path}:', e)
+            logger.error(f'error removing temp dir {self.path}: {e}')
 
 
 async def copy_supplementary_files (files: List[Url], cwd: PosixPath):
+    if len(files) != 0:
+        logger.debug(f'copying supplementary files to {cwd}')
     for f in as_completed(map(ensure_cached, files)):
         file = await f
         copy2(file.path, cwd / file.filename)

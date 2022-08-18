@@ -2,8 +2,10 @@ __all__ = 'run_with_limits', 'chown_back'
 
 from asyncio import create_subprocess_exec, wait_for
 from dataclasses import asdict, dataclass, field
+from logging import getLogger
 from os import getuid, wait4, waitstatus_to_exitcode
 from pathlib import PosixPath
+from shlex import quote
 from shutil import which
 from subprocess import DEVNULL, Popen, PIPE
 from sys import platform
@@ -14,9 +16,11 @@ from config import relative_slowness, worker_uid, task_envp
 from util import TempDir, asyncrun, format_args
 from task_typing import ResourceUsage, RunResult
 
+logger = getLogger(__name__)
+
 
 if platform != 'linux':
-    print(f'This judger runs only on Linux systems, but your system seems to be {platform}.')
+    logger.critical(f'This judger runs only on Linux systems, but your system seems to be {platform}.')
     exit(2)
 
 
@@ -102,7 +106,8 @@ async def run_with_limits (
         )
         nsjail_argv = format_args(asdict(args)) \
              + ['--', runner_path, str(result_file)] + argv
-        # print(' '.join(nsjail_argv))
+        argv_str = ' '.join(quote(x) for x in nsjail_argv)
+        logger.info(f'about to run nsjail with args {argv_str}')
 
         # execute
         time_start = time()
@@ -114,6 +119,8 @@ async def run_with_limits (
         code = waitstatus_to_exitcode(status)
         approx_time = time() - time_start
         approx_mem = rusage.ru_maxrss * 1024
+        logger.info(f'nsjail run finished')
+        logger.info(f'{code=} {approx_time=} {approx_mem=}')
 
         # parse result file
         try:
@@ -121,6 +128,7 @@ async def run_with_limits (
             # 'run' code realtime mem
             params = text.split(' ')
             if len(params) < 4 or params[0] != 'run':
+                logger.error(f'invalid runner output {repr(text)}')
                 raise Exception('invalid runner output')
             [program_code, realtime, mem] = [int(x) for x in params[1:4]]
             usage_is_accurate = True
@@ -191,6 +199,7 @@ async def run_with_limits (
 
 
 def chown_back (path: PosixPath):
+    logger.info(f'about to chown_back {path}')
     argv = [which('nsjail')] + format_args({
         'cwd': str(path),
         'chroot': '/',

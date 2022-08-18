@@ -2,8 +2,9 @@ runner-config: v1
 
 id: runner1
 relative-slowness: 1
-working-dir: /var/oj
+working-dir: /var/run/oj
 cache-dir: /var/cache/oj
+log-dir: /var/log/oj
 private-key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 worker-uid: 100001
 

@@ -1,3 +1,4 @@
+from logging import getLogger
 from math import isinf, isnan
 from os import devnull
 from pathlib import PosixPath
@@ -12,8 +13,11 @@ from steps.compile_ import NotCompiledException, ensure_input
 from task_typing import CheckInput, CheckResult, Checker, CompareChecker, \
                         SpjChecker
 
+logger = getLogger(__name__)
+
 
 async def check (outfile: CheckInput, checker: Checker) -> CheckResult:
+    logger.info(f'checking {outfile} with {checker}')
     # get output file to check
     if outfile.type != 'run_result':
         try:
@@ -26,7 +30,7 @@ async def check (outfile: CheckInput, checker: Checker) -> CheckResult:
         ouf = outfile.output_path
     if ouf is None:
         return CheckResult('system_error', 'Nothing to check')
-    
+
     # check
     return await checkers[checker.type](inf, ouf, checker)
 
@@ -37,8 +41,10 @@ async def checker_cmp (_infile, outfile: PosixPath, checker: CompareChecker):
     cmp = PosixPath(__file__).with_name('cmp')
     ans = (await ensure_cached(checker.answer)).path
     ignore_ws_flag = 'y' if checker.ignore_whitespace else 'n'
+    argv = [str(cmp), str(outfile), str(ans), ignore_ws_flag]
+    logger.debug(f'about to run {argv}')
     res = await run_with_limits(
-        [str(cmp), str(outfile), str(ans), ignore_ws_flag],
+        argv,
         PosixPath('/'),
         checker_cmp_limits,
         supplementary_paths=[str(cmp), str(outfile), str(ans)],
@@ -46,7 +52,8 @@ async def checker_cmp (_infile, outfile: PosixPath, checker: CompareChecker):
     if res.error == 'runtime_error' and res.code == cmp_errexit_code:
         return CheckResult('wrong_answer', 'Wrong answer')
     if res.error is not None:
-        return CheckResult(res.error, res.message)
+        logger.error(f'cmp failed with {res.message}')
+        return CheckResult('system_error', f'checker failed: {res.message}')
     return CheckResult('accepted', 'Accepted', 1.0)
 
 
@@ -99,6 +106,7 @@ async def checker_spj (infile: Optional[PosixPath], outfile: PosixPath, \
         message = cwd / 'message'
         argv = [exec_file, infile, outfile, ans, score, message]
         argv = [str(x) for x in argv]
+        logger.debug(f'about to run spj: {argv}')
 
         res = await run_with_limits(argv, cwd, checker.limits,
             supplementary_paths=bindmount)

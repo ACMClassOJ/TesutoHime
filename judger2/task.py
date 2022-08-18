@@ -1,7 +1,9 @@
 from asyncio import CancelledError
 from dataclasses import asdict
+from logging import getLogger
 from typing import List, Optional
 
+from logging_ import task_logger
 from util import TempDir
 from task_typing import CompileResult, CompileTask, JudgeResult, \
                         TestpointJudgeResult, JudgeTask, Result, Task, \
@@ -11,12 +13,15 @@ from steps.run import run
 from steps.check import check
 from rpc import rpc
 
+logger = getLogger(__name__)
+
 
 class InvalidTaskException (Exception): pass
 
 
 async def run_task (task: Task, task_id: str) -> Result:
     type = task.type
+    task_logger.info(f'received {type} task {task_id}')
     if type == 'compile':
         return await compile_task(task)
     elif type == 'judge':
@@ -57,31 +62,42 @@ def get_skip_reason (
 
 async def judge_task (task: JudgeTask, task_id: str) -> JudgeResult:
     result = JudgeResult([None for _ in task.testpoints])
+    async def report_progress ():
+        await rpc('progress', {
+            'id': task_id,
+            'progress': asdict(result),
+        })
     for i, testpoint in enumerate(task.testpoints):
         rusage = None
         try:
             skip_reason = get_skip_reason(testpoint, result.testpoints)
             if skip_reason != None:
+                task_logger.info(f'skipping {testpoint.id} due to {skip_reason}')
                 result.testpoints[i] = TestpointJudgeResult(
                     testpoint_id=testpoint.id,
                     result='skipped',
                     message=skip_reason,
                 )
+                await report_progress()
                 continue
 
             with TempDir() as cwd:
                 if testpoint.run != None:
                     output = await run(cwd, testpoint.input, testpoint.run)
+                    logger.debug(f'run result: {output}')
                     rusage = output.resource_usage
                 else:
                     output = testpoint.input
 
                 check_res = await check(output, testpoint.check)
-                result.testpoints[i] = TestpointJudgeResult(
+                logger.debug(f'check result: {check_res}')
+                res = TestpointJudgeResult(
                     **asdict(check_res),
                     testpoint_id=testpoint.id,
                     resource_usage=rusage,
                 )
+                task_logger.info(f'testpoint {testpoint.id} finished with {res}')
+                result.testpoints[i] = res
 
         except CancelledError:
             raise
@@ -92,10 +108,6 @@ async def judge_task (task: JudgeTask, task_id: str) -> JudgeResult:
                 message=str(e),
                 resource_usage=rusage,
             )
-
-        await rpc('progress', {
-            'id': task_id,
-            'progress': asdict(result),
-        })
+        await report_progress()
 
     return result

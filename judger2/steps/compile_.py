@@ -1,5 +1,6 @@
 __all__ = 'compile', 'ensure_input'
 
+from logging import getLogger
 from os import utime
 from pathlib import PosixPath
 from shutil import copy2, which
@@ -16,6 +17,8 @@ from task_typing import CompileLocalResult, CompileResult, CompileSourceCpp, \
                         CompileSourceGit, CompileSourceVerilog, CompileTask, \
                         Input, ResourceUsage
 from util import TempDir, copy_supplementary_files
+
+logger = getLogger(__name__)
 
 
 async def compile (task: CompileTask) -> CompileLocalResult:
@@ -104,6 +107,8 @@ async def compile_git (
     source: CompileSourceGit,
     limits: ResourceUsage,
 ) -> CompileLocalResult:
+    logger.debug(f'about to compile git repo {repr(source.url)}')
+
     def run_build_step (argv: List[str], network = False):
         bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share/cmake']
         return run_with_limits(
@@ -114,6 +119,7 @@ async def compile_git (
 
     # clone
     git_argv = [which('git'), 'clone', source.url, '.', '--depth', '1']
+    logger.debug(f'about to run {git_argv}')
     clone_res = await run_build_step(git_argv, True)
     if clone_res.error != None:
         return CompileLocalResult.from_run_failure(clone_res)
@@ -121,6 +127,7 @@ async def compile_git (
     # configure
     cmake_lists_path = cwd / 'CMakeLists.txt'
     if cmake_lists_path.is_file():
+        logger.debug('CMake config found, invoking cmake')
         res = await run_build_step([which('cmake'), '.'])
         if res.error != None:
             return CompileLocalResult.from_run_failure(res)
@@ -128,6 +135,7 @@ async def compile_git (
     # compile
     makefile_paths = [cwd / x for x in ['GNUmakefile', 'makefile', 'Makefile']]
     if any(x.is_file() for x in makefile_paths):
+        logger.debug('makefile found, invoking make')
         res = await run_build_step([which('make')])
         if res.error != None:
             return CompileLocalResult.from_run_failure(res)

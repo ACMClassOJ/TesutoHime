@@ -5,6 +5,8 @@ from nacl.public import PublicKey, PrivateKey, Box
 from redis import StrictRedis
 import yaml
 
+from judger2.task_typing import ResourceUsage
+
 
 def load_config () -> dict:
     with open('config.yml', 'r') as f:
@@ -80,3 +82,10 @@ valgrind_args = [
     f'--error-exitcode={valgrind_errexit_code}',
     '--quiet',
 ]
+
+checker_cmp_limits = ResourceUsage(
+    time_msecs=10000,
+    memory_bytes=67108864,
+    file_count=-1,
+    file_size_bytes=-1,
+)

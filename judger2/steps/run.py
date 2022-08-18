@@ -9,7 +9,7 @@ from typing import Dict, List
 
 from config import valgrind, valgrind_args, valgrind_errexit_code, \
                    verilog_interpreter
-from compile import NotCompiledException, ensure_input
+from steps.compile_ import NotCompiledException, ensure_input
 from cache import ensure_cached
 from sandbox import run_with_limits
 from util import TempDir, copy_supplementary_files

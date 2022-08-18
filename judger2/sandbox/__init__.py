@@ -21,6 +21,7 @@ if platform != 'linux':
 
 
 bindmount_ro_base = ['/lib', '/lib64', '/usr/lib', '/usr/lib64']
+bindmount_rw_base = ['/dev/null', '/dev/zero']
 worker_uid_inside = 65534
 worker_uid_maps = [
     f'0:{getuid()}:1', # map current user to 0
@@ -34,7 +35,7 @@ class NsjailArgs:
     time_limit: str
 
     bindmount_ro: Union[List[str], bool] = False
-    bindmount: Union[str, List[str], bool] = False
+    bindmount: Union[List[str], bool] = False
 
     rlimit_fsize: str = 'inf'
     # cgroup_mem_max: str
@@ -72,7 +73,8 @@ async def run_with_limits (
     time_limit = str(time_limit_scaled / 1000 + 1)
     # memory_limit = str(limits.memory_bytes + 1048576)
     bindmount_ro = bindmount_ro_base + [str(x) for x in supplementary_paths]
-    bindmount_rw = [str(cwd)] + [str(x) for x in supplementary_paths_rw]
+    bindmount_rw = bindmount_rw_base + [str(cwd)] \
+        + [str(x) for x in supplementary_paths_rw]
     # get the absolute path for ./runner and ./du
     runner_path = str(PosixPath(__file__).with_name('runner'))
     du_path = str(PosixPath(__file__).with_name('du'))

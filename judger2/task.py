@@ -1,12 +1,12 @@
 from asyncio import CancelledError
 from dataclasses import asdict
 from typing import List, Optional
-from .util import TempDir
 
+from util import TempDir
 from task_typing import CompileResult, CompileTask, JudgeResult, \
                         TestpointJudgeResult, JudgeTask, Result, Task, \
                         Testpoint
-from steps.compile import compile
+from steps.compile_ import compile
 from steps.run import run
 from steps.check import check
 from rpc import rpc
@@ -58,6 +58,7 @@ def get_skip_reason (
 async def judge_task (task: JudgeTask, task_id: str) -> JudgeResult:
     result = JudgeResult([None for _ in task.testpoints])
     for i, testpoint in enumerate(task.testpoints):
+        rusage = None
         try:
             skip_reason = get_skip_reason(testpoint, result.testpoints)
             if skip_reason != None:
@@ -71,11 +72,16 @@ async def judge_task (task: JudgeTask, task_id: str) -> JudgeResult:
             with TempDir() as cwd:
                 if testpoint.run != None:
                     output = await run(cwd, testpoint.input, testpoint.run)
+                    rusage = output.resource_usage
                 else:
                     output = testpoint.input
 
-                result.testpoints[i] = await check(output, testpoint.check)
-                result.testpoints[i].testpoint_id = testpoint.id
+                check_res = await check(output, testpoint.check)
+                result.testpoints[i] = TestpointJudgeResult(
+                    **asdict(check_res),
+                    testpoint_id=testpoint.id,
+                    resource_usage=rusage,
+                )
 
         except CancelledError:
             raise
@@ -84,6 +90,7 @@ async def judge_task (task: JudgeTask, task_id: str) -> JudgeResult:
                 testpoint_id=testpoint.id,
                 result='system_error',
                 message=str(e),
+                resource_usage=rusage,
             )
 
         await rpc('progress', {

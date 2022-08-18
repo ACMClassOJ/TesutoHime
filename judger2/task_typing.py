@@ -74,7 +74,9 @@ class DirectChecker:
 class SpjChecker:
     format: Literal['checker', 'scorer']
     executable: Input
+    answer: Optional[Url]
     supplementary_files: List[Url]
+    limits: ResourceUsage
     type: Literal['spj'] = 'spj'
 
 Checker = Union[CompareChecker, DirectChecker, SpjChecker]
@@ -174,9 +176,15 @@ class TestpointJudgeResult:
     testpoint_id: Optional[str]
     result: ResultType
     message: str
-    score: int = 0
+    score: float = 0.0
     resource_usage: Optional[ResourceUsage] = None
     type: Literal['testpoint_judge_result'] = 'testpoint_judge_result'
+
+@dataclass
+class CheckResult:
+    result: ResultType
+    message: str
+    score: float = 0.0
 
 
 @dataclass

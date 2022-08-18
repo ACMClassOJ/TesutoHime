@@ -3,27 +3,12 @@ from shutil import which
 
 from nacl.public import PublicKey, PrivateKey, Box
 from redis import StrictRedis
-import yaml
 
+from commons.config import load_config
 from commons.task_typing import ResourceUsage
 
 
-def load_config () -> dict:
-    with open('runner_config.yml', 'r') as f:
-        config = yaml.load(f, yaml.Loader)
-
-    if not 'runner_config' in config:
-        raise Exception('Config file is not valid runner config. Check your config.yml.')
-
-    config_version = config['runner_config']
-    program_version = 'v1'
-
-    if config_version != program_version:
-        raise Exception(f'config.yml has wrong version, has {config_version}, expecting {program_version}')
-
-    return config
-
-config = load_config()
+config = load_config('runner', 'v1')
 
 runner_id: str = config['id']
 relative_slowness: float = config['relative_slowness']

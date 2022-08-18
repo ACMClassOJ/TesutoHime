@@ -7,7 +7,6 @@ from redis import StrictRedis
 from commons.config import load_config
 from commons.task_typing import ResourceUsage
 
-
 config = load_config('runner', 'v1')
 
 runner_id: str = config['id']

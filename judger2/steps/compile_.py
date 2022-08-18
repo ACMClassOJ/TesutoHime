@@ -4,7 +4,7 @@ from logging import getLogger
 from os import utime
 from pathlib import PosixPath
 from shutil import copy2, which
-from typing import List
+from typing import Any, Callable, Coroutine, Dict, List
 from uuid import uuid4
 
 from judger2.cache import CachedFile, ensure_cached, upload
@@ -12,10 +12,10 @@ from judger2.config import cache_dir, cxx, cxxflags, cxx_file_name, \
                            cxx_exec_name, exec_file_name, git_exec_name, \
                            verilog, verilog_file_name, verilog_exec_name
 from judger2.sandbox import chown_back, run_with_limits
-from commons.task_typing import CompileLocalResult, CompileResult, \
+from commons.task_typing import CompileLocalResult, CompileResult, CompileSource, \
                                 CompileSourceCpp, CompileSourceGit, \
                                 CompileSourceVerilog, CompileTask, Input, \
-                                InvalidTaskException, ResourceUsage
+                                ResourceUsage
 from judger2.util import TempDir, copy_supplementary_files
 
 logger = getLogger(__name__)
@@ -34,14 +34,7 @@ async def compile (task: CompileTask) -> CompileLocalResult:
         # cached for later use, and the cache location is
         # returned as a semi-persistent compile artifact
         # location.
-        if type == 'cpp':
-            res = await compile_cpp(cwd, task.source, task.limits)
-        elif type == 'git':
-            res = await compile_git(cwd, task.source, task.limits)
-        elif type == 'verilog':
-            res = await compile_verilog(cwd, task.source, task.limits)
-        else:
-            raise InvalidTaskException(f'compile: invalid source type {type}')
+        res = await compilers[type](cwd, task.source, task.limits)
 
         # check for errors
         if res.result.result != 'compiled':
@@ -118,7 +111,8 @@ async def compile_git (
         )
 
     # clone
-    git_argv = [which('git'), 'clone', source.url, '.', '--depth', '1']
+    git_argv = [which('git'), 'clone', source.url, '.', '--depth', '1',
+                '--recursive']
     logger.debug(f'about to run {git_argv}')
     clone_res = await run_build_step(git_argv, True)
     if clone_res.error != None:
@@ -172,3 +166,14 @@ async def compile_verilog (
     if res.error != None:
         return CompileLocalResult.from_run_failure(res)
     return CompileLocalResult.from_file(exec_file)
+
+
+Compiler = Callable[
+    [PosixPath, CompileSource, ResourceUsage],
+    Coroutine[Any, Any, CompileLocalResult],
+]
+compilers: Dict[str, Compiler] = {
+    'cpp': compile_cpp,
+    'git': compile_git,
+    'verilog': compile_verilog,
+}

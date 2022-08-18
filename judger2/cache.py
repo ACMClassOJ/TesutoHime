@@ -9,7 +9,7 @@ from uuid import uuid5, NAMESPACE_URL
 
 from aiohttp import request
 
-from config import cache_dir
+from judger2.config import cache_dir
 
 
 @dataclass

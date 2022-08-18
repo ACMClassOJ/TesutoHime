@@ -1,16 +1,16 @@
-from logging_ import task_logger
+from judger2.logging_ import task_logger
 
 from asyncio import CancelledError, Task, create_task, run, sleep, wait
 from json import loads as load_json
 from logging import getLogger
 from time import time
 
-from cache import clean_cache_worker
-from config import heartbeat_interval_secs, redis_connect, task_queue_key, \
+from judger2.cache import clean_cache_worker
+from judger2.config import heartbeat_interval_secs, redis_connect, task_queue_key, \
                    in_progress_key, poll_timeout_secs, signals_key, runner_id
-from rpc import rpc
-from task import run_task
-from util import asyncrun
+from judger2.rpc import rpc
+from judger2.task import run_task
+from judger2.util import asyncrun
 
 logger = getLogger(__name__)
 

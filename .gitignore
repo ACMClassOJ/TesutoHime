@@ -6,6 +6,9 @@ BusyFlag
 scheduler.lock
 # Web/static/lib/
 
+*_config.yml
+test.out
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

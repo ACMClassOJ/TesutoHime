@@ -12,9 +12,9 @@ from sys import platform
 from time import time
 from typing import IO, Union, List
 
-from config import relative_slowness, worker_uid, task_envp
-from util import TempDir, asyncrun, format_args
-from task_typing import ResourceUsage, RunResult
+from judger2.config import relative_slowness, worker_uid, task_envp
+from judger2.util import TempDir, asyncrun, format_args
+from commons.task_typing import ResourceUsage, RunResult
 
 logger = getLogger(__name__)
 

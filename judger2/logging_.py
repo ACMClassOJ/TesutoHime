@@ -4,7 +4,7 @@ from logging import DEBUG, INFO, WARNING, Formatter, StreamHandler, getLogger, r
 from logging.handlers import WatchedFileHandler
 from pathlib import PosixPath
 
-from config import log_dir
+from judger2.config import log_dir
 
 cwd = PosixPath(log_dir)
 

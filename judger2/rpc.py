@@ -4,7 +4,7 @@ import json
 
 from aiohttp import request
 
-from config import web_box, web_base_url, runner_id
+from judger2.config import web_box, web_base_url, runner_id
 
 
 def box (data: dict) -> bytes:

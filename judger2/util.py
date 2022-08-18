@@ -5,9 +5,9 @@ from shutil import copy2, rmtree
 from typing import Callable, Dict, List, TypeVar, Union
 from uuid import uuid4
 
-from config import working_dir
-from cache import ensure_cached
-from task_typing import Url
+from judger2.config import working_dir
+from judger2.cache import ensure_cached
+from commons.task_typing import Url
 
 logger = getLogger(__name__)
 
@@ -30,7 +30,7 @@ class TempDir:
     def __exit__ (self, *_args):
         logger.debug(f'exiting temp dir {self.path}')
         # import here to avoid circular reference
-        from sandbox import chown_back
+        from judger2.sandbox import chown_back
         try:
             # Why chown_back:
             # There may be some subdirtectories in the temp

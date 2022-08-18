@@ -3,15 +3,16 @@ from dataclasses import asdict
 from logging import getLogger
 from typing import List, Optional
 
-from logging_ import task_logger
-from util import TempDir
-from task_typing import CompileResult, CompileTask, InvalidTaskException, \
-                        JudgeResult, TestpointJudgeResult, JudgeTask, Result, \
-                        Task, Testpoint
-from steps.compile_ import compile
-from steps.run import run
-from steps.check import check
-from rpc import rpc
+from judger2.logging_ import task_logger
+from judger2.util import TempDir
+from commons.task_typing import CompileResult, CompileTask, \
+                                InvalidTaskException, JudgeResult, \
+                                TestpointJudgeResult, JudgeTask, Result, Task, \
+                                Testpoint
+from judger2.steps.compile_ import compile
+from judger2.steps.run import run
+from judger2.steps.check import check
+from judger2.rpc import rpc
 
 logger = getLogger(__name__)
 

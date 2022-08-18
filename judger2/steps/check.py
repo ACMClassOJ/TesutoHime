@@ -5,13 +5,13 @@ from pathlib import PosixPath
 from shutil import copy2
 from typing import Any, Callable, Coroutine, Dict, Optional
 
-from config import checker_cmp_limits
-from cache import ensure_cached
-from util import TempDir, copy_supplementary_files
-from sandbox import run_with_limits
-from steps.compile_ import NotCompiledException, ensure_input
-from task_typing import CheckInput, CheckResult, Checker, CompareChecker, \
-                        SpjChecker
+from judger2.config import checker_cmp_limits
+from judger2.cache import ensure_cached
+from judger2.util import TempDir, copy_supplementary_files
+from judger2.sandbox import run_with_limits
+from judger2.steps.compile_ import NotCompiledException, ensure_input
+from commons.task_typing import CheckInput, CheckResult, Checker, \
+                                CompareChecker, SpjChecker
 
 logger = getLogger(__name__)
 

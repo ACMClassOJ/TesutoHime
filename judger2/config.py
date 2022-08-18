@@ -5,11 +5,11 @@ from nacl.public import PublicKey, PrivateKey, Box
 from redis import StrictRedis
 import yaml
 
-from task_typing import ResourceUsage
+from commons.task_typing import ResourceUsage
 
 
 def load_config () -> dict:
-    with open('config.yml', 'r') as f:
+    with open('runner_config.yml', 'r') as f:
         config = yaml.load(f, yaml.Loader)
 
     if not 'runner_config' in config:
@@ -46,7 +46,7 @@ in_progress_key: str = queues['in_progress']
 signals_key: str = queues['signals']
 poll_timeout_secs = 10.0
 async def redis_connect ():
-    from util import asyncrun
+    from judger2.util import asyncrun
     return await asyncrun(lambda:
         StrictRedis(**config['redis']['connection'], decode_responses=True)
     )

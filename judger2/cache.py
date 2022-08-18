@@ -1,15 +1,21 @@
+from asyncio import sleep
 from dataclasses import dataclass
 from datetime import datetime
 from http.client import NOT_MODIFIED, OK
-from os import path, stat, utime
+from logging import getLogger
+from os import chmod, path, remove, scandir, stat, utime
 from pathlib import PosixPath
+from shutil import copy
 from time import time
 from urllib.parse import urlsplit
-from uuid import uuid5, NAMESPACE_URL
+from uuid import NAMESPACE_URL, uuid5
 
 from aiohttp import request
 
-from judger2.config import cache_dir
+from judger2.config import cache_dir, cache_clear_interval_secs, \
+                           cache_max_age_secs
+
+logger = getLogger(__name__)
 
 
 @dataclass
@@ -45,7 +51,7 @@ async def ensure_cached (url: str) -> CachedFile:
             utime(cache.path, (time(), mtime))
             return cache
         if resp.status != OK:
-            raise Exception('Unknown response status while fetching object:', resp.status)
+            raise Exception(f'Unknown response status {resp.status} while fetching object')
         with open(cache.path, 'w') as f:
             async for data, _ in resp.content.iter_chunks():
                 f.write(data)
@@ -57,9 +63,33 @@ async def ensure_cached (url: str) -> CachedFile:
 
 
 async def upload (local_path: str, url: str) -> CachedFile:
-    pass
+    cache = cached_from_url(url)
+    copy(local_path, cache.path)
+    chmod(cache.path, 0o640)
+    utime(cache.path)
+    with open(cache.path, 'rb') as f:
+        async with request('PUT', url, data=f) as resp:
+            if resp.status != OK:
+                raise Exception(f'Unknown response status {resp.status} while uploading file')
+    return cache
 
+
+def clear_cache ():
+    for file in scandir(cache_dir):
+        if not file.is_file():
+            continue
+        st = file.stat()
+        atime = max(st.st_atime, st.st_mtime)
+        age = time() - atime
+        if age > cache_max_age_secs:
+            logger.debug(f'removing file {file.path} from cache as age is {age}')
+            remove(file)
 
 async def clean_cache_worker ():
-    # TODO
-    pass
+    while True:
+        try:
+            logger.info('clearing cache')
+            clear_cache()
+        except Exception as e:
+            logger.error(f'error while clearing cache: {e}')
+        await sleep(cache_clear_interval_secs)

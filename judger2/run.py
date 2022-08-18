@@ -1,6 +1,7 @@
 from judger2.logging_ import task_logger
 
 from asyncio import CancelledError, Task, create_task, run, sleep, wait
+from atexit import register
 from json import loads as load_json
 from logging import getLogger
 from time import time
@@ -93,3 +94,5 @@ if __name__ == '__main__':
         run(main())
     except KeyboardInterrupt:
         pass
+
+register(lambda: logger.info(f'runner {runner_id} stopping'))

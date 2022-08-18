@@ -1,6 +1,6 @@
 from logging_ import task_logger
 
-from asyncio import CancelledError, Task, create_task, run, sleep
+from asyncio import CancelledError, Task, create_task, run, sleep, wait
 from json import loads as load_json
 from logging import getLogger
 from time import time
@@ -19,10 +19,10 @@ async def send_heartbeats ():
     while True:
         try:
             data = {'timestamp': time(), 'task': current_task}
-            rpc('heartbeat', data)
+            await rpc('heartbeat', data)
         except Exception as e:
             logger.error(f'error sending heartbeat to web server: {e}')
-        sleep(heartbeat_interval_secs)
+        await sleep(heartbeat_interval_secs)
 
 
 current_task_id = None
@@ -51,7 +51,7 @@ async def poll_for_tasks ():
                 task_logger.info(f'task {task_id} was cancelled')
         except Exception as e:
             task_logger.error(f'error processing task: {e}')
-            sleep(2)
+            await sleep(2)
         finally:
             current_task = None
             current_task_id = None
@@ -75,16 +75,21 @@ async def poll_for_signals ():
                 raise Exception(f'Unknown command {cmd}')
         except Exception as e:
             logger.error(f'Error processing signal: {e}')
-            sleep(2)
+            await sleep(2)
 
 
 async def main ():
     logger.info(f'runner {runner_id} starting')
-    create_task(send_heartbeats())
-    create_task(poll_for_tasks())
-    create_task(poll_for_signals())
-    create_task(clean_cache_worker())
+    await wait([
+        create_task(send_heartbeats()),
+        create_task(poll_for_tasks()),
+        create_task(poll_for_signals()),
+        create_task(clean_cache_worker()),
+    ])
 
 
 if __name__ == '__main__':
-    run(main())
+    try:
+        run(main())
+    except KeyboardInterrupt:
+        pass

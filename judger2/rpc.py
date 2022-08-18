@@ -11,7 +11,8 @@ def box (data: dict) -> bytes:
     return web_box.encrypt(json.dumps(data, ensure_ascii=False).encode())
 
 def unbox (data: bytes):
-    return json.loads(web_box.decrypt(data), object_hook=lambda dict: namedtuple('', dict.keys())(*dict.values()))
+    return json.loads(web_box.decrypt(data), \
+        object_hook=lambda dict: namedtuple('Tmp', dict.keys())(*dict.values()))
 
 def api_url (path: str) -> str:
     return urljoin(web_base_url, f'api/runner/{path}')

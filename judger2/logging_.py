@@ -8,7 +8,7 @@ from config import log_dir
 
 cwd = PosixPath(log_dir)
 
-format = Formatter('%(asctime)s [%(levelname)s] %(name)s %(message)s', '%c')
+format = Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s', '%c')
 
 def add_handler (level, handler, target = root):
     handler.setLevel(level)

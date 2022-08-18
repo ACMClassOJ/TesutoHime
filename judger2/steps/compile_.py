@@ -12,10 +12,9 @@ from config import cache_dir, cxx, cxxflags, cxx_file_name, cxx_exec_name, \
                    exec_file_name, git_exec_name, verilog, verilog_file_name, \
                    verilog_exec_name
 from sandbox import chown_back, run_with_limits
-from task import InvalidTaskException
 from task_typing import CompileLocalResult, CompileResult, CompileSourceCpp, \
                         CompileSourceGit, CompileSourceVerilog, CompileTask, \
-                        Input, ResourceUsage
+                        Input, InvalidTaskException, ResourceUsage
 from util import TempDir, copy_supplementary_files
 
 logger = getLogger(__name__)

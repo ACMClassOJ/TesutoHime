@@ -12,10 +12,10 @@ def load_config () -> dict:
     with open('config.yml', 'r') as f:
         config = yaml.load(f, yaml.Loader)
 
-    if not 'runner-config' in config:
+    if not 'runner_config' in config:
         raise Exception('Config file is not valid runner config. Check your config.yml.')
 
-    config_version = config['runner-config']
+    config_version = config['runner_config']
     program_version = 'v1'
 
     if config_version != program_version:
@@ -26,23 +26,23 @@ def load_config () -> dict:
 config = load_config()
 
 runner_id: str = config['id']
-relative_slowness: float = config['relative-slowness']
-working_dir: str = config['working-dir']
-cache_dir: str = config['cache-dir']
-log_dir: str = config['log-dir']
+relative_slowness: float = config['relative_slowness']
+working_dir: str = config['working_dir']
+cache_dir: str = config['cache_dir']
+log_dir: str = config['log_dir']
 cache_max_age_secs = 86400.0
 cache_clear_interval_secs = 86400.0
-private_key = PrivateKey(b64decode(config['private-key'].encode()))
-worker_uid = int(config['worker-uid'])
+private_key = PrivateKey(b64decode(config['private_key'].encode()))
+worker_uid = int(config['worker_uid'])
 
-web_public_key = PublicKey(b64decode(config['web-server']['public-key'].encode()))
+web_public_key = PublicKey(b64decode(config['web_server']['public_key'].encode()))
 web_box = Box(private_key=private_key, public_key=web_public_key)
-web_base_url: str = config['web-server']['base-url']
+web_base_url: str = config['web_server']['base_url']
 heartbeat_interval_secs = 2.0
 
 queues = config['redis']['queues']
 task_queue_key: str = queues['tasks']
-in_progress_key: str = queues['in-progress']
+in_progress_key: str = queues['in_progress']
 signals_key: str = queues['signals']
 poll_timeout_secs = 10.0
 async def redis_connect ():

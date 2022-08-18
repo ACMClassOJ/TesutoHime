@@ -193,3 +193,5 @@ class JudgeResult:
     type: Literal['judge_result'] = 'judge_result'
 
 Result = Union[CompileResult, JudgeResult]
+
+class InvalidTaskException (Exception): pass

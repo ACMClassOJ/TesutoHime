@@ -5,18 +5,15 @@ from typing import List, Optional
 
 from logging_ import task_logger
 from util import TempDir
-from task_typing import CompileResult, CompileTask, JudgeResult, \
-                        TestpointJudgeResult, JudgeTask, Result, Task, \
-                        Testpoint
+from task_typing import CompileResult, CompileTask, InvalidTaskException, \
+                        JudgeResult, TestpointJudgeResult, JudgeTask, Result, \
+                        Task, Testpoint
 from steps.compile_ import compile
 from steps.run import run
 from steps.check import check
 from rpc import rpc
 
 logger = getLogger(__name__)
-
-
-class InvalidTaskException (Exception): pass
 
 
 async def run_task (task: Task, task_id: str) -> Result:

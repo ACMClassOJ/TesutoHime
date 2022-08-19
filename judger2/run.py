@@ -7,8 +7,9 @@ from logging import getLogger
 from time import time
 
 from judger2.cache import clean_cache_worker
-from judger2.config import heartbeat_interval_secs, redis_connect, task_queue_key, \
-                   in_progress_key, poll_timeout_secs, signals_key, runner_id
+from judger2.config import heartbeat_interval_secs, redis_connect, \
+                           task_queue_key, in_progress_key, poll_timeout_secs, \
+                           signals_key, runner_id
 from judger2.rpc import rpc
 from judger2.task import run_task
 from judger2.util import asyncrun
@@ -32,6 +33,7 @@ current_task: Task = None
 
 async def poll_for_tasks ():
     redis = await redis_connect()
+    redis.delete(in_progress_key)
     while True:
         try:
             task_id = await asyncrun(lambda: redis.blmove(

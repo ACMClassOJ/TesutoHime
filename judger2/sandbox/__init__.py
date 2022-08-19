@@ -104,8 +104,9 @@ async def run_with_limits (
             bindmount=[str(result_dir)] + bindmount_rw,
             disable_clone_newnet=network_access,
         )
-        nsjail_argv = format_args(asdict(args)) \
-             + ['--', runner_path, str(result_file)] + argv
+        run_args = [runner_path, str(time_limit_scaled + 1), str(result_file)] \
+            + argv
+        nsjail_argv = format_args(asdict(args)) + ['--'] + run_args
         argv_str = ' '.join(quote(x) for x in nsjail_argv)
         logger.info(f'about to run nsjail with args {argv_str}')
 

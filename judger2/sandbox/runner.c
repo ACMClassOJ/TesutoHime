@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -16,17 +17,30 @@ void check (int cond, const char *msg) {
   }
 }
 
+#define SEC_TO_MS 1000
+#define MS_TO_US  1000
+#define MS_TO_NS  1000000
+
 time_ms_t gettime () {
   struct timespec ts;
   check(clock_gettime(CLOCK_REALTIME, &ts), "clock_gettime");
-  time_ms_t time = ts.tv_sec * 1000;
-  time += ts.tv_nsec / 1000000;
+  time_ms_t time = ts.tv_sec * SEC_TO_MS;
+  time += ts.tv_nsec / MS_TO_NS;
   return time;
 }
 
+void set_timer (time_ms_t time) {
+  struct itimerval val;
+  val.it_value.tv_sec = time / SEC_TO_MS;
+  val.it_value.tv_usec = (time % SEC_TO_MS) * MS_TO_US;
+  val.it_interval.tv_sec = 0;
+  val.it_interval.tv_usec = 10 * MS_TO_US;
+  check(setitimer(ITIMER_REAL, &val, NULL), "setitimer");
+}
+
 int main (int argc, char **argv) {
-  if (argc < 3) {
-    fprintf(stderr, "Usage: runner <result file> <executable> [args...]\n");
+  if (argc < 4) {
+    fprintf(stderr, "Usage: runner <time limit msecs> <result file> <executable> [args...]\n");
     exit(126);
   }
   if (getuid() != 0 || geteuid() != 0) {
@@ -34,7 +48,8 @@ int main (int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
 
-  const char * const results_file = argv[1];
+  time_ms_t time_limit = atoll(argv[1]);
+  const char * const results_file = argv[2];
   FILE *results = fopen(results_file, "w");
   check(!results, "fopen");
   check(chmod(results_file, 0600), "chmod");
@@ -44,8 +59,9 @@ int main (int argc, char **argv) {
   if (child_pid == 0) { // is child
     check(fclose(results), "fclose");
     check(setuid(WORKER_UID), "setuid");
+    set_timer(time_limit);
 
-    check(execv(argv[2], &argv[2]), "execv");
+    check(execv(argv[3], &argv[3]), "execv");
     // execv returns only on errors.
   }
 

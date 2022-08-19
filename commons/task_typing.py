@@ -143,8 +143,8 @@ class CompileResult:
 class RunResult:
     error: Optional[RunError]
     message: str
-    code: Optional[int] = None # for runtime errors
     resource_usage: Optional[ResourceUsage] = None
+    code: Optional[int] = None # for runtime errors
     output_path: Optional[PosixPath] = None
     input_path: Optional[PosixPath] = None
     type: Literal['run_result'] = 'run_result'

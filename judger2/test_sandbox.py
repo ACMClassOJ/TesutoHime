@@ -26,7 +26,7 @@ async def run_test ():
 #include <stdio.h>
 
 int main () {
-    // while (1);
+    while (1);
     printf("Hello World!\n");
     return 0;
 }

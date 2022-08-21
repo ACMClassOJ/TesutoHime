@@ -13,7 +13,8 @@ from time import time
 from typing import IO, Union, List
 
 from judger2.config import relative_slowness, worker_uid, task_envp
-from judger2.util import TempDir, asyncrun, format_args
+from judger2.util import TempDir, format_args
+from commons.util import asyncrun
 from commons.task_typing import ResourceUsage, RunResult
 
 logger = getLogger(__name__)

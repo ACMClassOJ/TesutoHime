@@ -4,7 +4,7 @@ from shutil import which
 from nacl.public import PublicKey, PrivateKey, Box
 from redis import StrictRedis
 
-from commons.config import load_config
+from commons.util import load_config, asyncrun
 from commons.task_typing import ResourceUsage
 
 config = load_config('runner', 'v1')
@@ -30,7 +30,6 @@ in_progress_key: str = queues['in_progress']
 signals_key: str = queues['signals']
 poll_timeout_secs = 10.0
 async def redis_connect ():
-    from judger2.util import asyncrun
     return await asyncrun(lambda:
         StrictRedis(**config['redis']['connection'], decode_responses=True)
     )

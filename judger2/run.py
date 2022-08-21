@@ -12,7 +12,7 @@ from judger2.config import heartbeat_interval_secs, redis_connect, \
                            signals_key, runner_id
 from judger2.rpc import rpc
 from judger2.task import run_task
-from judger2.util import asyncrun
+from commons.util import asyncrun
 
 logger = getLogger(__name__)
 
@@ -52,12 +52,17 @@ async def poll_for_tasks ():
                 await current_task
             except CancelledError:
                 task_logger.info(f'task {task_id} was cancelled')
-        except Exception as e:
+        except BaseException as e:
             task_logger.error(f'error processing task: {e}')
             await sleep(2)
         finally:
             current_task = None
             current_task_id = None
+            if task_id is not None:
+                try:
+                    redis.lrem(in_progress_key, 0, task_id)
+                except BaseException as e:
+                    task_logger.error(f'error removing task from queue')
 
 
 async def poll_for_signals ():

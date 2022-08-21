@@ -1,8 +1,8 @@
-from asyncio import get_running_loop, as_completed
+from asyncio import as_completed
 from logging import getLogger
 from pathlib import PosixPath
 from shutil import copy2, rmtree
-from typing import Callable, Dict, List, TypeVar, Union
+from typing import Dict, List, Union
 from uuid import uuid4
 
 from judger2.config import working_dir
@@ -10,12 +10,6 @@ from judger2.cache import ensure_cached
 from commons.task_typing import Url
 
 logger = getLogger(__name__)
-
-
-T = TypeVar('T')
-
-async def asyncrun (func: Callable[[], T]) -> T:
-    return await get_running_loop().run_in_executor(None, func)
 
 
 class TempDir:

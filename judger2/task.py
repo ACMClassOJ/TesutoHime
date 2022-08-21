@@ -1,10 +1,11 @@
 from asyncio import CancelledError
 from dataclasses import asdict
 from logging import getLogger
+from pathlib import PosixPath
 from typing import List, Optional
 
 from judger2.logging_ import task_logger
-from judger2.util import TempDir
+from judger2.util import TempDir, copy_supplementary_files
 from commons.task_typing import CompileResult, CompileTask, \
                                 InvalidTaskException, JudgeResult, \
                                 TestpointJudgeResult, JudgeTask, Result, Task, \
@@ -58,6 +59,41 @@ def get_skip_reason (
 
     return None
 
+
+class Ref:
+    def __init__ (self, value):
+        self.value = value
+
+async def judge_testpoint (testpoint: Testpoint, result: JudgeResult, \
+    cwd: PosixPath, rusage: Ref):
+    skip_reason = get_skip_reason(testpoint, result.testpoints)
+    if skip_reason != None:
+        task_logger.info(f'skipping {testpoint.id} due to {skip_reason}')
+        return TestpointJudgeResult(
+            testpoint_id=testpoint.id,
+            result='skipped',
+            message=skip_reason,
+        )
+
+    with TempDir() as oufdir:
+        if testpoint.run != None:
+            await copy_supplementary_files(testpoint.run.supplementary_files)
+            output = await run(oufdir, cwd, testpoint.input, testpoint.run)
+            logger.debug(f'run result: {output}')
+            rusage.value = output.resource_usage
+        else:
+            output = testpoint.input
+
+        check_res = await check(output, testpoint.check)
+        logger.debug(f'check result: {check_res}')
+        res = TestpointJudgeResult(
+            **asdict(check_res),
+            testpoint_id=testpoint.id,
+            resource_usage=rusage.value,
+        )
+        task_logger.info(f'testpoint {testpoint.id} finished with {res}')
+        return res
+
 async def judge_task (task: JudgeTask, task_id: str) -> JudgeResult:
     result = JudgeResult([None for _ in task.testpoints])
     async def report_progress ():
@@ -65,47 +101,22 @@ async def judge_task (task: JudgeTask, task_id: str) -> JudgeResult:
             'id': task_id,
             'progress': asdict(result),
         })
-    for i, testpoint in enumerate(task.testpoints):
-        rusage = None
-        try:
-            skip_reason = get_skip_reason(testpoint, result.testpoints)
-            if skip_reason != None:
-                task_logger.info(f'skipping {testpoint.id} due to {skip_reason}')
+    with TempDir() as cwd:
+        for i, testpoint in enumerate(task.testpoints):
+            rusage = Ref(None)
+            try:
+                result.testpoints[i] = \
+                    judge_testpoint(testpoint, result, cwd, rusage)
+
+            except CancelledError:
+                raise
+            except Exception as e:
                 result.testpoints[i] = TestpointJudgeResult(
                     testpoint_id=testpoint.id,
-                    result='skipped',
-                    message=skip_reason,
+                    result='system_error',
+                    message=str(e),
+                    resource_usage=rusage.value,
                 )
-                await report_progress()
-                continue
-
-            with TempDir() as cwd:
-                if testpoint.run != None:
-                    output = await run(cwd, testpoint.input, testpoint.run)
-                    logger.debug(f'run result: {output}')
-                    rusage = output.resource_usage
-                else:
-                    output = testpoint.input
-
-                check_res = await check(output, testpoint.check)
-                logger.debug(f'check result: {check_res}')
-                res = TestpointJudgeResult(
-                    **asdict(check_res),
-                    testpoint_id=testpoint.id,
-                    resource_usage=rusage,
-                )
-                task_logger.info(f'testpoint {testpoint.id} finished with {res}')
-                result.testpoints[i] = res
-
-        except CancelledError:
-            raise
-        except Exception as e:
-            result.testpoints[i] = TestpointJudgeResult(
-                testpoint_id=testpoint.id,
-                result='system_error',
-                message=str(e),
-                resource_usage=rusage,
-            )
-        await report_progress()
+            await report_progress()
 
     return result

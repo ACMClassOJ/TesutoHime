@@ -60,20 +60,23 @@ runners: Dict[str, BaseRunner] = {
 }
 
 
-async def run (oufdir: PosixPath, input: Input, args: RunArgs) -> RunResult:
+async def run (oufdir: PosixPath, cwd: PosixPath, input: Input, args: RunArgs) -> RunResult:
     with TempDir() as cwd:
         # get infile
         infile = None if args.infile is None \
             else (await ensure_cached(args.infile)).path
-        outfile = oufdir / 'ouf'
+        outfile_name = 'ouf'
+        outfile = oufdir / outfile_name
 
         # compile if needed
         try:
             exe = await ensure_input(input)
         except NotCompiledException as e:
             return RunResult('compile_error', str(e))
-        exec_file = cwd / exe.filename
+        exec_file = oufdir / exe.filename
         copy2(exe.path, exec_file)
+        if exe.filename == outfile_name:
+            outfile = oufdir / f'{outfile_name}1'
 
         await copy_supplementary_files(args.supplementary_files, cwd)
 

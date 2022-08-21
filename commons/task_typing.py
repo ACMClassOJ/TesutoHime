@@ -3,6 +3,8 @@ from pathlib import PosixPath
 from typing import List, Literal, Optional, Union
 
 
+# scheduler -> runner
+
 Url = str
 
 @dataclass
@@ -98,6 +100,8 @@ class JudgeTask:
 
 Task = Union[CompileTask, JudgeTask]
 
+
+# runner -> scheduler, runner internal state
 
 CompileError = Literal['compile_error']
 RunError = Literal[
@@ -195,3 +199,11 @@ class JudgeResult:
 Result = Union[CompileResult, JudgeResult]
 
 class InvalidTaskException (Exception): pass
+
+
+# scheduler internal state
+
+@dataclass
+class JudgePlan:
+    compile: Optional[CompileTask]
+    judge: JudgeTask

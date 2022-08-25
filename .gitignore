@@ -7,6 +7,9 @@ scheduler.lock
 # Web/static/lib/
 
 *_config.yml
+problem.yml
+runner.yml
+scheduler.yml
 test.out
 
 # Byte-compiled / optimized / DLL files

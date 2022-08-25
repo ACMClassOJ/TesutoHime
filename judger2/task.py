@@ -4,16 +4,16 @@ from logging import getLogger
 from pathlib import PosixPath
 from typing import List, Optional
 
+from commons.task_typing import (CompileResult, CompileTask,
+                                 InvalidTaskException, JudgeResult, JudgeTask,
+                                 Result, Task, Testpoint, TestpointJudgeResult)
+
 from judger2.logging_ import task_logger
-from judger2.util import TempDir, copy_supplementary_files
-from commons.task_typing import CompileResult, CompileTask, \
-                                InvalidTaskException, JudgeResult, \
-                                TestpointJudgeResult, JudgeTask, Result, Task, \
-                                Testpoint
+from judger2.rpc import rpc
+from judger2.steps.check import check
 from judger2.steps.compile_ import compile
 from judger2.steps.run import run
-from judger2.steps.check import check
-from judger2.rpc import rpc
+from judger2.util import TempDir, copy_supplementary_files
 
 logger = getLogger(__name__)
 

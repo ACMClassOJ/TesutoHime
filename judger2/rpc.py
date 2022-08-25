@@ -1,10 +1,10 @@
+import json
 from collections import namedtuple
 from urllib.parse import urljoin
-import json
 
 from aiohttp import request
 
-from judger2.config import web_box, web_base_url, runner_id
+from judger2.config import runner_id, web_base_url, web_box
 
 
 def box (data: dict) -> bytes:

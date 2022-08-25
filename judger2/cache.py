@@ -12,8 +12,8 @@ from uuid import NAMESPACE_URL, uuid5
 
 from aiohttp import request
 
-from judger2.config import cache_dir, cache_clear_interval_secs, \
-                           cache_max_age_secs
+from judger2.config import (cache_clear_interval_secs, cache_dir,
+                            cache_max_age_secs)
 
 logger = getLogger(__name__)
 

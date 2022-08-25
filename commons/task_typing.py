@@ -204,6 +204,33 @@ class InvalidTaskException (Exception): pass
 # scheduler internal state
 
 @dataclass
+class UserCode:
+    filename: Optional[str] = None
+
+@dataclass
+class CompileTaskPlan:
+    source: Union[CompileSource, UserCode]
+    supplementary_files: List[Union[Url, UserCode]]
+    artifact: bool
+    limits: ResourceUsage
+
+@dataclass
+class JudgeTaskPlan:
+    task: JudgeTask
+    dependencies: List[int]
+    dependents: List[int]
+
+
+@dataclass
+class TestpointGroup:
+    name: str
+    testpoints: List[str]
+    score: float
+
+
+@dataclass
 class JudgePlan:
-    compile: Optional[CompileTask]
-    judge: JudgeTask
+    compile: Optional[CompileTask] = None
+    judge: List[JudgeTaskPlan] = None
+    score: List[TestpointGroup] = None
+

@@ -7,15 +7,16 @@ from os import getuid, wait4, waitstatus_to_exitcode
 from pathlib import PosixPath
 from shlex import quote
 from shutil import which
-from subprocess import DEVNULL, Popen, PIPE
+from subprocess import DEVNULL, PIPE, Popen
 from sys import platform
 from time import time
-from typing import IO, Union, List
+from typing import IO, List, Union
 
-from judger2.config import relative_slowness, worker_uid, task_envp
-from judger2.util import TempDir, format_args
-from commons.util import asyncrun
 from commons.task_typing import ResourceUsage, RunResult
+from commons.util import asyncrun
+
+from judger2.config import relative_slowness, task_envp, worker_uid
+from judger2.util import TempDir, format_args
 
 logger = getLogger(__name__)
 

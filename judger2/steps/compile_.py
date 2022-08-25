@@ -7,15 +7,16 @@ from shutil import copy2, which
 from typing import Any, Callable, Coroutine, Dict, List
 from uuid import uuid4
 
+from commons.task_typing import (CompileLocalResult, CompileResult,
+                                 CompileSource, CompileSourceCpp,
+                                 CompileSourceGit, CompileSourceVerilog,
+                                 CompileTask, Input, ResourceUsage)
+
 from judger2.cache import CachedFile, ensure_cached, upload
-from judger2.config import cache_dir, cxx, cxxflags, cxx_file_name, \
-                           cxx_exec_name, exec_file_name, git_exec_name, \
-                           verilog, verilog_file_name, verilog_exec_name
+from judger2.config import (cache_dir, cxx, cxx_exec_name, cxx_file_name,
+                            cxxflags, exec_file_name, git_exec_name, verilog,
+                            verilog_exec_name, verilog_file_name)
 from judger2.sandbox import chown_back, run_with_limits
-from commons.task_typing import CompileLocalResult, CompileResult, CompileSource, \
-                                CompileSourceCpp, CompileSourceGit, \
-                                CompileSourceVerilog, CompileTask, Input, \
-                                ResourceUsage
 from judger2.util import TempDir, copy_supplementary_files
 
 logger = getLogger(__name__)

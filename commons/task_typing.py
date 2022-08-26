@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum, auto
 from pathlib import PosixPath
 from typing import List, Literal, Optional, Union
 
@@ -6,10 +7,11 @@ from typing import List, Literal, Optional, Union
 # scheduler -> runner
 
 Url = str
+FileUrl = Url
 
 @dataclass
 class CompileSourceCpp:
-    main: Url
+    main: FileUrl
     type: Literal['cpp'] = 'cpp'
 
 @dataclass
@@ -19,7 +21,7 @@ class CompileSourceGit:
 
 @dataclass
 class CompileSourceVerilog:
-    main: Url
+    main: FileUrl
     type: Literal['verilog'] = 'verilog'
 
 
@@ -32,7 +34,7 @@ CompileSource = Union[
 
 @dataclass
 class Artifact:
-    url: Url
+    url: FileUrl
     type: Literal['artifact'] = 'artifact'
 
 @dataclass
@@ -45,7 +47,7 @@ class ResourceUsage:
 @dataclass
 class CompileTask:
     source: CompileSource
-    supplementary_files: List[Url]
+    supplementary_files: List[FileUrl]
     artifact: Optional[Artifact]
     limits: ResourceUsage
     type: Literal['compile'] = 'compile'
@@ -58,14 +60,14 @@ Input = Union[CompileTask, Artifact]
 class RunArgs:
     type: Literal['elf', 'valgrind', 'verilog']
     limits: ResourceUsage
-    infile: Optional[Url]
-    supplementary_files: List[Url]
+    infile: Optional[FileUrl]
+    supplementary_files: List[FileUrl]
 
 
 @dataclass
 class CompareChecker:
     ignore_whitespace: bool
-    answer: Url
+    answer: FileUrl
     type: Literal['compare'] = 'compare'
 
 @dataclass
@@ -76,8 +78,8 @@ class DirectChecker:
 class SpjChecker:
     format: Literal['checker', 'scorer']
     executable: Input
-    answer: Optional[Url]
-    supplementary_files: List[Url]
+    answer: Optional[FileUrl]
+    supplementary_files: List[FileUrl]
     limits: ResourceUsage
     type: Literal['spj'] = 'spj'
 
@@ -203,6 +205,12 @@ class InvalidTaskException (Exception): pass
 
 # scheduler internal state
 
+class CodeLanguage (Enum):
+    CPP = auto()
+    GIT = auto()
+    VERILOG = auto()
+
+
 @dataclass
 class UserCode:
     filename: Optional[str] = None
@@ -210,7 +218,7 @@ class UserCode:
 @dataclass
 class CompileTaskPlan:
     source: Union[CompileSource, UserCode]
-    supplementary_files: List[Union[Url, UserCode]]
+    supplementary_files: List[Union[FileUrl, UserCode]]
     artifact: bool
     limits: ResourceUsage
 
@@ -230,7 +238,7 @@ class TestpointGroup:
 
 @dataclass
 class JudgePlan:
-    compile: Optional[CompileTask] = None
+    compile: Optional[CompileTaskPlan] = None
     judge: List[JudgeTaskPlan] = None
     score: List[TestpointGroup] = None
 

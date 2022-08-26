@@ -4,7 +4,7 @@ from pathlib import PosixPath
 from shutil import copy2
 from typing import Dict, List, Union
 
-from commons.task_typing import Url
+from commons.task_typing import FileUrl
 from commons.util import TempDir
 
 from judger2.cache import ensure_cached
@@ -33,7 +33,7 @@ def _judger_before_tmpdir_exit (path: PosixPath):
 TempDir.config(working_dir, _judger_before_tmpdir_exit)
 
 
-async def copy_supplementary_files (files: List[Url], cwd: PosixPath):
+async def copy_supplementary_files (files: List[FileUrl], cwd: PosixPath):
     if len(files) != 0:
         logger.debug(f'copying supplementary files to {cwd}')
     for f in as_completed(map(ensure_cached, files)):

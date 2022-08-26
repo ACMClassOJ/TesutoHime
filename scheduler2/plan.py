@@ -1,17 +1,28 @@
-__all__ = 'generate_plan',
+__all__ = 'generate_plan', 'execute_plan'
 
-from copy import deepcopy
 import json
+from copy import deepcopy
+from dataclasses import dataclass
+from enum import Enum, auto
 from logging import getLogger
 from os import remove
-from typing import List, Literal, Optional, Set, Tuple
+from typing import List, Literal, Optional, Set
 from zipfile import ZipFile
 
-from scheduler2.config import default_check_limits, default_compile_limits, default_run_limits, s3_buckets, working_dir, problem_config_filename, s3_hosts
-from commons.task_typing import Artifact, CompareChecker, CompileSourceCpp, CompileTaskPlan, DirectChecker, JudgePlan, JudgeTask, JudgeTaskPlan, ResourceUsage, RunArgs, SpjChecker, Testpoint, TestpointGroup, Url, UserCode
-from commons.util import asyncrun
-from scheduler2.problem_typing import Spj, Group, ProblemConfig, Testpoint as ConfigTestpoint
-from scheduler2.s3 import construct_url, download, upload_obj
+from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
+                                 CompileSource, CompileSourceCpp,
+                                 CompileSourceGit, CompileSourceVerilog,
+                                 CompileTask, CompileTaskPlan, DirectChecker,
+                                 FileUrl, JudgePlan, JudgeTask, JudgeTaskPlan,
+                                 RunArgs, SpjChecker, Testpoint,
+                                 TestpointGroup, UserCode)
+
+from scheduler2.config import (default_check_limits, default_compile_limits,
+                               default_run_limits, problem_config_filename,
+                               s3_buckets, working_dir)
+from scheduler2.problem_typing import Group, ProblemConfig, Spj
+from scheduler2.problem_typing import Testpoint as ConfigTestpoint
+from scheduler2.s3 import download, sign_url_get, upload_obj
 
 logger = getLogger(__name__)
 
@@ -19,7 +30,7 @@ logger = getLogger(__name__)
 class InvalidProblemException (Exception): pass
 
 
-class PlanContext:
+class ParseContext:
     problem_id: str
     zip: ZipFile
     cfg: ProblemConfig
@@ -45,10 +56,10 @@ class PlanContext:
     def cons_url (self, filename):
         self.files_to_upload.add(filename)
         key = self.cons_key(filename)
-        return construct_url(s3_hosts.internal, s3_buckets.problems, key)
+        return f's3://{key}'
 
 
-async def load_config (ctx: PlanContext):
+async def load_config (ctx: ParseContext):
     try:
         with ctx.zip.open(problem_config_filename, 'r') as f:
             cfg = json.load(f)
@@ -64,7 +75,7 @@ async def load_config (ctx: PlanContext):
         raise InvalidProblemException(str(e))
 
 
-async def parse_spj (ctx: PlanContext):
+async def parse_spj (ctx: ParseContext):
     spj = ctx.cfg.SPJ
     type_map = {
         Spj.CLASSIC_CLASSIC: ('classic', 'classic'),
@@ -83,9 +94,11 @@ async def parse_spj (ctx: PlanContext):
 
 hpp_main_filename = 'main.cpp'
 hpp_main_template = '%d.cpp'
+hpp_main_template_vlog = '%d.v'
 hpp_src_filename = 'src.hpp'
+hpp_src_filename_vlog = 'answer.v'
 
-async def parse_compile (ctx: PlanContext) -> Optional[CompileTaskPlan]:
+async def parse_compile (ctx: ParseContext) -> Optional[CompileTaskPlan]:
     if ctx.compile_type == 'none':
         return None
 
@@ -104,7 +117,9 @@ async def parse_compile (ctx: PlanContext) -> Optional[CompileTaskPlan]:
     )
     if ctx.compile_type == 'classic':
         return task
-    task.supplementary_files.append(UserCode(hpp_src_filename))
+    src_filename = hpp_src_filename_vlog if ctx.cfg.Verilog \
+        else hpp_src_filename
+    task.supplementary_files.append(UserCode(src_filename))
 
     has_main = hpp_main_filename in ctx.zip.namelist()
     if has_main:
@@ -112,6 +127,7 @@ async def parse_compile (ctx: PlanContext) -> Optional[CompileTaskPlan]:
         return task
     ctx.compile_type = 'hpp-per-testpoint'
     task.source = None
+    task.artifact = False
     return task
 
 
@@ -125,7 +141,7 @@ infile_name_template = '%d.in'
 answer_name_template = '%d.ans'
 answer_name_template_alt = '%d.out'
 
-async def parse_testpoints (ctx: PlanContext) -> List[JudgeTaskPlan]:
+async def parse_testpoints (ctx: ParseContext) -> List[JudgeTaskPlan]:
     def parse_testpoint (conf: ConfigTestpoint) -> Testpoint:
         id = str(conf.ID)
         infile_name = infile_name_template % id
@@ -146,7 +162,7 @@ async def parse_testpoints (ctx: PlanContext) -> List[JudgeTaskPlan]:
             supplementary_files=[],
         )
 
-        def ans () -> Optional[Url]:
+        def ans () -> Optional[FileUrl]:
             ans_filename = answer_name_template % id
             if ans_filename in ctx.zip.namelist():
                 return ctx.cons_url(ans_filename)
@@ -171,9 +187,10 @@ async def parse_testpoints (ctx: PlanContext) -> List[JudgeTaskPlan]:
             check=check,
         )
         if ctx.compile_type == 'hpp-per-testpoint':
-            source = CompileSourceCpp(ctx.cons_url(hpp_main_template % id))
+            main_template = hpp_main_template_vlog if ctx.cfg.Verilog \
+                else hpp_main_template
             task = deepcopy(ctx.plan.compile)
-            task.source = source
+            task.source = CompileSourceCpp(ctx.cons_url(main_template % id))
             testpoint.input = task
         return testpoint
 
@@ -183,6 +200,9 @@ async def parse_testpoints (ctx: PlanContext) -> List[JudgeTaskPlan]:
         ctx.plan.compile = None
 
     if any(x.DiskLimit is not None and x.DiskLimit > 0 for x in ctx.cfg.Details):
+        if ctx.compile_type == 'hpp-per-testpoint':
+            msg = 'Per-testpoint compilation is incompatible with persistence testing'
+            raise InvalidProblemException(msg)
         plan: List[JudgeTaskPlan] = []
         for testpoint, conf in zip(testpoints, ctx.cfg.Details):
             if len(plan) == 0 or conf.DiskLimit < 0:
@@ -227,7 +247,7 @@ async def parse_testpoints (ctx: PlanContext) -> List[JudgeTaskPlan]:
 
 group_name_template = 'Task %d'
 
-async def parse_groups (ctx: PlanContext) -> List[TestpointGroup]:
+async def parse_groups (ctx: ParseContext) -> List[TestpointGroup]:
     return [TestpointGroup(
         name=conf.GroupName if conf.GroupName is not None \
             else group_name_template % (i + 1),
@@ -236,13 +256,13 @@ async def parse_groups (ctx: PlanContext) -> List[TestpointGroup]:
     ) for i, conf in enumerate(ctx.cfg.Groups)]
 
 
-async def upload_files (ctx: PlanContext):
+async def upload_files (ctx: ParseContext):
     for file in ctx.files_to_upload:
         with ctx.zip.open(file, 'rb') as f:
             await upload_obj(s3_buckets.problems, ctx.cons_key(file), f)
 
 
-async def compile_spj (ctx: PlanContext):
+async def compile_spj (ctx: ParseContext):
     raise NotImplementedError()
 
 
@@ -252,7 +272,7 @@ async def generate_plan (problem_id: str) -> JudgePlan:
     try:
         await download(s3_buckets.problems, zip_filename, zip_path)
         with ZipFile(zip_path) as zip:
-            ctx = PlanContext(problem_id, zip)
+            ctx = ParseContext(problem_id, zip)
             await load_config(ctx)
             await parse_spj(ctx)
             ctx.plan.compile = await parse_compile(ctx)
@@ -266,3 +286,146 @@ async def generate_plan (problem_id: str) -> JudgePlan:
             remove(zip_path)
         except BaseException as e:
             logger.error(f'cannot remove problem zip: {e}')
+
+
+class InvalidCodeException (Exception): pass
+
+
+class UrlType (Enum):
+    CODE = auto()
+    ARTIFACT = auto()
+
+@dataclass
+class JudgeTaskRecord:
+    task: JudgeTask
+    plan: JudgeTaskPlan
+
+@dataclass
+class ExecutionContext:
+    plan: JudgePlan
+    lang: CodeLanguage
+    code: str
+    compile: Optional[CompileTask] = None
+    judge: Optional[List[JudgeTaskRecord]] = None
+    compile_artifact: Optional[Artifact] = None
+
+    def cons_url (self, type: UrlType, filename: str):
+        raise NotImplementedError()
+
+
+def sign_url (url: str):
+    scheme = 's3://'
+    if not url.startswith(scheme):
+        raise InvalidProblemException(f'Invalid object url {url}')
+    return sign_url_get(s3_buckets.problems, url.replace(scheme, '', 1), {})
+
+
+raw_code_filename = 'code'
+cpp_main_filename = 'main.cpp'
+verilog_main_filename = 'main.v'
+artifact_filename = 'main'
+
+def get_compile_source (ctx: ExecutionContext, filename: str) -> CompileSource:
+    if ctx.lang == CodeLanguage.CPP:
+        return CompileSourceCpp(ctx.cons_url(UrlType.CODE, filename))
+    if ctx.lang == CodeLanguage.GIT:
+        return CompileSourceGit(ctx.code.strip())
+    if ctx.lang == CodeLanguage.VERILOG:
+        return CompileSourceVerilog(ctx.cons_url(UrlType.CODE, filename))
+    raise InvalidCodeException('Unknown language')
+
+def prepare_compile_task (ctx: ExecutionContext, plan: CompileTaskPlan) \
+    -> CompileTask:
+    if not plan:
+        return
+
+    user_codes = list(filter(lambda x: isinstance(x, UserCode), 
+        [plan.source] + plan.supplementary_files))
+    if len(user_codes) == 0:
+        raise InvalidProblemException('Compile task with no user input')
+    if len(user_codes) > 1:
+        raise InvalidCodeException('Compile task with multiple files as user input')
+
+    fallback_filename = cpp_main_filename if ctx.lang == CodeLanguage.CPP \
+        else verilog_main_filename if ctx.lang == CodeLanguage.VERILOG \
+        else None
+    filename = user_codes[0].filename
+    if filename is None: filename = fallback_filename
+    if isinstance(plan.source, UserCode):
+        source = get_compile_source(ctx, filename)
+    else:
+        source = deepcopy(plan.source)
+        if source.type == 'cpp' or source.type == 'verilog':
+            source.main = sign_url(source.main)
+    def map_supplementary_file (file):
+        if isinstance(file, UserCode):
+            return ctx.cons_url(UrlType.CODE, filename)
+        else:
+            return sign_url(file)
+    supplementary_files = [map_supplementary_file(x) for x in
+        plan.supplementary_files]
+
+    artifact = Artifact(ctx.cons_url(UrlType.ARTIFACT, artifact_filename)) \
+        if plan.artifact else None
+    limits = deepcopy(plan.limits)
+    ctx.compile = CompileTask(source, supplementary_files, artifact, limits)
+
+
+def get_judge_task (ctx: ExecutionContext, plan: JudgeTaskPlan) \
+    -> JudgeTaskRecord:
+    task = deepcopy(plan.task)
+    for testpoint in task.testpoints:
+        if testpoint.dependent_on is not None:
+            if all(x.id != testpoint.dependent_on for x in task.testpoints):
+                testpoint.dependent_on = None
+
+        match testpoint.input:
+            case UserCode():
+                if ctx.compile_artifact is None:
+                    ctx.compile_artifact = Artifact(ctx.cons_url(UrlType.CODE,
+                        raw_code_filename))
+                testpoint.input = ctx.compile_artifact
+            case CompileTaskPlan():
+                testpoint.input = prepare_compile_task(ctx, testpoint.input)
+            case CompileTask():
+                pass
+            case Artifact():
+                testpoint.input.url = sign_url(testpoint.input.url)
+
+        if testpoint.run is not None:
+            if testpoint.run.infile is not None:
+                testpoint.run.infile = sign_url(testpoint.run.infile)
+            testpoint.run.supplementary_files = \
+                [sign_url(x) for x in testpoint.run.supplementary_files]
+
+        match testpoint.check:
+            case CompareChecker():
+                testpoint.check.answer = sign_url(testpoint.check.answer)
+            case DirectChecker():
+                pass
+            case SpjChecker():
+                if testpoint.check.answer is not None:
+                    testpoint.check.answer = sign_url(testpoint.check.answer)
+                if not isinstance(testpoint.check.executable, Artifact):
+                    raise InvalidProblemException('Invalid SPJ')
+                testpoint.check.executable.url = \
+                    sign_url(testpoint.check.executable.url)
+                testpoint.check.supplementary_files = \
+                    [sign_url(x) for x in testpoint.check.supplementary_files]
+
+    return JudgeTaskRecord(task, plan)
+
+def get_judge_tasks (ctx: ExecutionContext) -> List[JudgeTaskRecord]:
+    return [get_judge_task(ctx, plan) for plan in ctx.plan.judge]
+
+
+async def run_judge_tasks (ctx: ExecutionContext):
+    raise NotImplementedError()
+
+
+async def execute_plan (plan: JudgePlan, lang: CodeLanguage, code: str):
+    ctx = ExecutionContext(plan, lang, code)
+    ctx.compile = prepare_compile_task(ctx.plan.compile)
+    ctx.judge = get_judge_tasks(ctx)
+    await run_judge_tasks(ctx)
+    # TODO: report back

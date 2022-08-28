@@ -18,7 +18,7 @@ logger = getLogger(__name__)
 
 
 async def check (outfile: CheckInput, checker: Checker) -> CheckResult:
-    logger.info(f'checking {outfile} with {checker}')
+    logger.info(f'checking with {checker}')
     # get output file to check
     if outfile.type != 'run_result':
         try:
@@ -44,12 +44,13 @@ async def checker_cmp (_infile, outfile: PosixPath, checker: CompareChecker):
     ignore_ws_flag = 'y' if checker.ignore_whitespace else 'n'
     argv = [str(cmp), str(outfile), str(ans), ignore_ws_flag]
     logger.debug(f'about to run {argv}')
-    res = await run_with_limits(
-        argv,
-        PosixPath('/'),
-        checker_cmp_limits,
-        supplementary_paths=[str(cmp), str(outfile), str(ans)],
-    )
+    with TempDir() as cwd:
+        res = await run_with_limits(
+            argv,
+            cwd,
+            checker_cmp_limits,
+            supplementary_paths=[str(cmp), str(outfile), str(ans)],
+        )
     if res.error == 'runtime_error' and res.code == cmp_errexit_code:
         return CheckResult('wrong_answer', 'Wrong answer')
     if res.error is not None:

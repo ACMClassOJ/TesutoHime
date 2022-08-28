@@ -38,6 +38,7 @@ utc_time_format = '%a, %d %b %Y %H:%M:%S GMT'
 
 async def ensure_cached (url: str) -> CachedFile:
     cache = cached_from_url(url)
+    logger.debug(f'caching file {cache.filename} to {cache.path}')
     headers = {}
     try:
         mtime = stat(cache.path).st_mtime
@@ -48,11 +49,13 @@ async def ensure_cached (url: str) -> CachedFile:
         mtime = time()
     async with request('GET', url, headers=headers) as resp:
         if resp.status == NOT_MODIFIED:
+            logger.debug(f'{cache.filename} is not modified, using cache')
             utime(cache.path, (time(), mtime))
             return cache
         if resp.status != OK:
             raise Exception(f'Unknown response status {resp.status} while fetching object')
-        with open(cache.path, 'w') as f:
+        logger.debug(f'{cache.filename} is modified, downloading file')
+        with open(cache.path, 'wb') as f:
             async for data, _ in resp.content.iter_chunks():
                 f.write(data)
         last_modified = datetime \

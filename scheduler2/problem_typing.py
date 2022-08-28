@@ -5,12 +5,12 @@ from typing import List, Literal, Optional, Union
 
 @unique
 class Spj (IntEnum):
-    CLASSIC_CLASSIC = 0
-    CLASSIC_CHECKER = 1
+    CLASSIC_COMPARE = 0
+    CLASSIC_SPJ = 1
     HPP_DIRECT = 2
-    HPP_CLASSIC = 3
-    HPP_CHECKER = 4
-    NONE_CHECKER = 5
+    HPP_COMPARE = 3
+    HPP_SPJ = 4
+    NONE_SPJ = 5
 
 
 @dataclass
@@ -38,5 +38,5 @@ class ProblemConfig:
     CompileTimeLimit: Optional[int] = None
     SPJ: Spj = 0
     Scorer: Literal[0] = 0
-    SupportedFiles: List[str] = field(default=lambda: [])
+    SupportedFiles: List[str] = field(default_factory=lambda: [])
     Verilog: bool = False

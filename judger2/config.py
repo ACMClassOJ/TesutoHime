@@ -1,11 +1,8 @@
-from base64 import b64decode
 from shutil import which
 
-from nacl.public import PublicKey, PrivateKey, Box
-from redis import StrictRedis
-
-from commons.util import load_config, asyncrun
 from commons.task_typing import ResourceUsage
+from commons.util import RedisQueues, load_config
+from redis.asyncio import StrictRedis
 
 config = load_config('runner', 'v1')
 
@@ -16,23 +13,14 @@ cache_dir: str = config['cache_dir']
 log_dir: str = config['log_dir']
 cache_max_age_secs = 86400.0
 cache_clear_interval_secs = 86400.0
-private_key = PrivateKey(b64decode(config['private_key'].encode()))
 worker_uid = int(config['worker_uid'])
 
-web_public_key = PublicKey(b64decode(config['web_server']['public_key'].encode()))
-web_box = Box(private_key=private_key, public_key=web_public_key)
-web_base_url: str = config['web_server']['base_url']
 heartbeat_interval_secs = 2.0
 
-queues = config['redis']['queues']
-task_queue_key: str = queues['tasks']
-in_progress_key: str = queues['in_progress']
-signals_key: str = queues['signals']
-poll_timeout_secs = 10.0
-async def redis_connect ():
-    return await asyncrun(lambda:
-        StrictRedis(**config['redis']['connection'], decode_responses=True)
-    )
+queues = RedisQueues(config['redis']['prefix'], runner_id)
+poll_timeout_secs = 10
+def redis_connect ():
+    return StrictRedis(**config['redis']['connection'], decode_responses=True)
 
 # env vars for task runner
 task_envp = [
@@ -46,7 +34,7 @@ task_envp = [
 exec_file_name = 'code'
 
 cxx = which('g++')
-cxxflags = ['-fmaxerrors=10', '-O2', '-DONLINE_JUDGE', '-std=c++17']
+cxxflags = ['-fmax-errors=10', '-O2', '-DONLINE_JUDGE', '-std=c++17']
 cxx_file_name = 'code.cpp'
 cxx_exec_name = exec_file_name
 

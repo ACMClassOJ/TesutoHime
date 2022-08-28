@@ -74,7 +74,7 @@ async def ensure_input (input: Input) -> CachedFile:
         if res.result.result != 'compiled':
             raise NotCompiledException(res.result.message)
         return CachedFile(res.local_path, exec_file_name)
-    return ensure_cached(input.url)
+    return await ensure_cached(input.url)
 
 
 async def compile_cpp (
@@ -82,7 +82,7 @@ async def compile_cpp (
     source: CompileSourceCpp,
     limits: ResourceUsage,
 ) -> CompileLocalResult:
-    main_file = await ensure_cached(source.main)
+    main_file = (await ensure_cached(source.main)).path
     code_file = cwd / cxx_file_name
     exec_file = cwd / cxx_exec_name
     copy2(main_file, code_file)

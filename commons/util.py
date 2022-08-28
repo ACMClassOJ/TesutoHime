@@ -94,3 +94,31 @@ class TempDir:
         global working_dir, before_exit
         working_dir = _working_dir
         before_exit = _before_exit
+
+
+class RedisQueues:
+    def __init__ (self, prefix: str, id: str = None):
+        def queue (name):
+            return f'{prefix}-{name}'
+        def rqueue (name):
+            return f'{queue(name)}-runner{id}'
+        self.tasks = queue('tasks')
+        self._prefix = prefix
+        self._task_prefix = queue('task')
+        if id is not None:
+            self.in_progress = rqueue('in-progress')
+            self.heartbeat = rqueue('heartbeat')
+
+    class TaskRedisQueues:
+        def __init__ (self, prefix, id):
+            def queue (name):
+                return f'{prefix}-{name}-{id}'
+            self.task = queue('task')
+            self.result = queue('result')
+            self.done = queue('done')
+            self.abort = queue('abort')
+    def task (self, task_id: str) -> TaskRedisQueues:
+        return RedisQueues.TaskRedisQueues(self._task_prefix, task_id)
+
+    def with_id (self, runner_id: str):
+        return RedisQueues(self._prefix, runner_id)

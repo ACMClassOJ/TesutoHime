@@ -23,25 +23,25 @@ class RunParams:
     supplementary_paths: List[str]
 
 class BaseRunner:
-    def prepare (program: PosixPath) -> RunParams:
+    def prepare (self, program: PosixPath) -> RunParams:
         raise NotImplementedError()
-    def interpret_result (result: RunResult) -> RunResult:
+    def interpret_result (self, result: RunResult) -> RunResult:
         return result
 
 elf_mode = 0o550
 
 class ElfRunner (BaseRunner):
-    def prepare (program: PosixPath):
+    def prepare (self, program: PosixPath):
         chmod(program, elf_mode)
         return RunParams([str(program)], [])
 
 class ValgrindRunner (BaseRunner):
-    def prepare (program: PosixPath):
+    def prepare (self, program: PosixPath):
         chmod(program, elf_mode)
         argv = [valgrind] + valgrind_args + [str(program)]
         return RunParams(argv, [valgrind])
 
-    def interpret_result (result: RunResult):
+    def interpret_result (self, result: RunResult):
         if result.error != 'runtime_error' \
         or result.code != valgrind_errexit_code:
             return result
@@ -50,7 +50,7 @@ class ValgrindRunner (BaseRunner):
         return RunResult(**res_dict)
 
 class VerilogRunner (BaseRunner):
-    def prepare (program: PosixPath):
+    def prepare (self, program: PosixPath):
         argv = [verilog_interpreter, str(program)]
         return RunParams(argv, [verilog_interpreter])
 
@@ -93,12 +93,13 @@ async def run (oufdir: PosixPath, cwd: PosixPath, input: Input, args: RunArgs) -
                     params.argv,
                     cwd,
                     args.limits,
+                    supplementary_paths=[exec_file],
                     infile=inf,
                     outfile=ouf,
                 ))
         finally:
             try:
-                if inf != DEVNULL and not inf.closed():
+                if inf != DEVNULL and not inf.closed:
                     inf.close()
             finally:
                 pass
@@ -107,5 +108,10 @@ async def run (oufdir: PosixPath, cwd: PosixPath, input: Input, args: RunArgs) -
         if res.error != None:
             return res
 
-        return RunResult(None, res.message, ouf, res.resource_usage,
-            input_path=infile)
+        return RunResult(
+            error=None,
+            message=res.message,
+            output_path=outfile,
+            resource_usage=res.resource_usage,
+            input_path=infile,
+        )

@@ -1,18 +1,20 @@
-from base64 import b64decode
 from dataclasses import dataclass
 from pathlib import PosixPath
-from nacl.public import PublicKey, PrivateKey, Box
-from redis import StrictRedis
-from commons.task_typing import ResourceUsage
 
-from commons.util import load_config
+from commons.task_typing import ResourceUsage
+from commons.util import RedisQueues, load_config
+from redis.asyncio import StrictRedis
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 config = load_config('scheduler', 'v1')
 
 working_dir = PosixPath(config['working_dir'])
 cache_dir = PosixPath(config['cache_dir'])
 log_dir = PosixPath(config['log_dir'])
-private_key = PrivateKey(b64decode(config['private_key'].encode()))
+
+db_engine = create_async_engine(config['db'])
+Session = sessionmaker(bind=db_engine, class_=AsyncSession)
 
 s3_connection = config['s3']['connection']
 
@@ -23,14 +25,13 @@ class S3Buckets:
     artifacts: str
 s3_buckets = S3Buckets(**config['s3']['buckets'])
 
-@dataclass
-class S3Hosts:
-    public: str
-    internal: str
-s3_hosts = S3Hosts(**config['s3']['hosts'])
-
 
 problem_config_filename = 'config.json'
+
+redis_queues = RedisQueues(config['redis']['prefix'])
+def redis_connect ():
+    return StrictRedis(**config['redis']['connection'], decode_responses=True)
+
 
 Secs = 1000
 KiB = 1024
@@ -58,3 +59,5 @@ default_check_limits = ResourceUsage(
     file_count=unlimited,
     file_size_bytes=unlimited,
 )
+
+task_timeout_secs = 3600 # 1 hour

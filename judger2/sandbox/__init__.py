@@ -133,7 +133,7 @@ async def run_with_limits (
             if len(params) < 4 or params[0] != 'run':
                 logger.error(f'invalid runner output {repr(text)}')
                 raise Exception('invalid runner output')
-            [program_code, realtime, mem] = [int(x) for x in params[1:4]]
+            program_code, realtime, mem = [int(x) for x in params[1:4]]
             usage_is_accurate = True
         except BaseException:
             program_code = -1
@@ -152,7 +152,7 @@ async def run_with_limits (
         if du_code != 0:
             raise Exception(f'du exited with code {du_code}')
         du_out = (await du_proc.stdout.read(4096)).decode().split('\n')
-        [file_size_bytes, file_count] = [int(x) for x in du_out[:2]]
+        file_size_bytes, file_count = [int(x) for x in du_out[:2]]
         file_size_bytes *= 1024
 
         usage = ResourceUsage(
@@ -190,10 +190,10 @@ async def run_with_limits (
             else:
                 msg = f'program exited with status {program_code}{errmsg}'
             return RunResult('runtime_error', msg, usage, code=program_code)
-        if file_size_bytes > limits.file_size_bytes:
+        if file_size_bytes > limits.file_size_bytes >= 0:
             msg = 'File size too large'
             return RunResult('disk_limit_exceeded', msg, usage)
-        if file_count > limits.file_count:
+        if file_count > limits.file_count >= 0:
             msg = 'Too many files are created'
             return RunResult('disk_limit_exceeded', msg, usage)
 
@@ -202,7 +202,7 @@ async def run_with_limits (
 
 
 def chown_back (path: PosixPath):
-    logger.info(f'about to chown_back {path}')
+    logger.debug(f'about to chown_back {path}')
     argv = [which('nsjail')] + format_args({
         'cwd': str(path),
         'chroot': '/',

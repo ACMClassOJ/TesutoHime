@@ -4,27 +4,26 @@ from boto3 import client as s3_client
 from botocore.config import Config
 from commons.util import asyncrun
 
-from scheduler2.config import s3_connection
+from scheduler2.config import s3_connection, task_timeout_secs
 
-cfg = Config(signature_version='v4')
+cfg = Config(signature_version='s3v4')
 s3 = s3_client('s3', **s3_connection, config=cfg)
-
 
 def construct_url (host: str, bucket: str, key: str) -> str:
     return urljoin(host, f'{bucket}/{key}')
 
-def sign_url_get (bucket: str, key: str, args: dict):
+def sign_url_get (bucket: str, key: str, args: dict = {}):
     return s3.generate_presigned_url('get_object', {
         'Bucket': bucket,
         'Key': key,
         **args,
-    })
+    }, ExpiresIn=task_timeout_secs * 5)
 
 def sign_url_put (bucket: str, key: str):
     return s3.generate_presigned_url('put_object', {
         'Bucket': bucket,
         'Key': key,
-    })
+    }, ExpiresIn=task_timeout_secs * 5)
 
 
 async def download (bucket: str, key: str, path: PosixPath):
@@ -34,4 +33,7 @@ async def upload (bucket: str, key: str, file: PosixPath):
     await asyncrun(lambda: s3.upload_file(str(file), bucket, key))
 
 async def upload_obj (bucket: str, key: str, fileobj):
-    await asyncrun(lambda: s3.upload_fileobj(fileobj, bucket, key))
+    await asyncrun(lambda: s3.put_object(Bucket=bucket, Key=key, Body=fileobj))
+
+async def remove_file (bucket: str, key: str):
+    await asyncrun(lambda: s3.delete_object(Bucket=bucket, Key=key))

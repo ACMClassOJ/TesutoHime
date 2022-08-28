@@ -1,8 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from pathlib import PosixPath
 from typing import List, Literal, Optional, Union
-
 
 # scheduler -> runner
 
@@ -242,3 +241,18 @@ class JudgePlan:
     judge: List[JudgeTaskPlan] = None
     score: List[TestpointGroup] = None
 
+
+@dataclass
+class GroupJudgeResult:
+    name: str
+    result: ResultType
+    testpoints: List[TestpointJudgeResult]
+    score: float
+
+@dataclass
+class ProblemJudgeResult:
+    result: ResultType
+    message: Optional[str]
+    score: float = 0.0
+    resource_usage: Optional[ResourceUsage] = None
+    groups: List[GroupJudgeResult] = field(default_factory=lambda: [])

@@ -1,4 +1,4 @@
-from asyncio import sleep
+from asyncio import CancelledError, sleep
 from dataclasses import dataclass
 from datetime import datetime
 from http.client import NOT_MODIFIED, OK
@@ -93,6 +93,8 @@ async def clean_cache_worker ():
         try:
             logger.info('clearing cache')
             clear_cache()
+        except CancelledError:
+            return
         except Exception as e:
             logger.error(f'error while clearing cache: {e}')
         await sleep(cache_clear_interval_secs)

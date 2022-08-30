@@ -115,6 +115,8 @@ RunError = Literal[
 CheckError = Literal['wrong_answer']
 Skipped = Literal['skipped']
 Cancelled = Literal['cancelled']
+Judging = Literal['judging']
+Pending = Literal['pending']
 MiscError = Literal[
     'system_error',
     'unknown_error',
@@ -126,6 +128,8 @@ ResultType = Union[
     CheckError,
     Skipped,
     Cancelled,
+    Judging,
+    Pending,
     MiscError,
     Accepted,
 ]
@@ -256,3 +260,9 @@ class ProblemJudgeResult:
     score: float = 0.0
     resource_usage: Optional[ResourceUsage] = None
     groups: List[GroupJudgeResult] = field(default_factory=lambda: [])
+
+
+@dataclass
+class SourceLocation:
+    bucket: str
+    key: str

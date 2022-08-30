@@ -1,3 +1,5 @@
+__import__('judger2.logging_')
+
 from asyncio import CancelledError, create_task, run, sleep, wait
 from atexit import register
 from json import dumps as dump_json
@@ -24,7 +26,7 @@ async def send_heartbeats ():
         try:
             await redis.set(queues.heartbeat, time())
         except CancelledError:
-            raise KeyboardInterrupt()
+            return
         except BaseException as e:
             logger.error(f'error sending heartbeat: {e}')
         await sleep(heartbeat_interval_secs)
@@ -36,7 +38,6 @@ async def poll_for_tasks ():
     while True:
         task_id = None
         try:
-            print('polling for tasks')
             task_id = await redis.blmove(
                 queues.tasks,
                 queues.in_progress,
@@ -74,7 +75,7 @@ async def poll_for_tasks ():
             except CancelledError:
                 task_logger.info(f'task {task_id} was cancelled')
         except CancelledError:
-            raise KeyboardInterrupt()
+            return
         except BaseException as e:
             task_logger.error(f'error processing task: {e}')
             print_exception(e)
@@ -83,9 +84,12 @@ async def poll_for_tasks ():
             if task_id is not None:
                 try:
                     await redis.lrem(queues.in_progress, 0, task_id)
+                except BaseException as e:
+                    task_logger.error(f'error removing task from queue: {e}')
+                try:
                     await redis.lpush(task_queues.done, 0)
                 except BaseException as e:
-                    task_logger.error(f'error removing task from queue')
+                    task_logger.error(f'error sending nack: {e}')
 
 
 async def main ():

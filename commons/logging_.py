@@ -19,4 +19,4 @@ def setup_logging (log_dir):
     add_handler(DEBUG, WatchedFileHandler(cwd / 'verbose.log'))
     add_handler(INFO, WatchedFileHandler(cwd / 'info.log'))
     add_handler(WARNING, WatchedFileHandler(cwd / 'errors.log'))
-    add_handler(WARNING, StreamHandler())
+    add_handler(INFO, StreamHandler())

@@ -110,7 +110,7 @@ async def run_with_limits (
             + argv
         nsjail_argv = format_args(asdict(args)) + ['--'] + run_args
         argv_str = ' '.join(quote(x) for x in nsjail_argv)
-        logger.info(f'about to run nsjail with args {argv_str}')
+        logger.debug(f'about to run nsjail with args {argv_str}')
 
         # execute
         time_start = time()
@@ -122,8 +122,8 @@ async def run_with_limits (
         code = waitstatus_to_exitcode(status)
         approx_time = time() - time_start
         approx_mem = rusage.ru_maxrss * 1024
-        logger.info(f'nsjail run finished')
-        logger.info(f'{code=} {approx_time=} {approx_mem=}')
+        logger.debug(f'nsjail run finished')
+        logger.debug(f'{code=} {approx_time=} {approx_mem=}')
 
         # parse result file
         try:

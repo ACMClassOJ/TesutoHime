@@ -1,13 +1,14 @@
-__all__ = 'generate_plan', 'execute_plan'
+__import__('scheduler2.logging_')
+
+__all__ = 'generate_plan', 'execute_plan', 'ctx_from_submission'
 
 import json
-from asyncio import FIRST_COMPLETED, Task, create_task, wait
+from asyncio import FIRST_COMPLETED, CancelledError, Task, create_task, wait
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from logging import getLogger
 from os import remove
-from pathlib import PosixPath
 from typing import Dict, Iterable, List, Literal, Optional, Set, Tuple
 from zipfile import ZipFile
 
@@ -19,8 +20,9 @@ from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
                                  GroupJudgeResult, JudgePlan, JudgeResult,
                                  JudgeTask, JudgeTaskPlan, ProblemJudgeResult,
                                  ResourceUsage, ResultType, RunArgs,
-                                 SpjChecker, Testpoint, TestpointGroup,
-                                 TestpointJudgeResult, UserCode)
+                                 SourceLocation, SpjChecker, Testpoint,
+                                 TestpointGroup, TestpointJudgeResult,
+                                 UserCode)
 
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
@@ -28,8 +30,8 @@ from scheduler2.config import (default_check_limits, default_compile_limits,
 from scheduler2.dispatch import run_task
 from scheduler2.problem_typing import Group, ProblemConfig, Spj
 from scheduler2.problem_typing import Testpoint as ConfigTestpoint
-from scheduler2.s3 import (download, remove_file, sign_url_get, sign_url_put, upload,
-                           upload_obj)
+from scheduler2.s3 import (copy_file, download, read_file, remove_file,
+                           sign_url_get, sign_url_put, upload_obj)
 
 logger = getLogger(__name__)
 
@@ -103,7 +105,7 @@ async def parse_spj (ctx: ParseContext):
     ctx.compile_type, ctx.check_type = type_map[spj]
     if ctx.cfg.Scorer != 0:
         raise InvalidProblemException(f'Scorers are not supported (yet)')
-    if ctx.check_type == 'checker':
+    if ctx.check_type == 'spj':
         if checker_precompiled_filename in ctx.zip.namelist():
             ctx.checker_artifact = Artifact(
                 ctx.file_url(checker_precompiled_filename))
@@ -167,6 +169,7 @@ infile_name_template = '{}.in'
 answer_name_template = '{}.ans'
 answer_name_template_alt = '{}.out'
 
+# TODO: detect loops in dependent_on relations
 def parse_testpoint (ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
     id = str(conf.ID)
     infile_name = infile_name_template.format(id)
@@ -291,6 +294,8 @@ async def parse_groups (ctx: ParseContext) -> List[TestpointGroup]:
 
 
 async def upload_files (ctx: ParseContext):
+    if any(not file in ctx.zip.namelist() for file in ctx.files_to_upload):
+        raise InvalidProblemException(f'file {file} not found in problem zip')
     for file in ctx.files_to_upload:
         with ctx.zip.open(file, 'r') as f:
             await upload_obj(s3_buckets.problems, ctx.file_key(file), f)
@@ -355,12 +360,13 @@ class ExecutionContext:
     plan: JudgePlan
     id: str
     lang: CodeLanguage
-    code: PosixPath
+    code: SourceLocation
     compile: Optional[CompileTask] = None
     judge: Optional[List[JudgeTaskRecord]] = None
     code_key: Optional[str] = None
     compile_artifact: Optional[Artifact] = None
     files_to_clean: Set[str] = field(default_factory=lambda: set())
+    results: Dict[str, TestpointJudgeResult] = field(default_factory=lambda: {})
 
     def file_url (self, type: UrlType, filename: str):
         key = f'{self.id}/{filename}'
@@ -395,19 +401,19 @@ cpp_main_filename = 'main.cpp'
 verilog_main_filename = 'main.v'
 artifact_filename = 'main'
 
-def get_compile_source (ctx: ExecutionContext, filename: str) -> CompileSource:
+async def get_compile_source (ctx: ExecutionContext, filename: str) -> CompileSource:
     if ctx.lang == CodeLanguage.CPP:
         return CompileSourceCpp(ctx.file_url(UrlType.CODE, filename))
     if ctx.lang == CodeLanguage.GIT:
-        st = ctx.code.stat()
-        if st.st_size > 1024:
-            raise InvalidCodeException('URL too long')
-        return CompileSourceGit(ctx.code.read_text().strip())
+        url = (await read_file(ctx.code.bucket, ctx.code.key)).strip()
+        if url.startswith('/'):
+            raise InvalidCodeException('Local clone not allowed')
+        return CompileSourceGit(url)
     if ctx.lang == CodeLanguage.VERILOG:
         return CompileSourceVerilog(ctx.file_url(UrlType.CODE, filename))
     raise InvalidCodeException('Unknown language')
 
-def prepare_compile_task (ctx: ExecutionContext) -> CompileTask:
+async def prepare_compile_task (ctx: ExecutionContext) -> CompileTask:
     plan = ctx.plan.compile
     if not plan:
         return None
@@ -425,7 +431,7 @@ def prepare_compile_task (ctx: ExecutionContext) -> CompileTask:
     filename = user_codes[0].filename
     if filename is None: filename = fallback_filename
     if isinstance(plan.source, UserCode):
-        source = get_compile_source(ctx, filename)
+        source = await get_compile_source(ctx, filename)
     else:
         source = deepcopy(plan.source)
         if source.type == 'cpp' or source.type == 'verilog':
@@ -444,7 +450,7 @@ def prepare_compile_task (ctx: ExecutionContext) -> CompileTask:
     return CompileTask(source, supplementary_files, artifact, limits)
 
 
-def get_judge_task (ctx: ExecutionContext, plan: JudgeTaskPlan) \
+async def get_judge_task (ctx: ExecutionContext, plan: JudgeTaskPlan) \
     -> JudgeTaskRecord:
     task = deepcopy(plan.task)
     for testpoint in task.testpoints:
@@ -459,7 +465,7 @@ def get_judge_task (ctx: ExecutionContext, plan: JudgeTaskPlan) \
                         raw_code_filename))
                 testpoint.input = ctx.compile_artifact
             case CompileTaskPlan():
-                testpoint.input = prepare_compile_task(ctx, testpoint.input)
+                testpoint.input = await prepare_compile_task(ctx, testpoint.input)
             case CompileTask():
                 pass
             case Artifact():
@@ -488,16 +494,15 @@ def get_judge_task (ctx: ExecutionContext, plan: JudgeTaskPlan) \
 
     return JudgeTaskRecord(task, deepcopy(plan))
 
-def get_judge_tasks (ctx: ExecutionContext) -> List[JudgeTaskRecord]:
-    return [get_judge_task(ctx, plan) for plan in ctx.plan.judge]
+async def get_judge_tasks (ctx: ExecutionContext) -> List[JudgeTaskRecord]:
+    return [await get_judge_task(ctx, plan) for plan in ctx.plan.judge]
 
 
 async def upload_code (ctx: ExecutionContext):
-    # TODO: maybe use s3 copy_object()?
     if ctx.code_key is not None:
         bucket = s3_buckets.submissions
         ctx.files_to_clean.add((bucket, ctx.code_key))
-        await upload(bucket, ctx.code_key, ctx.code)
+        await copy_file(ctx.code, bucket, ctx.code_key)
 
 
 async def run_compile_task (ctx: ExecutionContext) -> Optional[CompileResult]:
@@ -506,9 +511,14 @@ async def run_compile_task (ctx: ExecutionContext) -> Optional[CompileResult]:
     return await run_task(ctx.compile)
 
 
-def update_dependent_on (record: JudgeTaskRecord, task: JudgeTask):
+def skipped_result (name):
+    return TestpointJudgeResult(name, 'skipped', 'Skipped')
+
+def update_dependent_on (ctx: ExecutionContext, record: JudgeTaskRecord,
+    task: JudgeTask):
     # FIXME: make the following code comprehensible
-    for testpoint in task.testpoints:
+    removed_testpoints = []
+    for i, testpoint in enumerate(task.testpoints):
         if testpoint.dependent_on is not None:
             for tp1 in record.task.testpoints:
                 if testpoint.dependent_on == tp1.id:
@@ -518,7 +528,12 @@ def update_dependent_on (record: JudgeTaskRecord, task: JudgeTask):
                         testpoint.dependent_on = None
                     else:
                         testpoint.dependent_on = DependencyNotSatisfied()
+                        removed_testpoints.append(i)
+                        ctx.results[testpoint.id] = skipped_result(testpoint.id)
                     break
+    record.task.testpoints = [record.task.testpoints[i] for i in
+        filter(lambda i: not i in removed_testpoints,
+            range(len(record.task.testpoints)))]
 
 async def run_judge_tasks (ctx: ExecutionContext):
     records = ctx.judge
@@ -536,10 +551,13 @@ async def run_judge_tasks (ctx: ExecutionContext):
         for task in done:
             record, res = await task
             record.result = res
+            for testpoint in res.testpoints:
+                if testpoint is not None:
+                    ctx.results[testpoint.testpoint_id] = testpoint
             dependents_task = record.plan.dependents
             dependents.update(dependents_task)
             for dependent in dependents_task:
-                update_dependent_on(record, records[dependent].plan.task)
+                update_dependent_on(ctx, record, records[dependent].plan.task)
         dependents = (records[id] for id in dependents)
         ready = list(filter(ctx.dependencies_satisfied, dependents))
 
@@ -559,43 +577,63 @@ def synthesize_rusage (rusages: Iterable[ResourceUsage]) -> ResourceUsage:
         file_size_bytes=max((x.file_size_bytes for x in rusages), default=-1),
     )
 
-def synthesize_scores (ctx: ExecutionContext) -> ProblemJudgeResult:
-    def get_testpoint_results (rec: JudgeTaskRecord):
-        return ((x.testpoint_id, x) for x in rec.result.testpoints)
-    testpoints: Dict[str, TestpointJudgeResult] = dict(testpoint for list_ in \
-        map(get_testpoint_results, ctx.judge) for testpoint in list_)
+def cancelled_result (name):
+    return TestpointJudgeResult(name, 'cancelled', 'Cancelled')
+def in_progress_result (name):
+    return TestpointJudgeResult(name, 'pending', 'Pending')
+
+def synthesize_scores (ctx: ExecutionContext, *, cancelled: bool = False,
+    in_progress: bool = False) -> ProblemJudgeResult:
+    testpoints = ctx.results
     rusage = synthesize_rusage(x.resource_usage for x in \
         filter(lambda x: x is not None, testpoints.values()))
-    def skipped (name):
-        return TestpointJudgeResult(name, 'skipped', 'Skipped')
+    def fallback_result (_):
+        raise InvalidProblemException(f'Loop detected in dependent_on relations')
+    if cancelled: fallback_result = cancelled_result
+    if in_progress: fallback_result = in_progress_result
     def get_group_result (group: TestpointGroup):
-        res = list(testpoints[x] if x in testpoints else skipped(x) for x in \
-            group.testpoints)
+        res = [testpoints[x] if x in testpoints else fallback_result(x)
+            for x in group.testpoints]
         result = synthesize_results(x.result for x in res)
         score = min(x.score for x in res) * group.score
         return GroupJudgeResult(group.name, result, res, score)
     groups = list(map(get_group_result, ctx.plan.score))
     score = sum(x.score for x in groups)
     result = synthesize_results(x.result for x in groups)
+    if cancelled:
+        result = 'cancelled'
+        score = 0.0
+    if in_progress:
+        result = 'judging'
+        score = 0.0
     return ProblemJudgeResult(result, None, score, rusage, groups)
 
 
-async def execute_plan (plan: JudgePlan, id: int, lang: CodeLanguage,
-    code: PosixPath) -> ProblemJudgeResult:
+ctx_from_submission: Dict[str, ExecutionContext] = {}
+
+async def execute_plan (plan: JudgePlan, id: str, lang: CodeLanguage,
+    code: SourceLocation) -> ProblemJudgeResult:
     ctx = ExecutionContext(plan, id, lang, code)
+    ctx_from_submission[id] = ctx
+    compiled = False
     try:
-        ctx.compile = prepare_compile_task(ctx)
-        ctx.judge = get_judge_tasks(ctx)
-        # print(ctx)
+        ctx.compile = await prepare_compile_task(ctx)
+        ctx.judge = await get_judge_tasks(ctx)
         await upload_code(ctx)
         compile_res = await run_compile_task(ctx)
         if compile_res.result != 'compiled':
             status = 'system_error' if compile_res.result == 'system_error' \
                 else 'compile_error'
             return ProblemJudgeResult(status, compile_res.message)
+        compiled = True
         await run_judge_tasks(ctx)
         return synthesize_scores(ctx)
+    except CancelledError:
+        if compiled:
+            return synthesize_scores(ctx, cancelled=True)
+        return ProblemJudgeResult('cancelled', message=None)
     finally:
+        del ctx_from_submission[id]
         for bucket, key in ctx.files_to_clean:
             try:
                 await remove_file(bucket, key)

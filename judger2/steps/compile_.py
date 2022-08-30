@@ -14,8 +14,8 @@ from commons.task_typing import (CompileLocalResult, CompileResult,
 
 from judger2.cache import CachedFile, ensure_cached, upload
 from judger2.config import (cache_dir, cxx, cxx_exec_name, cxx_file_name,
-                            cxxflags, exec_file_name, git_exec_name, verilog,
-                            verilog_exec_name, verilog_file_name)
+                            cxxflags, exec_file_name, git_exec_name, gitflags,
+                            verilog, verilog_exec_name, verilog_file_name)
 from judger2.sandbox import chown_back, run_with_limits
 from judger2.util import TempDir, copy_supplementary_files
 
@@ -112,8 +112,7 @@ async def compile_git (
         )
 
     # clone
-    git_argv = [which('git'), 'clone', source.url, '.', '--depth', '1',
-                '--recursive']
+    git_argv = [which('git'), 'clone', source.url, '.'] + gitflags
     logger.debug(f'about to run {git_argv}')
     clone_res = await run_build_step(git_argv, True)
     if clone_res.error != None:

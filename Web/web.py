@@ -2,6 +2,10 @@ from flask import Flask, Blueprint, request, render_template, redirect, make_res
 from uuid import uuid4
 import re
 from typing import Optional
+from commons.models import JudgeRecord2, JudgeStatus
+from commons.task_typing import CodeLanguage, ProblemJudgeResult, SourceLocation
+from commons.util import dump_dataclass
+from scheduler2.task import schedule_judge
 from sessionManager import Login_Manager
 from userManager import User_Manager
 from problemManager import Problem_Manager
@@ -366,12 +370,18 @@ def submit_problem():
         lang_request_str = str(request.form.get('lang'))
         if lang_request_str == 'cpp': 
             lang = 0
+            language = CodeLanguage.CPP
         elif lang_request_str == 'git':
             lang = 1
+            language = CodeLanguage.GIT
         elif lang_request_str == 'Verilog':
             lang = 2
+            language = CodeLanguage.VERILOG
         elif lang_request_str == 'quiz':
             lang = 3
+            return '-1'
+        else:
+            return '-1'
         # cpp or git or Verilog or quiz
         if lang == 3:
             user_code = json.dumps(request.form.to_dict())
@@ -380,6 +390,36 @@ def submit_problem():
         if len(str(user_code)) > ProblemConfig.Max_Code_Length:
             return '-1'
         JudgeServer_Scheduler.Start_Judge(problem_id, username, user_code, lang, share)
+        with Session() as db:
+            rec = JudgeRecord2(
+                public=share,
+                username=username,
+                problem_id=problem_id,
+                status=JudgeStatus.created,
+            ) 
+            db.add(rec)
+            db.flush()
+            bucket = S3Config.Buckets.submissions
+            rec_id = rec.id
+            db.commit()
+        key = f'{rec_id}.code'
+        s3.put_object(Bucket=bucket, Key=key, Body=user_code.encode())
+        src = SourceLocation(bucket, key)
+        def cb (res: ProblemJudgeResult):
+            with Session() as db:
+                rec: JudgeRecord2 = db \
+                    .query(JudgeRecord2) \
+                    .where(JudgeRecord2.id == rec_id) \
+                    .one()
+                rec.score = int(res.score)
+                rec.status = res.result
+                rec.message = res.message
+                rusage = res.resource_usage.__dict__
+                for k in rusage:
+                    setattr(rec, k, rusage[k])
+                rec.details = json.dumps(dump_dataclass(res.groups))
+                db.commit()
+        schedule_judge(str(problem_id), str(rec_id), language, src, cb)
         return '0'
 
 

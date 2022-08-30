@@ -1,19 +1,22 @@
-import pymysql
-import requests
 import datetime
 import time
+
+import boto3
 import redis
+import requests
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from config import *
+
+engine = create_engine(mysql_connection_string)
+Session = sessionmaker(bind=engine)
+
+s3 = boto3.client('s3', **S3Config.connection)
 
 
 def db_connect():
-    host = DataBaseConfig.mysql_Host
-    if host.startswith('unix:'):
-        host = host.replace('unix:', '', 1)
-        return pymysql.connect(unix_socket=host, user=DataBaseConfig.mysql_User,
-            database=DataBaseConfig.mysql_Database, autocommit=True)
-    return pymysql.connect(host = DataBaseConfig.mysql_Host, user = DataBaseConfig.mysql_User, password = DataBaseConfig.mysql_Password,
-                           database = DataBaseConfig.mysql_Database, autocommit=True)
+    return engine.dialect.connect(database=mysql_database)
 
 
 def redis_connect():

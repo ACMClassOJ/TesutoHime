@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import Enum
 from pathlib import PosixPath
 from typing import List, Literal, Optional, Union
 
@@ -114,7 +114,8 @@ RunError = Literal[
 ]
 CheckError = Literal['wrong_answer']
 Skipped = Literal['skipped']
-Cancelled = Literal['cancelled']
+Void = Literal['void']
+Aborted = Literal['aborted']
 Judging = Literal['judging']
 Pending = Literal['pending']
 MiscError = Literal[
@@ -127,7 +128,8 @@ ResultType = Union[
     RunError,
     CheckError,
     Skipped,
-    Cancelled,
+    Void,
+    Aborted,
     Judging,
     Pending,
     MiscError,
@@ -137,7 +139,7 @@ ResultType = Union[
 Compiled = Literal['compiled']
 CompileResultType = Union[
     RunError,
-    Cancelled,
+    Aborted,
     MiscError,
     Compiled,
 ]
@@ -182,7 +184,7 @@ CheckInput = Union[Input, RunResult]
 
 @dataclass
 class TestpointJudgeResult:
-    testpoint_id: Optional[str]
+    id: Optional[str]
     result: ResultType
     message: str
     score: float = 0.0
@@ -205,13 +207,32 @@ Result = Union[CompileResult, JudgeResult]
 
 class InvalidTaskException (Exception): pass
 
+@dataclass
+class StatusUpdateStarted: pass
+@dataclass
+class StatusUpdateProgress:
+    result: Result
+@dataclass
+class StatusUpdateDone:
+    result: Result
+@dataclass
+class StatusUpdateError:
+    message: str
+
+StatusUpdate = Union[
+    StatusUpdateStarted,
+    StatusUpdateProgress,
+    StatusUpdateDone,
+    StatusUpdateError,
+]
+
 
 # scheduler internal state
 
 class CodeLanguage (Enum):
-    CPP = auto()
-    GIT = auto()
-    VERILOG = auto()
+    CPP = 'cpp'
+    GIT = 'git'
+    VERILOG = 'verilog'
 
 
 @dataclass
@@ -234,6 +255,7 @@ class JudgeTaskPlan:
 
 @dataclass
 class TestpointGroup:
+    id: str
     name: str
     testpoints: List[str]
     score: float
@@ -248,6 +270,7 @@ class JudgePlan:
 
 @dataclass
 class GroupJudgeResult:
+    id: str
     name: str
     result: ResultType
     testpoints: List[TestpointJudgeResult]

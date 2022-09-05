@@ -1,3 +1,4 @@
+import json
 from asyncio import get_running_loop
 from dataclasses import is_dataclass
 from logging import getLogger
@@ -5,7 +6,10 @@ from pathlib import PosixPath
 from shutil import rmtree
 from typing import Any, Callable, Dict, Type, TypeVar
 from uuid import uuid4
+
 import yaml
+
+import commons.task_typing
 
 logger = getLogger(__name__)
 
@@ -49,6 +53,10 @@ def dump_dataclass (object: Any):
             object.__dict__.items())),
     }
 
+def serialize (object: Any) -> str:
+    return json.dumps(dump_dataclass(object))
+
+
 def load_dataclass (object, classes: Dict[str, Type]) -> Any:
     if isinstance(object, int) \
     or isinstance(object, str) \
@@ -64,6 +72,10 @@ def load_dataclass (object, classes: Dict[str, Type]) -> Any:
     values = dict(map(lambda e: (e[0], load_dataclass(e[1], classes)), \
         object['value'].items()))
     return ctor(**values)
+
+def deserialize (data: str) -> Any:
+    classes = commons.task_typing.__dict__
+    return load_dataclass(json.loads(data), classes)
 
 
 working_dir = None
@@ -114,8 +126,7 @@ class RedisQueues:
             def queue (name):
                 return f'{prefix}-{name}-{id}'
             self.task = queue('task')
-            self.result = queue('result')
-            self.done = queue('done')
+            self.progress = queue('progress')
             self.abort = queue('abort')
     def task (self, task_id: str) -> TaskRedisQueues:
         return RedisQueues.TaskRedisQueues(self._task_prefix, task_id)

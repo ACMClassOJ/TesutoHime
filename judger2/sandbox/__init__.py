@@ -7,10 +7,11 @@ from os import getuid, wait4, waitstatus_to_exitcode
 from pathlib import PosixPath
 from shlex import quote
 from shutil import which
+from signal import strsignal
 from subprocess import DEVNULL, PIPE, Popen
 from sys import platform
 from time import time
-from typing import IO, List, Union
+from typing import IO, List, Literal, Union
 
 from commons.task_typing import ResourceUsage, RunResult
 from commons.util import asyncrun
@@ -26,7 +27,7 @@ if platform != 'linux':
     exit(2)
 
 
-bindmount_ro_base = ['/lib', '/lib64', '/usr/lib', '/usr/lib64']
+bindmount_ro_base = ['/lib', '/lib64', '/usr/lib', '/usr/lib64', '/dev/urandom']
 bindmount_rw_base = ['/dev/null', '/dev/zero']
 worker_uid_inside = 65534
 worker_uid_maps = [
@@ -56,6 +57,7 @@ class NsjailArgs:
     uid_mapping: List[str] = field(default_factory=lambda: worker_uid_maps)
     group: str = '0'
     disable_proc: bool = True
+    tmpfsmount: Union[Literal[False], str] = False
     execute_fd: bool = True
     nice_level: str = '0'
     env: List[str] = field(default_factory=lambda: task_envp)
@@ -66,11 +68,13 @@ async def run_with_limits (
     cwd: PosixPath,
     limits: ResourceUsage,
     *,
-    infile: IO = DEVNULL,
-    outfile: IO = DEVNULL,
+    infile: Union[IO, int] = DEVNULL,
+    outfile: Union[IO, int] = DEVNULL,
     supplementary_paths: List[PosixPath] = [],
     supplementary_paths_rw: List[PosixPath] = [],
     network_access: bool = False,
+    disable_proc: bool = True,
+    tmpfsmount: bool = False,
 ) -> RunResult:
     # these are nsjail args
     fsize = 'inf' if limits.file_size_bytes < 0 else \
@@ -105,6 +109,8 @@ async def run_with_limits (
             bindmount_ro=bindmount_ro,
             bindmount=[str(result_dir)] + bindmount_rw,
             disable_clone_newnet=network_access,
+            disable_proc=disable_proc,
+            tmpfsmount='/tmp' if tmpfsmount else False,
         )
         run_args = [runner_path, str(time_limit_scaled + 1), str(result_file)] \
             + argv
@@ -184,7 +190,12 @@ async def run_with_limits (
         if program_code != 0:
             # runner exited properly, but the program did not
             if program_code >= 256:
-                msg = f'program killed by signal {program_code - 256}{errmsg}'
+                signal = program_code - 256
+                try:
+                    name = f' ({strsignal(signal)})'
+                except ValueError:
+                    name = ''
+                msg = f'program killed by signal {signal}{name}{errmsg}'
             elif program_code < 0:
                 msg = f'program quit abnormally{errmsg}'
             else:

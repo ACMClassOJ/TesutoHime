@@ -17,7 +17,7 @@ async def main ():
     try:
         await run_task
     except CancelledError:
-        print('task cancelled')
+        print('task aborted')
 
 async def run_test ():
     with TempDir() as cwd:

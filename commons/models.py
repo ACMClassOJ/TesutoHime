@@ -14,6 +14,7 @@ metadata = Base.metadata
 
 class User(Base):
     __tablename__ = 'User'
+    __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     id = Column('tempID', INTEGER(11), primary_key=True)
     username = Column('Username', String(20), unique=True)
@@ -28,6 +29,7 @@ class Problem(Base):
     __tablename__ = 'Problem'
     __table_args__ = (
         Index('Release_Time_ID', 'Release_Time', 'ID'),
+        {'mysql_charset': 'utf8mb4'},
     )
 
     id = Column('ID', INTEGER(11), primary_key=True)
@@ -46,6 +48,7 @@ class Problem(Base):
 
 class Contest(Base):
     __tablename__ = 'Contest'
+    __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     id = Column('ID', INTEGER(11), primary_key=True)
     name = Column('Name', TINYTEXT)
@@ -77,6 +80,7 @@ User.contests = relationship(
 
 class ContestProblem(Base):
     __tablename__ = 'Contest_Problem'
+    __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     id = Column('tempID', INTEGER(11), primary_key=True)
     contest_id = Column('Belong', INTEGER(11), ForeignKey(Contest.id), index=True)
@@ -85,6 +89,7 @@ class ContestProblem(Base):
 
 class Discuss(Base):
     __tablename__ = 'Discuss'
+    __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     id = Column('ID', INTEGER(11), primary_key=True)
     problem_id = Column('Problem_ID', INTEGER(11), ForeignKey(Problem.id))
@@ -99,6 +104,7 @@ class JudgeRecord(Base):
     __tablename__ = 'Judge'
     __table_args__ = (
         Index('Problem_ID_Time', 'Problem_ID', 'Time'),
+        {'mysql_charset': 'utf8mb4'},
     )
 
     id = Column('ID', INTEGER(11), primary_key=True)
@@ -119,6 +125,7 @@ class JudgeRecord(Base):
 
 class JudgeServer(Base):
     __tablename__ = 'Judge_Server'
+    __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     id = Column('ID', INTEGER(11), primary_key=True)
     base_url = Column('Address', TINYTEXT)
@@ -132,6 +139,7 @@ class JudgeServer(Base):
 
 class RealnameReference(Base):
     __tablename__ = 'Realname_Reference'
+    __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     id = Column('ID', INTEGER(11), primary_key=True)
     student_id = Column('Student_ID', BIGINT(20), index=True)
@@ -143,12 +151,14 @@ class RealnameReference(Base):
 
 class DatabaseVersion(Base):
     __tablename__ = 'version'
+    __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     version = Column(Integer, primary_key=True)
 
 
 class JudgeRunner2(Base):
     __tablename__ = 'judge_runners2'
+    __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     id = Column(Integer, primary_key=True)
     name = Column(Text)
@@ -156,10 +166,11 @@ class JudgeRunner2(Base):
 
 
 class JudgeStatus(Enum):
-    created = auto()
+    pending = auto()
     compiling = auto()
     judging = auto()
-    cancelled = auto()
+    void = auto()
+    aborted = auto()
 
     compile_error = auto()
     runtime_error = auto()
@@ -178,6 +189,7 @@ class JudgeStatus(Enum):
 
 class JudgeRecord2(Base):
     __tablename__ = 'judge_records2'
+    __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     id = Column(Integer, primary_key=True)
     public = Column(Boolean)
@@ -192,8 +204,3 @@ class JudgeRecord2(Base):
     score = Column(Integer)
     message = Column(Text)
     details = Column(Text) # actually JSON
-
-    time_msecs = Column(Integer)
-    memory_bytes = Column(Integer)
-    file_count = Column(Integer)
-    file_size_bytes = Column(Integer)

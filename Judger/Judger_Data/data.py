@@ -47,7 +47,7 @@ def get_data_from_server(id: int):
 
     shutil.rmtree(dir_path, ignore_errors=True)
     with zipfile.ZipFile(zip_path, 'r') as zip_file:
-        zip_file.extractall(DataConfig.cache_dir)
+        zip_file.extractall(dir_path)
     os.utime(dir_path, (last_modified, last_modified))
     os.remove(zip_path)
 

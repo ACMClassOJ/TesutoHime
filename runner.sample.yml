@@ -1,0 +1,17 @@
+runner_config: v1
+
+id: 1
+relative_slowness: 10
+working_dir: /var/run/oj/runner
+cache_dir: /var/cache/oj/runner
+log_dir: /var/log/oj/runner
+worker_uid: 100001
+
+redis:
+  prefix: oj
+  connection:
+    host: localhost
+    port: 6379
+    username: runner1
+    password: password
+    db: 1

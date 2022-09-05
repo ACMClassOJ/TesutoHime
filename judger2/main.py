@@ -2,14 +2,12 @@ __import__('judger2.logging_')
 
 from asyncio import CancelledError, create_task, run, sleep, wait
 from atexit import register
-from json import dumps as dump_json
-from json import loads as load_json
 from logging import getLogger
 from time import time
-from traceback import print_exception
+from traceback import format_exception
 
-import commons.task_typing
-from commons.util import dump_dataclass, load_dataclass
+from commons.task_typing import StatusUpdateDone, StatusUpdateError, StatusUpdateStarted
+from commons.util import deserialize, serialize
 
 from judger2.cache import clean_cache_worker
 from judger2.config import (heartbeat_interval_secs, poll_timeout_secs, queues,
@@ -47,9 +45,12 @@ async def poll_for_tasks ():
             )
             if task_id is None: continue
             task_queues = queues.task(task_id)
-            task = await redis.get(task_queues.task)
-            task = load_dataclass(load_json(task), commons.task_typing.__dict__)
+            async def report_progress (status):
+                await redis.lpush(task_queues.progress, serialize(status))
+
+            task = deserialize(await redis.get(task_queues.task))
             aio_task = create_task(run_task(task, task_id))
+            await report_progress(StatusUpdateStarted())
 
             async def poll_for_abort_signal ():
                 redis = redis_connect()
@@ -69,16 +70,18 @@ async def poll_for_tasks ():
                 result = await aio_task
                 abort_task.cancel()
                 task_logger.debug(f'task {task_id} completed with {result}')
-                await redis.set(task_queues.result,
-                    dump_json(dump_dataclass(result)))
-                await redis.lpush(task_queues.done, 1)
+                await report_progress(StatusUpdateDone(result))
             except CancelledError:
-                task_logger.info(f'task {task_id} was cancelled')
+                task_logger.info(f'task {task_id} was aborted')
+            normal_completion = True
         except CancelledError:
+            normal_completion = False
+            error = 'Aborted'
             return
         except BaseException as e:
-            task_logger.error(f'error processing task: {e}')
-            print_exception(e)
+            normal_completion = False
+            error = ''.join(format_exception(e))
+            task_logger.error(f'error processing task: {error}')
             await sleep(2)
         finally:
             if task_id is not None:
@@ -86,10 +89,11 @@ async def poll_for_tasks ():
                     await redis.lrem(queues.in_progress, 0, task_id)
                 except BaseException as e:
                     task_logger.error(f'error removing task from queue: {e}')
-                try:
-                    await redis.lpush(task_queues.done, 0)
-                except BaseException as e:
-                    task_logger.error(f'error sending nack: {e}')
+                if not normal_completion:
+                    try:
+                        await report_progress(StatusUpdateError(error))
+                    except BaseException as e:
+                        task_logger.error(f'error sending nack: {e}')
 
 
 async def main ():

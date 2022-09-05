@@ -1,31 +1,37 @@
-from flask import Flask, Blueprint, request, render_template, redirect, make_response, abort, send_from_directory
-from uuid import uuid4
-import re
-from typing import Optional
-from commons.models import JudgeRecord2, JudgeStatus
-from commons.task_typing import CodeLanguage, ProblemJudgeResult, SourceLocation
-from commons.util import dump_dataclass
-from scheduler2.task import schedule_judge
-from sessionManager import Login_Manager
-from userManager import User_Manager
-from problemManager import Problem_Manager
-from quizManager import Quiz_Manager
-from discussManager import Discuss_Manager
-from judgeManager import Judge_Manager
-from contestManager import Contest_Manager
-from judgeServerScheduler import JudgeServer_Scheduler
-from judgeServerManager import JudgeServer_Manager
-from referenceManager import Reference_Manager
-from config import LoginConfig, WebConfig, JudgeConfig, ProblemConfig
-from utils import *
-from admin import admin
-from api import api
-from functools import cmp_to_key
+from http.client import NOT_FOUND, OK, SEE_OTHER
 import json
 import os
+import re
+from functools import cmp_to_key
+from typing import Optional, Tuple
+from urllib.parse import quote, urljoin
+from uuid import uuid4
+
+import commons.task_typing
+from commons.models import JudgeRecord2, JudgeStatus
+from commons.task_typing import ProblemJudgeResult
+from commons.util import load_dataclass, serialize
+from flask import (Blueprint, Flask, abort, make_response, redirect,
+                   render_template, request, send_from_directory)
+from sqlalchemy.orm import joinedload
+
+from admin import admin
+from api import api
+from config import JudgeConfig, LoginConfig, ProblemConfig, WebConfig
 from const import Privilege, ReturnCode
-from tracker import tracker
 from contestCache import Contest_Cache
+from contestManager import Contest_Manager
+from discussManager import Discuss_Manager
+from judgeManager import Judge_Manager
+from judgeServerManager import JudgeServer_Manager
+from judgeServerScheduler import JudgeServer_Scheduler
+from problemManager import Problem_Manager
+from quizManager import Quiz_Manager
+from referenceManager import Reference_Manager
+from sessionManager import Login_Manager
+from tracker import tracker
+from userManager import User_Manager
+from utils import *
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -370,13 +376,10 @@ def submit_problem():
         lang_request_str = str(request.form.get('lang'))
         if lang_request_str == 'cpp': 
             lang = 0
-            language = CodeLanguage.CPP
         elif lang_request_str == 'git':
             lang = 1
-            language = CodeLanguage.GIT
         elif lang_request_str == 'Verilog':
             lang = 2
-            language = CodeLanguage.VERILOG
         elif lang_request_str == 'quiz':
             lang = 3
             return '-1'
@@ -389,38 +392,72 @@ def submit_problem():
             user_code = request.form.get('code')
         if len(str(user_code)) > ProblemConfig.Max_Code_Length:
             return '-1'
-        JudgeServer_Scheduler.Start_Judge(problem_id, username, user_code, lang, share)
+        submission_id = JudgeServer_Scheduler.Start_Judge(problem_id, username, user_code, lang, share)
+        if submission_id is None:
+            return '-1'
+        lang_str = lang_request_str.lower()
         with Session() as db:
             rec = JudgeRecord2(
+                id=submission_id,
                 public=share,
+                language=lang_str,
                 username=username,
                 problem_id=problem_id,
-                status=JudgeStatus.created,
-            ) 
+                status=JudgeStatus.pending,
+            )
             db.add(rec)
-            db.flush()
-            bucket = S3Config.Buckets.submissions
-            rec_id = rec.id
             db.commit()
-        key = f'{rec_id}.code'
+        key = key_from_submission_id(submission_id)
+        bucket = S3Config.Buckets.submissions
         s3.put_object(Bucket=bucket, Key=key, Body=user_code.encode())
-        src = SourceLocation(bucket, key)
-        def cb (res: ProblemJudgeResult):
-            with Session() as db:
-                rec: JudgeRecord2 = db \
-                    .query(JudgeRecord2) \
-                    .where(JudgeRecord2.id == rec_id) \
-                    .one()
-                rec.score = int(res.score)
-                rec.status = res.result
-                rec.message = res.message
-                rusage = res.resource_usage.__dict__
-                for k in rusage:
-                    setattr(rec, k, rusage[k])
-                rec.details = json.dumps(dump_dataclass(res.groups))
-                db.commit()
-        schedule_judge(str(problem_id), str(rec_id), language, src, cb)
+        schedule_judge2(problem_id, submission_id, lang_str, username)
         return '0'
+
+
+def check_scheduler_auth ():
+    auth = request.headers.get('Authorization', '')
+    if auth != SchedulerConfig.auth:
+        abort(401)
+
+
+@web.route('/api/submission/<submission_id>/status', methods=['PUT'])
+def set_status (submission_id):
+    check_scheduler_auth()
+    status = request.get_data(as_text=True)
+    if status not in ('compiling', 'judging'):
+        print(status)
+        abort(400)
+    with Session() as db:
+        rec: JudgeRecord2 = db \
+            .query(JudgeRecord2) \
+            .where(JudgeRecord2.id == submission_id) \
+            .one_or_none()
+        if rec is None:
+            abort(404)
+        rec.status = getattr(JudgeStatus, status)
+        rec.details = None
+        db.commit()
+    return ''
+
+
+@web.route('/api/submission/<submission_id>/result', methods=['PUT'])
+def set_result (submission_id):
+    check_scheduler_auth()
+    classes = commons.task_typing.__dict__
+    res: ProblemJudgeResult = load_dataclass(request.json, classes)
+    with Session() as db:
+        rec: JudgeRecord2 = db \
+            .query(JudgeRecord2) \
+            .where(JudgeRecord2.id == submission_id) \
+            .one_or_none()
+        if rec is None:
+            abort(404)
+        rec.score = int(res.score)
+        rec.status = res.result
+        rec.message = res.message
+        rec.details = serialize(res)
+        db.commit()
+    return ''
 
 
 @web.route('/rank')
@@ -639,6 +676,93 @@ def code():
         return render_template('judge_detail.html', Detail=detail, Data=data,
                                friendlyName=Login_Manager.get_friendly_name(),
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+
+
+@web.route('/code/<int:submit_id>/')
+def code2(submit_id):
+    if not Login_Manager.check_user_status():  # not login
+        return redirect('login?next=' + request.full_path)
+    if submit_id < 0 or submit_id > Judge_Manager.max_id():
+        abort(404)
+    with Session(expire_on_commit=False) as db:
+        submission: JudgeRecord2 = db \
+            .query(JudgeRecord2) \
+            .options(joinedload(JudgeRecord2.user)) \
+            .options(joinedload(JudgeRecord2.problem)) \
+            .where(JudgeRecord2.id == submit_id) \
+            .one_or_none()
+        if submission is None:
+            abort(404)
+    if not is_code_visible(submission.username, submission.problem_id, submission.public):
+        abort(403)
+
+    details = json.loads(submission.details) if submission.details is not None else None
+    if details is None and submission.status == JudgeStatus.judging:
+        url = f'submission/{quote(str(submission.id))}/status'
+        try:
+            # TODO: caching
+            res = requests.get(urljoin(SchedulerConfig.base_url, url))
+            if res.status_code == OK:
+                details = res.json()
+            elif res.status_code == NOT_FOUND:
+                pass
+            else:
+                raise Exception(f'Unknown status code {res.status_code}')
+        except BaseException as e:
+            # TODO: error handling
+            print(e)
+            pass
+    if details is not None:
+        details = load_dataclass(details, commons.task_typing.__dict__)
+
+    code_url = s3.generate_presigned_url('get_object', {
+        'Bucket': S3Config.Buckets.submissions,
+        'Key': key_from_submission_id(submission.id),
+    }, ExpiresIn=60)
+    language = language_info[submission.language] \
+        if submission.language in language_info else 'Unknown'
+    abortable = submission.status in \
+        (JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging)
+    show_score = not abortable and submission.status not in \
+        (JudgeStatus.void, JudgeStatus.aborted)
+
+    return render_template('judge_detail2.html', submission=submission,
+                           enumerate=enumerate, code_url=code_url,
+                           details=details, judge_status_info=judge_status_info,
+                           language=language, abortable=abortable,
+                           show_score=show_score,
+                           friendlyName=Login_Manager.get_friendly_name(),
+                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+
+
+@web.route('/code/<int:submit_id>/abort', methods=['POST'])
+def abort_judge(submit_id):
+    if not Login_Manager.check_user_status():  # not login
+        return redirect('login?next=' + request.full_path)
+    if submit_id < 0 or submit_id > Judge_Manager.max_id():
+        abort(404)
+    with Session(expire_on_commit=False) as db:
+        submission: Optional[Tuple[str, int]] = db \
+            .query(JudgeRecord2.username) \
+            .where(JudgeRecord2.id == submit_id) \
+            .one_or_none()
+        if submission is None:
+            abort(404)
+        username = submission[0]
+    if username != Login_Manager.get_username() \
+        and Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(403)
+    # not quoting here as submit_id is int
+    url = urljoin(SchedulerConfig.base_url, f'submission/{submit_id}/abort')
+    try:
+        res = requests.post(url)
+        if res.status_code == NOT_FOUND:
+            return redirect('.', SEE_OTHER)
+        if res.json()['result'] != 'ok':
+            abort(500, 'runner error')
+    except BaseException as e:
+        abort(500, str(e))
+    return redirect('.', SEE_OTHER)
 
 
 @web.route('/contest')

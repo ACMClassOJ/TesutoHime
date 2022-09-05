@@ -1,0 +1,28 @@
+scheduler_config: v1
+
+working_dir: /var/run/oj/scheduler
+cache_dir: /var/cache/oj/scheduler
+log_dir: /var/log/oj/scheduler
+port: 5100
+
+web:
+  base_url: http://127.0.0.1:5000/OnlineJudge/
+  auth: Bearer xxxxxxxxxxxxxxxx
+
+s3:
+  connection:
+    endpoint_url: http://localhost:9000/
+    aws_access_key_id: OG485lUbVXOaE2MF
+    aws_secret_access_key: 1HaID5nj9FVcI5zPprdtaLeUw7KwHOBE
+  buckets:
+    problems: oj-problems
+    artifacts: oj-artifacts
+
+redis:
+  prefix: oj
+  connection:
+    host: localhost
+    port: 6379
+    # username: runner1
+    password: redisalan-liang
+    db: 1

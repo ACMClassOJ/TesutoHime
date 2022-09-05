@@ -104,7 +104,7 @@ async def compile_git (
     logger.debug(f'about to compile git repo {repr(source.url)}')
 
     def run_build_step (argv: List[str], network = False):
-        bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share/cmake']
+        bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share/cmake', '/etc']
         return run_with_limits(
             argv, cwd, limits,
             supplementary_paths=bind,
@@ -137,8 +137,8 @@ async def compile_git (
     # check
     exe = cwd / git_exec_name
     if not exe.is_file():
-        msg = f'Executable \'{git_exec_name}\' not found in built files;' \
-            f'please ensure your compile output is named \'{git_exec_name}\'' \
+        msg = f'Executable \'{git_exec_name}\' not found in built files; ' \
+            f'please ensure your compile output is named \'{git_exec_name}\' ' \
             'in the root directory of the repository.'
         return CompileLocalResult(
             CompileResult('runtime_error', msg),
@@ -154,7 +154,7 @@ async def compile_verilog (
     source: CompileSourceVerilog,
     limits: ResourceUsage,
 ) -> CompileLocalResult:
-    main_file = await ensure_cached(source.main)
+    main_file = (await ensure_cached(source.main)).path
     code_file = cwd / verilog_file_name
     exec_file = cwd / verilog_exec_name
     copy2(main_file, code_file)
@@ -162,6 +162,7 @@ async def compile_verilog (
         [verilog, str(code_file), '-o', str(exec_file)],
         cwd, limits,
         supplementary_paths=['/bin', '/usr/bin'],
+        tmpfsmount=True,
     )
     if res.error != None:
         return CompileLocalResult.from_run_failure(res)

@@ -35,14 +35,14 @@ exec_file_name = 'code'
 
 cxx = which('g++')
 cxxflags = ['-fmax-errors=10', '-O2', '-DONLINE_JUDGE', '-std=c++17']
-cxx_file_name = 'code.cpp'
+cxx_file_name = 'main.cpp'
 cxx_exec_name = exec_file_name
 
 git_exec_name = exec_file_name
 gitflags = ['--depth', '1', '--recurse-submodules', '--no-local']
 
 verilog = which('iverilog')
-verilog_file_name = 'answer.v'
+verilog_file_name = 'main.v'
 verilog_exec_name = exec_file_name
 verilog_interpreter = which('vvp')
 

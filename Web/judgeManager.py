@@ -20,16 +20,18 @@ class JudgeManager:
     def add_judge(self, code: str, user: str, problem_id: int, language: int, time: int, share: bool):
         db = db_connect()
         cursor = db.cursor()
+        data = None
         try:
             cursor.execute(
-                "INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status, Share) VALUES(%s, %s, %s, %s, %s, '0', %s)",
+                "INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status, Share) VALUES(%s, %s, %s, %s, %s, '0', %s) RETURNING ID",
                 (code, user, str(problem_id), str(language), str(time), int(share)))
+            data = cursor.fetchone()[0]
             db.commit()
         except pymysql.Error:
             db.rollback()
             sys.stderr.write("SQL Error in JudgeManager: Add_Judge\n")
         db.close()
-        return
+        return data
 
 
     # def add_quiz(self, user: str, problem_id: int, status: str, score: str, time: str, time_used: str, mem_used: str, detail: str):

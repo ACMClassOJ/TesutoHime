@@ -4,8 +4,6 @@ from pathlib import PosixPath
 from commons.task_typing import ResourceUsage
 from commons.util import RedisQueues, load_config
 from redis.asyncio import StrictRedis
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
 
 config = load_config('scheduler', 'v1')
 
@@ -13,15 +11,16 @@ working_dir = PosixPath(config['working_dir'])
 cache_dir = PosixPath(config['cache_dir'])
 log_dir = PosixPath(config['log_dir'])
 
-db_engine = create_async_engine(config['db'])
-Session = sessionmaker(bind=db_engine, class_=AsyncSession)
+host = '0.0.0.0'
+port = int(config['port'])
+web_base_url = config['web']['base_url']
+web_auth = config['web']['auth']
 
 s3_connection = config['s3']['connection']
 
 @dataclass
 class S3Buckets:
     problems: str
-    submissions: str
     artifacts: str
 s3_buckets = S3Buckets(**config['s3']['buckets'])
 
@@ -61,3 +60,6 @@ default_check_limits = ResourceUsage(
 )
 
 task_timeout_secs = 3600 # 1 hour
+task_retries = 3
+task_retry_interval_secs = 10
+task_concurrency_per_account = 1

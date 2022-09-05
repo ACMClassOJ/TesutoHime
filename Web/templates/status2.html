@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% set page='Status' %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="card card-body">
+        <h1 class="text-center"> 评测状态 </h1>
+        <div>
+            <form class="form-group input-group" method="get" id="status_serach">
+                <input class="form-control input-group" type="text" name="submitter" id="submitter" placeholder="用户名"
+                       value="{{ Args["submitter"] if "submitter" in Args }}">
+                <input class="form-control input-group" type="number" name="problem_id" id="problem_id"
+                       placeholder="题目编号" value="{{ Args["problem_id"] if "problem_id" in Args }}">
+                <select class="form-control selectpicker" name="status" id="status"
+                        data-style="form-control font-weight-normal border-grey shadow-none">
+                    <option value="" {{ 'selected' if not 'status' in Args or Args['status'] == '' }}>评测状态</option>
+                    {% for key in judge_status_info -%}
+                    <option value="{{ key }}" {{ 'selected' if 'status' in Args and Args['status'] == key }}>
+                        {{ judge_status_info[key].name }}
+                    </option>
+                    {%- endfor %}
+                </select>
+                <select class="form-control selectpicker" name="lang" id="lang"
+                        data-style="form-control font-weight-normal border-grey shadow-none">
+                    <option value="" {{ 'selected' if not 'lang' in Args or Args['lang'] == '' }}>语言</option>
+                    <option value="0" {{ "selected" if "lang" in Args and Args["lang"]=="0" }}>C++</option>
+                    <option value="1" {{ "selected" if "lang" in Args and Args["lang"]=="1" }}>Git</option>
+                    <option value="2" {{ "selected" if "lang" in Args and Args["lang"]=="2" }}>Verilog</option>
+                    <option value="3" {{ "selected" if "lang" in Args and Args["lang"]=="3" }}>Quiz</option>
+                </select>
+                <div class="input-group-append">
+                    <button class="btn btn-primary">搜索</button>
+                </div>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered table-hover" id="status_list">
+                <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>用户昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
+                    <th>题目</th>
+                    <th><span class="mr-2">评测状态</span><a href="/OnlineJudge/about">?</a></th>
+                    <th>运行时间</th>
+                    <th>内存</th>
+                    <th>语言</th>
+                    <th>提交时间</th>
+                </tr>
+                </thead>
+                {% for cur in Data -%}
+                    <tr>
+                        <td>{{ cur['ID'] }}</td>
+                        <td>
+                            {% if is_Admin -%}
+                            <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ cur['Username'] }}">{{ cur['Friendly_Name'] }}</span>
+                            {% else -%}
+                            <span>{{ cur['Friendly_Name'] }}</span>
+                            {%- endif %}
+                            {% if is_Admin -%}
+                                <span class="text-black-50 float-right"><small>{{ cur['Real_Name'] }}</small></span>
+                            {%- endif %}
+                        </td>
+                        <td>
+                            <a href="/OnlineJudge/problem?problem_id={{ cur['Problem_ID'] }}">{{ cur['Problem_ID'] }}. {{ cur['Problem_Title'] }}</a>
+                        </td>
+                        <td>
+                            <b>
+                                {%- if cur['Status'] == '0' -%}
+                                    <span class="text-gray">Pending</span>
+                                {%- elif cur['Status'] == '1' -%}
+                                    <span class="text-blue">Running & Judging</span>
+                                {%- elif cur['Status'] == '2' -%}
+                                    <span class="text-green">Accepted</span>
+                                {%- elif cur['Status'] == '3' -%}
+                                    <span class="text-red">Wrong Answer</span>
+                                {%- elif cur['Status'] == '4' -%}
+                                    <span class="text-yellow">Compile Error</span>
+                                {%- elif cur['Status'] == '5' -%}
+                                    <span class="text-red">Runtime Error</span>
+                                {%- elif cur['Status'] == '6' -%}
+                                    <span class="text-orange">Time Limit Exceed</span>
+                                {%- elif cur['Status'] == '7' -%}
+                                    <span class="text-orange">Memory Limit Exceed</span>
+                                {%- elif cur['Status'] == '8' -%}
+                                    <span class="text-purple">Memory Leak</span>
+                                {%- elif cur['Status'] == '9' -%}
+                                    <span class="text-gray-dark">System Error</span>
+                                {%- elif cur['Status'] == '10' -%}
+                                    <span class="text-purple">Disk Limit Exceed</span>
+                                {%- endif -%}
+                            </b>
+                        </td>
+                        <td>{{ cur['Time_Used'] }}ms</td>
+                        <td>{{ cur['Mem_Used'] }}KiB</td>
+                        {% if cur['Visible'] -%}
+                            <td><a href="/OnlineJudge/code?submit_id={{ cur['ID'] }}">{{ cur['Lang'] }}</a></td>
+                        {% else -%}
+                            <td>{{ cur['Lang'] }}</td>
+                        {%- endif %}
+                        <td>{{ cur['Time'] }}</td>
+                    </tr>
+                {%- endfor %}
+            </table>
+        </div>
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% for x in Pages -%}
+                    {%- if x[2] == 1 -%}
+                        <li class="page-item active">
+                            <a class="page-link btn-light" href="javascript:void(0)"> {{ x[0] }} </a>
+                        </li>
+                    {%- elif x[2] != -1 -%}
+                        <li class="page-item">
+                            <a class="page-link btn-light" href="/OnlineJudge/status?page={{ x[1] }}
+                            {%- for arg in Args.items() -%}
+                                &{{ arg[0] }}={{ arg[1] }}
+                            {%- endfor -%}
+                            "> {{ x[0] }} </a>
+                        </li>
+                    {%- endif -%}
+                {%- endfor %}
+            </ul>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
+    <script>
+    $(function(){
+        $("[data-toggle='popover']").popover();
+    });
+    $("[data-toggle='popover']").click(function(){
+        setTimeout(function(){
+            $("[data-toggle='popover']").popover('hide')
+        }, 2000);
+    });
+    </script>
+{% endblock %}

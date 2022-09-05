@@ -9,6 +9,7 @@ from commons.util import TempDir
 
 from judger2.cache import ensure_cached
 from judger2.config import working_dir
+from scheduler2.plan import InvalidProblemException
 
 logger = getLogger(__name__)
 
@@ -37,8 +38,12 @@ async def copy_supplementary_files (files: List[FileUrl], cwd: PosixPath):
     if len(files) != 0:
         logger.debug(f'copying supplementary files to {cwd}')
     for f in as_completed(map(ensure_cached, files)):
-        file = await f
-        copy2(file.path, cwd / file.filename)
+        try:
+            file = await f
+            copy2(file.path, cwd / file.filename)
+        except BaseException as e:
+            msg = f'Cannot copy supplementary file: {e}'
+            raise InvalidProblemException(msg) from e
 
 
 def format_args (args: Dict[str, Union[bool, str, List[str]]]) -> List[str]:

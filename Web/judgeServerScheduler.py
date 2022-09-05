@@ -61,9 +61,9 @@ class JudgeServerScheduler:
     def Start_Judge(self, Problem_ID, User, Code, Lang, Share):
         self.Check_System_Error()
 
-        Judge_Manager.add_judge(Code, User, Problem_ID, Lang, unix_nano(), Share)
+        id = Judge_Manager.add_judge(Code, User, Problem_ID, Lang, unix_nano(), Share)
         self.Check_Queue()
-        return
+        return id
 
     def Start_Targeted_Judge(self, Problem_ID, User, Code, Lang, Share, Server_Friendly_Name):
         self.Check_System_Error()

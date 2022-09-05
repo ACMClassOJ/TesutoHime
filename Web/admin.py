@@ -2,6 +2,8 @@ import re
 from flask import request, render_template, Blueprint, abort, Response, stream_with_context
 import requests
 from requests.models import Request
+from Web.utils import Session, schedule_judge2
+from commons.models import JudgeRecord2, JudgeStatus
 from const import *
 from sessionManager import Login_Manager
 from userManager import User_Manager
@@ -280,6 +282,18 @@ def pic_upload():
 
 @admin.route('/rejudge', methods=['POST'])
 def rejudge():
+    class RejudgeException (Exception): pass
+    def rejudge2 (id):
+        with Session() as db:
+            submission: JudgeRecord2 = db.query(JudgeRecord2).where(JudgeRecord2.id == id).one_or_none()
+            if submission is None:
+                raise RejudgeException()
+            schedule_judge2(
+                submission.problem_id,
+                id,
+                submission.language,
+                submission.username,
+            )
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
 
@@ -291,8 +305,11 @@ def rejudge():
         try:
             for i in id_list:
                 JudgeServer_Scheduler.ReJudge(i)
+                rejudge2(i)
             return ReturnCode.SUC_REJUDGE
         except RequestException:
+            return ReturnCode.ERR_BAD_DATA
+        except RejudgeException:
             return ReturnCode.ERR_BAD_DATA
     elif type == "by_problem_id":
         ids = request.form['problem_id'].strip().splitlines()
@@ -301,12 +318,24 @@ def rejudge():
                 record = Judge_Manager.search_judge(None, id, None, None)
                 for i in record:
                     JudgeServer_Scheduler.ReJudge(i['ID'])
+                    rejudge2(i['ID'])
             return ReturnCode.SUC_REJUDGE
         except RequestException:
             return ReturnCode.ERR_BAD_DATA
 
 @admin.route('/disable_judge', methods=['POST'])
 def disable_judge():
+    class MarkException (Exception): pass
+    def mark_void2 (id):
+        with Session() as db:
+            submission: JudgeRecord2 = db.query(JudgeRecord2).where(JudgeRecord2.id == id).one_or_none()
+            if submission is None:
+                raise MarkException()
+            submission.details = None
+            submission.status = JudgeStatus.void
+            submission.message = 'Your judge result has been marked as void by an admin.'
+            submission.score = 0
+            db.commit()
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
 
@@ -318,8 +347,11 @@ def disable_judge():
         try:
             for i in id_list:
                 Judge_Manager.update_after_judge(i, 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, -1, "Your judge result has been disabled manually by admin."]]]', 0, 0)
+                mark_void2(i)
             return ReturnCode.SUC_DISABLE_JUDGE
         except RequestException:
+            return ReturnCode.ERR_BAD_DATA
+        except MarkException:
             return ReturnCode.ERR_BAD_DATA
     elif type == "by_problem_id":
         ids = request.form['problem_id'].strip().splitlines()
@@ -328,8 +360,11 @@ def disable_judge():
                 record = Judge_Manager.search_judge(None, id, None, None)
                 for i in record:
                     Judge_Manager.update_after_judge(i['ID'], 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, -1, "Your judge result has been disabled manually by admin."]]]', 0, 0)
+                    mark_void2(i['ID'])
             return ReturnCode.SUC_DISABLE_JUDGE
         except RequestException:
+            return ReturnCode.ERR_BAD_DATA
+        except MarkException:
             return ReturnCode.ERR_BAD_DATA
 
 @admin.route('/add_judge', methods=['POST'])

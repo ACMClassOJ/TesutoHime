@@ -82,19 +82,19 @@ async def checker_spj (infile: Optional[PosixPath], outfile: PosixPath, \
     if checker.format == 'scorer':
         raise NotImplementedError()
     try:
-        checker = await ensure_input(checker.executable)
+        exe = (await ensure_input(checker.executable)).path
     except NotCompiledException as e:
         return CheckResult('system_error', f'cannot compile spj: {e}')
 
     # run spj
     with TempDir() as cwd:
         exec_file = cwd / 'spj'
-        copy2(checker, exec_file)
+        copy2(exe, exec_file)
         exec_file.chmod(0o550)
 
         await copy_supplementary_files(checker.supplementary_files, cwd)
 
-        bindmount = [str(outfile)]
+        bindmount = ['/bin', '/usr/bin', str(outfile)]
         if infile is None:
             infile = PosixPath(devnull)
         else:

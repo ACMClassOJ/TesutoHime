@@ -1,6 +1,9 @@
 from pathlib import PosixPath
 from urllib.parse import urljoin
+
 from boto3 import client as s3_client
+from botocore.utils import determine_content_length
+from botocore.client import ClientError
 from botocore.config import Config
 from commons.task_typing import SourceLocation
 from commons.util import asyncrun
@@ -41,8 +44,25 @@ async def copy_file (src: SourceLocation, bucket: str, key: str):
     await asyncrun(lambda: s3.copy_object(Bucket=bucket, Key=key,
         CopySource=src_dict))
 
-async def upload_obj (bucket: str, key: str, fileobj):
+async def upload_str (bucket: str, key: str, fileobj):
     await asyncrun(lambda: s3.put_object(Bucket=bucket, Key=key, Body=fileobj))
+
+async def upload_obj (bucket: str, key: str, fileobj):
+    length = determine_content_length(fileobj)
+    if length is None:
+        raise Exception(f'Unable to determine length of file {key}')
+    try:
+        await asyncrun(lambda: s3.upload_fileobj(fileobj, bucket, key))
+    except ClientError:
+        raise
+
+    # From https://github.com/boto/botocore/pull/1990#issuecomment-1171401468
+    # HOTFIX: patch to close session after upload if file being uploaded is empty
+    # We can remove this when this PR is merged to boto3:
+    # https://github.com/boto/botocore/pull/1990
+    if length == 0:
+        s3._endpoint.http_session._manager.clear()
+
 
 async def remove_file (bucket: str, key: str):
     await asyncrun(lambda: s3.delete_object(Bucket=bucket, Key=key))

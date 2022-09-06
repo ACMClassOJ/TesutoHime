@@ -16,7 +16,8 @@ from config import *
 engine = create_engine(mysql_connection_string)
 Session = sessionmaker(bind=engine)
 
-s3 = boto3.client('s3', **S3Config.connection)
+s3_public = boto3.client('s3', **S3Config.Connections.public)
+s3_internal = boto3.client('s3', **S3Config.Connections.internal)
 
 
 def db_connect():
@@ -178,6 +179,31 @@ def schedule_judge2 (problem_id, submission_id, language, username):
             rec.score = 0
             db.commit()
 
+
+class NotFoundException (Exception): pass
+def mark_void2 (id):
+    with Session() as db:
+        submission: JudgeRecord2 = db.query(JudgeRecord2).where(JudgeRecord2.id == id).one_or_none()
+        if submission is None:
+            raise NotFoundException()
+        submission.details = None
+        submission.status = JudgeStatus.void
+        submission.message = 'Your judge result has been marked as void by an admin.'
+        submission.score = 0
+        db.commit()
+
+def rejudge2 (id):
+    with Session() as db:
+        submission: JudgeRecord2 = db.query(JudgeRecord2).where(JudgeRecord2.id == id).one_or_none()
+        if submission is None:
+            raise NotFoundException()
+        schedule_judge2(
+            submission.problem_id,
+            id,
+            submission.language,
+            submission.username,
+        )
+
 @dataclass
 class JudgeStatusInfo:
     name: str
@@ -213,4 +239,5 @@ language_info = {
     'cpp': 'C++',
     'git': 'Git',
     'verilog': 'Verilog',
+    'quiz': 'Quiz',
 }

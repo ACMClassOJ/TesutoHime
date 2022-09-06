@@ -1,7 +1,8 @@
 __all__ = 'generate_plan', 'execute_plan', 'get_partial_result'
 
 import json
-from asyncio import FIRST_COMPLETED, CancelledError, Task, create_task, sleep, wait
+from asyncio import (FIRST_COMPLETED, CancelledError, Task, create_task, sleep,
+                     wait)
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -16,16 +17,16 @@ from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
                                  CompileSourceVerilog, CompileTask,
                                  CompileTaskPlan, DirectChecker, FileUrl,
                                  GroupJudgeResult, JudgePlan, JudgeResult,
-                                 JudgeTask, JudgeTaskPlan, ProblemJudgeResult,
+                                 JudgeTask, JudgeTaskPlan, ProblemJudgeResult, QuizOption,
                                  ResourceUsage, ResultType, RunArgs,
                                  SourceLocation, SpjChecker,
                                  StatusUpdateProgress, StatusUpdateStarted,
                                  Testpoint, TestpointGroup,
-                                 TestpointJudgeResult, UserCode)
+                                 TestpointJudgeResult, UserCode, QuizProblem)
 
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
-                               s3_buckets, working_dir)
+                               quiz_filename, s3_buckets, working_dir)
 from scheduler2.dispatch import run_task
 from scheduler2.problem_typing import Group, ProblemConfig, Spj
 from scheduler2.problem_typing import Testpoint as ConfigTestpoint
@@ -46,6 +47,7 @@ class ParseContext:
     problem_id: str
     zip: ZipFile
     cfg: Optional[ProblemConfig] = None
+    quiz_problems: Optional[List[QuizProblem]] = None
     testpoint_count: Optional[int] = None
     compile_type: Literal['classic', 'hpp', 'hpp-per-testpoint', 'none'] = None
     check_type: Literal['compare', 'direct', 'spj'] = None
@@ -80,6 +82,16 @@ async def load_config (ctx: ParseContext):
     try:
         cfg['Groups'] = [Group(**x) for x in cfg['Groups']]
         cfg['Details'] = [ConfigTestpoint(**x) for x in cfg['Details']]
+        if 'Quiz' in cfg and cfg['Quiz']:
+            try:
+                with ctx.zip.open(quiz_filename, 'r') as f:
+                    quiz = json.load(f)
+            except BaseException as e:
+                msg = f'cannot read {problem_config_filename}: {e}'
+                raise InvalidProblemException(msg)
+            for problem in quiz['problems']:
+                problem['options'] = [QuizOption(**x) for x in problem['options']]
+            ctx.plan.quiz = [QuizProblem(**x) for x in quiz['problems']]
         ctx.cfg = ProblemConfig(**cfg)
         ctx.testpoint_count = len(ctx.cfg.Details)
     except BaseException as e:
@@ -334,6 +346,8 @@ async def generate_plan (problem_id: str) -> JudgePlan:
         with ZipFile(zip_path) as zip:
             ctx = ParseContext(problem_id, zip)
             await load_config(ctx)
+            if ctx.plan.quiz is not None:
+                return ctx.plan
             await parse_spj(ctx)
             ctx.plan.compile = await parse_compile(ctx)
             ctx.plan.judge = await parse_testpoints(ctx)
@@ -663,6 +677,19 @@ def synthesize_scores (ctx: ExecutionContext, *, aborted: bool = False,
     return ProblemJudgeResult(result, None, score, rusage, groups)
 
 
+async def judge_quiz (quiz: List[QuizProblem], answer: Dict[str, str]):
+    def ac (id):
+        return TestpointJudgeResult(id, 'accepted', 'Accepted', 1.0)
+    def wa (id):
+        return TestpointJudgeResult(id, 'wrong_answer', 'Wrong Answer')
+    correct = dict((x.id, x.answer == answer.get(x.id, None)) for x in quiz)
+    testpoints = [ac(id) if correct[id] else wa(id) for id in correct]
+    result = 'accepted' if all(correct[id] for id in correct) \
+        else 'wrong_answer'
+    score = float(len(list(filter(lambda id: correct[id], correct))))
+    groups = [GroupJudgeResult('quiz', 'Quiz', result, testpoints, score)]
+    return ProblemJudgeResult(result, None, score, groups=groups)
+
 ctx_from_submission: Dict[str, ExecutionContext] = {}
 
 async def execute_plan (plan: JudgePlan, id: str, lang: CodeLanguage,
@@ -670,6 +697,19 @@ async def execute_plan (plan: JudgePlan, id: str, lang: CodeLanguage,
     ctx = ExecutionContext(plan, id, lang, code, rate_limit_group)
     ctx_from_submission[id] = ctx
     compiled = False
+
+    if lang == CodeLanguage.QUIZ:
+        if plan.quiz is None:
+            raise InvalidCodeException('This problem is not a quiz.')
+        answer = await read_file(code.bucket, code.key)
+        try:
+            answer = json.loads(answer)
+        except BaseException as e:
+            raise InvalidCodeException(f'Answer is invalid JSON: {e}')
+        return await judge_quiz(plan.quiz, answer)
+    if plan.quiz is not None:
+        raise InvalidCodeException('This problem is a quiz. Do not submit code.')
+
     try:
         ctx.compile = await prepare_compile_task(ctx, ctx.plan.compile)
         ctx.judge = await get_judge_tasks(ctx)
@@ -687,6 +727,7 @@ async def execute_plan (plan: JudgePlan, id: str, lang: CodeLanguage,
             return synthesize_scores(ctx, aborted=True)
         return ProblemJudgeResult('aborted', message=None)
     finally:
+        # perform some cleanup
         del ctx_from_submission[id]
         for bucket, key in ctx.files_to_clean:
             try:

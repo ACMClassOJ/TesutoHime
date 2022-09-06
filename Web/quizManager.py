@@ -1,27 +1,20 @@
-import os, shutil, requests, zipfile, json, sys
-from config import QuizTempDataConfig
-from collections import namedtuple
+import os, shutil, requests, zipfile, json
+from Web.config import S3Config
+from utils import s3_internal
 from const import ReturnCode
 import json
 
 class QuizManager:
     def get_json_from_data_service_by_id(self, config, id: int):
-        r = requests.get(config.server + '/' + config.key + '/' + str(id) + '.zip', stream=True)
-        with open(config.cache_dir + '/' + str(id) + '.zip', 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-        shutil.rmtree(config.cache_dir + '/' + str(id), ignore_errors=True)
-        try:
-            with zipfile.ZipFile(config.cache_dir + '/' + str(id) + '.zip', 'r') as zip_file:
-                zip_file.extractall(config.cache_dir)
-        except zipfile.BadZipFile:
-            return ReturnCode.ERR_QUIZ_ZIP_NOT_FOUND
-        os.remove(config.cache_dir + '/' + str(id) + '.zip')
-        with open(config.cache_dir + '/' + str(id) + '/quiz.json') as f:
-            try:
-                main_json = json.loads(f.read())
-            except json.JSONDecodeError:
-                return ReturnCode.ERR_QUIZ_JSON_DECODE
+        key = f'{id}.zip'
+        zip_path = os.path.join(config.cache_dir, key)
+        s3_internal.download_file(S3Config.Buckets.problems, key, zip_path)
+        with zipfile.ZipFile(zip_path, 'r') as zip:
+            with zip.open('quiz.json') as f:
+                try:
+                    main_json = json.loads(f.read())
+                except json.JSONDecodeError:
+                    return ReturnCode.ERR_QUIZ_JSON_DECODE
         return {**main_json, **ReturnCode.SUC_QUIZ_JSON_DECODE}
        
 Quiz_Manager = QuizManager()

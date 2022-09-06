@@ -26,6 +26,7 @@ s3_buckets = S3Buckets(**config['s3']['buckets'])
 
 
 problem_config_filename = 'config.json'
+quiz_filename = 'quiz.json'
 
 redis_queues = RedisQueues(config['redis']['prefix'])
 def redis_connect ():
@@ -62,4 +63,4 @@ default_check_limits = ResourceUsage(
 task_timeout_secs = 3600 # 1 hour
 task_retries = 3
 task_retry_interval_secs = 10
-task_concurrency_per_account = 1
+task_concurrency_per_account = 4

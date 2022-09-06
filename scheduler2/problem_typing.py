@@ -40,3 +40,4 @@ class ProblemConfig:
     Scorer: Literal[0] = 0
     SupportedFiles: List[str] = field(default_factory=lambda: [])
     Verilog: bool = False
+    Quiz: bool = False

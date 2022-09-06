@@ -201,6 +201,8 @@ class JudgeRecord2(Base):
     problem = relationship(Problem)
 
     status = Column(SqlEnum(JudgeStatus))
-    score = Column(Integer)
+    score = Column(Integer, default=0)
     message = Column(Text)
     details = Column(Text) # actually JSON
+    time_msecs = Column(Integer)
+    memory_bytes = Column(Integer)

@@ -29,7 +29,7 @@
                     <option value="" {{ 'selected' if not 'lang' in Args or Args['lang'] == '' }}>语言</option>
                     {% for key in language_info -%}
                     <option value="{{ key }}" {{ 'selected' if 'lang' in Args and Args['lang'] == key }}>
-                        {{ language_info[key].name }}
+                        {{ language_info[key] }}
                     </option>
                     {%- endfor %}
                 </select>

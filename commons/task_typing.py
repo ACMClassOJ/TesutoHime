@@ -233,6 +233,7 @@ class CodeLanguage (Enum):
     CPP = 'cpp'
     GIT = 'git'
     VERILOG = 'verilog'
+    QUIZ = 'quiz'
 
 
 @dataclass
@@ -262,10 +263,25 @@ class TestpointGroup:
 
 
 @dataclass
+class QuizOption:
+    value: str
+    text: str
+
+@dataclass
+class QuizProblem:
+    id: str
+    type: Literal['SELECT']
+    title: str
+    answer: str
+    options: List
+
+
+@dataclass
 class JudgePlan:
     compile: Optional[CompileTaskPlan] = None
     judge: List[JudgeTaskPlan] = None
     score: List[TestpointGroup] = None
+    quiz: Optional[List[QuizProblem]] = None
 
 
 @dataclass

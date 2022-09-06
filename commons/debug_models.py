@@ -5,6 +5,6 @@ from sqlalchemy.orm import sessionmaker
 
 from commons.models import *
 
-engine = create_engine(environ.get('DB'))
+engine = create_engine(environ.get('DB'), echo=True)
 Session = sessionmaker(bind=engine)
 s = Session()

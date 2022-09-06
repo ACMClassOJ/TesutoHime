@@ -78,6 +78,9 @@
             </div>
         </div>
         {%- endif %}
+        {% if submission.message != None and submission.message != '' -%}
+        <pre><code>{{ submission.message }}</code></pre>
+        {% endif -%}
         {% if False and (Detail['Status'] == '0' or Detail['Status'] == '1') -%}
         <div class="row">
             <div class="m-auto">
@@ -104,6 +107,14 @@
             <span class="badge badge-secondary"> 私有代码 </span>
             {%- endif %}    
             </span>
+            {% if is_Admin and not abortable and submission.status.name != 'void' -%}
+                <form action="void" method="POST" style="display: inline" onsubmit="return confirm('确认将此份代码标记为无效？')">
+                    <button class="btn btn-secondary btn-sm">Void</button>
+                </form>
+                <form action="rejudge" method="POST" style="display: inline" onsubmit="return confirm('确认重测？')">
+                    <button class="btn btn-secondary btn-sm">重测</button>
+                </form>
+            {%- endif %}
             <span class="float-right">
                 {% if abortable -%}
                 <form action="abort" method="POST" style="display: inline">
@@ -114,15 +125,9 @@
             </span>
         </div>
         <pre class="cpp"><code id="judge_detail_code_highlighted">Waiting for code</code></pre>
-        {% if submission.message != None and submission.message != '' -%}
-        <pre><code>{{ submission.message }}</code></pre>
-        {% endif -%}
         {% if details != None -%}
             <hr>
             <div>
-                {% if details.message != None and details.message != '' -%}
-                <pre><code>{{ details.message }}</code></pre>
-                {% endif -%}
                 {% if details.groups|length > 0 -%}
                 <h5>测试点详情：</h5>
                 <div class="table-responsive">

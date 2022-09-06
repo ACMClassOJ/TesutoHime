@@ -49,6 +49,7 @@ class ValgrindRunner (BaseRunner):
             return result
         res_dict = result.__dict__
         res_dict['error'] = 'memory_leak'
+        res_dict['message'] = None
         return RunResult(**res_dict)
 
 class VerilogRunner (BaseRunner):
@@ -98,6 +99,7 @@ async def run (oufdir: PosixPath, cwd: PosixPath, input: Input, args: RunArgs) \
                 supplementary_paths=[exec_file] + params.supplementary_paths,
                 infile=inf,
                 outfile=ouf,
+                disable_stderr=True,
                 disable_proc=params.disable_procfs,
                 tmpfsmount=params.tmpfsmount,
             ))

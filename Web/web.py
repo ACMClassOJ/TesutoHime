@@ -384,7 +384,6 @@ def submit_problem():
             lang = 2
         elif lang_request_str == 'quiz':
             lang = 3
-            return '-1'
         else:
             return '-1'
         # cpp or git or Verilog or quiz
@@ -411,7 +410,7 @@ def submit_problem():
             db.commit()
         key = key_from_submission_id(submission_id)
         bucket = S3Config.Buckets.submissions
-        s3.put_object(Bucket=bucket, Key=key, Body=user_code.encode())
+        s3_internal.put_object(Bucket=bucket, Key=key, Body=user_code.encode())
         schedule_judge2(problem_id, submission_id, lang_str, username)
         return '0'
 
@@ -496,13 +495,10 @@ def problem_rank():
                            In_Exam=in_exam)
 
 
-@web.route('/rank2')
-def problem_rank2():
+@web.route('/problem/<int:problem_id>/rank')
+def problem_rank2(problem_id):
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
-    problem_id = request.args.get('problem_id')
-    if problem_id is None:
-        abort(404)
     sort_parameter = request.args.get('sort')
     is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
     with Session(expire_on_commit=False) as db:
@@ -510,6 +506,8 @@ def problem_rank2():
             .query(JudgeRecord2) \
             .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
             .options(selectinload(JudgeRecord2.user)) \
+            .where(JudgeRecord2.problem_id == problem_id) \
+            .where(JudgeRecord2.status == JudgeStatus.accepted) \
             .all()
 
     real_names = {}
@@ -851,7 +849,7 @@ def code2(submit_id):
     if details is not None:
         details = load_dataclass(details, commons.task_typing.__dict__)
 
-    code_url = s3.generate_presigned_url('get_object', {
+    code_url = s3_public.generate_presigned_url('get_object', {
         'Bucket': S3Config.Buckets.submissions,
         'Key': key_from_submission_id(submission.id),
     }, ExpiresIn=60)
@@ -869,6 +867,27 @@ def code2(submit_id):
                            show_score=show_score,
                            friendlyName=Login_Manager.get_friendly_name(),
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+
+@web.route('/code/<int:submit_id>/void', methods=['POST'])
+def mark_void(submit_id):
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(403)
+    try:
+        mark_void2(submit_id)
+    except NotFoundException:
+        abort(404)
+    return redirect('.', SEE_OTHER)
+
+
+@web.route('/code/<int:submit_id>/rejudge', methods=['POST'])
+def rejudge(submit_id):
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(403)
+    try:
+        rejudge2(submit_id)
+    except NotFoundException:
+        abort(404)
+    return redirect('.', SEE_OTHER)
 
 
 @web.route('/code/<int:submit_id>/abort', methods=['POST'])

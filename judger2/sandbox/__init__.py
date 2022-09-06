@@ -75,6 +75,7 @@ async def run_with_limits (
     network_access: bool = False,
     disable_proc: bool = True,
     tmpfsmount: bool = False,
+    disable_stderr: bool = False,
 ) -> RunResult:
     # these are nsjail args
     fsize = 'inf' if limits.file_size_bytes < 0 else \
@@ -122,7 +123,8 @@ async def run_with_limits (
         time_start = time()
         proc = Popen(
             [which('nsjail')] + nsjail_argv,
-            stdin=infile, stdout=outfile, stderr=PIPE,
+            stdin=infile, stdout=outfile,
+            stderr=DEVNULL if disable_stderr else PIPE,
         )
         _, status, rusage = await asyncrun(lambda: wait4(proc.pid, 0))
         code = waitstatus_to_exitcode(status)
@@ -167,7 +169,8 @@ async def run_with_limits (
             file_count=file_count,
             file_size_bytes=file_size_bytes,
         )
-        err = (await asyncrun(lambda: proc.stderr.read(4096))).decode()
+        err = '' if disable_stderr else \
+            (await asyncrun(lambda: proc.stderr.read(4096))).decode()
         errmsg = '' if err == '' else f': {err}'
 
         # check for errors
@@ -196,7 +199,7 @@ async def run_with_limits (
                 except ValueError:
                     name = ''
                 msg = f'program killed by signal {signal}{name}{errmsg}'
-            elif program_code < 0:
+            elif program_code < 0 or disable_stderr:
                 msg = f'program quit abnormally{errmsg}'
             else:
                 msg = f'program exited with status {program_code}{errmsg}'

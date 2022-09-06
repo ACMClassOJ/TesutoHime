@@ -1,9 +1,10 @@
-from http.client import NOT_FOUND, OK, SEE_OTHER
 import json
+from math import ceil
 import os
 import re
 from functools import cmp_to_key
-from typing import Optional, Tuple
+from http.client import NOT_FOUND, OK, SEE_OTHER
+from typing import List, Optional, Tuple
 from urllib.parse import quote, urljoin
 from uuid import uuid4
 
@@ -13,7 +14,8 @@ from commons.task_typing import ProblemJudgeResult
 from commons.util import load_dataclass, serialize
 from flask import (Blueprint, Flask, abort, make_response, redirect,
                    render_template, request, send_from_directory)
-from sqlalchemy.orm import joinedload
+from sqlalchemy import func
+from sqlalchemy.orm import defer, joinedload, selectinload
 
 from admin import admin
 from api import api
@@ -436,6 +438,7 @@ def set_status (submission_id):
             abort(404)
         rec.status = getattr(JudgeStatus, status)
         rec.details = None
+        rec.message = None
         db.commit()
     return ''
 
@@ -456,6 +459,9 @@ def set_result (submission_id):
         rec.status = res.result
         rec.message = res.message
         rec.details = serialize(res)
+        if res is not None and res.resource_usage is not None:
+            rec.time_msecs = res.resource_usage.time_msecs
+            rec.memory_bytes = res.resource_usage.memory_bytes
         db.commit()
     return ''
 
@@ -487,6 +493,47 @@ def problem_rank():
                            Data=record, Sorting=sort_parameter, friendlyName=Login_Manager.get_friendly_name(),
                            readable_lang=readable_lang, readable_time=readable_time,
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN,
+                           In_Exam=in_exam)
+
+
+@web.route('/rank2')
+def problem_rank2():
+    if not Login_Manager.check_user_status():
+        return redirect('login?next=' + request.full_path)
+    problem_id = request.args.get('problem_id')
+    if problem_id is None:
+        abort(404)
+    sort_parameter = request.args.get('sort')
+    is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+    with Session(expire_on_commit=False) as db:
+        submissions: List[JudgeRecord2] = db \
+            .query(JudgeRecord2) \
+            .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
+            .options(selectinload(JudgeRecord2.user)) \
+            .all()
+
+    real_names = {}
+    languages = {}
+    for submission in submissions:
+        if is_admin:
+            real_names[submission] = Reference_Manager.Query_Realname(submission.user.student_id)
+        languages[submission] = 'Unknown' if submission.language not in language_info \
+            else language_info[submission.language]
+
+    if sort_parameter == 'memory':
+        submissions = sorted(submissions, key=lambda x: x.memory_bytes)
+    elif sort_parameter == 'submit_time':
+        submissions = sorted(submissions, key=lambda x: x.created)
+    else:
+        sort_parameter = 'time'
+        submissions = sorted(submissions, key=lambda x: x.time_msecs)
+
+    in_exam = problem_in_exam(problem_id)
+
+    return render_template('problem_rank2.html', Problem_ID=problem_id, Title=Problem_Manager.get_title(problem_id),
+                           submissions=submissions, Sorting=sort_parameter, friendlyName=Login_Manager.get_friendly_name(),
+                           readable_lang=readable_lang, readable_time=readable_time,
+                           is_Admin=is_admin, real_names=real_names, languages=languages,
                            In_Exam=in_exam)
 
 
@@ -645,6 +692,95 @@ def status():
             cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.get_student_id(ele['Username']))
         data.append(cur)
     return render_template('status.html', Data=data, Pages=gen_page(page, max_page),
+                           Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
+                           is_Admin=is_admin, friendlyName=Login_Manager.get_friendly_name())
+
+
+@web.route('/status2')
+def status2():
+    if not Login_Manager.check_user_status():
+        return redirect('login?next=' + request.full_path)
+
+    page = request.args.get('page')
+    arg_submitter = request.args.get('submitter')
+    if arg_submitter == '':
+        arg_submitter = None
+    arg_problem_id = request.args.get('problem_id')
+    if arg_problem_id == '':
+        arg_problem_id = None
+    arg_status = request.args.get('status')
+    if arg_status == '':
+        arg_status = None
+    if arg_status is not None:
+        arg_status = getattr(JudgeStatus, arg_status, None)
+        if not isinstance(arg_status, JudgeStatus):
+            abort(400)
+    arg_lang = request.args.get('lang')
+    if arg_lang == '':
+        arg_lang = None
+    username = Login_Manager.get_username()
+    is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+
+    with Session(expire_on_commit=False) as db:
+        page = int(page) if page is not None else 1
+        limit = JudgeConfig.Judge_Each_Page + 1
+        offset = (page - 1) * JudgeConfig.Judge_Each_Page
+        show_all = all(x is None for x in (arg_submitter, arg_problem_id, arg_status, arg_lang))
+        if show_all:
+            limit = JudgeConfig.Judge_Each_Page
+            count = db.query(func.count(JudgeRecord2.id)).one()[0]
+            max_page = ceil(count / JudgeConfig.Judge_Each_Page)
+        query = db.query(JudgeRecord2) \
+            .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
+            .options(selectinload(JudgeRecord2.user)) \
+            .options(selectinload(JudgeRecord2.problem))
+        if arg_submitter is not None:
+            query = query.where(JudgeRecord2.username == arg_submitter)
+        if arg_problem_id is not None:
+            query = query.where(JudgeRecord2.problem_id == arg_problem_id)
+        if arg_status is not None:
+            query = query.where(JudgeRecord2.status == arg_status)
+        if arg_lang is not None:
+            query = query.where(JudgeRecord2.language == arg_lang)
+        query = query.order_by(JudgeRecord2.id.desc())
+        query = query.limit(limit).offset(offset)
+        submissions: List[JudgeRecord2] = query.all()
+        if not show_all:
+            max_page = page + 1 if len(submissions) == limit else page
+            submissions = submissions[:JudgeConfig.Judge_Each_Page]
+
+    exam_id, is_exam_started = Contest_Manager.get_unfinished_exam_info_for_player(username, unix_nano())
+    # if not None, only problems in here are visible to user
+    exam_visible_problems = None
+
+    # only change the visibility when the exam started
+    if exam_id != -1 and is_exam_started: 
+        exam_visible_problems = list()
+        exam_problems_raw = Contest_Manager.list_problem_for_contest(exam_id)
+        for raw_tuple in exam_problems_raw:
+            exam_visible_problems.append(raw_tuple[0])
+
+    real_names = {}
+    visible = {}
+    languages = {}
+    for submission in submissions:
+        if is_admin:
+            real_names[submission] = Reference_Manager.Query_Realname(submission.user.student_id)
+        visible[submission] = (
+            is_admin or (
+                # user's own problem: username == ele['Username']
+                # shared problems are always banned if exam_visible_problems is None (this means user in exam)
+                (username == submission.username or (exam_visible_problems is None and submission.public)) 
+                # and exam visible check for problems
+                and (exam_visible_problems is None or submission.problem_id in exam_visible_problems)
+            )
+        )
+        languages[submission] = 'Unknown' if submission.language not in language_info \
+            else language_info[submission.language]
+    return render_template('status2.html', Pages=gen_page(page, max_page, not show_all),
+                           judge_status_info=judge_status_info, language_info=language_info,
+                           submissions=submissions, real_names=real_names, visible=visible,
+                           languages=languages,
                            Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
                            is_Admin=is_admin, friendlyName=Login_Manager.get_friendly_name())
 

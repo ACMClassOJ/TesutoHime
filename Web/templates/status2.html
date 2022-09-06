@@ -27,10 +27,11 @@
                 <select class="form-control selectpicker" name="lang" id="lang"
                         data-style="form-control font-weight-normal border-grey shadow-none">
                     <option value="" {{ 'selected' if not 'lang' in Args or Args['lang'] == '' }}>语言</option>
-                    <option value="0" {{ "selected" if "lang" in Args and Args["lang"]=="0" }}>C++</option>
-                    <option value="1" {{ "selected" if "lang" in Args and Args["lang"]=="1" }}>Git</option>
-                    <option value="2" {{ "selected" if "lang" in Args and Args["lang"]=="2" }}>Verilog</option>
-                    <option value="3" {{ "selected" if "lang" in Args and Args["lang"]=="3" }}>Quiz</option>
+                    {% for key in language_info -%}
+                    <option value="{{ key }}" {{ 'selected' if 'lang' in Args and Args['lang'] == key }}>
+                        {{ language_info[key].name }}
+                    </option>
+                    {%- endfor %}
                 </select>
                 <div class="input-group-append">
                     <button class="btn btn-primary">搜索</button>
@@ -51,57 +52,47 @@
                     <th>提交时间</th>
                 </tr>
                 </thead>
-                {% for cur in Data -%}
+                {% for submission in submissions -%}
                     <tr>
-                        <td>{{ cur['ID'] }}</td>
+                        <td>{{ submission.id }}</td>
                         <td>
                             {% if is_Admin -%}
-                            <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ cur['Username'] }}">{{ cur['Friendly_Name'] }}</span>
+                            <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ submission.username }}">{{ submission.user.friendly_name }}</span>
                             {% else -%}
-                            <span>{{ cur['Friendly_Name'] }}</span>
+                            <span>{{ submission.user.friendly_name }}</span>
                             {%- endif %}
                             {% if is_Admin -%}
-                                <span class="text-black-50 float-right"><small>{{ cur['Real_Name'] }}</small></span>
+                                <span class="text-black-50 float-right"><small>{{ real_names[submission] }}</small></span>
                             {%- endif %}
                         </td>
                         <td>
-                            <a href="/OnlineJudge/problem?problem_id={{ cur['Problem_ID'] }}">{{ cur['Problem_ID'] }}. {{ cur['Problem_Title'] }}</a>
+                            <a href="/OnlineJudge/problem?problem_id={{ submission.problem_id }}">{{ submission.problem_id }}. {{ submission.problem.title }}</a>
                         </td>
                         <td>
                             <b>
-                                {%- if cur['Status'] == '0' -%}
-                                    <span class="text-gray">Pending</span>
-                                {%- elif cur['Status'] == '1' -%}
-                                    <span class="text-blue">Running & Judging</span>
-                                {%- elif cur['Status'] == '2' -%}
-                                    <span class="text-green">Accepted</span>
-                                {%- elif cur['Status'] == '3' -%}
-                                    <span class="text-red">Wrong Answer</span>
-                                {%- elif cur['Status'] == '4' -%}
-                                    <span class="text-yellow">Compile Error</span>
-                                {%- elif cur['Status'] == '5' -%}
-                                    <span class="text-red">Runtime Error</span>
-                                {%- elif cur['Status'] == '6' -%}
-                                    <span class="text-orange">Time Limit Exceed</span>
-                                {%- elif cur['Status'] == '7' -%}
-                                    <span class="text-orange">Memory Limit Exceed</span>
-                                {%- elif cur['Status'] == '8' -%}
-                                    <span class="text-purple">Memory Leak</span>
-                                {%- elif cur['Status'] == '9' -%}
-                                    <span class="text-gray-dark">System Error</span>
-                                {%- elif cur['Status'] == '10' -%}
-                                    <span class="text-purple">Disk Limit Exceed</span>
-                                {%- endif -%}
+                                <span class="text-{{ judge_status_info[submission.status.name].color }}">
+                                    {{ judge_status_info[submission.status.name].name }}
+                                </span>
                             </b>
                         </td>
-                        <td>{{ cur['Time_Used'] }}ms</td>
-                        <td>{{ cur['Mem_Used'] }}KiB</td>
-                        {% if cur['Visible'] -%}
-                            <td><a href="/OnlineJudge/code?submit_id={{ cur['ID'] }}">{{ cur['Lang'] }}</a></td>
+                        {%- if submission.time_msecs != None -%}
+                        <td>{{ submission.time_msecs }} ms</td>
                         {% else -%}
-                            <td>{{ cur['Lang'] }}</td>
+                        <td>N/A</td>
                         {%- endif %}
-                        <td>{{ cur['Time'] }}</td>
+
+                        {%- if submission.memory_bytes != None -%}
+                        <td>{{ "%.2f" % (submission.memory_bytes / 1024) }} KiB</td>
+                        {% else -%}
+                        <td>N/A</td>
+                        {%- endif %}
+
+                        {% if visible[submission] -%}
+                            <td><a href="/OnlineJudge/code/{{ submission.id }}/">{{ languages[submission] }}</a></td>
+                        {% else -%}
+                            <td>{{ languages[submission] }}</td>
+                        {%- endif %}
+                        <td>{{ submission.created.strftime('%b-%d-%Y %H:%M:%S') }}</td>
                     </tr>
                 {%- endfor %}
             </table>
@@ -115,7 +106,7 @@
                         </li>
                     {%- elif x[2] != -1 -%}
                         <li class="page-item">
-                            <a class="page-link btn-light" href="/OnlineJudge/status?page={{ x[1] }}
+                            <a class="page-link btn-light" href="/OnlineJudge/status2?page={{ x[1] }}
                             {%- for arg in Args.items() -%}
                                 &{{ arg[0] }}={{ arg[1] }}
                             {%- endfor -%}

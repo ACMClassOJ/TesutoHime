@@ -20,11 +20,9 @@
                     <th>用户昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
                     <th>题目名称</th>
                     <th>评测状态</th>
-                    {% if details != None -%}
-                        {% if details.resource_usage != None -%}
-                            <th>运行时间</th>
-                            <th>内存</th>
-                        {%- endif %}
+                    {% if details != None and details.resource_usage != None -%}
+                        <th>运行时间</th>
+                        <th>内存</th>
                     {%- endif %}
                     {%- if show_score %}
                         <th>分数</th>
@@ -52,11 +50,9 @@
                             </span>
                         </b>
                     </td>
-                    {% if details != None -%}
-                        {% if details.resource_usage != None -%}
-                            <td>{{ details.resource_usage.time_msecs }} ms</td>
-                            <td>{{ "%.2f" % (details.resource_usage.memory_bytes / 1024) }} KiB</td>
-                        {%- endif %}
+                    {% if details != None and details.resource_usage != None -%}
+                        <td>{{ details.resource_usage.time_msecs }} ms</td>
+                        <td>{{ "%.2f" % (details.resource_usage.memory_bytes / 1024) }} KiB</td>
                     {%- endif %}
                     {%- if show_score %}
                         <td>{{ submission.score }}</td>

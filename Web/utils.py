@@ -45,7 +45,7 @@ def regularize_string(raw_str: str) -> str:
     return raw_str
 
 
-def gen_page(cur_page: int, max_page: int):
+def gen_page(cur_page: int, max_page: int, disable_jump_to_last: bool = False):
     ret = []
     if cur_page != 1:
         ret.append(['<<', 1, 0])
@@ -84,7 +84,7 @@ def gen_page(cur_page: int, max_page: int):
         ret.append(['>', cur_page + 1, 0])
     else:
         ret.append(['>', cur_page + 1, -1])
-    if cur_page < max_page:
+    if cur_page < max_page and not disable_jump_to_last:
         ret.append(['>>', max_page, 0])
     else:
         ret.append(['>>', max_page, -1])
@@ -175,6 +175,7 @@ def schedule_judge2 (problem_id, submission_id, language, username):
                 .one()
             rec.status = JudgeStatus.system_error
             rec.message = str(e)
+            rec.score = 0
             db.commit()
 
 @dataclass

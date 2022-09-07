@@ -1,24 +1,24 @@
-import re
-from flask import request, render_template, Blueprint, abort, Response, stream_with_context
+import random
+import time
+from http.client import SEE_OTHER
+from urllib.parse import urljoin
+from uuid import uuid4
+
 import requests
-from requests.models import Request
-from Web.utils import NotFoundException, Session, mark_void2, rejudge2, schedule_judge2
-from commons.models import JudgeRecord2, JudgeStatus
-from const import *
-from sessionManager import Login_Manager
-from userManager import User_Manager
-from problemManager import Problem_Manager
-from contestManager import Contest_Manager
-from referenceManager import Reference_Manager
-from judgeServerScheduler import JudgeServer_Scheduler
-from judgeManager import Judge_Manager
+from flask import Blueprint, abort, redirect, render_template, request
 from requests import post
 from requests.exceptions import RequestException
-from config import DataConfig, PicConfig, ProblemConfig
-import json
-import hashlib
-import time
-import random
+
+from config import ProblemConfig, S3Config, SchedulerConfig
+from const import *
+from contestManager import Contest_Manager
+from judgeManager import Judge_Manager
+from judgeServerScheduler import JudgeServer_Scheduler
+from problemManager import Problem_Manager
+from referenceManager import Reference_Manager
+from sessionManager import Login_Manager
+from userManager import User_Manager
+from Web.utils import NotFoundException, mark_void2, rejudge2, s3_public
 
 admin = Blueprint('admin', __name__, static_folder='static')
 
@@ -226,18 +226,27 @@ def contest_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-@admin.route('/data', methods=['POST'])
-def data_upload():
+@admin.route('/problem/<int:problem_id>/upload-url')
+def data_upload(problem_id):
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
-    if 'file' in request.files:
-        f = request.files['file']
-        try:
-            r = post(DataConfig.server + '/' + DataConfig.key + '/upload.php', files={'file': (f.filename, f)})
-            return {'e': 0, 'msg': r.content.decode('utf-8')}
-        except RequestException:
-            return ReturnCode.ERR_NETWORK_FAILURE
-    return ReturnCode.ERR_BAD_DATA
+    return s3_public.generate_presigned_url('put_object', {
+        'Bucket': S3Config.Buckets.problems,
+        'Key': f'{problem_id}.zip',
+    }, ExpiresIn=3600)
+
+
+@admin.route('/problem/<int:problem_id>/update', methods=['POST'])
+def data_update(problem_id):
+    url = urljoin(SchedulerConfig.base_url, f'problem/{problem_id}/update')
+    res = requests.post(url).json()
+    if res['result'] == 'ok':
+        return 'ok'
+    elif res['result'] == 'invalid problem':
+        return f'Invalid problem: {res["error"]}'
+    elif res['result'] == 'system error':
+        return f'System error: {res["error"]}'
+    return 'Bad result from scheduler'
 
 
 @admin.route('/data_download', methods=['POST'])
@@ -245,40 +254,34 @@ def data_download():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
     id = request.form['id']
-    try:
-        r = requests.get(DataConfig.server + '/' + DataConfig.key + '/' + str(id) + '.zip', stream=True)
-        resp = Response(stream_with_context(r.iter_content(chunk_size = 512)), content_type = 'application/octet-stream')
-        resp.headers["Content-disposition"] = 'attachment; filename=' + str(id) +'.zip'
-        return resp
-    except RequestException:
-        return ReturnCode.ERR_NETWORK_FAILURE
+    key = f'{id}.zip'
+    url = s3_public.generate_presigned_url('get_object', {
+        'Bucket': S3Config.Buckets.problems,
+        'Key': key,
+    }, ExpiresIn=3600)
+    return redirect(url, SEE_OTHER)
 
 
-@admin.route('/pic', methods=['POST'])
+max_pic_size = 10485760
+
+@admin.route('/pic-url', methods=['POST'])
 def pic_upload():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
-    if 'file' in request.files:
-        f = request.files['file']
-        try:
-            filenamehashed = time.strftime('%Y%m%d-%H%M%S', time.localtime())
-            filenamehashed += "-" + str(random.randint(100000, 999999))
-            filenamehashed += f.filename[f.filename.rindex("."):].lower()
-            r = post(PicConfig.server + '/' + PicConfig.key + '/upload.php', files={'file': (filenamehashed, f)})
-            response_text = r.content.decode('utf-8')
-            if response_text == '0':
-                ret_notify = ReturnCode.SUC_PIC_SERVICE_UPLOAD
-                ret_notify['link'] = PicConfig.server + '/' + filenamehashed
-                return ret_notify
-            elif response_text == '-500':
-                return ReturnCode.ERR_PIC_SERIVCE_TOO_BIG
-            elif response_text == '-501':
-                return ReturnCode.ERR_PIC_SERIVCE_WRONG_EXT
-            elif response_text == '-502':
-                return ReturnCode.ERR_PIC_SERIVCE_SYSTEM_ERROR
-        except RequestException:
-            return ReturnCode.ERR_NETWORK_FAILURE
-    return ReturnCode.ERR_BAD_DATA
+    length = int(request.form['length'])
+    if length > max_pic_size:
+        abort(413)
+    if length <= 0:
+        abort(400)
+    type = str(request.form['type'])
+    if not type.startswith('image/'):
+        abort(400)
+    return s3_public.generate_presigned_url('put_object', {
+        'Bucket': S3Config.Buckets.images,
+        'Key': str(uuid4()),
+        'ContentLength': length,
+        'ContentType': type,
+    }, ExpiresIn=3600)
 
 @admin.route('/rejudge', methods=['POST'])
 def rejudge():

@@ -1,19 +1,24 @@
 __import__('scheduler2.logging_')
 
-from asyncio import CancelledError, Task, create_task
+from asyncio import CancelledError, Future, Task, create_task, wait
 from atexit import register
+from dataclasses import asdict
+from http.client import BAD_REQUEST
 from logging import getLogger
+from time import time
 from traceback import format_exception
-from typing import Dict, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import quote
 
-from aiohttp.web import (Application, HTTPNotFound, Request, RouteTableDef,
-                         json_response, run_app)
+from aiohttp.web import (Application, HTTPNotFound, Request, Response,
+                         RouteTableDef, json_response, run_app)
 from commons.task_typing import (CodeLanguage, ProblemJudgeResult,
                                  SourceLocation)
 from commons.util import deserialize, dump_dataclass, serialize
 
-from scheduler2.config import host, port, s3_buckets
+from scheduler2.config import (host, port, runner_heartbeat_interval_secs,
+                               s3_buckets)
+from scheduler2.monitor import get_runner_status
 from scheduler2.plan import (InvalidCodeException, InvalidProblemException,
                              execute_plan, generate_plan, get_partial_result)
 from scheduler2.s3 import read_file, upload_str
@@ -87,8 +92,8 @@ async def run_judge (problem_id: str, submission_id: str,
         plan = await read_file(s3_buckets.problems, plan_key(problem_id))
         plan = deserialize(plan)
         logger.debug(f'plan for problem {problem_id} loaded')
-        res = await execute_plan(plan, submission_id, language, source,
-            rate_limit_group)
+        res = await execute_plan(plan, submission_id, problem_id, language,
+            source, rate_limit_group)
     except CancelledError as e:
         if res is None:
             res = ProblemJudgeResult(result='aborted', message='Aborted')
@@ -144,6 +149,44 @@ async def abort_judge (request: Request):
         logger.info(f'aborting judge {submission_id}')
         task.cancel()
     return json_response({'result': 'ok', 'error': None})
+
+
+cached_runner_status: Optional[Dict[str, dict]] = None
+cached_runner_status_time: Optional[float] = None
+runner_status_future: Optional[Future] = None
+
+@routes.get('/status')
+async def runner_status (request: Request):
+    if not 'id' in request.query:
+        return Response(text='no runner id specified', status=BAD_REQUEST)
+    ids = request.query['id'].split(',')
+    if len(ids) == 0:
+        return Response(text='no runner id specified', status=BAD_REQUEST)
+    global cached_runner_status
+    global cached_runner_status_time
+    global runner_status_future
+    if cached_runner_status is not None:
+        if time() - cached_runner_status_time > runner_heartbeat_interval_secs:
+            cached_runner_status = None
+            cached_runner_status_time = None
+    if cached_runner_status is None:
+        if runner_status_future is None:
+            runner_status_future = Future()
+            async def stat (id):
+                return (id, asdict(await get_runner_status(id)))
+            try:
+                tasks = [create_task(stat(x)) for x in ids]
+                tasks, _ = await wait(tasks)
+                cached_runner_status = dict([await x for x in tasks])
+                cached_runner_status_time = time()
+                runner_status_future.set_result(cached_runner_status)
+            except BaseException as e:
+                runner_status_future.set_exception(e)
+            finally:
+                runner_status_future = None
+        else:
+            await runner_status_future
+    return json_response(cached_runner_status)
 
 
 if __name__ == '__main__':

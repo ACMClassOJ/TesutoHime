@@ -1,23 +1,25 @@
-from dataclasses import dataclass
 import datetime
 import time
+from dataclasses import dataclass
 from typing import Optional
 from urllib.parse import urljoin
 
 import boto3
 import redis
 import requests
+from botocore.config import Config
+from commons.models import JudgeRecord2, JudgeStatus
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from commons.models import JudgeRecord2, JudgeStatus
 
 from config import *
 
 engine = create_engine(mysql_connection_string)
 Session = sessionmaker(bind=engine)
 
-s3_public = boto3.client('s3', **S3Config.Connections.public)
-s3_internal = boto3.client('s3', **S3Config.Connections.internal)
+cfg = Config(signature_version='s3v4')
+s3_public = boto3.client('s3', **S3Config.Connections.public, config=cfg)
+s3_internal = boto3.client('s3', **S3Config.Connections.internal, config=cfg)
 
 
 def db_connect():
@@ -240,4 +242,16 @@ language_info = {
     'git': 'Git',
     'verilog': 'Verilog',
     'quiz': 'Quiz',
+}
+
+@dataclass
+class RunnerStatus:
+    name: str
+    color: str
+
+runner_status_info = {
+    'invalid': RunnerStatus('Invalid', 'black-50'),
+    'idle': RunnerStatus('Idle', 'blue'),
+    'offline': RunnerStatus('Offline', 'black-50'),
+    'busy': RunnerStatus('Busy', 'orange'),
 }

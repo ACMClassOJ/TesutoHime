@@ -27,7 +27,7 @@ from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
                                quiz_filename, s3_buckets, working_dir)
-from scheduler2.dispatch import run_task
+from scheduler2.dispatch import TaskInfo, run_task
 from scheduler2.problem_typing import Group, ProblemConfig, Spj
 from scheduler2.problem_typing import Testpoint as ConfigTestpoint
 from scheduler2.s3 import (copy_file, download, read_file, remove_file,
@@ -331,7 +331,8 @@ async def compile_checker (ctx: ParseContext):
             ctx.file_key(checker_exec_filename))),
         limits=ctx.compile_limits,
     )
-    res = await run_task(task)
+    msg = f'Compiling SPJ for problem {ctx.problem_id}'
+    res = await run_task(TaskInfo(task, None, ctx.problem_id, msg))
     if res.result != 'compiled':
         msg = f'Cannot compile checker ({res.result}): {res.message}'
         raise InvalidProblemException(msg)
@@ -381,6 +382,7 @@ class JudgeTaskRecord:
 class ExecutionContext:
     plan: JudgePlan
     id: str
+    problem_id: str
     lang: CodeLanguage
     code: SourceLocation
     rate_limit_group: str
@@ -533,7 +535,9 @@ async def run_compile_task (ctx: ExecutionContext) -> Optional[CompileResult]:
     async def onprogress (status):
         if isinstance(status, StatusUpdateStarted):
             await update_status(ctx.id, 'compiling')
-    return await run_task(ctx.compile, onprogress, ctx.rate_limit_group)
+    msg = f'Compiling code for submission #{ctx.id}'
+    task = TaskInfo(ctx.compile, ctx.id, ctx.problem_id, msg)
+    return await run_task(task, onprogress, ctx.rate_limit_group)
 
 
 def skipped_result (name, message = 'Skipped'):
@@ -584,7 +588,9 @@ async def run_judge_tasks (ctx: ExecutionContext):
                         ctx.results[testpoint.id] = testpoint
         async def run_with_rec ():
             try:
-                return (task, True, await run_task(task.task, onprogress,
+                msg = f'Running test for submission #{ctx.id}'
+                taskinfo = TaskInfo(task.task, ctx.id, ctx.problem_id, msg)
+                return (task, True, await run_task(taskinfo, onprogress,
                     ctx.rate_limit_group))
             except CancelledError:
                 raise
@@ -692,9 +698,10 @@ async def judge_quiz (quiz: List[QuizProblem], answer: Dict[str, str]):
 
 ctx_from_submission: Dict[str, ExecutionContext] = {}
 
-async def execute_plan (plan: JudgePlan, id: str, lang: CodeLanguage,
-    code: SourceLocation, rate_limit_group: str) -> ProblemJudgeResult:
-    ctx = ExecutionContext(plan, id, lang, code, rate_limit_group)
+async def execute_plan (plan: JudgePlan, id: str, problem_id: str,
+    lang: CodeLanguage, code: SourceLocation, rate_limit_group: str) \
+    -> ProblemJudgeResult:
+    ctx = ExecutionContext(plan, id, problem_id, lang, code, rate_limit_group)
     ctx_from_submission[id] = ctx
     compiled = False
 

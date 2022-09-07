@@ -517,15 +517,15 @@ $(function () {
     $("#formDataZipUpload").submit(function (e) {
         e.preventDefault();
         e.stopPropagation();
-        var long_zip_name = $("#iptDataZipUpload").val();
-        var zip_name = long_zip_name.substring(long_zip_name.lastIndexOf("\\")+1, long_zip_name.lastIndexOf("."));
-        if(isNaN(zip_name) || parseInt(zip_name) < 1000)
+        var problemId = $('#iptDataZipUploadProblemID').val()
+        if (isNaN(problemId) || parseInt(problemId) < 1000)
         {
-            swal("Error", "数据包名不正确！", "error");
+            swal("Error", "题号不正确！", "error");
             return;
         }
-        JSZip.loadAsync($("#iptDataZipUpload").prop("files")[0]).then(function (zip) {
-            zip.file(zip_name + "/config.json").async("string").then(function (config) {
+        const file = $("#iptDataZipUpload").prop("files")[0]
+        JSZip.loadAsync(file).then(function (zip) {
+            zip.file("config.json").async("string").then(function (config) {
                 var config_json = JSON.parse(config);
                 let limit_config = {};
                 limit_config["length"] = config_json["Details"].length;
@@ -545,7 +545,7 @@ $(function () {
                 $.ajax({
                     url: "/OnlineJudge/admin/problem_limit",
                     type: "POST",
-                    data: {id: zip_name, data: JSON.stringify(limit_config)},
+                    data: {id: problemId, data: JSON.stringify(limit_config)},
                     dataType: "json",
                     complete: function (ret) {
                         var ret_json = JSON.parse(ret.responseText);
@@ -580,76 +580,139 @@ $(function () {
         });
     
         let data = new FormData(this);
-        $.ajax({
-            url: "/OnlineJudge/admin/data",
-            type: "POST",
-            processData: false,
-            contentType: false,
-            data: data,
-            dataType: "json",
-            complete: function (ret) {
-                var ret_json = JSON.parse(ret.responseText);
-                if(ret_json['e'] < 0)
-                    swal("Error " + ret_json['e'], ret_json['msg'], "error");
-                else
-                    swal("Success", ret_json['msg'], "success");
+        ; (async () => {
+            try {
+                const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/upload-url`)
+                if (res.status !== 200) {
+                    swal("Error", "无法获取上传链接", "error")
+                    return
+                }
+                const url = (await res.text()).trim()
+
+                const xhr = new XMLHttpRequest()
+                /** @type {HTMLProgressElement} */
+                const progressBar = document.getElementById('data-upload-progress')
+                progressBar.value = 0
+                xhr.open('PUT', url, true)
+                xhr.upload.onprogress = xhr.onprogress = event => {
+                    const progress = event.loaded / event.total
+                    progressBar.value = progress
+                }
+                xhr.onreadystatechange = async () => {
+                    if (xhr.readyState !== 4) return
+                    if (xhr.status !== 200) {
+                        swal('Error', `未知错误: ${xhr.status}`, 'error')
+                        return
+                    }
+                    try {
+                        const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/update`, { method: 'POST' })
+                        if (res.status !== 200) {
+                            swal('Error', `未知错误: ${res.status}`, 'error')
+                            return
+                        }
+                        const msg = await res.text()
+                        if (msg !== 'ok') {
+                            swal('Error', msg, 'error')
+                            return
+                        }
+                        swal("Success", msg, "success");
+                    } finally {
+                        progressBar.value = 0
+                    }
+                }
+                xhr.onerror = event => {
+                    swal('Error', `未知错误: ${event}`, 'error')
+                }
+                xhr.send(file)
+            } catch (e) {
+                swal("Error", `未知错误: ${e}`, "error")
             }
-        });
+        })()
     });
 
     $("#formPicUpload").submit(function (e) {
         e.preventDefault();
         e.stopPropagation();
-        let data = new FormData(this);
         $("#btnPicUpload").attr("disabled", "disabled");
-        $.ajax({
-            url: "/OnlineJudge/admin/pic",
-            type: "POST",
-            processData: false,
-            contentType: false,
-            data: data,
-            complete: function (ret) {
-                var ret_json = JSON.parse(ret.responseText);
-                if(ret_json['e'] < 0)
-                    swal("Error " + ret_json['e'], ret_json['msg'], "error");
-                else
-                {
-                    var swal_content = document.createElement("p");
-                    swal_content.innerHTML = '<img src="' + ret_json['link'] + '" style="width: 33%"><br>';
-                    swal_content.innerHTML += "<xmp id='swal_content_url'>" + ret_json['link'] + "</xmp>";
-                    swal_content.innerHTML += '<xmp id="swal_content_html"><img src="' + ret_json['link'] + '" style="width: 100%"></xmp>';
-                    swal_config = {
-                        title: ret_json['msg'],
-                        icon: "success",
-                        content: swal_content,
-                        buttons: {
-                            copy_url: {
-                                text: "复制链接",
-                                value: "copy_url",
-                                className: "copy_url",
-                                closeModal: false
-                            },
-                            copy_html: {
-                                text: "复制html",
-                                value: "copy_html",
-                                className: "copy_html",
-                                closeModal: false
-                            }
-                        }
-                    };
-                    swal(swal_config);
-                    $(".swal-modal").css("width", "70%");
-                    document.getElementsByClassName('copy_url')[0].setAttribute("data-clipboard-target", "#swal_content_url");
-                    var clipboard1 = new ClipboardJS(document.getElementsByClassName('copy_url')[0]);
-                    document.getElementsByClassName('copy_html')[0].setAttribute("data-clipboard-target", "#swal_content_html");
-                    var clipboard2 = new ClipboardJS(document.getElementsByClassName('copy_html')[0]);
+        /** @type {File} */
+        const image = document.getElementById('iptPicUpload').files[0]
+        if (!image) return
+        ; (async () => {
+            try {
+                if (!image.type.startsWith('image/')) {
+                    throw new Error('不是图片')
                 }
+                if (image.size === 0) {
+                    throw new Error('您正在上传一个空文件')
+                }
+                const urlRes = await fetch(`/OnlineJudge/admin/pic-url`, {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        length: image.size,
+                        type: image.type,
+                    }),
+                })
+                if (urlRes.status === 413) {
+                    throw new Error('文件过大')
+                }
+                if (urlRes.status !== 200) {
+                    throw new Error('无法获取上传链接')
+                }
+                const url = (await urlRes.text()).trim()
+                const res = await fetch(url, {
+                    method: 'PUT',
+                    body: image,
+                    headers: { 'Content-Type': image.type },
+                })
+                if (res.status !== 200) {
+                    throw new Error(`网络错误: ${res.status}`)
+                }
+                const displayUrl = new URL(url)
+                displayUrl.search = ''
+                var swal_content = document.createElement("p");
+                swal_content.innerHTML = `
+                    <img src="${displayUrl}" style="width: 33%"><br>
+                    <pre id="swal_content_url">${displayUrl}</pre>
+                    <pre id="swal_content_html">&lt;img src=&quot;${displayUrl}&quot; style=&quot;width: 100%&quot;&gt;</pre>
+                `
+                swal_config = {
+                    title: '上传成功',
+                    icon: "success",
+                    content: swal_content,
+                    buttons: {
+                        copy_url: {
+                            text: "复制链接",
+                            value: "copy_url",
+                            className: "copy_url",
+                            closeModal: false
+                        },
+                        copy_html: {
+                            text: "复制html",
+                            value: "copy_html",
+                            className: "copy_html",
+                            closeModal: false
+                        },
+                        close: {
+                            text: '关闭',
+                            value: 'close',
+                        },
+                    }
+                };
+                swal(swal_config);
+                $(".swal-modal").css("width", "70%");
+                document.getElementsByClassName('copy_url')[0].setAttribute("data-clipboard-target", "#swal_content_url");
+                var clipboard1 = new ClipboardJS(document.getElementsByClassName('copy_url')[0]);
+                document.getElementsByClassName('copy_html')[0].setAttribute("data-clipboard-target", "#swal_content_html");
+                var clipboard2 = new ClipboardJS(document.getElementsByClassName('copy_html')[0]);
+            } catch (e) {
+                swal("Error", String(e), "error")
+            } finally {
                 var upload_input_bar = $("#iptPicUpload");
                 upload_input_bar.after(upload_input_bar.clone().val(""));
                 upload_input_bar.remove();
                 $("#btnPicUpload").removeAttr("disabled");
             }
-        });
+        })()
     });
 
     $("#formRejudge").ajaxForm(function (ret_json) {

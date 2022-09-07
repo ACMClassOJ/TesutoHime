@@ -162,7 +162,8 @@ class JudgeRunner2(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Text)
-    description = Column(Text)
+    hardware = Column(Text)
+    provider = Column(Text)
 
 
 class JudgeStatus(Enum):

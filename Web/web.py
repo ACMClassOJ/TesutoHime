@@ -1,15 +1,15 @@
 import json
-from math import ceil
 import os
 import re
 from functools import cmp_to_key
 from http.client import NOT_FOUND, OK, SEE_OTHER
+from math import ceil
 from typing import List, Optional, Tuple
-from urllib.parse import quote, urljoin
+from urllib.parse import quote, urlencode, urljoin
 from uuid import uuid4
 
 import commons.task_typing
-from commons.models import JudgeRecord2, JudgeStatus
+from commons.models import JudgeRecord2, JudgeRunner2, JudgeStatus
 from commons.task_typing import ProblemJudgeResult
 from commons.util import load_dataclass, serialize
 from flask import (Blueprint, Flask, abort, make_response, redirect,
@@ -925,6 +925,7 @@ def contest():
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
     contest_id = request.args.get('contest_id')
+    judger2 = request.args.get('judger2') is not None
     username = Login_Manager.get_username()
     if contest_id is None:  # display contest list
         contest_list = Contest_Manager.list_contest_and_exam()
@@ -989,9 +990,25 @@ def contest():
             username_to_num = dict(map(lambda entry: [regularize_string(entry[1]), entry[0]], enumerate(players)))
             problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
 
-            submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
+            if judger2:
+                with Session() as db:
+                    submits = db \
+                        .query(JudgeRecord2) \
+                        .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
+                        .where(JudgeRecord2.problem_id.in_(problems)) \
+                        .where(JudgeRecord2.username.in_(players)) \
+                        .all()
+            else:
+                submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
             for submit in submits:
-                [ _submit_id, username, problem_id, status, score, submit_time ] = submit
+                if judger2:
+                    username = submit.username
+                    problem_id = submit.problem_id
+                    status = 2 if submit.status == JudgeStatus.accepted else -1
+                    score = submit.score
+                    submit_time = submit.created.timestamp()
+                else:
+                    [ _submit_id, username, problem_id, status, score, submit_time ] = submit
 
                 if regularize_string(username) not in username_to_num:
                     continue
@@ -1060,6 +1077,7 @@ def homework():
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
     contest_id = request.args.get('homework_id')
+    judger2 = request.args.get('judger2') is not None
     username = Login_Manager.get_username()
     if contest_id is None:  # display contest list
         contest_list = Contest_Manager.list_contest(1)
@@ -1112,10 +1130,24 @@ def homework():
             username_to_num = dict(map(lambda entry: [regularize_string(entry[1]), entry[0]], enumerate(players)))
             problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
 
-            submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
+            if judger2:
+                with Session() as db:
+                    submits = db \
+                        .query(JudgeRecord2) \
+                        .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
+                        .where(JudgeRecord2.problem_id.in_(problems)) \
+                        .where(JudgeRecord2.username.in_(players)) \
+                        .all()
+            else:
+                submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
 
             for submit in submits:
-                [ _submit_id, username, problem_id, status, _score, _submit_time ] = submit
+                if judger2:
+                    username = submit.username
+                    problem_id = submit.problem_id
+                    status = 2 if submit.status == JudgeStatus.accepted else -1
+                else:
+                    [ _submit_id, username, problem_id, status, _score, _submit_time ] = submit
 
                 if regularize_string(username) not in username_to_num:
                     continue
@@ -1194,7 +1226,38 @@ def profile():
 @web.route('/about')
 def about():
     server_list = JudgeServer_Manager.Get_Server_List()
-    return render_template('about.html', Server_List=server_list, friendlyName=Login_Manager.get_friendly_name(),
+    with Session(expire_on_commit=False) as db:
+        runner2s: List[JudgeRunner2] = db \
+            .query(JudgeRunner2) \
+            .order_by(JudgeRunner2.id) \
+            .all()
+    if len(runner2s) == 0:
+        runner2_dict = {}
+    else:
+        query = urlencode({'id': ','.join(str(x.id) for x in runner2s)})
+        url = urljoin(SchedulerConfig.base_url, f'status?{query}')
+        runner2_res = requests.get(url)
+        if runner2_res.status_code != OK:
+            abort(500)
+        runner2_dict = runner2_res.json()
+        runner2_list = []
+        for runner in runner2s:
+            r = runner2_dict[str(runner.id)]
+            r['id'] = str(runner.id)
+            r['name'] = runner.name
+            r['hardware'] = runner.hardware
+            r['provider'] = runner.provider
+            if r['last_seen'] is not None:
+                r['last_seen'] = readable_time(r['last_seen'])
+            else:
+                r['last_seen'] = 'N/A'
+            status_info = runner_status_info[r['status']]
+            r['status'] = status_info.name
+            r['status_color'] = status_info.color
+            runner2_list.append(r)
+    return render_template('about.html', Server_List=server_list,
+                           runner2=runner2_list,
+                           friendlyName=Login_Manager.get_friendly_name(),
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 

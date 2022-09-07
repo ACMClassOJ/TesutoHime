@@ -64,3 +64,5 @@ task_timeout_secs = 3600 # 1 hour
 task_retries = 3
 task_retry_interval_secs = 10
 task_concurrency_per_account = 4
+
+runner_heartbeat_interval_secs = 2.0

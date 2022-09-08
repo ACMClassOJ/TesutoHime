@@ -48,6 +48,7 @@ class ParseContext:
     problem_id: str
     zip: ZipFile
     cfg: Optional[ProblemConfig] = None
+
     quiz_problems: Optional[List[QuizProblem]] = None
     testpoint_count: Optional[int] = None
     compile_type: Literal['classic', 'hpp', 'hpp-per-testpoint', 'none'] = None
@@ -62,6 +63,7 @@ class ParseContext:
     def file_key (self, filename: str):
         return f'{self.problem_id}/{filename}'
 
+    # file URLs inside judge plans has a format of s3://key .
     def file_url (self, filename: str) -> FileUrl:
         self.files_to_upload.add(filename)
         return f'{url_scheme}{self.file_key(filename)}'
@@ -118,7 +120,10 @@ async def parse_spj (ctx: ParseContext):
     ctx.compile_type, ctx.check_type = type_map[spj]
     if ctx.cfg.Scorer != 0:
         raise InvalidProblemException(f'Scorers are not supported (yet)')
+
     if ctx.check_type == 'spj':
+        # A custom checker is needed for judging, so
+        # register the checker executable artifact.
         if checker_precompiled_filename in ctx.zip.namelist():
             ctx.checker_artifact = Artifact(
                 ctx.file_url(checker_precompiled_filename))
@@ -144,6 +149,9 @@ async def parse_compile (ctx: ParseContext) -> Optional[CompileTaskPlan]:
     ctx.compile_limits = limits
 
     supplementary_files = list(map(ctx.file_url, ctx.cfg.SupportedFiles))
+    # make a copy here since we may want to append UserCode()
+    # into supplementary_files, and there is no user code
+    # during SPJ compilation.
     ctx.compile_supp = supplementary_files[:]
 
     if ctx.compile_type == 'none':
@@ -165,12 +173,16 @@ async def parse_compile (ctx: ParseContext) -> Optional[CompileTaskPlan]:
     if has_main:
         task.source = CompileSourceCpp(ctx.file_url(hpp_main_filename))
         return task
+    # a seperate compilation is needed per testpoint, and
+    # the generated compile task is just a template.
+    # the compile task will be set to None in parse_testpoints.
     ctx.compile_type = 'hpp-per-testpoint'
     task.source = None
     task.artifact = False
     return task
 
 
+# populate dependents from dependencies.
 def generate_dependents (plan: List[JudgeTaskPlan]) \
     -> List[JudgeTaskPlan]:
     for i, deps in enumerate(x.dependencies for x in plan):
@@ -356,6 +368,7 @@ async def generate_plan (problem_id: str) -> JudgePlan:
             ctx.plan.score = await parse_groups(ctx)
             await upload_files(ctx)
             await compile_checker(ctx)
+            logger.debug(f'generated plan for {problem_id}: {ctx.plan}')
             return ctx.plan
     finally:
         try:

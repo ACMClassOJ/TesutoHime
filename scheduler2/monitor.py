@@ -25,6 +25,7 @@ async def get_runner_status (runner_id: str):
         if heartbeat is None \
         or heartbeat < time() - runner_heartbeat_interval_secs * 2:
             return RunnerStatus('offline', 'Offline', heartbeat)
+
         task_ids = await redis.lrange(runner_queues.in_progress, 0, -1)
         if len(task_ids) == 0:
             status = 'idle'

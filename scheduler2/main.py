@@ -98,6 +98,8 @@ async def run_judge (problem_id: str, submission_id: str,
         if res is None:
             res = ProblemJudgeResult(result='aborted', message='Aborted')
     except InvalidProblemException as e:
+        logger.warning('invalid problem encountered in judging: ' +
+            "".join(format_exception(e)))
         if res is None:
             msg = f'Invalid problem: {e}'
             res = ProblemJudgeResult(result='system_error', message=msg)
@@ -106,9 +108,9 @@ async def run_judge (problem_id: str, submission_id: str,
             msg = f'Invalid code: {e}'
             res = ProblemJudgeResult(result='compile_error', message=msg)
     except BaseException as e:
+        msg = f'Internal error: {"".join(format_exception(e))}'
+        logger.error(f'error judging problem: {msg}')
         if res is None:
-            msg = f'Internal error: {"".join(format_exception(e))}'
-            logger.error(f'error judging problem: {msg}')
             res = ProblemJudgeResult(result='system_error', message=msg)
     await make_request(f'api/submission/{quote(submission_id)}/result', res)
 

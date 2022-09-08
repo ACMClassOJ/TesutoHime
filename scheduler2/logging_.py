@@ -9,6 +9,7 @@ from scheduler2.config import log_dir
 
 setup_logging(log_dir)
 
+# split access log to a new logger since they are too noisy
 access_logger = getLogger('aiohttp.access')
 access_logger.propagate = False
 access_log_file = log_dir / 'access.log'

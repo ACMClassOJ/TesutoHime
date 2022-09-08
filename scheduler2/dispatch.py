@@ -54,6 +54,7 @@ async def run_task (
                     _, status = await redis.blpop(queues.progress,
                         task_timeout_secs)
                     status: StatusUpdate = deserialize(status)
+                    logger.debug(f'received status update from task {task_id}: {status}')
                     match status:
                         case StatusUpdateStarted():
                             if onprogress is not None:

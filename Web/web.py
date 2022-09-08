@@ -397,7 +397,7 @@ def submit_problem():
         if submission_id is None:
             return '-1'
         lang_str = lang_request_str.lower()
-        with Session() as db:
+        with SqlSession() as db:
             rec = JudgeRecord2(
                 id=submission_id,
                 public=share,
@@ -428,7 +428,7 @@ def set_status(submission_id):
     if status not in ('compiling', 'judging'):
         print(status)
         abort(400)
-    with Session() as db:
+    with SqlSession() as db:
         rec: JudgeRecord2 = db \
             .query(JudgeRecord2) \
             .where(JudgeRecord2.id == submission_id) \
@@ -447,7 +447,7 @@ def set_result(submission_id):
     check_scheduler_auth()
     classes = commons.task_typing.__dict__
     res: ProblemJudgeResult = load_dataclass(request.json, classes)
-    with Session() as db:
+    with SqlSession() as db:
         rec: JudgeRecord2 = db \
             .query(JudgeRecord2) \
             .where(JudgeRecord2.id == submission_id) \
@@ -501,7 +501,7 @@ def problem_rank2(problem_id):
         return redirect('login?next=' + request.full_path)
     sort_parameter = request.args.get('sort')
     is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
-    with Session(expire_on_commit=False) as db:
+    with SqlSession(expire_on_commit=False) as db:
         submissions: List[JudgeRecord2] = db \
             .query(JudgeRecord2) \
             .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
@@ -719,7 +719,7 @@ def status2():
     username = Login_Manager.get_username()
     is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
 
-    with Session(expire_on_commit=False) as db:
+    with SqlSession(expire_on_commit=False) as db:
         page = int(page) if page is not None else 1
         limit = JudgeConfig.Judge_Each_Page + 1
         offset = (page - 1) * JudgeConfig.Judge_Each_Page
@@ -818,7 +818,7 @@ def code2(submit_id):
         return redirect('login?next=' + request.full_path)
     if submit_id < 0 or submit_id > Judge_Manager.max_id():
         abort(404)
-    with Session(expire_on_commit=False) as db:
+    with SqlSession(expire_on_commit=False) as db:
         submission: JudgeRecord2 = db \
             .query(JudgeRecord2) \
             .options(joinedload(JudgeRecord2.user)) \
@@ -896,7 +896,7 @@ def abort_judge(submit_id):
         return redirect('login?next=' + request.full_path)
     if submit_id < 0 or submit_id > Judge_Manager.max_id():
         abort(404)
-    with Session(expire_on_commit=False) as db:
+    with SqlSession(expire_on_commit=False) as db:
         submission: Optional[Tuple[str, int]] = db \
             .query(JudgeRecord2.username) \
             .where(JudgeRecord2.id == submit_id) \
@@ -991,7 +991,7 @@ def contest():
             problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
 
             if judger2:
-                with Session() as db:
+                with SqlSession() as db:
                     submits = db \
                         .query(JudgeRecord2) \
                         .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
@@ -1131,7 +1131,7 @@ def homework():
             problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
 
             if judger2:
-                with Session() as db:
+                with SqlSession() as db:
                     submits = db \
                         .query(JudgeRecord2) \
                         .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
@@ -1226,7 +1226,7 @@ def profile():
 @web.route('/about')
 def about():
     server_list = JudgeServer_Manager.Get_Server_List()
-    with Session(expire_on_commit=False) as db:
+    with SqlSession(expire_on_commit=False) as db:
         runner2s: List[JudgeRunner2] = db \
             .query(JudgeRunner2) \
             .order_by(JudgeRunner2.id) \

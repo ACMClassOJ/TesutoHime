@@ -15,7 +15,7 @@ from sqlalchemy.orm import sessionmaker
 from config import *
 
 engine = create_engine(mysql_connection_string)
-Session = sessionmaker(bind=engine)
+SqlSession = sessionmaker(bind=engine)
 
 cfg = Config(signature_version='s3v4')
 s3_public = boto3.client('s3', **S3Config.Connections.public, config=cfg)
@@ -179,7 +179,7 @@ def schedule_judge2(problem_id, submission_id, language, username):
         if res['result'] != 'ok':
             raise Exception(f'Scheduler error: {res["error"]}')
     except BaseException as e:
-        with Session() as db:
+        with SqlSession() as db:
             rec: JudgeRecord2 = db \
                 .query(JudgeRecord2) \
                 .where(JudgeRecord2.id == submission_id) \
@@ -192,7 +192,7 @@ def schedule_judge2(problem_id, submission_id, language, username):
 
 class NotFoundException(Exception): pass
 def mark_void2(id):
-    with Session() as db:
+    with SqlSession() as db:
         submission: JudgeRecord2 = db.query(JudgeRecord2).where(JudgeRecord2.id == id).one_or_none()
         if submission is None:
             raise NotFoundException()
@@ -203,7 +203,7 @@ def mark_void2(id):
         db.commit()
 
 def rejudge2(id):
-    with Session() as db:
+    with SqlSession() as db:
         submission: JudgeRecord2 = db.query(JudgeRecord2).where(JudgeRecord2.id == id).one_or_none()
         if submission is None:
             raise NotFoundException()

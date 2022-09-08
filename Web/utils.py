@@ -21,7 +21,7 @@ cfg = Config(signature_version='s3v4')
 s3_public = boto3.client('s3', **S3Config.Connections.public, config=cfg)
 s3_internal = boto3.client('s3', **S3Config.Connections.internal, config=cfg)
 
-def generate_s3_public_url (*args, **kwargs):
+def generate_s3_public_url(*args, **kwargs):
     url = s3_public.generate_presigned_url(*args, **kwargs)
     public_base = urlsplit(S3Config.public_url)
     url = urlsplit(url)
@@ -159,10 +159,10 @@ def ping(url: str) -> bool:
             pass
     return False
 
-def key_from_submission_id (submission_id) -> str:
+def key_from_submission_id(submission_id) -> str:
     return f'{submission_id}.code'
 
-def schedule_judge2 (problem_id, submission_id, language, username):
+def schedule_judge2(problem_id, submission_id, language, username):
     task = {
         'problem_id': str(problem_id),
         'submission_id': str(submission_id),
@@ -190,8 +190,8 @@ def schedule_judge2 (problem_id, submission_id, language, username):
             db.commit()
 
 
-class NotFoundException (Exception): pass
-def mark_void2 (id):
+class NotFoundException(Exception): pass
+def mark_void2(id):
     with Session() as db:
         submission: JudgeRecord2 = db.query(JudgeRecord2).where(JudgeRecord2.id == id).one_or_none()
         if submission is None:
@@ -202,7 +202,7 @@ def mark_void2 (id):
         submission.score = 0
         db.commit()
 
-def rejudge2 (id):
+def rejudge2(id):
     with Session() as db:
         submission: JudgeRecord2 = db.query(JudgeRecord2).where(JudgeRecord2.id == id).one_or_none()
         if submission is None:

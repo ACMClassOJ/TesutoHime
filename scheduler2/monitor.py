@@ -15,7 +15,7 @@ class RunnerStatus:
     message: str
     last_seen: Optional[float]
 
-async def get_runner_status (runner_id: str):
+async def get_runner_status(runner_id: str):
     heartbeat = None
     try:
         runner_queues = redis_queues.with_id(runner_id)

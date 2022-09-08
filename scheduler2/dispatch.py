@@ -32,7 +32,7 @@ class TaskInfo:
 
 taskinfo_from_task_id: Dict[str, TaskInfo] = {}
 
-async def run_task (
+async def run_task(
     taskinfo: TaskInfo,
     onprogress: Callable[[StatusUpdate], Awaitable] = None,
     rate_limit_group: Optional[str] = None,

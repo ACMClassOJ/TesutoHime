@@ -32,7 +32,7 @@ judge_tasks: Dict[str, Set[Task]] = {}
 judge_tasks_from_submission_id: Dict[str, Task] = {}
 judge_task_args: Dict[Task, Tuple[str, str, CodeLanguage, SourceLocation]] = {}
 
-def register_judge_task (problem_id, submission_id, language, source,
+def register_judge_task(problem_id, submission_id, language, source,
     rate_limit_group):
     if submission_id in judge_tasks_from_submission_id:
         raise Exception('already judging')
@@ -44,19 +44,19 @@ def register_judge_task (problem_id, submission_id, language, source,
     judge_tasks_from_submission_id[submission_id] = task
     judge_task_args[task] = (problem_id, submission_id, language, source,
         rate_limit_group)
-    def cleanup (_):
+    def cleanup(_):
         judge_tasks[problem_id].remove(task)
         del judge_tasks_from_submission_id[submission_id]
         del judge_task_args[task]
     task.add_done_callback(cleanup)
 
 
-def plan_key (problem_id: str) -> str:
+def plan_key(problem_id: str) -> str:
     return f'plans/{problem_id}.json'
 
 
 @routes.post('/problem/{problem_id}/update')
-async def update_problem (request: Request):
+async def update_problem(request: Request):
     problem_id = request.match_info['problem_id']
     task_args = []
     try:
@@ -84,7 +84,7 @@ async def update_problem (request: Request):
     return json_response({'result': 'ok', 'error': None})
 
 
-async def run_judge (problem_id: str, submission_id: str,
+async def run_judge(problem_id: str, submission_id: str,
     language: CodeLanguage, source: SourceLocation, rate_limit_group: str):
     res = None
     logger.info(f'judging submission {submission_id} for problem {problem_id}')
@@ -116,7 +116,7 @@ async def run_judge (problem_id: str, submission_id: str,
 
 
 @routes.post('/judge')
-async def judge (request: Request):
+async def judge(request: Request):
     try:
         body = await request.json()
         problem_id = body['problem_id']
@@ -133,7 +133,7 @@ async def judge (request: Request):
 
 
 @routes.get('/submission/{submission_id}/status')
-async def get_status (request: Request):
+async def get_status(request: Request):
     submission_id = request.match_info['submission_id']
     res = await get_partial_result(submission_id)
     if res is None:
@@ -142,7 +142,7 @@ async def get_status (request: Request):
 
 
 @routes.post('/submission/{submission_id}/abort')
-async def abort_judge (request: Request):
+async def abort_judge(request: Request):
     submission_id = request.match_info['submission_id']
     if not submission_id in judge_tasks_from_submission_id:
         raise HTTPNotFound()
@@ -158,7 +158,7 @@ cached_runner_status_time: Optional[float] = None
 runner_status_future: Optional[Future] = None
 
 @routes.get('/status')
-async def runner_status (request: Request):
+async def runner_status(request: Request):
     if not 'id' in request.query:
         return Response(text='no runner id specified', status=BAD_REQUEST)
     ids = request.query['id'].split(',')
@@ -174,7 +174,7 @@ async def runner_status (request: Request):
     if cached_runner_status is None:
         if runner_status_future is None:
             runner_status_future = Future()
-            async def stat (id):
+            async def stat(id):
                 return (id, asdict(await get_runner_status(id)))
             try:
                 tasks = [create_task(stat(x)) for x in ids]

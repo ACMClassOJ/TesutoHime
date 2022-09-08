@@ -12,7 +12,7 @@ from scheduler2.config import web_auth, web_base_url
 logger = getLogger(__name__)
 
 
-async def make_request (path, body):
+async def make_request(path, body):
     if isinstance(body, str) or isinstance(body, bytes):
         args = {'data': body}
     else:
@@ -23,7 +23,7 @@ async def make_request (path, body):
         if res.status != OK:
             logger.error(f'Error sending request to {path}: {res.status}')
 
-async def update_status (submission_id, status):
+async def update_status(submission_id, status):
     return await make_request(f'api/submission/{quote(submission_id)}/status',
         status)
 
@@ -31,13 +31,13 @@ async def update_status (submission_id, status):
 class RateLimiter:
     max: int
     semaphores: Dict[str, Semaphore]
-    def __init__ (self, max: int):
+    def __init__(self, max: int):
         self.max = max
         self.semaphores = {}
     class Unlimited:
-        async def __aenter__ (self): pass
-        async def __aexit__ (self, *_): pass
-    def limit (self, key: str):
+        async def __aenter__(self): pass
+        async def __aexit__(self, *_): pass
+    def limit(self, key: str):
         if key is None:
             return RateLimiter.Unlimited()
         if key not in self.semaphores:

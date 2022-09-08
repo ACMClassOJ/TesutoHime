@@ -7,11 +7,11 @@ from judger2.sandbox import run_with_limits
 from judger2.util import TempDir
 
 
-async def autocancel (task: Task):
+async def autocancel(task: Task):
     await sleep(1)
     # task.cancel()
 
-async def main ():
+async def main():
     run_task = create_task(run_test())
     create_task(autocancel(run_task))
     try:
@@ -19,7 +19,7 @@ async def main ():
     except CancelledError:
         print('task aborted')
 
-async def run_test ():
+async def run_test():
     with TempDir() as cwd:
         cpp = cwd / 'main.c'
         exe = cwd / 'code'

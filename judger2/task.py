@@ -20,7 +20,7 @@ from judger2.util import TempDir, copy_supplementary_files
 logger = getLogger(__name__)
 
 
-async def run_task (task: Task, task_id: str) -> Result:
+async def run_task(task: Task, task_id: str) -> Result:
     type = task.type
     task_logger.info(f'received {type} task {task_id}: {task}')
     if type == 'compile':
@@ -31,7 +31,7 @@ async def run_task (task: Task, task_id: str) -> Result:
         raise InvalidTaskException(f'Unknown task type {type}')
 
 
-async def compile_task (task: CompileTask) -> CompileResult:
+async def compile_task(task: CompileTask) -> CompileResult:
     try:
         return (await compile(task)).result
     except CancelledError:
@@ -40,7 +40,7 @@ async def compile_task (task: CompileTask) -> CompileResult:
         return CompileResult(result='system_error', message=str(e))
 
 
-def get_skip_reason (
+def get_skip_reason(
     testpoint: Testpoint,
     results: List[Optional[TestpointJudgeResult]],
 ) -> Optional[str]:
@@ -63,10 +63,10 @@ def get_skip_reason (
 
 
 class Ref:
-    def __init__ (self, value):
+    def __init__(self, value):
         self.value = value
 
-async def judge_testpoint (testpoint: Testpoint, result: JudgeResult, \
+async def judge_testpoint(testpoint: Testpoint, result: JudgeResult, \
     cwd: PosixPath, rusage: Ref):
     skip_reason = get_skip_reason(testpoint, result.testpoints)
     if skip_reason != None:
@@ -106,7 +106,7 @@ async def judge_testpoint (testpoint: Testpoint, result: JudgeResult, \
 
 redis = redis_connect()
 
-async def judge_task (task: JudgeTask, task_id: str) -> JudgeResult:
+async def judge_task(task: JudgeTask, task_id: str) -> JudgeResult:
     result = JudgeResult([None for _ in task.testpoints])
     with TempDir() as cwd:
         for i, testpoint in enumerate(task.testpoints):

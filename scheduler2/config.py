@@ -29,7 +29,7 @@ problem_config_filename = 'config.json'
 quiz_filename = 'quiz.json'
 
 redis_queues = RedisQueues(config['redis']['prefix'])
-def redis_connect ():
+def redis_connect():
     return StrictRedis(**config['redis']['connection'], decode_responses=True)
 
 

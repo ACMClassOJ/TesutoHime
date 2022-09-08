@@ -22,7 +22,7 @@ from judger2.util import TempDir, copy_supplementary_files
 logger = getLogger(__name__)
 
 
-async def compile (task: CompileTask) -> CompileLocalResult:
+async def compile(task: CompileTask) -> CompileLocalResult:
     with TempDir() as cwd:
         # copy supplementary files
         await copy_supplementary_files(task.supplementary_files, cwd)
@@ -66,9 +66,9 @@ async def compile (task: CompileTask) -> CompileLocalResult:
         return CompileLocalResult(result=res.result, local_path=local_path)
 
 
-class NotCompiledException (Exception): pass
+class NotCompiledException(Exception): pass
 
-async def ensure_input (input: Input) -> CachedFile:
+async def ensure_input(input: Input) -> CachedFile:
     if input.type == 'compile':
         res = await compile(input)
         if res.result.result != 'compiled':
@@ -77,7 +77,7 @@ async def ensure_input (input: Input) -> CachedFile:
     return await ensure_cached(input.url)
 
 
-async def compile_cpp (
+async def compile_cpp(
     cwd: PosixPath,
     source: CompileSourceCpp,
     limits: ResourceUsage,
@@ -96,14 +96,14 @@ async def compile_cpp (
     return CompileLocalResult.from_file(exec_file)
 
 
-async def compile_git (
+async def compile_git(
     cwd: PosixPath,
     source: CompileSourceGit,
     limits: ResourceUsage,
 ) -> CompileLocalResult:
     logger.debug(f'about to compile git repo {repr(source.url)}')
 
-    def run_build_step (argv: List[str], network = False):
+    def run_build_step(argv: List[str], network = False):
         bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share/cmake', '/etc']
         return run_with_limits(
             argv, cwd, limits,
@@ -149,7 +149,7 @@ async def compile_git (
     return CompileLocalResult.from_file(exe)
 
 
-async def compile_verilog (
+async def compile_verilog(
     cwd: PosixPath,
     source: CompileSourceVerilog,
     limits: ResourceUsage,

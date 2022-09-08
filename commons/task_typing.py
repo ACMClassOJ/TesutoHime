@@ -166,14 +166,14 @@ class CompileLocalResult:
     local_path: Optional[PosixPath]
 
     @staticmethod
-    def from_run_failure (res: RunResult):
+    def from_run_failure(res: RunResult):
         return CompileLocalResult(
             CompileResult(res.error, res.message),
             None,
         )
 
     @staticmethod
-    def from_file (file: PosixPath):
+    def from_file(file: PosixPath):
         return CompileLocalResult(
             CompileResult('compiled', 'Compiled'),
             file,
@@ -205,7 +205,7 @@ class JudgeResult:
 
 Result = Union[CompileResult, JudgeResult]
 
-class InvalidTaskException (Exception): pass
+class InvalidTaskException(Exception): pass
 
 @dataclass
 class StatusUpdateStarted: pass
@@ -229,7 +229,7 @@ StatusUpdate = Union[
 
 # scheduler internal state
 
-class CodeLanguage (Enum):
+class CodeLanguage(Enum):
     CPP = 'cpp'
     GIT = 'git'
     VERILOG = 'verilog'

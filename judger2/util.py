@@ -14,7 +14,7 @@ from scheduler2.plan import InvalidProblemException
 logger = getLogger(__name__)
 
 
-def _judger_before_tmpdir_exit (path: PosixPath):
+def _judger_before_tmpdir_exit(path: PosixPath):
     # import here to avoid circular reference
     from judger2.sandbox import chown_back
     try:
@@ -34,7 +34,7 @@ def _judger_before_tmpdir_exit (path: PosixPath):
 TempDir.config(working_dir, _judger_before_tmpdir_exit)
 
 
-async def copy_supplementary_files (files: List[FileUrl], cwd: PosixPath):
+async def copy_supplementary_files(files: List[FileUrl], cwd: PosixPath):
     if len(files) != 0:
         logger.debug(f'copying supplementary files to {cwd}')
     for f in as_completed(map(ensure_cached, files)):
@@ -46,8 +46,8 @@ async def copy_supplementary_files (files: List[FileUrl], cwd: PosixPath):
             raise InvalidProblemException(msg) from e
 
 
-def format_args (args: Dict[str, Union[bool, str, List[str]]]) -> List[str]:
-    def format_arg (arg: tuple[str, Union[bool, str, List[str]]]):
+def format_args(args: Dict[str, Union[bool, str, List[str]]]) -> List[str]:
+    def format_arg(arg: tuple[str, Union[bool, str, List[str]]]):
         k, v = arg
         k = f'--{k}'
         if v is True:

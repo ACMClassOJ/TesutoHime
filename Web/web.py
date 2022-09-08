@@ -415,14 +415,14 @@ def submit_problem():
         return '0'
 
 
-def check_scheduler_auth ():
+def check_scheduler_auth():
     auth = request.headers.get('Authorization', '')
     if auth != SchedulerConfig.auth:
         abort(401)
 
 
 @web.route('/api/submission/<submission_id>/status', methods=['PUT'])
-def set_status (submission_id):
+def set_status(submission_id):
     check_scheduler_auth()
     status = request.get_data(as_text=True)
     if status not in ('compiling', 'judging'):
@@ -443,7 +443,7 @@ def set_status (submission_id):
 
 
 @web.route('/api/submission/<submission_id>/result', methods=['PUT'])
-def set_result (submission_id):
+def set_result(submission_id):
     check_scheduler_auth()
     classes = commons.task_typing.__dict__
     res: ProblemJudgeResult = load_dataclass(request.json, classes)

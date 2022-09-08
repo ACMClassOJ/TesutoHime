@@ -24,7 +24,7 @@ class CachedFile:
     filename: str = None
 
 
-def cached_from_url (url: str) -> CachedFile:
+def cached_from_url(url: str) -> CachedFile:
     cache = CachedFile()
     key = urlsplit(url).path
     cache_id = str(uuid5(NAMESPACE_URL, key))
@@ -36,7 +36,7 @@ def cached_from_url (url: str) -> CachedFile:
 utc_time_format = '%a, %d %b %Y %H:%M:%S GMT'
 
 
-async def ensure_cached (url: str) -> CachedFile:
+async def ensure_cached(url: str) -> CachedFile:
     cache = cached_from_url(url)
     logger.debug(f'caching file {cache.filename} to {cache.path}')
     headers = {}
@@ -65,7 +65,7 @@ async def ensure_cached (url: str) -> CachedFile:
         return cache
 
 
-async def upload (local_path: str, url: str) -> CachedFile:
+async def upload(local_path: str, url: str) -> CachedFile:
     cache = cached_from_url(url)
     copy(local_path, cache.path)
     chmod(cache.path, 0o640)
@@ -77,7 +77,7 @@ async def upload (local_path: str, url: str) -> CachedFile:
     return cache
 
 
-def clear_cache ():
+def clear_cache():
     for file in scandir(cache_dir):
         if not file.is_file():
             continue
@@ -88,7 +88,7 @@ def clear_cache ():
             logger.debug(f'removing file {file.path} from cache as age is {age}')
             remove(file)
 
-async def clean_cache_worker ():
+async def clean_cache_worker():
     while True:
         try:
             logger.info('clearing cache')

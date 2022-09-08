@@ -19,7 +19,7 @@ from judger2.task import run_task
 logger = getLogger(__name__)
 
 
-async def send_heartbeats ():
+async def send_heartbeats():
     redis = redis_connect()
     while True:
         try:
@@ -31,7 +31,7 @@ async def send_heartbeats ():
         await sleep(heartbeat_interval_secs)
 
 
-async def poll_for_tasks ():
+async def poll_for_tasks():
     redis = redis_connect()
     await redis.delete(queues.in_progress)
     while True:
@@ -46,7 +46,7 @@ async def poll_for_tasks ():
             )
             if task_id is None: continue
             task_queues = queues.task(task_id)
-            async def report_progress (status):
+            async def report_progress(status):
                 await redis.lpush(task_queues.progress, serialize(status))
                 await redis.expire(task_queues.progress, task_timeout_secs)
 
@@ -54,7 +54,7 @@ async def poll_for_tasks ():
             aio_task = create_task(run_task(task, task_id))
             await report_progress(StatusUpdateStarted())
 
-            async def poll_for_abort_signal ():
+            async def poll_for_abort_signal():
                 redis = redis_connect()
                 while True:
                     try:
@@ -98,7 +98,7 @@ async def poll_for_tasks ():
                         task_logger.error(f'error sending nack: {e}')
 
 
-async def main ():
+async def main():
     logger.info(f'runner {runner_id} starting')
     register(lambda: logger.info(f'runner {runner_id} stopping'))
     await wait([

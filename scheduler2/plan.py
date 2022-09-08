@@ -38,7 +38,7 @@ from scheduler2.util import update_status
 logger = getLogger(__name__)
 
 
-class InvalidProblemException (Exception): pass
+class InvalidProblemException(Exception): pass
 
 
 url_scheme = 's3://'
@@ -60,22 +60,22 @@ class ParseContext:
     checker_artifact: Optional[Artifact] = None
     plan: JudgePlan = field(default_factory=lambda: JudgePlan())
 
-    def file_key (self, filename: str):
+    def file_key(self, filename: str):
         return f'{self.problem_id}/{filename}'
 
     # file URLs inside judge plans has a format of s3://key .
-    def file_url (self, filename: str) -> FileUrl:
+    def file_url(self, filename: str) -> FileUrl:
         self.files_to_upload.add(filename)
         return f'{url_scheme}{self.file_key(filename)}'
 
 
-def sign_url (url: str):
+def sign_url(url: str):
     if not url.startswith(url_scheme):
         raise InvalidProblemException(f'Invalid object url {url}')
     return sign_url_get(s3_buckets.problems, url.replace(url_scheme, '', 1))
 
 
-async def load_config (ctx: ParseContext):
+async def load_config(ctx: ParseContext):
     try:
         with ctx.zip.open(problem_config_filename, 'r') as f:
             cfg = json.load(f)
@@ -105,7 +105,7 @@ checker_source_filename = 'spj.cpp'
 checker_precompiled_filename = 'spj_bin'
 checker_exec_filename = 'checker'
 
-async def parse_spj (ctx: ParseContext):
+async def parse_spj(ctx: ParseContext):
     spj = ctx.cfg.SPJ
     type_map = {
         Spj.CLASSIC_COMPARE: ('classic', 'compare'),
@@ -141,7 +141,7 @@ hpp_main_template_vlog = '{}.v'
 hpp_src_filename = 'src.hpp'
 hpp_src_filename_vlog = 'answer.v'
 
-async def parse_compile (ctx: ParseContext) -> Optional[CompileTaskPlan]:
+async def parse_compile(ctx: ParseContext) -> Optional[CompileTaskPlan]:
     limits = deepcopy(default_compile_limits)
     time_msecs = ctx.cfg.CompileTimeLimit
     if time_msecs is not None:
@@ -183,7 +183,7 @@ async def parse_compile (ctx: ParseContext) -> Optional[CompileTaskPlan]:
 
 
 # populate dependents from dependencies.
-def generate_dependents (plan: List[JudgeTaskPlan]) \
+def generate_dependents(plan: List[JudgeTaskPlan]) \
     -> List[JudgeTaskPlan]:
     for i, deps in enumerate(x.dependencies for x in plan):
         for dep in deps:
@@ -195,7 +195,7 @@ answer_name_template = '{}.ans'
 answer_name_template_alt = '{}.out'
 
 # TODO: detect loops in dependent_on relations
-def parse_testpoint (ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
+def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
     id = str(conf.ID)
     infile_name = infile_name_template.format(id)
     if infile_name in ctx.zip.namelist():
@@ -218,7 +218,7 @@ def parse_testpoint (ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
         supplementary_files=[],
     )
 
-    def ans () -> Optional[FileUrl]:
+    def ans() -> Optional[FileUrl]:
         ans_filename = answer_name_template.format(id)
         if ans_filename in ctx.zip.namelist():
             return ctx.file_url(ans_filename)
@@ -259,7 +259,7 @@ def parse_testpoint (ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
         testpoint.input = task
     return testpoint
 
-async def parse_testpoints (ctx: ParseContext) -> List[JudgeTaskPlan]:
+async def parse_testpoints(ctx: ParseContext) -> List[JudgeTaskPlan]:
     testpoints = [parse_testpoint(ctx, x) for x in ctx.cfg.Details]
     testpoints_map = dict((tp.id, tp) for tp in testpoints)
     if ctx.compile_type == 'hpp-per-testpoint':
@@ -313,7 +313,7 @@ async def parse_testpoints (ctx: ParseContext) -> List[JudgeTaskPlan]:
 
 group_name_template = 'Task {}'
 
-async def parse_groups (ctx: ParseContext) -> List[TestpointGroup]:
+async def parse_groups(ctx: ParseContext) -> List[TestpointGroup]:
     return [TestpointGroup(
         id=str(conf.GroupID),
         name=conf.GroupName if conf.GroupName is not None \
@@ -323,7 +323,7 @@ async def parse_groups (ctx: ParseContext) -> List[TestpointGroup]:
     ) for conf in ctx.cfg.Groups]
 
 
-async def upload_files (ctx: ParseContext):
+async def upload_files(ctx: ParseContext):
     files_not_found = list(filter(lambda file: not file in ctx.zip.namelist(),
         ctx.files_to_upload))
     if len(files_not_found) > 0:
@@ -333,7 +333,7 @@ async def upload_files (ctx: ParseContext):
             await upload_obj(s3_buckets.problems, ctx.file_key(file), f)
 
 
-async def compile_checker (ctx: ParseContext):
+async def compile_checker(ctx: ParseContext):
     source = ctx.checker_to_compile
     if source is None:
         return
@@ -351,7 +351,7 @@ async def compile_checker (ctx: ParseContext):
         raise InvalidProblemException(msg)
 
 
-async def generate_plan (problem_id: str) -> JudgePlan:
+async def generate_plan(problem_id: str) -> JudgePlan:
     logger.info(f'generating plan for {problem_id}')
     zip_filename = f'{problem_id}.zip'
     zip_path = working_dir / zip_filename
@@ -377,10 +377,10 @@ async def generate_plan (problem_id: str) -> JudgePlan:
             logger.error(f'cannot remove problem zip: {e}')
 
 
-class InvalidCodeException (Exception): pass
+class InvalidCodeException(Exception): pass
 
 
-class UrlType (Enum):
+class UrlType(Enum):
     CODE = auto()
     ARTIFACT = auto()
 
@@ -407,7 +407,7 @@ class ExecutionContext:
     files_to_clean: Set[str] = field(default_factory=lambda: set())
     results: Dict[str, TestpointJudgeResult] = field(default_factory=lambda: {})
 
-    def file_url (self, type: UrlType, filename: str):
+    def file_url(self, type: UrlType, filename: str):
         key = f'{self.id}/{filename}'
         if type == UrlType.CODE:
             if self.code_key is not None \
@@ -427,8 +427,8 @@ class ExecutionContext:
         else:
             raise Exception(f'Invalid url type {type}')
 
-    def dependencies_satisfied (self, rec: JudgeTaskRecord) -> bool:
-        def dependency_satisfied (testpoint: Testpoint) -> bool:
+    def dependencies_satisfied(self, rec: JudgeTaskRecord) -> bool:
+        def dependency_satisfied(testpoint: Testpoint) -> bool:
             dep = testpoint.dependent_on
             return dep is None or isinstance(dep, DependencyNotSatisfied) \
                 or any(dep == tp.id for tp in rec.task.testpoints)
@@ -440,7 +440,7 @@ cpp_main_filename = 'main.cpp'
 verilog_main_filename = 'main.v'
 artifact_filename = 'main'
 
-async def get_compile_source (ctx: ExecutionContext, filename: str) \
+async def get_compile_source(ctx: ExecutionContext, filename: str) \
     -> CompileSource:
     if ctx.lang == CodeLanguage.CPP:
         return CompileSourceCpp(ctx.file_url(UrlType.CODE, filename))
@@ -453,7 +453,7 @@ async def get_compile_source (ctx: ExecutionContext, filename: str) \
         return CompileSourceVerilog(ctx.file_url(UrlType.CODE, filename))
     raise InvalidCodeException('Unknown language')
 
-async def prepare_compile_task (ctx: ExecutionContext, plan: CompileTaskPlan) \
+async def prepare_compile_task(ctx: ExecutionContext, plan: CompileTaskPlan) \
     -> CompileTask:
     if not plan:
         return None
@@ -476,7 +476,7 @@ async def prepare_compile_task (ctx: ExecutionContext, plan: CompileTaskPlan) \
         source = deepcopy(plan.source)
         if source.type == 'cpp' or source.type == 'verilog':
             source.main = sign_url(source.main)
-    def map_supplementary_file (file):
+    def map_supplementary_file(file):
         if isinstance(file, UserCode):
             return ctx.file_url(UrlType.CODE, filename)
         else:
@@ -490,7 +490,7 @@ async def prepare_compile_task (ctx: ExecutionContext, plan: CompileTaskPlan) \
     return CompileTask(source, supplementary_files, artifact, limits)
 
 
-async def get_judge_task (ctx: ExecutionContext, plan: JudgeTaskPlan) \
+async def get_judge_task(ctx: ExecutionContext, plan: JudgeTaskPlan) \
     -> JudgeTaskRecord:
     task = deepcopy(plan.task)
     for testpoint in task.testpoints:
@@ -531,11 +531,11 @@ async def get_judge_task (ctx: ExecutionContext, plan: JudgeTaskPlan) \
 
     return JudgeTaskRecord(task, deepcopy(plan))
 
-async def get_judge_tasks (ctx: ExecutionContext) -> List[JudgeTaskRecord]:
+async def get_judge_tasks(ctx: ExecutionContext) -> List[JudgeTaskRecord]:
     return [await get_judge_task(ctx, plan) for plan in ctx.plan.judge]
 
 
-async def upload_code (ctx: ExecutionContext):
+async def upload_code(ctx: ExecutionContext):
     if ctx.code_key is not None:
         bucket = s3_buckets.artifacts
         logger.debug(f'uploading user code to {bucket}/{ctx.code_key}')
@@ -543,10 +543,10 @@ async def upload_code (ctx: ExecutionContext):
         await copy_file(ctx.code, bucket, ctx.code_key)
 
 
-async def run_compile_task (ctx: ExecutionContext) -> Optional[CompileResult]:
+async def run_compile_task(ctx: ExecutionContext) -> Optional[CompileResult]:
     if ctx.compile is None:
         return None
-    async def onprogress (status):
+    async def onprogress(status):
         if isinstance(status, StatusUpdateStarted):
             await update_status(ctx.id, 'compiling')
     msg = f'Compiling code for submission #{ctx.id}'
@@ -554,10 +554,10 @@ async def run_compile_task (ctx: ExecutionContext) -> Optional[CompileResult]:
     return await run_task(task, onprogress, ctx.rate_limit_group)
 
 
-def skipped_result (name, message = 'Skipped'):
+def skipped_result(name, message = 'Skipped'):
     return TestpointJudgeResult(name, 'skipped', message)
 
-def update_dependent_on (ctx: ExecutionContext, record: JudgeTaskRecord,
+def update_dependent_on(ctx: ExecutionContext, record: JudgeTaskRecord,
     task: JudgeTask):
     # FIXME: make the following code comprehensible
     removed_testpoints = []
@@ -579,15 +579,15 @@ def update_dependent_on (ctx: ExecutionContext, record: JudgeTaskRecord,
         filter(lambda i: not i in removed_testpoints,
             range(len(task.testpoints)))]
 
-async def run_judge_tasks (ctx: ExecutionContext):
+async def run_judge_tasks(ctx: ExecutionContext):
     await update_status(ctx.id, 'judging')
     records = ctx.judge
     ready = list(filter(ctx.dependencies_satisfied, records))
     tasks_running: List[Task[Tuple[JudgeTaskRecord, JudgeResult]]] = []
-    def run (task: JudgeTaskRecord):
+    def run(task: JudgeTaskRecord):
         if len(task.task.testpoints) == 0:
             return None
-        async def onprogress (status):
+        async def onprogress(status):
             if isinstance(status, StatusUpdateStarted):
                 for testpoint in task.task.testpoints:
                     if not testpoint.id in ctx.results:
@@ -600,7 +600,7 @@ async def run_judge_tasks (ctx: ExecutionContext):
                         or ctx.results[testpoint.id].result
                             in ('pending', 'judging')):
                         ctx.results[testpoint.id] = testpoint
-        async def run_with_rec ():
+        async def run_with_rec():
             try:
                 msg = f'Running test for submission #{ctx.id}'
                 taskinfo = TaskInfo(task.task, ctx.id, ctx.problem_id, msg)
@@ -647,13 +647,13 @@ async def run_judge_tasks (ctx: ExecutionContext):
         ready = list(filter(ctx.dependencies_satisfied, dependents))
 
 
-def synthesize_results (results: Iterable[ResultType]) -> ResultType:
+def synthesize_results(results: Iterable[ResultType]) -> ResultType:
     for res in results:
         if res != 'accepted':
             return res
     return 'accepted'
 
-def synthesize_rusage (rusages: Iterable[ResourceUsage]) -> ResourceUsage:
+def synthesize_rusage(rusages: Iterable[ResourceUsage]) -> ResourceUsage:
     rusages = list(filter(lambda x: x is not None, rusages))
     return ResourceUsage(
         time_msecs=sum((x.time_msecs for x in rusages), 0),
@@ -662,21 +662,21 @@ def synthesize_rusage (rusages: Iterable[ResourceUsage]) -> ResourceUsage:
         file_size_bytes=max((x.file_size_bytes for x in rusages), default=-1),
     )
 
-def aborted_result (name):
+def aborted_result(name):
     return TestpointJudgeResult(name, 'aborted', 'Aborted')
-def pending_result (name):
+def pending_result(name):
     return TestpointJudgeResult(name, 'pending', 'Pending')
 
-def synthesize_scores (ctx: ExecutionContext, *, aborted: bool = False,
+def synthesize_scores(ctx: ExecutionContext, *, aborted: bool = False,
     in_progress: bool = False) -> ProblemJudgeResult:
     testpoints = ctx.results
     rusage = synthesize_rusage(x.resource_usage for x in \
         filter(lambda x: x is not None, testpoints.values()))
-    def fallback_result (_):
+    def fallback_result(_):
         raise InvalidProblemException('Loop detected in dependent_on relations')
     if aborted: fallback_result = aborted_result
     if in_progress: fallback_result = pending_result
-    def get_group_result (group: TestpointGroup):
+    def get_group_result(group: TestpointGroup):
         res = [testpoints[x] if x in testpoints else fallback_result(x)
             for x in group.testpoints]
         if aborted:
@@ -697,10 +697,10 @@ def synthesize_scores (ctx: ExecutionContext, *, aborted: bool = False,
     return ProblemJudgeResult(result, None, score, rusage, groups)
 
 
-async def judge_quiz (quiz: List[QuizProblem], answer: Dict[str, str]):
-    def ac (id):
+async def judge_quiz(quiz: List[QuizProblem], answer: Dict[str, str]):
+    def ac(id):
         return TestpointJudgeResult(id, 'accepted', 'Accepted', 1.0)
-    def wa (id):
+    def wa(id):
         return TestpointJudgeResult(id, 'wrong_answer', 'Wrong Answer')
     correct = dict((x.id, x.answer == answer.get(x.id, None)) for x in quiz)
     testpoints = [ac(id) if correct[id] else wa(id) for id in correct]
@@ -712,7 +712,7 @@ async def judge_quiz (quiz: List[QuizProblem], answer: Dict[str, str]):
 
 ctx_from_submission: Dict[str, ExecutionContext] = {}
 
-async def execute_plan (plan: JudgePlan, id: str, problem_id: str,
+async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
     lang: CodeLanguage, code: SourceLocation, rate_limit_group: str) \
     -> ProblemJudgeResult:
     ctx = ExecutionContext(plan, id, problem_id, lang, code, rate_limit_group)
@@ -758,7 +758,7 @@ async def execute_plan (plan: JudgePlan, id: str, problem_id: str,
             except BaseException as e:
                 logger.info(f'Error clearing object: {e}')
 
-async def get_partial_result (submission_id):
+async def get_partial_result(submission_id):
     if not submission_id in ctx_from_submission:
         return None
     ctx = ctx_from_submission[submission_id]

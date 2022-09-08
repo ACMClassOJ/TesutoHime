@@ -25,25 +25,25 @@ class RunParams:
     tmpfsmount: bool = False
 
 class BaseRunner:
-    def prepare (self, program: PosixPath) -> RunParams:
+    def prepare(self, program: PosixPath) -> RunParams:
         raise NotImplementedError()
-    def interpret_result (self, result: RunResult) -> RunResult:
+    def interpret_result(self, result: RunResult) -> RunResult:
         return result
 
 elf_mode = 0o550
 
-class ElfRunner (BaseRunner):
-    def prepare (self, program: PosixPath):
+class ElfRunner(BaseRunner):
+    def prepare(self, program: PosixPath):
         chmod(program, elf_mode)
         return RunParams([str(program)], [])
 
-class ValgrindRunner (BaseRunner):
-    def prepare (self, program: PosixPath):
+class ValgrindRunner(BaseRunner):
+    def prepare(self, program: PosixPath):
         chmod(program, elf_mode)
         argv = [valgrind] + valgrind_args + [str(program)]
         return RunParams(argv, [valgrind], False, True)
 
-    def interpret_result (self, result: RunResult):
+    def interpret_result(self, result: RunResult):
         if result.error != 'runtime_error' \
         or result.code != valgrind_errexit_code:
             return result
@@ -52,8 +52,8 @@ class ValgrindRunner (BaseRunner):
         res_dict['message'] = 'Memory leak'
         return RunResult(**res_dict)
 
-class VerilogRunner (BaseRunner):
-    def prepare (self, program: PosixPath):
+class VerilogRunner(BaseRunner):
+    def prepare(self, program: PosixPath):
         argv = [verilog_interpreter, str(program)]
         return RunParams(argv, [verilog_interpreter])
 
@@ -64,7 +64,7 @@ runners: Dict[str, BaseRunner] = {
 }
 
 
-async def run (oufdir: PosixPath, cwd: PosixPath, input: Input, args: RunArgs) \
+async def run(oufdir: PosixPath, cwd: PosixPath, input: Input, args: RunArgs) \
     -> RunResult:
     # get infile
     infile = None if args.infile is None \

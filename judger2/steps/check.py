@@ -17,7 +17,7 @@ from judger2.util import TempDir, copy_supplementary_files
 logger = getLogger(__name__)
 
 
-async def check (outfile: CheckInput, checker: Checker) -> CheckResult:
+async def check(outfile: CheckInput, checker: Checker) -> CheckResult:
     logger.info(f'checking with {checker}')
     # get output file to check
     if outfile.type != 'run_result':
@@ -38,7 +38,7 @@ async def check (outfile: CheckInput, checker: Checker) -> CheckResult:
 
 cmp_errexit_code = 63
 
-async def checker_cmp (_infile, outfile: PosixPath, checker: CompareChecker):
+async def checker_cmp(_infile, outfile: PosixPath, checker: CompareChecker):
     cmp = PosixPath(__file__).with_name('cmp')
     ans = (await ensure_cached(checker.answer)).path
     ignore_ws_flag = 'y' if checker.ignore_whitespace else 'n'
@@ -59,7 +59,7 @@ async def checker_cmp (_infile, outfile: PosixPath, checker: CompareChecker):
     return CheckResult('accepted', 'Accepted', 1.0)
 
 
-def checker_read_float (outfile: PosixPath, message: str = ''):
+def checker_read_float(outfile: PosixPath, message: str = ''):
     try:
         score = float(outfile.read_text())
     except ValueError:
@@ -72,11 +72,11 @@ def checker_read_float (outfile: PosixPath, message: str = ''):
     result = 'accepted' if score >= 1.0 else 'wrong_answer'
     return CheckResult(result, message, score)
 
-async def checker_direct (_infile, outfile: PosixPath, _checker):
+async def checker_direct(_infile, outfile: PosixPath, _checker):
     return checker_read_float(outfile)
 
 
-async def checker_spj (infile: Optional[PosixPath], outfile: PosixPath, \
+async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
     checker: SpjChecker):
     # get spj binary
     if checker.format == 'scorer':

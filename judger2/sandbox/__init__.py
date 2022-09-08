@@ -75,7 +75,7 @@ class NsjailArgs:
     env: List[str] = field(default_factory=lambda: task_envp)
 
 
-async def run_with_limits (
+async def run_with_limits(
     argv: List[str],
     cwd: PosixPath,
     limits: ResourceUsage,
@@ -227,7 +227,7 @@ async def run_with_limits (
         return RunResult(None, 'OK', usage)
 
 
-def chown_back (path: PosixPath):
+def chown_back(path: PosixPath):
     logger.debug(f'about to chown_back {path}')
     argv = [which('nsjail')] + format_args({
         'cwd': str(path),

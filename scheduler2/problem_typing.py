@@ -4,7 +4,7 @@ from typing import List, Literal, Optional, Union
 
 
 @unique
-class Spj (IntEnum):
+class Spj(IntEnum):
     CLASSIC_COMPARE = 0
     CLASSIC_SPJ = 1
     HPP_DIRECT = 2

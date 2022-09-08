@@ -3,7 +3,7 @@ from commons.models import JudgeRunner2
 from scripts.db.env import Session
 
 
-def add_runner_cli ():
+def add_runner_cli():
     runner = JudgeRunner2()
     runner.id = int(input('Runner ID? '))
     runner.name = input('Runner name? ')

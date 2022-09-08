@@ -20,7 +20,7 @@ task_timeout_secs = 3600
 
 queues = RedisQueues(config['redis']['prefix'], runner_id)
 poll_timeout_secs = 10
-def redis_connect ():
+def redis_connect():
     return StrictRedis(**config['redis']['connection'], decode_responses=True)
 
 # env vars for task runner

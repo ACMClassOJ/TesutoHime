@@ -412,11 +412,11 @@
                                 <div class="form-group custom-file col-md-3 mb-3">
                                     <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge (cpp) </label>
                                     <input class="custom-file-input" type="file" name="data" id="iptSpj">
-                                </div>                           
-                                <div class="form-group custom-file col-md-3 mb-3">
+                                </div>
+                                <!-- <div class="form-group custom-file col-md-3 mb-3">
                                     <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
                                     <input class="custom-file-input" type="file" name="data" id="iptScorer" accept=".py">
-                                </div>
+                                </div> -->
                                 <!--
                                 <div class="form-group custom-file col-md-3 mb-3">
                                     <label class="custom-file-label ml-1 mr-1" for="iptConfig"> Config (json) </label>
@@ -490,6 +490,7 @@
                                     </div>
                                 </div>
                             </div>
+                            <progress id="data-gui-progress" class="w-100" max="1" value="0"></progress>
                             <div class="float-right d-flex ml-auto pr-1 mb-3">
                                 <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemData"> 打包上传所有数据 </button>
                             </div>

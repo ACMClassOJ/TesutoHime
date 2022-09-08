@@ -1,3 +1,8 @@
+/*
+ * mem.c - A program to test the accuracy of measurement of
+ *         memory usage.
+ */
+
 #include <sys/resource.h>
 #include <stdio.h>
 #include <stdlib.h>

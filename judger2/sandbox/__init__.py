@@ -37,26 +37,38 @@ worker_uid_maps = [
 
 @dataclass
 class NsjailArgs:
+    # where to chroot to.
     chroot: str
+    # the program working dir.
     cwd: str
+    # time limit (str, but in secs) for the runner.
     time_limit: str
 
+    # readonly mount points.
     bindmount_ro: Union[List[str], bool] = False
+    # R/W mount points.
     bindmount: Union[List[str], bool] = False
 
+    # number of file descriptors that could be simultaneously opened by a single
+    # process. NOT file size limit. pretty much useless.
     rlimit_fsize: str = 'inf'
+    # memory limit: not working.
     # cgroup_mem_max: str
 
+    # whether to enable network access in the container.
     disable_clone_newnet: bool = False
 
     mode: str = 'o'
     quiet: bool = True
     max_cpus: str = '1'
     rlimit_stack: str = 'inf'
+    # capabilities(7) to grant to the program.
     cap: str = 'CAP_SETUID'
     uid_mapping: List[str] = field(default_factory=lambda: worker_uid_maps)
     group: str = '0'
+    # whether to disable procfs.
     disable_proc: bool = True
+    # where to mount /tmp.
     tmpfsmount: Union[Literal[False], str] = False
     execute_fd: bool = True
     nice_level: str = '0'
@@ -140,7 +152,7 @@ async def run_with_limits (
             params = text.split(' ')
             if len(params) < 4 or params[0] != 'run':
                 logger.error(f'invalid runner output {repr(text)}')
-                raise Exception('invalid runner output')
+                raise Exception('Invalid runner output')
             program_code, realtime, mem = [int(x) for x in params[1:4]]
             usage_is_accurate = True
         except BaseException:
@@ -176,11 +188,11 @@ async def run_with_limits (
         # check for errors
         if usage_is_accurate and realtime > time_limit_scaled \
         or approx_time * 1000 > time_limit_scaled + 500:
-            #  ^^^^^^^^^^^ Check needed here as most TLE'd
-            # programs end up being kill -9'd by nsjail;
-            # the real time won't be accurate in this case.
-            # Therefore, do not move this check down after
-            # check for exit code.
+            # Check needed here as some TLE'd programs end
+            # up being kill -9'd by nsjail; the real time
+            # won't be accurate in this case. Therefore,
+            # do not move this check down after the check
+            # for exit code.
             msg = 'Time limit exceeded'
             return RunResult('time_limit_exceeded', msg, usage)
         if usage_is_accurate and mem > limits.memory_bytes:
@@ -188,7 +200,7 @@ async def run_with_limits (
             return RunResult('memory_limit_exceeded', msg, usage)
         if code != 0:
             # code is ./runner's exit code, so there must be something wrong.
-            msg = f'task runner exited with status {code}{errmsg}'
+            msg = f'Task runner exited with status {code}{errmsg}'
             return RunResult('system_error', msg, usage, code=code)
         if program_code != 0:
             # runner exited properly, but the program did not
@@ -198,11 +210,11 @@ async def run_with_limits (
                     name = f' ({strsignal(signal)})'
                 except ValueError:
                     name = ''
-                msg = f'program killed by signal {signal}{name}{errmsg}'
+                msg = f'Program killed by signal {signal}{name}{errmsg}'
             elif program_code < 0 or disable_stderr:
-                msg = f'program quit abnormally{errmsg}'
+                msg = f'Program quit abnormally{errmsg}'
             else:
-                msg = f'program exited with status {program_code}{errmsg}'
+                msg = f'Program exited with status {program_code}{errmsg}'
             return RunResult('runtime_error', msg, usage, code=program_code)
         if file_size_bytes > limits.file_size_bytes >= 0:
             msg = 'File size too large'

@@ -57,6 +57,53 @@ window.onload = function() {
     }
 }
 
+const uploadData = async (problemId, file, progressBar) => {
+    try {
+        const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/upload-url`)
+        if (res.status !== 200) {
+            swal("Error", "无法获取上传链接", "error")
+            return
+        }
+        const url = (await res.text()).trim()
+
+        const xhr = new XMLHttpRequest()
+        progressBar.value = 0
+        xhr.open('PUT', url, true)
+        xhr.upload.onprogress = xhr.onprogress = event => {
+            const progress = event.loaded / event.total
+            progressBar.value = progress
+        }
+        xhr.onreadystatechange = async () => {
+            if (xhr.readyState !== 4) return
+            if (xhr.status !== 200) {
+                swal('Error', `未知错误: ${xhr.status}`, 'error')
+                return
+            }
+            try {
+                const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/update`, { method: 'POST' })
+                if (res.status !== 200) {
+                    swal('Error', `未知错误: ${res.status}`, 'error')
+                    return
+                }
+                const msg = await res.text()
+                if (msg !== 'ok') {
+                    swal('Error', msg, 'error')
+                    return
+                }
+                swal("Success", msg, "success");
+            } finally {
+                progressBar.value = 0
+            }
+        }
+        xhr.onerror = event => {
+            swal('Error', `未知错误: ${event}`, 'error')
+        }
+        xhr.send(file)
+    } catch (e) {
+        swal("Error", `未知错误: ${e}`, "error")
+    }
+}
+
 let op;
 $(function () {
 
@@ -436,18 +483,23 @@ $(function () {
                 `"DiskLimit":${d[4].innerHTML.replace("<br>", "")},"ValgrindTestOn":${$(d[5]).find("input").is(":checked") ? "true" : "false"}}`;
         });
         let type = $("#iptSpjType");
+        if (type.val() === '3') {
+            swal('Error', 'scorers are not supported (for now)', 'error')
+            throw new Error('invalid spj')
+        }
         config += `],"CompileTimeLimit":${$("#iptCompileTime").val()},"SPJ":${type.val()},` +
-            `"Scorer":${type.val() === 3 ? 1 : 0}}`;
+            `"Scorer":${type.val() === '3' ? 1 : 0}}`;
         return config;
     }
 
     $("#formData").submit(function (e) {
         e.preventDefault();
         e.stopPropagation();
+        const problemId = $("#iptDataProblemID").val()
         $.ajax({
             url: "/OnlineJudge/admin/problem_limit",
             type: "POST",
-            data: {id: $("#iptDataProblemID").val(), data: JSON.stringify(extract_limit())},
+            data: {id: problemId, data: JSON.stringify(extract_limit())},
             dataType: "json",
             complete: function (ret) {
                 var ret_json = JSON.parse(ret.responseText);
@@ -459,7 +511,8 @@ $(function () {
             }
         });
         let zip = new JSZip();
-        let folder = zip.folder($("#iptDataProblemID").val());
+        // let folder = zip.folder($("#iptDataProblemID").val());
+        const folder = zip
         let data_files = $("#iptData");
         let description_md = $("#iptDescriptionMd");
         let type = $("#iptSpjType");
@@ -493,24 +546,7 @@ $(function () {
         zip.generateAsync({
             type: "blob"
         }).then(function (blob) {
-            let data = new FormData(), id = $("#iptDataProblemID").val();
-            data.append("file", blob, id + ".zip");
-            console.log(data);
-            $.ajax({
-                url: "/OnlineJudge/admin/data",
-                type: "POST",
-                processData: false,
-                contentType: false,
-                data: data,
-                dataType: "json",
-                complete: function (ret) {
-                    var ret_json = JSON.parse(ret.responseText);
-                    if(ret_json['e'] < 0)
-                        swal("Error " + ret_json['e'], ret_json['msg'], "error");
-                    else
-                        swal("Success", ret_json['msg'], "success");
-                }
-            });
+            return uploadData(problemId, blob, document.getElementById('data-gui-progress'))
         });
     });
 
@@ -579,55 +615,8 @@ $(function () {
             });
         });
     
-        let data = new FormData(this);
-        ; (async () => {
-            try {
-                const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/upload-url`)
-                if (res.status !== 200) {
-                    swal("Error", "无法获取上传链接", "error")
-                    return
-                }
-                const url = (await res.text()).trim()
-
-                const xhr = new XMLHttpRequest()
-                /** @type {HTMLProgressElement} */
-                const progressBar = document.getElementById('data-upload-progress')
-                progressBar.value = 0
-                xhr.open('PUT', url, true)
-                xhr.upload.onprogress = xhr.onprogress = event => {
-                    const progress = event.loaded / event.total
-                    progressBar.value = progress
-                }
-                xhr.onreadystatechange = async () => {
-                    if (xhr.readyState !== 4) return
-                    if (xhr.status !== 200) {
-                        swal('Error', `未知错误: ${xhr.status}`, 'error')
-                        return
-                    }
-                    try {
-                        const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/update`, { method: 'POST' })
-                        if (res.status !== 200) {
-                            swal('Error', `未知错误: ${res.status}`, 'error')
-                            return
-                        }
-                        const msg = await res.text()
-                        if (msg !== 'ok') {
-                            swal('Error', msg, 'error')
-                            return
-                        }
-                        swal("Success", msg, "success");
-                    } finally {
-                        progressBar.value = 0
-                    }
-                }
-                xhr.onerror = event => {
-                    swal('Error', `未知错误: ${event}`, 'error')
-                }
-                xhr.send(file)
-            } catch (e) {
-                swal("Error", `未知错误: ${e}`, "error")
-            }
-        })()
+        const progressBar = document.getElementById('data-upload-progress')
+        uploadData(problemId, file, progressBar)
     });
 
     $("#formPicUpload").submit(function (e) {

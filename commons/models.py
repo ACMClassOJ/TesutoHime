@@ -153,6 +153,7 @@ class DatabaseVersion(Base):
     __tablename__ = 'version'
     __table_args__ = {'mysql_charset': 'utf8mb4'}
 
+    # database version, used for upgrades.
     version = Column(Integer, primary_key=True)
 
 
@@ -204,6 +205,6 @@ class JudgeRecord2(Base):
     status = Column(SqlEnum(JudgeStatus))
     score = Column(Integer, default=0)
     message = Column(Text)
-    details = Column(Text) # actually JSON
+    details = Column(Text) # actually JSON of ProblemJudgeResult
     time_msecs = Column(Integer)
     memory_bytes = Column(Integer)

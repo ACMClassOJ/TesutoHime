@@ -46,7 +46,8 @@ async def run_task (
         async with rate_limiter.limit(rate_limit_group):
             logger.debug(f'running task {task_id}: {task}')
             queues = redis_queues.task(task_id)
-            await redis.set(queues.task, serialize(task))
+            await redis.lpush(queues.task, serialize(task))
+            await redis.expire(queues.task, task_timeout_secs)
             await redis.lpush(redis_queues.tasks, task_id)
             try:
                 while True:
@@ -75,6 +76,7 @@ async def run_task (
             except CancelledError:
                 logger.info(f'aborting task {task_id}')
                 await redis.lpush(queues.abort, 1)
+                await redis.expire(queues.abort, task_timeout_secs)
                 raise
     finally:
         del taskinfo_from_task_id[task_id]

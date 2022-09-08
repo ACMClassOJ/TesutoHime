@@ -1,8 +1,7 @@
-class DataBaseConfig:                     #数据库主要配置文件，一般在localhost
-    mysql_Host = 'localhost'
-    mysql_User = 'root'
-    mysql_Password = 'Progynova'
-    mysql_Database = 'OJ'
+# 数据库地址, 一般替换 username 与 database 即可
+mysql_connection_string = 'mysql+pymysql://username@/database?unix_socket=/run/mysqld/mysqld.sock'
+# 重复上面的 database 段
+mysql_database = 'database'
 
 class RedisConfig:
     host = 'localhost'
@@ -11,12 +10,36 @@ class RedisConfig:
     db = 0
     prefix = 'OJ_'
 
+
+class S3Config:
+    public_url = 'https://acm.sjtu.edu.cn/'
+    class Connections:
+        public = {
+            'endpoint_url': 'http://localhost:9000/',
+            'aws_access_key_id': 'xxxxxxxxxxxxxxxx',
+            'aws_secret_access_key': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        }
+        internal = {
+            'endpoint_url': 'http://localhost:9000/',
+            'aws_access_key_id': 'xxxxxxxxxxxxxxxx',
+            'aws_secret_access_key': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        }
+    class Buckets:
+        problems = 'OnlineJudge-problems'
+        submissions = 'OnlineJudge-submissions'
+        images = 'OnlineJudge-pic'
+
+
 class LoginConfig:                        #登陆过期时间，单位s
     Login_Life_Time = 24 * 60 * 60 * 60 
 
 class WebConfig:
     Problems_Each_Page = 20               #题库界面每页显示多少题目
     Block_Register = False                #暂停OJ注册
+
+class SchedulerConfig:
+    base_url = 'http://localhost:5100'
+    auth = 'Bearer xxxxxxxxxxxxxxxx'
 
 class JudgeConfig:
     Judge_Each_Page = 15                  #评测详情界面每页显示多少题目
@@ -28,25 +51,15 @@ class ProblemConfig:
     Max_Code_Length = 16384 * 8           #代码提交最多接受长度上限
                                           #这里为后端限制，请注意在前端js中还有限制，请一并修改
 
-class DataConfig:
-    server = 'http://192.168.1.233:8080/' #data_service_url，数据服务地址，可以是内网
-                                          #一定要有http://
-    key = 'data_service_key'              #data_service_key，数据服务密钥
 
 class QuizTempDataConfig:
-    server = 'http://192.168.1.233:8080/'        #quiz_service_url，填选服务地址，大多情况下与数据服务地址保持一致，可以是内网
-    key = 'quiz_service_key'                     #quiz_service_key，填选服务密钥，大多情况下与数据服务密钥保持一致
-    cache_dir = '/home/rbq/TesutoHime_quiz_tmp'  #quiz_cache_dir，用于解压存放填选临时文件的本地目录
+    cache_dir = '/var/cache/oj/web'       #quiz_cache_dir，用于解压存放填选临时文件的本地目录
 
 class LogConfig:
     name = 'tracker'                                    #Web服务日志名称
-    path = '/home/rbq/TesutoHime_log/tracker.log'       #web_log_url，Web服务日志存放的本地目录
-    Syslog_Path = '/home/rbq/TesutoHime_log/syslog.log' #sys_log_url，其他系统服务日志存放的本地目录
+    path = '/var/log/oj/web/tracker.log'                #web_log_url，Web服务日志存放的本地目录
+    Syslog_Path = '/var/log/oj/web/syslog.log'          #sys_log_url，其他系统服务日志存放的本地目录
     Max_Bytes = 134217728                               #Web服务日志保存的最大空间
     Backup_Count = 3                                    #Web服务需要保存多少份滚动日志。
                                                         #例如当前日志写入tracker.log, maxBytes为128M，那么当128M被写满时，
                                                         #最早的日志将被写入tracker.log.1；tracker.log.2等依此类推，直到最早的日志被废弃
-
-class PicConfig:
-    server = 'http://192.168.1.233:8080/' #pic_service_url_public，请填写可从*公网*访问的图片服务地址
-    key = 'pic_service_key'               #pic_service_key，图片服务密钥

@@ -19,12 +19,24 @@
             <p>等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</p>
         </div>
         <div class="row">
+            <div class="col-sm-3"><span class="text-blue">Compiling</span>：</div>
+            <p>正在编译。你的程序正在被评测机编译成可执行文件。</p>
+        </div>
+        <div class="row">
             <div class="col-sm-3"><span class="text-blue">Running & Judging</span>：</div>
             <p>正在测试。你的程序正在被评测机运行以检查正确性。</p>
         </div>
         <div class="row">
             <div class="col-sm-3"><span class="text-green">Accepted</span>：</div>
             <p>通过。你的程序正确通过全部测试点。</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-gray-dark">Aborted</span>：</div>
+            <p>评测中断。这可能是由于你中断了评测，也可能是因为评测机在评测时下线。</p>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><span class="text-brown">Voided</span>：</div>
+            <p>成绩无效。你的程序被管理员标记为无效。</p>
         </div>
         <div class="row">
             <div class="col-sm-3"><span class="text-red">Wrong Answer</span>：</div>
@@ -61,7 +73,10 @@
     </div>
     <div class="d-block d-xl-none">
         <p><span class="text-gray">Pending</span>：等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</p>
+        <p><span class="text-blue">Compiling</span>：正在编译。你的程序正在被评测机编译成可执行文件。</p>
         <p><span class="text-blue">Running & Judging</span>：正在测试。你的程序正在被评测机运行以检查正确性。</p>
+        <p><span class="text-gray-dark">Aborted</span>：评测中断。这可能是由于你中断了评测，也可能是因为评测机在评测时下线。</p>
+        <p><span class="text-brown">Voided</span>：成绩无效。你的程序被管理员标记为无效。</p>
         <p><span class="text-green">Accepted</span>：通过。你的程序正确通过全部测试点。</p>
         <p><span class="text-red">Wrong Answer</span>：答案错误。你的程序在某个测试点输出了错误的答案。</p>
         <p><span class="text-yellow">Compile Error</span>：编译错误。你的程序没有通过编译。</p>

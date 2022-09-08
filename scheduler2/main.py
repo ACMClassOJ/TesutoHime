@@ -7,7 +7,7 @@ from http.client import BAD_REQUEST
 from logging import getLogger
 from time import time
 from traceback import format_exception
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, Optional, Set, Tuple
 from urllib.parse import quote
 
 from aiohttp.web import (Application, HTTPNotFound, Request, Response,

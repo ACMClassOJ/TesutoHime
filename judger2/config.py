@@ -16,6 +16,7 @@ cache_clear_interval_secs = 86400.0
 worker_uid = int(config['worker_uid'])
 
 heartbeat_interval_secs = 2.0
+task_timeout_secs = 3600
 
 queues = RedisQueues(config['redis']['prefix'], runner_id)
 poll_timeout_secs = 10

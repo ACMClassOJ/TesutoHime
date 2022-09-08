@@ -1,6 +1,6 @@
 scheduler_config: v1
 
-working_dir: /var/run/oj/scheduler
+working_dir: /var/oj/scheduler
 cache_dir: /var/cache/oj/scheduler
 log_dir: /var/log/oj/scheduler
 port: 5100
@@ -12,8 +12,8 @@ web:
 s3:
   connection:
     endpoint_url: http://localhost:9000/
-    aws_access_key_id: OG485lUbVXOaE2MF
-    aws_secret_access_key: 1HaID5nj9FVcI5zPprdtaLeUw7KwHOBE
+    aws_access_key_id: xxxxxxxxxxxxxxxx
+    aws_secret_access_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   buckets:
     problems: oj-problems
     artifacts: oj-artifacts
@@ -23,6 +23,6 @@ redis:
   connection:
     host: localhost
     port: 6379
-    # username: runner1
-    password: redisalan-liang
+    username: scheduler
+    password: xxxxxxxx
     db: 1

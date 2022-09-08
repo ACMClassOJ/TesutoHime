@@ -1,10 +1,13 @@
-from utils import *
-import requests
-from judgeServerManager import JudgeServer_Manager
-from judgeManager import Judge_Manager
-from config import JudgeConfig
 import json
+
 import redis_lock
+import requests
+
+from config import JudgeConfig
+from judgeManager import Judge_Manager
+from judgeServerManager import JudgeServer_Manager
+from utils import *
+
 
 class JudgeServerScheduler:
     def __init__(self):

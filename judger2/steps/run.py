@@ -49,7 +49,7 @@ class ValgrindRunner (BaseRunner):
             return result
         res_dict = result.__dict__
         res_dict['error'] = 'memory_leak'
-        res_dict['message'] = None
+        res_dict['message'] = 'Memory leak'
         return RunResult(**res_dict)
 
 class VerilogRunner (BaseRunner):

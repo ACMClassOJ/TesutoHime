@@ -849,7 +849,7 @@ def code2(submit_id):
     if details is not None:
         details = load_dataclass(details, commons.task_typing.__dict__)
 
-    code_url = s3_public.generate_presigned_url('get_object', {
+    code_url = generate_s3_public_url('get_object', {
         'Bucket': S3Config.Buckets.submissions,
         'Key': key_from_submission_id(submission.id),
     }, ExpiresIn=60)

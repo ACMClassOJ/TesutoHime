@@ -400,11 +400,11 @@ html .text-yellow {
 }
 
 html .text-green {
-  color: #6effb9 !important;
+  color: #70dfaa !important;
 }
 
 html .text-gray-dark {
-  color: #ffffff !important;
+  color: #cccccc !important;
 }
 
 html .text-blue {
@@ -413,6 +413,10 @@ html .text-blue {
 
 html .text-black-50 {
   color: rgba(255, 255, 255, 0.5) !important;
+}
+
+html .text-brown {
+    color: #ac8f8f;
 }
 
 code[style="color: black;"] {
@@ -443,6 +447,27 @@ html .badge-secondary {
 
 html .badge-success {
   background-color: #1d8458;
+}
+
+html .badge-info {
+  background-color: #0d90a8;
+}
+
+html .btn-secondary {
+  color: rgba(255, 255, 255, .9);
+  background-color: #4f4f4f;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+html .btn-secondary:hover {
+  background-color: #6f6f6f;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+html img {
+  filter: saturate(.8) brightness(.8);
 }
 
 

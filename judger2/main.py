@@ -6,12 +6,13 @@ from logging import getLogger
 from time import time
 from traceback import format_exception
 
-from commons.task_typing import StatusUpdateDone, StatusUpdateError, StatusUpdateStarted
+from commons.task_typing import (StatusUpdateDone, StatusUpdateError,
+                                 StatusUpdateStarted)
 from commons.util import deserialize, serialize
 
 from judger2.cache import clean_cache_worker
 from judger2.config import (heartbeat_interval_secs, poll_timeout_secs, queues,
-                            redis_connect, runner_id)
+                            redis_connect, runner_id, task_timeout_secs)
 from judger2.logging_ import task_logger
 from judger2.task import run_task
 
@@ -47,8 +48,9 @@ async def poll_for_tasks ():
             task_queues = queues.task(task_id)
             async def report_progress (status):
                 await redis.lpush(task_queues.progress, serialize(status))
+                await redis.expire(task_queues.progress, task_timeout_secs)
 
-            task = deserialize(await redis.get(task_queues.task))
+            task = deserialize(await redis.lpop(task_queues.task))
             aio_task = create_task(run_task(task, task_id))
             await report_progress(StatusUpdateStarted())
 

@@ -1,9 +1,9 @@
-from flask import Flask, request, Blueprint
+from flask import Blueprint, request
+
+from judgeManager import Judge_Manager
 from judgeServerManager import JudgeServer_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
-from judgeManager import Judge_Manager
 from utils import *
-import json
 
 api = Blueprint('api', __name__, static_folder='static')
 

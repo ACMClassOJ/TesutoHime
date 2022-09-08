@@ -1,3 +1,12 @@
+/*
+ * runner.c - Program runner for ACM Class Online Judge
+ * Part of TesutoHime, the ACM Class Online Judge.
+ *
+ * Note: This program is written in pure C (instead of C++)
+ *       for minimum overhead.
+ * Note: This program runs only on Linux.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/resource.h>
@@ -7,6 +16,11 @@
 #include <time.h>
 #include <unistd.h>
 
+/* This is the worker UID inside the clone(2)'d user
+   namespace. An UID map is needed to setuid(2) to this UID.
+   See deploy instructions for more detail on that.
+   See also: https://lwn.net/Articles/532593/
+ */
 #define WORKER_UID 65534
 typedef long long time_ms_t;
 
@@ -30,6 +44,10 @@ time_ms_t gettime () {
 }
 
 void set_timer (time_ms_t time) {
+  /* Not using timer_create(2) here since timers created
+     that way would be cleared upon execve(2), which is not
+     desired for us.
+   */
   struct itimerval val;
   val.it_value.tv_sec = time / SEC_TO_MS;
   val.it_value.tv_usec = (time % SEC_TO_MS) * MS_TO_US;
@@ -44,6 +62,9 @@ int main (int argc, char **argv) {
     exit(126);
   }
   if (getuid() != 0 || geteuid() != 0) {
+    /* What we actually want is CAP_SETUID, but let's
+       assume we want root.
+     */
     fprintf(stderr, "runner needs to be run as root\n");
     exit(EXIT_FAILURE);
   }
@@ -56,22 +77,24 @@ int main (int argc, char **argv) {
 
   pid_t child_pid = fork();
   check(child_pid < 0, "fork");
-  if (child_pid == 0) { // is child
+  if (child_pid == 0) { /* is child */
     check(fclose(results), "fclose");
     check(setuid(WORKER_UID), "setuid");
     set_timer(time_limit);
 
     check(execv(argv[3], &argv[3]), "execv");
-    // execv returns only on errors.
+    /* execv return only on errors. */
   }
 
   time_ms_t start_time = gettime();
   int status = -1;
   struct rusage rusage;
+  /* Using wait4(2) here to get rusage data directly. */
   check(wait4(child_pid, &status, 0, &rusage) < 0, "wait4");
   time_ms_t end_time = gettime();
   time_ms_t real_time = end_time - start_time;
 
+  /* maxrss is in kbytes on Linux. */
   long mem = rusage.ru_maxrss * 1024;
 
   int code;

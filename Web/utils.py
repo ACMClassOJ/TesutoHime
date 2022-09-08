@@ -2,7 +2,7 @@ import datetime
 import time
 from dataclasses import dataclass
 from typing import Optional
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import boto3
 import redis
@@ -20,6 +20,14 @@ Session = sessionmaker(bind=engine)
 cfg = Config(signature_version='s3v4')
 s3_public = boto3.client('s3', **S3Config.Connections.public, config=cfg)
 s3_internal = boto3.client('s3', **S3Config.Connections.internal, config=cfg)
+
+def generate_s3_public_url (*args, **kwargs):
+    url = s3_public.generate_presigned_url(*args, **kwargs)
+    public_base = urlsplit(S3Config.public_url)
+    url = urlsplit(url)
+    url = (public_base.scheme, public_base.netloc, url.path, url.query,
+        url.fragment)
+    return urlunsplit(url)
 
 
 def db_connect():

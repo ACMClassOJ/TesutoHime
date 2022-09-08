@@ -1,5 +1,5 @@
-import os, shutil, requests, zipfile, json
-from Web.config import S3Config
+import os, zipfile, json
+from config import S3Config
 from utils import s3_internal
 from const import ReturnCode
 import json

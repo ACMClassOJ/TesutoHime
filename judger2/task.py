@@ -6,10 +6,11 @@ from typing import List, Optional
 
 from commons.task_typing import (CompileResult, CompileTask,
                                  InvalidTaskException, JudgeResult, JudgeTask,
-                                 Result, StatusUpdateProgress, Task, Testpoint, TestpointJudgeResult)
+                                 Result, StatusUpdateProgress, Task, Testpoint,
+                                 TestpointJudgeResult)
 from commons.util import serialize
 
-from judger2.config import queues, redis_connect
+from judger2.config import queues, redis_connect, task_timeout_secs
 from judger2.logging_ import task_logger
 from judger2.steps.check import check
 from judger2.steps.compile_ import compile
@@ -125,7 +126,8 @@ async def judge_task (task: JudgeTask, task_id: str) -> JudgeResult:
                     resource_usage=rusage.value,
                 )
 
-            await redis.lpush(queues.task(task_id).progress,
-                serialize(StatusUpdateProgress(result)))
+            queue = queues.task(task_id).progress
+            await redis.lpush(queue, serialize(StatusUpdateProgress(result)))
+            await redis.expire(queue, task_timeout_secs)
 
     return result

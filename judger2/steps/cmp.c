@@ -1,3 +1,8 @@
+/*
+ * cmp.c - Compares two files.
+ * Part of TesutoHime, the ACM Class Online Judge.
+ */
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,7 +67,7 @@ void cmp_ignore_ws (FILE *file1, FILE *file2, bool is_in_ws) {
       return cmp_ignore_ws(file1, file2, true);
     }
   }
-  // both not ws or not in ws
+  /* both not ws or not in ws */
   if (c1 == EOF && c2 == EOF) return same();
   if (c1 != c2) return different();
   return cmp_ignore_ws(file1, file2, false);

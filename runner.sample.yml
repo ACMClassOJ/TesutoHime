@@ -2,7 +2,7 @@ runner_config: v1
 
 id: 1
 relative_slowness: 10
-working_dir: /var/run/oj/runner
+working_dir: /var/oj/runner
 cache_dir: /var/cache/oj/runner
 log_dir: /var/log/oj/runner
 worker_uid: 100001
@@ -12,6 +12,6 @@ redis:
   connection:
     host: localhost
     port: 6379
-    username: runner1
-    password: password
+    username: runner
+    password: xxxxxxxx
     db: 1

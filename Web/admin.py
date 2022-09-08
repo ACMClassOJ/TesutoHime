@@ -1,12 +1,9 @@
-import random
-import time
 from http.client import SEE_OTHER
 from urllib.parse import urljoin
 from uuid import uuid4
 
 import requests
 from flask import Blueprint, abort, redirect, render_template, request
-from requests import post
 from requests.exceptions import RequestException
 
 from config import ProblemConfig, S3Config, SchedulerConfig
@@ -18,7 +15,8 @@ from problemManager import Problem_Manager
 from referenceManager import Reference_Manager
 from sessionManager import Login_Manager
 from userManager import User_Manager
-from Web.utils import NotFoundException, mark_void2, rejudge2, s3_public
+from utils import (NotFoundException, generate_s3_public_url, mark_void2,
+                   rejudge2)
 
 admin = Blueprint('admin', __name__, static_folder='static')
 
@@ -230,7 +228,7 @@ def contest_manager():
 def data_upload(problem_id):
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
-    return s3_public.generate_presigned_url('put_object', {
+    return generate_s3_public_url('put_object', {
         'Bucket': S3Config.Buckets.problems,
         'Key': f'{problem_id}.zip',
     }, ExpiresIn=3600)
@@ -255,7 +253,7 @@ def data_download():
         abort(404)
     id = request.form['id']
     key = f'{id}.zip'
-    url = s3_public.generate_presigned_url('get_object', {
+    url = generate_s3_public_url('get_object', {
         'Bucket': S3Config.Buckets.problems,
         'Key': key,
     }, ExpiresIn=3600)
@@ -276,7 +274,7 @@ def pic_upload():
     type = str(request.form['type'])
     if not type.startswith('image/'):
         abort(400)
-    return s3_public.generate_presigned_url('put_object', {
+    return generate_s3_public_url('put_object', {
         'Bucket': S3Config.Buckets.images,
         'Key': str(uuid4()),
         'ContentLength': length,

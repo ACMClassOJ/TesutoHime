@@ -1,3 +1,8 @@
+REMARK: This is a patch to the GNU coreutils' du program
+        which counts the total number of files in addition
+        to their total size. This is part of TesutoHime, the
+        ACM Class Online Judge.
+
 diff --git a/src/du.c b/src/du.c
 index 5799533..b1f6648 100644
 --- a/src/du.c

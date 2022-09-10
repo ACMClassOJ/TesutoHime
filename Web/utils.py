@@ -23,11 +23,11 @@ s3_internal = boto3.client('s3', **S3Config.Connections.internal, config=cfg)
 
 def generate_s3_public_url(*args, **kwargs):
     url = s3_public.generate_presigned_url(*args, **kwargs)
-    public_base = urlsplit(S3Config.public_url)
     url = urlsplit(url)
-    url = (public_base.scheme, public_base.netloc, url.path, url.query,
-        url.fragment)
-    return urlunsplit(url)
+    url = urlunsplit(('', '', url.path, url.query, url.fragment))
+    if url[0] == '/':
+        url = url[1:]
+    return urljoin(S3Config.public_url, url)
 
 
 def db_connect():

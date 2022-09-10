@@ -12,7 +12,7 @@ class RedisConfig:
 
 
 class S3Config:
-    public_url = 'https://acm.sjtu.edu.cn/'
+    public_url = 'https://acm.sjtu.edu.cn/OnlineJudge/'
     class Connections:
         public = {
             'endpoint_url': 'http://localhost:9000/',

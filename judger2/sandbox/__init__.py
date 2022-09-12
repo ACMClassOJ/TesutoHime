@@ -173,6 +173,10 @@ async def run_with_limits(
             raise Exception(f'du exited with code {du_code}')
         du_out = (await du_proc.stdout.read(4096)).decode().split('\n')
         file_size_bytes, file_count = [int(x) for x in du_out[:2]]
+        # empty directories could still use disk storage on some FSs.
+        # let's ignore them.
+        if file_count == 0 and file_size_bytes < 16:
+            file_size_bytes = 0
         file_size_bytes *= 1024
 
         usage = ResourceUsage(

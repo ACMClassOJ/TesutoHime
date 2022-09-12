@@ -453,6 +453,18 @@ html .badge-info {
   background-color: #0d90a8;
 }
 
+html .badge-danger {
+  background-color: #a65162;
+}
+
+html .badge-warning {
+  background-color: #c66c58;
+}
+
+html .badge-default {
+  background-color: #506c9b;
+}
+
 html .btn-secondary {
   color: rgba(255, 255, 255, .9);
   background-color: #4f4f4f;

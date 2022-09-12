@@ -223,10 +223,8 @@ class JudgeStatusInfo:
 
 judge_status_info = {
     'pending': JudgeStatusInfo('Pending', 'gray-dark', 'Pending', 'secondary'),
-    # TODO: update dark mode
     'compiling': JudgeStatusInfo('Compiling', 'blue', 'Compiling', 'info'),
     'judging': JudgeStatusInfo('Judging', 'blue', 'Judging', 'info'),
-    # TODO: add the brown color to the stylesheets
     'void': JudgeStatusInfo('Voided', 'brown', 'Void', 'warning'),
     'aborted': JudgeStatusInfo('Aborted', 'gray-dark', 'Aborted', 'secondary'),
 

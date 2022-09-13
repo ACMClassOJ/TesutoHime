@@ -25,9 +25,9 @@ class S3Config:
             'aws_secret_access_key': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
         }
     class Buckets:
-        problems = 'OnlineJudge-problems'
-        submissions = 'OnlineJudge-submissions'
-        images = 'OnlineJudge-pic'
+        problems = 'oj-problems'
+        submissions = 'oj-submissions'
+        images = 'oj-images'
 
 
 class LoginConfig:                        #登陆过期时间，单位s

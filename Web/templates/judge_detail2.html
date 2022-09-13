@@ -81,7 +81,7 @@
         {% if submission.message != None and submission.message != '' -%}
         <pre><code>{{ submission.message }}</code></pre>
         {% endif -%}
-        {% if False and (Detail['Status'] == '0' or Detail['Status'] == '1') -%}
+        {% if submission.status.name == 'pending' or submission.status.name == 'compiling' or submission.status.name == 'judging' -%}
         <div class="row">
             <div class="m-auto">
                 <div id="judge_detail_auto_refresh_svgcontainer">
@@ -201,24 +201,21 @@
             });
         });
 
-        {% if False -%}
+        {% if submission.status.name == 'pending' or submission.status.name == 'compiling' or submission.status.name == 'judging' -%}
         $(function () {
             var count_down_time = 3;
-            if({{ Detail['Status'] }} == '0' || {{ Detail['Status'] }} == '1')
-            {
-                var r = 15;
-                var origin_interval = 15;
-                var interval = origin_interval;
-                setInterval(function() {
-                    interval--;
-                    var percent = interval / origin_interval;
-                    var perimeter = 2 * Math.PI * r;
-                    $("#judge_detail_auto_refresh_circle").attr('stroke-dasharray', perimeter * percent + ',' + perimeter * (1 - percent));
-                    $("#judge_detail_auto_refresh_timeleft").html(parseInt(count_down_time * interval / origin_interval))
-                    if(interval == 0)
-                        window.location.reload();
-                }, count_down_time * 1000 / origin_interval); 
-            }
+            var r = 15;
+            var origin_interval = 15;
+            var interval = origin_interval;
+            setInterval(function() {
+                interval--;
+                var percent = interval / origin_interval;
+                var perimeter = 2 * Math.PI * r;
+                $("#judge_detail_auto_refresh_circle").attr('stroke-dasharray', perimeter * percent + ',' + perimeter * (1 - percent));
+                $("#judge_detail_auto_refresh_timeleft").html(parseInt(count_down_time * interval / origin_interval))
+                if(interval == 0)
+                    window.location.reload();
+            }, count_down_time * 1000 / origin_interval); 
         });
         {%- endif %}
     </script>

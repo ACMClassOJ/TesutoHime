@@ -3,7 +3,7 @@ __all__ = 'run_with_limits', 'chown_back'
 from asyncio import create_subprocess_exec, wait_for
 from dataclasses import asdict, dataclass, field
 from logging import getLogger
-from os import getuid, wait4, waitstatus_to_exitcode
+from os import WEXITSTATUS, WIFEXITED, WIFSIGNALED, WTERMSIG, getuid, wait4
 from pathlib import PosixPath
 from shlex import quote
 from shutil import which
@@ -34,6 +34,13 @@ worker_uid_maps = [
     f'0:{getuid()}:1', # map current user to 0
     f'{worker_uid_inside}:{worker_uid}:1', # map worker
 ]
+
+def waitstatus_to_exitcode (status):
+    if WIFEXITED(status):
+        return WEXITSTATUS(status)
+    if WIFSIGNALED(status):
+        return -WTERMSIG(status)
+    raise ValueError(f'Invalid waitstatus {status}')
 
 @dataclass
 class NsjailArgs:

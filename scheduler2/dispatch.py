@@ -55,25 +55,25 @@ async def run_task(
                         task_timeout_secs)
                     status: StatusUpdate = deserialize(status)
                     logger.debug(f'received status update from task {task_id}: {status}')
-                    match status:
-                        case StatusUpdateStarted():
-                            if onprogress is not None:
-                                await onprogress(status)
-                        case StatusUpdateProgress():
-                            if onprogress is not None:
-                                await onprogress(status)
-                        case StatusUpdateDone(result):
-                            return result
-                        case StatusUpdateError(message):
-                            msg = f'Runner error: {message}'
-                            logger.error(msg)
-                            if retries_left <= 0:
-                                raise Exception(msg)
-                            await sleep(task_retry_interval_secs)
-                            return await run_task(taskinfo, onprogress,
-                                rate_limit_group, retries_left - 1)
-                        case _:
-                            raise Exception(f'Unknown message from runner: {status}')
+                    if isinstance(status, StatusUpdateStarted):
+                        if onprogress is not None:
+                            await onprogress(status)
+                    elif isinstance(status, StatusUpdateProgress):
+                        if onprogress is not None:
+                            await onprogress(status)
+                    elif isinstance(status, StatusUpdateDone):
+                        return status.result
+                    elif isinstance(status, StatusUpdateError):
+                        message = status.message
+                        msg = f'Runner error: {message}'
+                        logger.error(msg)
+                        if retries_left <= 0:
+                            raise Exception(msg)
+                        await sleep(task_retry_interval_secs)
+                        return await run_task(taskinfo, onprogress,
+                            rate_limit_group, retries_left - 1)
+                    else:
+                        raise Exception(f'Unknown message from runner: {status}')
             except CancelledError:
                 logger.info(f'aborting task {task_id}')
                 await redis.lpush(queues.abort, 1)

@@ -222,11 +222,8 @@ class JudgeStatusInfo:
     badge_type: Optional[str] = None
 
 judge_status_info = {
-    'pending': JudgeStatusInfo('Pending', 'gray-dark', 'Pending', 'secondary'),
-    'compiling': JudgeStatusInfo('Compiling', 'blue', 'Compiling', 'info'),
-    'judging': JudgeStatusInfo('Judging', 'blue', 'Judging', 'info'),
-    'void': JudgeStatusInfo('Voided', 'brown', 'Void', 'warning'),
-    'aborted': JudgeStatusInfo('Aborted', 'gray-dark', 'Aborted', 'secondary'),
+    'accepted': JudgeStatusInfo('Accepted', 'green', 'AC', 'success'),
+    'wrong_answer': JudgeStatusInfo('Wrong Answer', 'red', 'WA', 'danger'),
 
     'compile_error': JudgeStatusInfo('Compile Error', 'yellow', 'CE', 'warning'),
     'runtime_error': JudgeStatusInfo('Runtime Error', 'red', 'RE', 'warning'),
@@ -235,12 +232,15 @@ judge_status_info = {
     'disk_limit_exceeded': JudgeStatusInfo('Disk Limit Exceeded', 'purple', 'DLE', 'warning'),
     'memory_leak': JudgeStatusInfo('Memory Leak', 'purple', 'Leak', 'warning'),
 
-    'wrong_answer': JudgeStatusInfo('Wrong Answer', 'red', 'WA', 'danger'),
+    'pending': JudgeStatusInfo('Pending', 'gray-dark', 'Pending', 'secondary'),
+    'compiling': JudgeStatusInfo('Compiling', 'blue', 'Compiling', 'info'),
+    'judging': JudgeStatusInfo('Judging', 'blue', 'Judging', 'info'),
+    'void': JudgeStatusInfo('Voided', 'brown', 'Void', 'warning'),
+    'aborted': JudgeStatusInfo('Aborted', 'gray-dark', 'Aborted', 'secondary'),
+
     'skipped': JudgeStatusInfo('Skipped', 'black', 'Skip', 'secondary'),
     'system_error': JudgeStatusInfo('System Error', 'gray-dark', 'SE', 'default'),
     'unknown_error': JudgeStatusInfo('Unknown Error', 'gray-dark', 'UKE', 'default'),
-
-    'accepted': JudgeStatusInfo('Accepted', 'green', 'AC', 'success'),
 }
 
 language_info = {

@@ -11,17 +11,14 @@ FileUrl = Url
 @dataclass
 class CompileSourceCpp:
     main: FileUrl
-    type: Literal['cpp'] = 'cpp'
 
 @dataclass
 class CompileSourceGit:
     url: Url
-    type: Literal['git'] = 'git'
 
 @dataclass
 class CompileSourceVerilog:
     main: FileUrl
-    type: Literal['verilog'] = 'verilog'
 
 
 CompileSource = Union[
@@ -34,7 +31,6 @@ CompileSource = Union[
 @dataclass
 class Artifact:
     url: FileUrl
-    type: Literal['artifact'] = 'artifact'
 
 @dataclass
 class ResourceUsage:
@@ -49,7 +45,6 @@ class CompileTask:
     supplementary_files: List[FileUrl]
     artifact: Optional[Artifact]
     limits: ResourceUsage
-    type: Literal['compile'] = 'compile'
 
 
 Input = Union[CompileTask, Artifact]
@@ -67,11 +62,9 @@ class RunArgs:
 class CompareChecker:
     ignore_whitespace: bool
     answer: FileUrl
-    type: Literal['compare'] = 'compare'
 
 @dataclass
-class DirectChecker:
-    type: Literal['direct'] = 'direct'
+class DirectChecker: pass
 
 @dataclass
 class SpjChecker:
@@ -80,7 +73,6 @@ class SpjChecker:
     answer: Optional[FileUrl]
     supplementary_files: List[FileUrl]
     limits: ResourceUsage
-    type: Literal['spj'] = 'spj'
 
 Checker = Union[CompareChecker, DirectChecker, SpjChecker]
 
@@ -96,7 +88,6 @@ class Testpoint:
 @dataclass
 class JudgeTask:
     testpoints: List[Testpoint]
-    type: Literal['judge'] = 'judge'
 
 
 Task = Union[CompileTask, JudgeTask]
@@ -148,7 +139,6 @@ CompileResultType = Union[
 class CompileResult:
     result: CompileResultType
     message: str
-    type: Literal['compile_result'] = 'compile_result'
 
 @dataclass
 class RunResult:
@@ -158,7 +148,6 @@ class RunResult:
     code: Optional[int] = None # for runtime errors
     output_path: Optional[PosixPath] = None
     input_path: Optional[PosixPath] = None
-    type: Literal['run_result'] = 'run_result'
 
 @dataclass
 class CompileLocalResult:
@@ -189,7 +178,6 @@ class TestpointJudgeResult:
     message: str
     score: float = 0.0
     resource_usage: Optional[ResourceUsage] = None
-    type: Literal['testpoint_judge_result'] = 'testpoint_judge_result'
 
 @dataclass
 class CheckResult:
@@ -201,7 +189,6 @@ class CheckResult:
 @dataclass
 class JudgeResult:
     testpoints: List[TestpointJudgeResult]
-    type: Literal['judge_result'] = 'judge_result'
 
 Result = Union[CompileResult, JudgeResult]
 

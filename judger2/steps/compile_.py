@@ -28,7 +28,8 @@ async def compile(task: CompileTask) -> CompileLocalResult:
         await copy_supplementary_files(task.supplementary_files, cwd)
 
         # compile
-        type = task.source.type
+        type = task.source.__class__
+        
         # The compiled program returned by these functions
         # reside inside cwd. As cwd is deleted once this
         # function returns, the file need to be uploaded or
@@ -69,7 +70,7 @@ async def compile(task: CompileTask) -> CompileLocalResult:
 class NotCompiledException(Exception): pass
 
 async def ensure_input(input: Input) -> CachedFile:
-    if input.type == 'compile':
+    if isinstance(input, CompileTask):
         res = await compile(input)
         if res.result.result != 'compiled':
             raise NotCompiledException(res.result.message)
@@ -173,8 +174,8 @@ Compiler = Callable[
     [PosixPath, CompileSource, ResourceUsage],
     Coroutine[Any, Any, CompileLocalResult],
 ]
-compilers: Dict[str, Compiler] = {
-    'cpp': compile_cpp,
-    'git': compile_git,
-    'verilog': compile_verilog,
+compilers: Dict[Any, Compiler] = {
+    CompileSourceCpp: compile_cpp,
+    CompileSourceGit: compile_git,
+    CompileSourceVerilog: compile_verilog,
 }

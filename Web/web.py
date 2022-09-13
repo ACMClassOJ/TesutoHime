@@ -1055,6 +1055,9 @@ def contest():
         time_overall = float(end_time - start_time)
         percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
 
+        status_url = 'status2' if judger2 else 'status'
+        ac_status = 'accepted' if judger2 else '2'
+
         return render_template(
             'contest.html',
             id=contest_id,
@@ -1065,6 +1068,8 @@ def contest():
             Problems=problems,
             problems_visible=problems_visible,
             data=data,
+            status_url=status_url,
+            ac_status=ac_status,
             is_Admin=is_admin,
             Percentage=percentage,
             friendlyName=Login_Manager.get_friendly_name(),
@@ -1182,6 +1187,9 @@ def homework():
         time_overall = float(end_time - start_time)
         percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
 
+        status_url = 'status2' if judger2 else 'status'
+        ac_status = 'accepted' if judger2 else '2'
+
         return render_template(
             'homework.html',
             id=contest_id,
@@ -1193,6 +1201,8 @@ def homework():
             problems_visible=problems_visible,
             Players=players,
             data=data,
+            status_url=status_url,
+            ac_status=ac_status,
             is_Admin=is_admin,
             Percentage=percentage,
             friendlyName=Login_Manager.get_friendly_name(),

@@ -6,7 +6,7 @@ from shutil import copy2
 from typing import Any, Callable, Coroutine, Dict, Optional
 
 from commons.task_typing import (Checker, CheckInput, CheckResult,
-                                 CompareChecker, SpjChecker)
+                                 CompareChecker, DirectChecker, RunResult, SpjChecker)
 
 from judger2.cache import ensure_cached
 from judger2.config import checker_cmp_limits
@@ -20,7 +20,7 @@ logger = getLogger(__name__)
 async def check(outfile: CheckInput, checker: Checker) -> CheckResult:
     logger.info(f'checking with {checker}')
     # get output file to check
-    if outfile.type != 'run_result':
+    if not isinstance(outfile, RunResult):
         try:
             inf = None
             ouf = (await ensure_input(outfile)).path
@@ -33,7 +33,7 @@ async def check(outfile: CheckInput, checker: Checker) -> CheckResult:
         return CheckResult('system_error', 'Nothing to check')
 
     # check
-    return await checkers[checker.type](inf, ouf, checker)
+    return await checkers[checker.__class__](inf, ouf, checker)
 
 
 cmp_errexit_code = 63
@@ -123,8 +123,8 @@ Checker = Callable[
     [Optional[PosixPath], PosixPath, Checker],
     Coroutine[Any, Any, CheckResult],
 ]
-checkers: Dict[str, Checker] = {
-    'compare': checker_cmp,
-    'direct': checker_direct,
-    'spj': checker_spj,
+checkers: Dict[Any, Checker] = {
+    CompareChecker: checker_cmp,
+    DirectChecker: checker_direct,
+    SpjChecker: checker_spj,
 }

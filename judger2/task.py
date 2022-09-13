@@ -21,14 +21,13 @@ logger = getLogger(__name__)
 
 
 async def run_task(task: Task, task_id: str) -> Result:
-    type = task.type
-    task_logger.info(f'received {type} task {task_id}: {task}')
-    if type == 'compile':
+    task_logger.info(f'received task {task_id}: {task}')
+    if isinstance(task, CompileTask):
         return await compile_task(task)
-    elif type == 'judge':
+    elif isinstance(task, JudgeTask):
         return await judge_task(task, task_id)
     else:
-        raise InvalidTaskException(f'Unknown task type {type}')
+        raise InvalidTaskException(f'Unknown task type')
 
 
 async def compile_task(task: CompileTask) -> CompileResult:

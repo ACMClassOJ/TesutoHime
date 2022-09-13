@@ -474,7 +474,8 @@ async def prepare_compile_task(ctx: ExecutionContext, plan: CompileTaskPlan) \
         source = await get_compile_source(ctx, filename)
     else:
         source = deepcopy(plan.source)
-        if source.type == 'cpp' or source.type == 'verilog':
+        if isinstance(source, CompileSourceCpp) \
+        or isinstance(source, CompileSourceVerilog):
             source.main = sign_url(source.main)
     def map_supplementary_file(file):
         if isinstance(file, UserCode):
@@ -494,19 +495,18 @@ async def get_judge_task(ctx: ExecutionContext, plan: JudgeTaskPlan) \
     -> JudgeTaskRecord:
     task = deepcopy(plan.task)
     for testpoint in task.testpoints:
-        match testpoint.input:
-            case UserCode():
-                if ctx.compile_artifact is None:
-                    ctx.compile_artifact = Artifact(ctx.file_url(UrlType.CODE,
-                        raw_code_filename))
-                testpoint.input = ctx.compile_artifact
-            case CompileTaskPlan():
-                testpoint.input = \
-                    await prepare_compile_task(ctx, testpoint.input)
-            case CompileTask():
-                pass
-            case Artifact():
-                testpoint.input.url = sign_url(testpoint.input.url)
+        if isinstance(testpoint.input, UserCode):
+            if ctx.compile_artifact is None:
+                ctx.compile_artifact = Artifact(ctx.file_url(UrlType.CODE,
+                    raw_code_filename))
+            testpoint.input = ctx.compile_artifact
+        elif isinstance(testpoint.input, CompileTaskPlan):
+            testpoint.input = \
+                await prepare_compile_task(ctx, testpoint.input)
+        elif isinstance(testpoint.input, CompileTask):
+            pass
+        elif isinstance(testpoint.input, Artifact):
+            testpoint.input.url = sign_url(testpoint.input.url)
 
         if testpoint.run is not None:
             if testpoint.run.infile is not None:
@@ -514,20 +514,19 @@ async def get_judge_task(ctx: ExecutionContext, plan: JudgeTaskPlan) \
             testpoint.run.supplementary_files = \
                 [sign_url(x) for x in testpoint.run.supplementary_files]
 
-        match testpoint.check:
-            case CompareChecker():
+        if isinstance(testpoint.check, CompareChecker):
+            testpoint.check.answer = sign_url(testpoint.check.answer)
+        elif isinstance(testpoint.check, DirectChecker):
+            pass
+        elif isinstance(testpoint.check, SpjChecker):
+            if testpoint.check.answer is not None:
                 testpoint.check.answer = sign_url(testpoint.check.answer)
-            case DirectChecker():
-                pass
-            case SpjChecker():
-                if testpoint.check.answer is not None:
-                    testpoint.check.answer = sign_url(testpoint.check.answer)
-                if not isinstance(testpoint.check.executable, Artifact):
-                    raise InvalidProblemException('Invalid SPJ')
-                testpoint.check.executable.url = \
-                    sign_url(testpoint.check.executable.url)
-                testpoint.check.supplementary_files = \
-                    [sign_url(x) for x in testpoint.check.supplementary_files]
+            if not isinstance(testpoint.check.executable, Artifact):
+                raise InvalidProblemException('Invalid SPJ')
+            testpoint.check.executable.url = \
+                sign_url(testpoint.check.executable.url)
+            testpoint.check.supplementary_files = \
+                [sign_url(x) for x in testpoint.check.supplementary_files]
 
     return JudgeTaskRecord(task, deepcopy(plan))
 

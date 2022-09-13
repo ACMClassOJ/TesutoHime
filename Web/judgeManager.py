@@ -26,8 +26,9 @@ class JudgeManager:
         data = None
         try:
             cursor.execute(
-                "INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status, Share) VALUES(%s, %s, %s, %s, %s, '0', %s) RETURNING ID",
+                "INSERT INTO Judge(Code, User, Problem_ID, Language, Time, Status, Share) VALUES(%s, %s, %s, %s, %s, '0', %s)",
                 (code, user, str(problem_id), str(language), str(time), int(share)))
+            cursor.execute('SELECT LAST_INSERT_ID()')
             data = cursor.fetchone()[0]
             db.commit()
         except pymysql.Error:

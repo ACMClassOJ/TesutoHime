@@ -4,6 +4,7 @@ from dataclasses import is_dataclass
 from logging import getLogger
 from pathlib import PosixPath
 from shutil import rmtree
+from traceback import format_exception
 from typing import Any, Callable, Dict, Type, TypeVar
 from uuid import uuid4
 
@@ -133,3 +134,7 @@ class RedisQueues:
 
     def with_id(self, runner_id: str):
         return RedisQueues(self._prefix, runner_id)
+
+
+def format_exc(e):
+    return format_exception(e, e, e.__traceback__)

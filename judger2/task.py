@@ -1,14 +1,13 @@
 from asyncio import CancelledError
 from logging import getLogger
 from pathlib import PosixPath
-from traceback import format_exception
 from typing import List, Optional
 
 from commons.task_typing import (CompileResult, CompileTask,
                                  InvalidTaskException, JudgeResult, JudgeTask,
                                  Result, StatusUpdateProgress, Task, Testpoint,
                                  TestpointJudgeResult)
-from commons.util import serialize
+from commons.util import format_exc, serialize
 
 from judger2.config import queues, redis_connect, task_timeout_secs
 from judger2.logging_ import task_logger
@@ -117,7 +116,7 @@ async def judge_task(task: JudgeTask, task_id: str) -> JudgeResult:
             except CancelledError:
                 raise
             except Exception as e:
-                logger.error(f'Error judging testpoint: {"".join(format_exception(e))}')
+                logger.error(f'Error judging testpoint: {"".join(format_exc(e))}')
                 result.testpoints[i] = TestpointJudgeResult(
                     id=testpoint.id,
                     result='system_error',

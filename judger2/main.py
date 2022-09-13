@@ -4,11 +4,10 @@ from asyncio import CancelledError, create_task, run, sleep, wait
 from atexit import register
 from logging import getLogger
 from time import time
-from traceback import format_exception
 
 from commons.task_typing import (StatusUpdateDone, StatusUpdateError,
                                  StatusUpdateStarted)
-from commons.util import deserialize, serialize
+from commons.util import deserialize, format_exc, serialize
 
 from judger2.cache import clean_cache_worker
 from judger2.config import (heartbeat_interval_secs, poll_timeout_secs, queues,
@@ -82,7 +81,7 @@ async def poll_for_tasks():
             return
         except BaseException as e:
             normal_completion = False
-            error = ''.join(format_exception(e))
+            error = ''.join(format_exc(e))
             task_logger.error(f'error processing task: {error}')
             await sleep(2)
         finally:

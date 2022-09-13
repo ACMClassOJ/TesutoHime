@@ -6,7 +6,6 @@ from dataclasses import asdict
 from http.client import BAD_REQUEST
 from logging import getLogger
 from time import time
-from traceback import format_exception
 from typing import Dict, Optional, Set, Tuple
 from urllib.parse import quote
 
@@ -14,7 +13,7 @@ from aiohttp.web import (Application, HTTPNotFound, Request, Response,
                          RouteTableDef, json_response, run_app)
 from commons.task_typing import (CodeLanguage, ProblemJudgeResult,
                                  SourceLocation)
-from commons.util import deserialize, dump_dataclass, serialize
+from commons.util import deserialize, dump_dataclass, format_exc, serialize
 
 from scheduler2.config import (host, port, runner_heartbeat_interval_secs,
                                s3_buckets)
@@ -75,7 +74,7 @@ async def update_problem(request: Request):
     except InvalidProblemException as e:
         return json_response({'result': 'invalid problem', 'error': str(e)})
     except BaseException as e:
-        err = ''.join(format_exception(e))
+        err = ''.join(format_exc(e))
         logger.error(f'error updating problem: {err}')
         return json_response({'result': 'system error', 'error': err})
     finally:
@@ -99,7 +98,7 @@ async def run_judge(problem_id: str, submission_id: str,
             res = ProblemJudgeResult(result='aborted', message='Aborted')
     except InvalidProblemException as e:
         logger.warning('invalid problem encountered in judging: ' +
-            "".join(format_exception(e)))
+            "".join(format_exc(e)))
         if res is None:
             msg = f'Invalid problem: {e}'
             res = ProblemJudgeResult(result='system_error', message=msg)
@@ -108,7 +107,7 @@ async def run_judge(problem_id: str, submission_id: str,
             msg = f'Invalid code: {e}'
             res = ProblemJudgeResult(result='compile_error', message=msg)
     except BaseException as e:
-        msg = f'Internal error: {"".join(format_exception(e))}'
+        msg = f'Internal error: {"".join(format_exc(e))}'
         logger.error(f'error judging problem: {msg}')
         if res is None:
             res = ProblemJudgeResult(result='system_error', message=msg)

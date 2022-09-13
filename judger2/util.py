@@ -9,7 +9,6 @@ from commons.util import TempDir
 
 from judger2.cache import ensure_cached
 from judger2.config import working_dir
-from scheduler2.plan import InvalidProblemException
 
 logger = getLogger(__name__)
 
@@ -33,6 +32,8 @@ def _judger_before_tmpdir_exit(path: PosixPath):
 
 TempDir.config(working_dir, _judger_before_tmpdir_exit)
 
+
+class InvalidProblemException(Exception): pass
 
 async def copy_supplementary_files(files: List[FileUrl], cwd: PosixPath):
     if len(files) != 0:

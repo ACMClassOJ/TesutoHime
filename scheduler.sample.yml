@@ -6,12 +6,12 @@ log_dir: /var/log/oj/scheduler
 port: 5100
 
 web:
-  base_url: http://127.0.0.1:5000/OnlineJudge/
+  base_url: http://10.0.0.2:5000/OnlineJudge/
   auth: Bearer xxxxxxxxxxxxxxxx
 
 s3:
   connection:
-    endpoint_url: http://localhost:9000/
+    endpoint_url: http://10.0.0.1:9000/
     aws_access_key_id: xxxxxxxxxxxxxxxx
     aws_secret_access_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   buckets:
@@ -21,8 +21,7 @@ s3:
 redis:
   prefix: oj
   connection:
-    host: localhost
+    host: 10.0.0.2
     port: 6379
-    username: scheduler
     password: xxxxxxxx
     db: 1

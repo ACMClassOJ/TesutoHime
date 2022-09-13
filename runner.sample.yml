@@ -10,8 +10,7 @@ worker_uid: 100001
 redis:
   prefix: oj
   connection:
-    host: localhost
+    host: 10.0.0.2
     port: 6379
-    username: runner
     password: xxxxxxxx
     db: 1

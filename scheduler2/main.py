@@ -14,6 +14,7 @@ from aiohttp.web import (Application, HTTPNotFound, Request, Response,
 from commons.task_typing import (CodeLanguage, ProblemJudgeResult,
                                  SourceLocation)
 from commons.util import deserialize, dump_dataclass, format_exc, serialize
+from botocore.exceptions import ClientError
 
 from scheduler2.config import (host, port, runner_heartbeat_interval_secs,
                                s3_buckets)
@@ -93,9 +94,12 @@ async def run_judge(problem_id: str, submission_id: str,
         logger.debug(f'plan for problem {problem_id} loaded')
         res = await execute_plan(plan, submission_id, problem_id, language,
             source, rate_limit_group)
-    except CancelledError as e:
+    except CancelledError:
         if res is None:
             res = ProblemJudgeResult(result='aborted', message='Aborted')
+    except ClientError:
+        msg = 'Cannot get judge plan'
+        res = ProblemJudgeResult(result='system_error', message=msg)
     except InvalidProblemException as e:
         logger.warning('invalid problem encountered in judging: ' +
             "".join(format_exc(e)))

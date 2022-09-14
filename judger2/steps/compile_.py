@@ -97,6 +97,16 @@ async def compile_cpp(
     return CompileLocalResult.from_file(exec_file)
 
 
+def get_resolv_conf_path():
+    resolv_conf = PosixPath('/etc/resolv.conf')
+    if not resolv_conf.exists():
+        return None
+    if not resolv_conf.is_symlink():
+        return None
+    return str(resolv_conf.resolve())
+
+resolv_conf_path = get_resolv_conf_path()
+
 async def compile_git(
     cwd: PosixPath,
     source: CompileSourceGit,
@@ -106,6 +116,8 @@ async def compile_git(
 
     def run_build_step(argv: List[str], network = False):
         bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share/cmake', '/etc']
+        if resolv_conf_path is not None:
+            bind.append(resolv_conf_path)
         return run_with_limits(
             argv, cwd, limits,
             supplementary_paths=bind,

@@ -5,7 +5,7 @@ from shutil import copy2
 from typing import Dict, List, Union
 
 from commons.task_typing import FileUrl
-from commons.util import TempDir
+from commons.util import TempDir, format_exc
 
 from judger2.cache import ensure_cached
 from judger2.config import working_dir
@@ -27,8 +27,8 @@ def _judger_before_tmpdir_exit(path: PosixPath):
         # back to our user, so these files could be
         # removed by rmtree.
         chown_back(path)
-    except Exception as e:
-        logger.error(f'error removing temp dir {path}: {e}')
+    except BaseException as e:
+        logger.error(f'error removing temp dir {path}: {format_exc(e)}')
 
 TempDir.config(working_dir, _judger_before_tmpdir_exit)
 
@@ -43,7 +43,7 @@ async def copy_supplementary_files(files: List[FileUrl], cwd: PosixPath):
             file = await f
             copy2(file.path, cwd / file.filename)
         except BaseException as e:
-            msg = f'Cannot copy supplementary file: {e}'
+            msg = f'Cannot copy supplementary file: {format_exc(e)}'
             raise InvalidProblemException(msg) from e
 
 

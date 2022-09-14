@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 from uuid import NAMESPACE_URL, uuid5
 
 from aiohttp import request
+from commons.util import format_exc
 
 from judger2.config import (cache_clear_interval_secs, cache_dir,
                             cache_max_age_secs)
@@ -95,6 +96,6 @@ async def clean_cache_worker():
             clear_cache()
         except CancelledError:
             return
-        except Exception as e:
-            logger.error(f'error while clearing cache: {e}')
+        except BaseException as e:
+            logger.error(f'error while clearing cache: {format_exc(e)}')
         await sleep(cache_clear_interval_secs)

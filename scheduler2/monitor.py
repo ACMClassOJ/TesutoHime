@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from logging import getLogger
 from time import time
 from typing import Dict, Literal, Optional
+from commons.util import format_exc
 
 from scheduler2.config import (redis_connect, redis_queues,
                                runner_heartbeat_interval_secs)
@@ -48,7 +49,7 @@ async def get_runner_status(runner_id: str):
     except BaseException as e:
         if not isinstance(heartbeat, float):
             heartbeat = None
-        msg = f'Cannot get runner status: {e}'
+        msg = f'Cannot get runner status: {format_exc(e)}'
         logger.warn(msg)
         return RunnerStatus('invalid', msg, heartbeat)
 

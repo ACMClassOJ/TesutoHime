@@ -24,6 +24,7 @@ from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
                                  StatusUpdateStarted, Testpoint,
                                  TestpointGroup, TestpointJudgeResult,
                                  UserCode)
+from commons.util import format_exc
 
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
@@ -374,7 +375,7 @@ async def generate_plan(problem_id: str) -> JudgePlan:
         try:
             remove(zip_path)
         except BaseException as e:
-            logger.error(f'cannot remove problem zip: {e}')
+            logger.error(f'cannot remove problem zip: {format_exc(e)}')
 
 
 class InvalidCodeException(Exception): pass
@@ -756,7 +757,7 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
                 await sleep(1)
                 await remove_file(bucket, key)
             except BaseException as e:
-                logger.info(f'Error clearing object: {e}')
+                logger.info(f'Error clearing object: {format_exc(e)}')
 
 async def get_partial_result(submission_id):
     if not submission_id in ctx_from_submission:

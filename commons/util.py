@@ -99,8 +99,8 @@ class TempDir:
             if before_exit is not None:
                 before_exit(self.path)
             rmtree(self.path, ignore_errors=True)
-        except Exception as e:
-            logger.error(f'error removing temp dir {self.path}: {e}')
+        except BaseException as e:
+            logger.error(f'error removing temp dir {self.path}: {format_exc(e)}')
 
     @staticmethod
     def config(_working_dir, _before_exit = None):
@@ -137,4 +137,4 @@ class RedisQueues:
 
 
 def format_exc(e):
-    return format_exception(e, e, e.__traceback__)
+    return ''.join(format_exception(e, e, e.__traceback__))

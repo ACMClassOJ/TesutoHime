@@ -34,8 +34,8 @@ async def compile_task(task: CompileTask) -> CompileResult:
         return (await compile(task)).result
     except CancelledError:
         return CompileResult(result='aborted', message='')
-    except Exception as e:
-        return CompileResult(result='system_error', message=str(e))
+    except BaseException as e:
+        return CompileResult(result='system_error', message=format_exc(e))
 
 
 def get_skip_reason(
@@ -115,8 +115,8 @@ async def judge_task(task: JudgeTask, task_id: str) -> JudgeResult:
 
             except CancelledError:
                 return ProblemJudgeResult(result='aborted', message=None)
-            except Exception as e:
-                logger.error(f'Error judging testpoint: {"".join(format_exc(e))}')
+            except BaseException as e:
+                logger.error(f'Error judging testpoint: {format_exc(e)}')
                 result.testpoints[i] = TestpointJudgeResult(
                     id=testpoint.id,
                     result='system_error',

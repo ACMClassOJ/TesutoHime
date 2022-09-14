@@ -26,7 +26,7 @@ async def send_heartbeats():
         except CancelledError:
             return
         except BaseException as e:
-            logger.error(f'error sending heartbeat: {e}')
+            logger.error(f'error sending heartbeat: {format_exc(e)}')
         await sleep(heartbeat_interval_secs)
 
 
@@ -60,8 +60,8 @@ async def poll_for_tasks():
                         if message == None: continue
                         aio_task.cancel()
                         return
-                    except Exception as e:
-                        logger.error(f'Error processing signal: {e}')
+                    except BaseException as e:
+                        logger.error(f'Error processing signal: {format_exc(e)}')
                         await sleep(2)
             abort_task = create_task(poll_for_abort_signal())
 
@@ -79,20 +79,19 @@ async def poll_for_tasks():
             return
         except BaseException as e:
             normal_completion = False
-            error = ''.join(format_exc(e))
-            task_logger.error(f'error processing task: {error}')
+            task_logger.error(f'error processing task: {format_exc(e)}')
             await sleep(2)
         finally:
             if task_id is not None:
                 try:
                     await redis.lrem(queues.in_progress, 0, task_id)
                 except BaseException as e:
-                    task_logger.error(f'error removing task from queue: {e}')
+                    task_logger.error(f'error removing task from queue: {format_exc(e)}')
                 if not normal_completion:
                     try:
                         await report_progress(StatusUpdateError(error))
                     except BaseException as e:
-                        task_logger.error(f'error sending nack: {e}')
+                        task_logger.error(f'error sending nack: {format_exc(e)}')
 
 
 async def main():

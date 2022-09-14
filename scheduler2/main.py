@@ -75,7 +75,7 @@ async def update_problem(request: Request):
     except InvalidProblemException as e:
         return json_response({'result': 'invalid problem', 'error': str(e)})
     except BaseException as e:
-        err = ''.join(format_exc(e))
+        err = format_exc(e)
         logger.error(f'error updating problem: {err}')
         return json_response({'result': 'system error', 'error': err})
     finally:
@@ -101,8 +101,7 @@ async def run_judge(problem_id: str, submission_id: str,
         msg = 'Cannot get judge plan'
         res = ProblemJudgeResult(result='system_error', message=msg)
     except InvalidProblemException as e:
-        logger.warning('invalid problem encountered in judging: ' +
-            "".join(format_exc(e)))
+        logger.warning(f'invalid problem encountered in judging: {format_exc(e)}')
         if res is None:
             msg = f'Invalid problem: {e}'
             res = ProblemJudgeResult(result='system_error', message=msg)
@@ -111,7 +110,7 @@ async def run_judge(problem_id: str, submission_id: str,
             msg = f'Invalid code: {e}'
             res = ProblemJudgeResult(result='compile_error', message=msg)
     except BaseException as e:
-        msg = f'Internal error: {"".join(format_exc(e))}'
+        msg = f'Internal error: {format_exc(e)}'
         logger.error(f'error judging problem: {msg}')
         if res is None:
             res = ProblemJudgeResult(result='system_error', message=msg)
@@ -131,7 +130,7 @@ async def judge(request: Request):
         register_judge_task(problem_id, submission_id, language, source,
             rate_limit_group)
     except BaseException as e:
-        return json_response({'result': 'system error', 'error': str(e)})
+        return json_response({'result': 'system error', 'error': format_exc(e)})
     return json_response({'result': 'ok', 'error': None})
 
 

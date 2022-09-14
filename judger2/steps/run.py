@@ -41,7 +41,7 @@ class ValgrindRunner(BaseRunner):
     def prepare(self, program: PosixPath):
         chmod(program, elf_mode)
         argv = [valgrind] + valgrind_args + [str(program)]
-        return RunParams(argv, [valgrind], False, True)
+        return RunParams(argv, ['/bin', '/usr/bin', '/usr/libexec'], False, True)
 
     def interpret_result(self, result: RunResult):
         if result.error != 'runtime_error' \

@@ -1,11 +1,14 @@
+from asyncio import Task, create_task, sleep
 from dataclasses import dataclass
+from logging import getLogger
 from time import time
-from typing import Literal, Optional
+from typing import Dict, Literal, Optional
 
 from scheduler2.config import (redis_connect, redis_queues,
                                runner_heartbeat_interval_secs)
-from scheduler2.dispatch import taskinfo_from_task_id
+from scheduler2.util import RunnerOfflineException, taskinfo_from_task_id
 
+logger = getLogger(__name__)
 redis = redis_connect()
 
 
@@ -18,7 +21,7 @@ class RunnerStatus:
 async def get_runner_status(runner_id: str):
     heartbeat = None
     try:
-        runner_queues = redis_queues.with_id(runner_id)
+        runner_queues = redis_queues.runner(runner_id)
         heartbeat = await redis.get(runner_queues.heartbeat)
         if heartbeat is not None:
             heartbeat = float(heartbeat)
@@ -46,4 +49,27 @@ async def get_runner_status(runner_id: str):
         if not isinstance(heartbeat, float):
             heartbeat = None
         msg = f'Cannot get runner status: {e}'
+        logger.warn(msg)
         return RunnerStatus('invalid', msg, heartbeat)
+
+
+watch_tasks: Dict[str, Task] = {}
+
+def wait_until_offline(runner_id: str):
+    if runner_id in watch_tasks:
+        return watch_tasks[runner_id]
+    logger.debug(f'Polling runner {runner_id} for offline signal')
+    async def task():
+        key = redis_queues.runner(runner_id).heartbeat
+        while True:
+            await sleep(runner_heartbeat_interval_secs * 2)
+            heartbeat = await redis.get(key)
+            if heartbeat is None \
+            or float(heartbeat) < time() - runner_heartbeat_interval_secs * 5:
+                raise RunnerOfflineException('Runner is offline')
+    t = create_task(task())
+    watch_tasks[runner_id] = t
+    def cleanup(_):
+        del watch_tasks[runner_id]
+    t.add_done_callback(cleanup)
+    return t

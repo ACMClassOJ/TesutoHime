@@ -737,6 +737,7 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
         compile_res = await run_compile_task(ctx)
         if compile_res is not None and compile_res.result != 'compiled':
             status = 'system_error' if compile_res.result == 'system_error' \
+                else 'aborted' if compile_res.result == 'aborted' \
                 else 'compile_error'
             return ProblemJudgeResult(status, compile_res.message)
         compiled = True

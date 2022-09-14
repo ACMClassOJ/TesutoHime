@@ -1,10 +1,12 @@
 from asyncio import Semaphore
+from dataclasses import dataclass
 from http.client import OK
 from logging import getLogger
-from typing import Dict
+from typing import Dict, Optional
 from urllib.parse import quote, urljoin
 
 from aiohttp import request
+from commons.task_typing import Task
 from commons.util import dump_dataclass
 
 from scheduler2.config import web_auth, web_base_url
@@ -44,3 +46,17 @@ class RateLimiter:
             logger.debug(f'creating rate limit group {key}')
             self.semaphores[key] = Semaphore(self.max)
         return self.semaphores[key]
+
+
+@dataclass
+class TaskInfo:
+    task: Task
+    submission_id: Optional[str]
+    problem_id: str
+    message: str
+    id: str = ''
+
+taskinfo_from_task_id: Dict[str, TaskInfo] = {}
+
+
+class RunnerOfflineException (Exception): pass

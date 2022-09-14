@@ -4,7 +4,7 @@ from pathlib import PosixPath
 from typing import List, Optional
 
 from commons.task_typing import (CompileResult, CompileTask,
-                                 InvalidTaskException, JudgeResult, JudgeTask,
+                                 InvalidTaskException, JudgeResult, JudgeTask, ProblemJudgeResult,
                                  Result, StatusUpdateProgress, Task, Testpoint,
                                  TestpointJudgeResult)
 from commons.util import format_exc, serialize
@@ -33,7 +33,7 @@ async def compile_task(task: CompileTask) -> CompileResult:
     try:
         return (await compile(task)).result
     except CancelledError:
-        raise
+        return CompileResult(result='aborted', message='')
     except Exception as e:
         return CompileResult(result='system_error', message=str(e))
 
@@ -114,7 +114,7 @@ async def judge_task(task: JudgeTask, task_id: str) -> JudgeResult:
                     await judge_testpoint(testpoint, result, cwd, rusage)
 
             except CancelledError:
-                raise
+                return ProblemJudgeResult(result='aborted', message=None)
             except Exception as e:
                 logger.error(f'Error judging testpoint: {"".join(format_exc(e))}')
                 result.testpoints[i] = TestpointJudgeResult(

@@ -195,7 +195,8 @@ Result = Union[CompileResult, JudgeResult]
 class InvalidTaskException(Exception): pass
 
 @dataclass
-class StatusUpdateStarted: pass
+class StatusUpdateStarted:
+    id: str
 @dataclass
 class StatusUpdateProgress:
     result: Result

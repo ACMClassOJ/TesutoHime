@@ -49,7 +49,7 @@ async def poll_for_tasks():
 
             task = deserialize(await redis.lpop(task_queues.task))
             aio_task = create_task(run_task(task, task_id))
-            await report_progress(StatusUpdateStarted())
+            await report_progress(StatusUpdateStarted(runner_id))
 
             async def poll_for_abort_signal():
                 redis = redis_connect()

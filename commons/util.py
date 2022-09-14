@@ -5,7 +5,7 @@ from logging import getLogger
 from pathlib import PosixPath
 from shutil import rmtree
 from traceback import format_exception
-from typing import Any, Callable, Dict, Type, TypeVar
+from typing import Any, Callable, Dict, Optional, Type, TypeVar
 from uuid import uuid4
 
 import yaml
@@ -110,15 +110,15 @@ class TempDir:
 
 
 class RedisQueues:
-    def __init__(self, prefix: str, id: str = None):
+    def __init__(self, prefix: str, runner_id: Optional[str] = None):
         def queue(name):
             return f'{prefix}-{name}'
         def rqueue(name):
-            return f'{queue(name)}-runner{id}'
+            return f'{queue(name)}-runner{runner_id}'
         self.tasks = queue('tasks')
         self._prefix = prefix
         self._task_prefix = queue('task')
-        if id is not None:
+        if runner_id is not None:
             self.in_progress = rqueue('in-progress')
             self.heartbeat = rqueue('heartbeat')
 
@@ -132,7 +132,7 @@ class RedisQueues:
     def task(self, task_id: str) -> TaskRedisQueues:
         return RedisQueues.TaskRedisQueues(self._task_prefix, task_id)
 
-    def with_id(self, runner_id: str):
+    def runner(self, runner_id: str):
         return RedisQueues(self._prefix, runner_id)
 
 

@@ -65,7 +65,8 @@ def readable_lang(lang: int) -> str:
         0: 'C++',
         1: 'Git',
         2: 'Verilog',
-        3: 'Quiz'
+        3: 'Quiz',
+        4: 'Git (Java)'
     }
     try:
         return lang_str[lang]
@@ -384,6 +385,8 @@ def submit_problem():
             lang = 2
         elif lang_request_str == 'quiz':
             lang = 3
+        elif lang_request_str == 'git_java':
+            lang = 4
         else:
             return '-1'
         # cpp or git or Verilog or quiz

@@ -14,7 +14,7 @@ from zipfile import ZipFile
 from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
                                  CompileResult, CompileSource,
                                  CompileSourceCpp, CompileSourceGit,
-                                 CompileSourceVerilog, CompileTask,
+                                 CompileSourceVerilog, CompileSourceGitJava, CompileTask,
                                  CompileTaskPlan, DirectChecker, FileUrl,
                                  GroupJudgeResult, JudgePlan, JudgeResult,
                                  JudgeTask, JudgeTaskPlan, ProblemJudgeResult,
@@ -452,6 +452,11 @@ async def get_compile_source(ctx: ExecutionContext, filename: str) \
         return CompileSourceGit(url)
     if ctx.lang == CodeLanguage.VERILOG:
         return CompileSourceVerilog(ctx.file_url(UrlType.CODE, filename))
+    if ctx.lang == CodeLanguage.GIT_JAVA:
+        url = (await read_file(ctx.code.bucket, ctx.code.key)).strip()
+        if url.startswith('/'):
+            raise InvalidCodeException('Local clone not allowed')
+        return CompileSourceGitJava(url)
     raise InvalidCodeException('Unknown language')
 
 async def prepare_compile_task(ctx: ExecutionContext, plan: CompileTaskPlan) \

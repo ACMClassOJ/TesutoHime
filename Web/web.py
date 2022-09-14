@@ -1243,6 +1243,7 @@ def about():
             .all()
     if len(runner2s) == 0:
         runner2_dict = {}
+        runner2_list = []
     else:
         query = urlencode({'id': ','.join(str(x.id) for x in runner2s)})
         url = urljoin(SchedulerConfig.base_url, f'status?{query}')

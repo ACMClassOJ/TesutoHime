@@ -4,4 +4,6 @@ test.o
 mem
 a.out
 du
+nsjail
 .du-build
+.nsjail-build

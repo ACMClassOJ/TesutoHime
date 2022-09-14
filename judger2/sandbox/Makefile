@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-O2 -Wall -Wextra
 
-all: runner test mem du
+all: runner test mem du nsjail
 	strip runner
 	strip test
 	strip mem
@@ -16,3 +16,6 @@ clean:
 
 du:
 	./build-du
+
+nsjail:
+	./build-nsjail

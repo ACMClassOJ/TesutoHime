@@ -27,6 +27,11 @@ if platform != 'linux':
     exit(2)
 
 
+nsjail = PosixPath(__file__).with_name('nsjail')
+if not nsjail.exists():
+    raise Exception('nsjail executable not found')
+nsjail = str(nsjail)
+
 bindmount_ro_base = ['/lib', '/lib64', '/usr/lib', '/usr/lib64', '/dev/urandom']
 bindmount_rw_base = ['/dev/null', '/dev/zero']
 worker_uid_inside = 65534
@@ -141,7 +146,7 @@ async def run_with_limits(
         # execute
         time_start = time()
         proc = Popen(
-            [which('nsjail')] + nsjail_argv,
+            [nsjail] + nsjail_argv,
             stdin=infile, stdout=outfile,
             stderr=DEVNULL if disable_stderr else PIPE,
         )
@@ -169,7 +174,7 @@ async def run_with_limits(
             usage_is_accurate = False
 
         du_proc = await create_subprocess_exec(
-            which('nsjail'),
+            nsjail,
             *format_args(asdict(NsjailArgs('/', str(cwd), '9.0'))),
             '--', du_path, '-s',
             stdin=DEVNULL, stdout=PIPE, stderr=PIPE,
@@ -240,7 +245,7 @@ async def run_with_limits(
 
 def chown_back(path: PosixPath):
     logger.debug(f'about to chown_back {path}')
-    argv = [which('nsjail')] + format_args({
+    argv = [nsjail] + format_args({
         'cwd': str(path),
         'chroot': '/',
         'uid_mapping': worker_uid_maps,

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -e
+
+dir=.nsjail-build
+source="https://github.com/google/nsjail"
+exe=nsjail
+
+if [ -e "$exe" ]; then
+  exit 0
+fi
+
+if [ -e "$dir" ]; then
+  rm -rf "$dir"
+fi
+
+git clone --recursive --depth 1 "$source" "$dir"
+cd "$dir"
+make -j$(nproc)
+strip "$exe"
+cp "$exe" ../"$exe"
+cd ..
+rm -rf "$dir"

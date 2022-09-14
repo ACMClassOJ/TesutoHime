@@ -61,7 +61,7 @@ async def poll_for_tasks():
                         aio_task.cancel()
                         return
                     except CancelledError:
-                        pass
+                        return
                     except BaseException as e:
                         logger.error(f'Error processing signal: {format_exc(e)}')
                         await sleep(2)
@@ -73,6 +73,7 @@ async def poll_for_tasks():
                 task_logger.debug(f'task {task_id} completed with {result}')
                 await report_progress(StatusUpdateDone(result))
             except CancelledError:
+                abort_task.cancel()
                 task_logger.info(f'task {task_id} was aborted')
             normal_completion = True
         except CancelledError:

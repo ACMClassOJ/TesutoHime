@@ -114,7 +114,7 @@ async def judge_task(task: JudgeTask, task_id: str) -> JudgeResult:
                     await judge_testpoint(testpoint, result, cwd, rusage)
 
             except CancelledError:
-                return ProblemJudgeResult(result='aborted', message=None)
+                return result
             except BaseException as e:
                 logger.error(f'Error judging testpoint: {format_exc(e)}')
                 result.testpoints[i] = TestpointJudgeResult(

@@ -71,6 +71,10 @@ def wait_until_offline(runner_id: str):
     t = create_task(task())
     watch_tasks[runner_id] = t
     def cleanup(_):
+        try:
+            t.exception()
+        except BaseException:
+            pass
         del watch_tasks[runner_id]
     t.add_done_callback(cleanup)
     return t

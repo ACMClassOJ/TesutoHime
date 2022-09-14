@@ -1,6 +1,7 @@
 from asyncio import CancelledError, sleep
 from dataclasses import dataclass
 from logging import getLogger
+from time import time
 from typing import Awaitable, Callable, Dict, Optional
 from uuid import uuid4
 
@@ -49,10 +50,18 @@ async def run_task(
             await redis.lpush(queues.task, serialize(task))
             await redis.expire(queues.task, task_timeout_secs)
             await redis.lpush(redis_queues.tasks, task_id)
+            task_timeout = time() + task_timeout_secs
             try:
                 while True:
-                    _, status = await redis.blpop(queues.progress,
-                        task_timeout_secs)
+                    res = await redis.blpop(queues.progress,
+                        int(task_timeout - time()))
+                    if res is None:
+                        if retries_left <= 0:
+                            raise Exception('Task timed out')
+                        await sleep(task_retry_interval_secs)
+                        return await run_task(taskinfo, onprogress,
+                            rate_limit_group, retries_left - 1)
+                    _, status = res
                     status: StatusUpdate = deserialize(status)
                     logger.debug(f'received status update from task {task_id}: {status}')
                     if isinstance(status, StatusUpdateStarted):

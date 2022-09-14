@@ -36,12 +36,10 @@ async def poll_for_tasks():
     while True:
         task_id = None
         try:
-            task_id = await redis.blmove(
+            task_id = await redis.brpoplpush(
                 queues.tasks,
                 queues.in_progress,
                 poll_timeout_secs,
-                'RIGHT',
-                'LEFT',
             )
             if task_id is None: continue
             task_queues = queues.task(task_id)

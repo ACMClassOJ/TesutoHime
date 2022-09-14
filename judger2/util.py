@@ -2,7 +2,7 @@ from asyncio import as_completed
 from logging import getLogger
 from pathlib import PosixPath
 from shutil import copy2
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 from commons.task_typing import FileUrl
 from commons.util import TempDir, format_exc
@@ -48,7 +48,7 @@ async def copy_supplementary_files(files: List[FileUrl], cwd: PosixPath):
 
 
 def format_args(args: Dict[str, Union[bool, str, List[str]]]) -> List[str]:
-    def format_arg(arg: tuple[str, Union[bool, str, List[str]]]):
+    def format_arg(arg: Tuple[str, Union[bool, str, List[str]]]):
         k, v = arg
         k = f'--{k}'
         if v is True:

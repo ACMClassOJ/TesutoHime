@@ -60,6 +60,8 @@ async def poll_for_tasks():
                         if message == None: continue
                         aio_task.cancel()
                         return
+                    except CancelledError:
+                        pass
                     except BaseException as e:
                         logger.error(f'Error processing signal: {format_exc(e)}')
                         await sleep(2)

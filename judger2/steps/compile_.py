@@ -115,7 +115,7 @@ async def compile_git(
     logger.debug(f'about to compile git repo {repr(source.url)}')
 
     def run_build_step(argv: List[str], network = False):
-        bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share/cmake', '/etc']
+        bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc']
         if resolv_conf_path is not None:
             bind.append(resolv_conf_path)
         return run_with_limits(

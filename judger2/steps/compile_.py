@@ -3,7 +3,7 @@ __all__ = 'compile', 'ensure_input'
 from logging import getLogger
 from os import utime, makedirs, walk, path, listdir
 from pathlib import PosixPath
-from shutil import copy2, which
+from shutil import copy2, which, rmtree
 from typing import Any, Callable, Coroutine, Dict, List
 from uuid import uuid4
 
@@ -217,16 +217,23 @@ async def compile_git_java(
         if j.endswith('.jar'):
             jar_name = j
     jar_path = cwd / jar_name
+    logger.debug(f'found jar {jar_name}')
+
+    if path.isdir(bin_path):
+        logger.debug(f'bin path already exists, removing')
+        rmtree(bin_path.as_posix())
     makedirs(bin_path.as_posix())
     with open(src_txt.as_posix(), 'w') as src:
         for root, dirs, files in walk(src_path.as_posix()):
             for name in files:
                 if name.endswith('.java'):
                     src.write(path.join(root, name) + '\n')
+
     res = await run_build_step([which('javac'), '@' + src_txt.as_posix(),'-encoding', 'UTF8', 
           '-d', bin_path.as_posix(), '-cp', jar_path.as_posix()])
     if res.error != None:
         return CompileLocalResult.from_run_failure(res)
+        
     res = await run_build_step([which('tar'), '-czvf', bin_tar.as_posix(), './bin', jar_name])
     if res.error != None:
         return CompileLocalResult.from_run_failure(res)

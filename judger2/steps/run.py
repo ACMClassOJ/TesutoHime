@@ -2,7 +2,7 @@ __all__ = ('run',)
 
 from asyncio.subprocess import DEVNULL
 from dataclasses import dataclass
-from os import chmod
+from os import chmod, listdir
 from pathlib import PosixPath
 from shutil import copy2
 from typing import Dict, List
@@ -11,10 +11,10 @@ from commons.task_typing import Input, RunArgs, RunResult
 
 from judger2.cache import ensure_cached
 from judger2.config import (valgrind, valgrind_args, valgrind_errexit_code,
-                            verilog_interpreter)
+                            verilog_interpreter, java)
 from judger2.sandbox import run_with_limits
 from judger2.steps.compile_ import NotCompiledException, ensure_input
-from judger2.util import copy_supplementary_files
+from judger2.util import copy_supplementary_files, extract_exe_as_tar
 
 
 @dataclass
@@ -57,10 +57,33 @@ class VerilogRunner(BaseRunner):
         argv = [verilog_interpreter, str(program)]
         return RunParams(argv, [verilog_interpreter])
 
+class JavaRunner(BaseRunner):
+    def prepare(self, program: PosixPath):
+        cwd = program.parent
+        bin_path = cwd / 'bin'
+        jar_name = ''
+        extract_exe_as_tar(program)
+        for j in listdir(cwd.as_posix()):
+            if j.endswith('.jar'):
+                jar_name = j
+        jar_path = cwd / jar_name
+        argv = [java, '-cp', f'{jar_path.as_posix()}:{bin_path.as_posix()}', 'Compiler']
+        return RunParams(argv, ['/bin', '/usr/bin', '/usr/share', '/etc', bin_path, jar_path], False, True)
+
+    def interpret_result(self, result: RunResult):
+        if result.error == 'runtime_error':
+            res_dict = result.__dict__
+            res_dict['error'] = None
+            res_dict['message'] = 'Runtime Error'
+            return RunResult(**res_dict)
+        return result
+        
+
 runners: Dict[str, BaseRunner] = {
     'elf': ElfRunner(),
     'valgrind': ValgrindRunner(),
     'verilog': VerilogRunner(),
+    'java': JavaRunner()
 }
 
 

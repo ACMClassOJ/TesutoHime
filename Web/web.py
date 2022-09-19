@@ -1242,7 +1242,6 @@ def profile():
 
 @web.route('/about')
 def about():
-    server_list = JudgeServer_Manager.Get_Server_List()
     with SqlSession(expire_on_commit=False) as db:
         runner2s: List[JudgeRunner2] = db \
             .query(JudgeRunner2) \
@@ -1273,7 +1272,7 @@ def about():
             r['status'] = status_info.name
             r['status_color'] = status_info.color
             runner2_list.append(r)
-    return render_template('about.html', Server_List=server_list,
+    return render_template('about.html',
                            runner2=runner2_list,
                            friendlyName=Login_Manager.get_friendly_name(),
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)

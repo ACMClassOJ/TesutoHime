@@ -1,0 +1,13 @@
+[Unit]
+Description=TesutoHime Web Server
+After=network.target
+
+[Service]
+User=acmoj
+Type=idle
+ExecStart=python3 /home/acmoj/TesutoHime/Web/run.py
+Restart=always
+RestartSec=120
+
+[Install]
+WantedBy=multi-user.target

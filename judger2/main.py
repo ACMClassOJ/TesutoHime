@@ -11,7 +11,7 @@ from commons.util import deserialize, format_exc, serialize
 
 from judger2.cache import clean_cache_worker
 from judger2.config import (heartbeat_interval_secs, poll_timeout_secs, queues,
-                            redis_connect, runner_id, task_timeout_secs)
+                            redis, runner_id, task_timeout_secs)
 from judger2.logging_ import task_logger
 from judger2.task import run_task
 
@@ -19,7 +19,6 @@ logger = getLogger(__name__)
 
 
 async def send_heartbeats():
-    redis = redis_connect()
     while True:
         try:
             await redis.set(queues.heartbeat, time())
@@ -31,7 +30,6 @@ async def send_heartbeats():
 
 
 async def poll_for_tasks():
-    redis = redis_connect()
     await redis.delete(queues.in_progress)
     while True:
         task_id = None
@@ -52,7 +50,6 @@ async def poll_for_tasks():
             await report_progress(StatusUpdateStarted(runner_id))
 
             async def poll_for_abort_signal():
-                redis = redis_connect()
                 while True:
                     try:
                         message = await redis.blpop(task_queues.abort,

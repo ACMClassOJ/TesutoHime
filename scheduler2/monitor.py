@@ -5,12 +5,11 @@ from time import time
 from typing import Dict, Literal, Optional
 from commons.util import format_exc
 
-from scheduler2.config import (redis_connect, redis_queues,
+from scheduler2.config import (redis, redis_queues,
                                runner_heartbeat_interval_secs)
 from scheduler2.util import RunnerOfflineException, taskinfo_from_task_id
 
 logger = getLogger(__name__)
-redis = redis_connect()
 
 
 @dataclass

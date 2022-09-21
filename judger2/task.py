@@ -9,7 +9,7 @@ from commons.task_typing import (CompileResult, CompileTask,
                                  TestpointJudgeResult)
 from commons.util import format_exc, serialize
 
-from judger2.config import queues, redis_connect, task_timeout_secs
+from judger2.config import queues, redis, task_timeout_secs
 from judger2.logging_ import task_logger
 from judger2.steps.check import check
 from judger2.steps.compile_ import compile
@@ -101,8 +101,6 @@ async def judge_testpoint(testpoint: Testpoint, result: JudgeResult, \
         )
         task_logger.info(f'testpoint {testpoint.id} finished with {res}')
         return res
-
-redis = redis_connect()
 
 async def judge_task(task: JudgeTask, task_id: str) -> JudgeResult:
     result = JudgeResult([None for _ in task.testpoints])

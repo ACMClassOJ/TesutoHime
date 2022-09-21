@@ -10,7 +10,7 @@ from commons.task_typing import (Result, StatusUpdate, StatusUpdateDone,
                                  StatusUpdateStarted)
 from commons.util import deserialize, serialize
 
-from scheduler2.config import (redis_connect, redis_queues,
+from scheduler2.config import (redis, redis_queues,
                                task_concurrency_per_account, task_retries,
                                task_retry_interval_secs, task_timeout_secs)
 from scheduler2.monitor import wait_until_offline
@@ -18,7 +18,6 @@ from scheduler2.util import (RateLimiter, RunnerOfflineException, TaskInfo,
                              taskinfo_from_task_id)
 
 logger = getLogger(__name__)
-redis = redis_connect()
 classes = commons.task_typing.__dict__
 
 rate_limiter = RateLimiter(task_concurrency_per_account)

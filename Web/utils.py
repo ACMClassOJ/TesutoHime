@@ -14,7 +14,7 @@ from sqlalchemy.orm import sessionmaker
 
 from config import *
 
-engine = create_engine(mysql_connection_string)
+engine = create_engine(mysql_connection_string, pool_recycle=mysql_connection_pool_recycle)
 SqlSession = sessionmaker(bind=engine)
 
 cfg = Config(signature_version='s3v4')

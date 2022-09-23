@@ -1,5 +1,12 @@
 # 数据库地址, 一般替换 username 与 database 即可
 mysql_connection_string = 'mysql+pymysql://username@/database?unix_socket=/run/mysqld/mysqld.sock'
+
+# 经过多少秒后，一个 mysql 连接将被 sqlalchemy 连接池回收。
+# 由于 mysql 服务端通常对一个连接的最长时长有限制（默认是 28800 秒），
+# 我们需要让 sqlalchemy 连接池在此之前主动作废这些已经过去很久的连接。
+# 参考 https://docs.sqlalchemy.org/en/14/core/engines.html?highlight=cycle#sqlalchemy.create_engine.params.pool_recycle
+mysql_connection_pool_recycle = 7200
+
 # 重复上面的 database 段
 mysql_database = 'database'
 

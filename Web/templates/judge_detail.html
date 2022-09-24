@@ -200,6 +200,14 @@
                         </table>
                     {%- endfor %}
                 </div>
+                {% if Detail['Problem_ID'] == 1319 -%}
+                <button class="btn btn-block btn-primary" id="1319btn">Show Simulation</button>
+                <iframe id="1319iframe" style="height: 25rem; width: 100%; display: none;" src="https://acm.sjtu.edu.cn/simulator/turing_machine.html"></iframe>
+                {%- endif %}
+                {% if Detail['Problem_ID'] == 1320 -%}
+                <button class="btn btn-block btn-primary" id="1320btn">Show Simulation （长按播放键设置播放速度）</button>
+                <iframe id="1320iframe" style="height: 40rem; width: 100%; display: none;" src="https://acm.sjtu.edu.cn/simulator/analytical_engine.html"></iframe>
+                {%- endif %}
             </div>
         {%- endif %}
     </div>
@@ -251,6 +259,26 @@
                 }, count_down_time * 1000 / origin_interval); 
             }
         });
+
+        {% if Detail['Problem_ID'] == 1319 -%}
+        $("#1319btn").click(function(){
+            document.getElementById('1319iframe').contentWindow.document.getElementsByClassName("card")[0].style.display = "none";
+            document.getElementById('1319iframe').contentWindow.document.getElementsByTagName("nav")[0].style.display = "none";
+            document.getElementById('1319iframe').contentWindow.document.getElementById('buildinfo').value=`{{ Data[0][4][5] }}`;
+            document.getElementById('1319iframe').contentWindow.document.getElementById('start_simulation').click();
+            $("#1319iframe").slideDown(500);
+        });
+        {%- endif %}
+
+        {% if Detail['Problem_ID'] == 1320 -%}
+        $("#1320btn").click(function(){
+            document.getElementById('1320iframe').contentWindow.document.getElementsByClassName("card")[0].style.display = "none";
+            document.getElementById('1320iframe').contentWindow.document.getElementsByTagName("nav")[0].style.display = "none";
+            document.getElementById('1320iframe').contentWindow.document.getElementById('buildinfo').value=`{{ Data[0][4][5] }}`;
+            document.getElementById('1320iframe').contentWindow.document.getElementById('start_simulation').click();
+            $("#1320iframe").slideDown(500);
+        });
+        {%- endif %}
     </script>
 {% endblock %}
 

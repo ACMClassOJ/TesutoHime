@@ -190,9 +190,16 @@
                                             {% if group[j][4] != -1 -%}
                                             <div class="col-2"> <i class="fa fa-database"></i> {{ "%.2f" | format(group[j][4] / 1024) }} MiB </div>
                                             {%- endif %}
+                                            {% if group[j][5] != '' -%}
+                                            <div class="col testpoint_msg_exp" id="testpoint_msg_exp-{{ group[0] }}_{{ j }}">
+                                                <i class="fa fa-caret-down" style="position: relative; float: right;"></i>
+                                            </div>
+                                            {%- endif %}
                                         </div>
                                         {% if group[j][5] != '' -%}
-                                        <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ group[j][5] }}</pre>
+                                        <div class="testpoint_msg" id="testpoint_msg-{{ group[0] }}_{{ j }}">
+                                            <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ group[j][5] }}</pre>
+                                        </div>
                                         {%- endif %}
                                     </td>
                                 <tr>
@@ -279,6 +286,21 @@
             $("#1320iframe").slideDown(500);
         });
         {%- endif %}
+
+        $(".testpoint_msg").each(function(){
+            if($(this).height() < 60)
+            {
+                var testpoint_id = $(this).attr("id").split("-").at(-1);
+                $("#testpoint_msg_exp-" + testpoint_id).hide();
+            }
+        });
+
+        $(".testpoint_msg_exp").click(function(){
+           var testpoint_id = $(this).attr("id").split("-").at(-1);
+           $("#testpoint_msg-" + testpoint_id).css("max-height", "none");
+           $(this).hide();
+        });
+
     </script>
 {% endblock %}
 

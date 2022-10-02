@@ -928,7 +928,7 @@ def contest():
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
     contest_id = request.args.get('contest_id')
-    judger2 = request.args.get('judger2') is not None
+    judger2 = request.args.get('judger2') != '0'
     username = Login_Manager.get_username()
     if contest_id is None:  # display contest list
         contest_list = Contest_Manager.list_contest_and_exam()
@@ -1087,7 +1087,7 @@ def homework():
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
     contest_id = request.args.get('homework_id')
-    judger2 = request.args.get('judger2') is not None
+    judger2 = request.args.get('judger2') != '0'
     username = Login_Manager.get_username()
     if contest_id is None:  # display contest list
         contest_list = Contest_Manager.list_contest(1)

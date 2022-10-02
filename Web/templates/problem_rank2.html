@@ -18,7 +18,7 @@
                 <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/discuss?problem_id={{ Problem_ID }}">讨论</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/rank?problem_id={{ Problem_ID }}">排行榜</a>
+                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ Problem_ID }}/rank">排行榜</a>
             </li>
             {% endif %}
             {% if is_Admin %}
@@ -46,7 +46,7 @@
                     <th><span>实名</span></th>
                     {%- endif %}
                     <th>
-                        <a class="nav-link p-0" href="/OnlineJudge/rank?problem_id={{ Problem_ID }}&sort=time">
+                        <a class="nav-link p-0" href="/OnlineJudge/problem/{{ Problem_ID }}/rank?sort=time">
                             <span>运行时间</span>
                             <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
                             <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>
@@ -55,7 +55,7 @@
                         </a>
                     </th>
                     <th>
-                        <a class="nav-link p-0" href="/OnlineJudge/rank?problem_id={{ Problem_ID }}&sort=memory">
+                        <a class="nav-link p-0" href="/OnlineJudge/problem/{{ Problem_ID }}/rank?sort=memory">
                             <span>内存</span>
                             <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
                             <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>
@@ -65,7 +65,7 @@
                     </th>
                     <th><span>语言</span></th>
                     <th>
-                        <a class="nav-link p-0" href="/OnlineJudge/rank?problem_id={{ Problem_ID }}&sort=submit_time">
+                        <a class="nav-link p-0" href="/OnlineJudge/problem/{{ Problem_ID }}/rank?sort=submit_time">
                             <span>提交时间</span>
                             <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
                             <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>

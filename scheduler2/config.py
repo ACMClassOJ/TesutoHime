@@ -3,7 +3,7 @@ from pathlib import PosixPath
 
 from commons.task_typing import ResourceUsage
 from commons.util import RedisQueues, load_config
-from redis.asyncio import StrictRedis
+from redis.asyncio import Redis
 
 config = load_config('scheduler', 'v1')
 
@@ -29,7 +29,11 @@ problem_config_filename = 'config.json'
 quiz_filename = 'quiz.json'
 
 redis_queues = RedisQueues(config['redis']['prefix'])
-redis = StrictRedis(**config['redis']['connection'], decode_responses=True)
+redis = Redis(
+    **config['redis']['connection'],
+    decode_responses=True,
+    health_check_interval=30,
+)
 
 
 Secs = 1000

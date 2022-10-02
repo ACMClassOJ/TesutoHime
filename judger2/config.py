@@ -2,7 +2,7 @@ from shutil import which
 
 from commons.task_typing import ResourceUsage
 from commons.util import RedisQueues, load_config
-from redis.asyncio import StrictRedis
+from redis.asyncio import Redis
 
 config = load_config('runner', 'v1')
 
@@ -20,7 +20,11 @@ task_timeout_secs = 3600
 
 queues = RedisQueues(config['redis']['prefix'], runner_id)
 poll_timeout_secs = 10
-redis = StrictRedis(**config['redis']['connection'], decode_responses=True)
+redis = Redis(
+    **config['redis']['connection'],
+    decode_responses=True,
+    health_check_interval=30,
+)
 
 # env vars for task runner
 task_envp = [

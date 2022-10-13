@@ -7,12 +7,12 @@ def RunFlask(f, port):
     f(host='0.0.0.0', port=port)
 
 
-from config import Path
+from config import Path, busyFlag
 import os
 os.chdir(Path)
 
-if os.path.exists('BusyFlag'):
-   os.remove('BusyFlag')
+if os.path.exists(busyFlag):
+   os.remove(busyFlag)
 
 global api
 t1 = threading.Thread(target=RunFlask, args=(api.run, API_port,))

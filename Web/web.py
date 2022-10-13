@@ -22,6 +22,7 @@ import os
 from const import Privilege, ReturnCode
 from tracker import tracker
 from contestCache import Contest_Cache
+import tracemalloc
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -567,6 +568,7 @@ def status():
         if is_admin:
             cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.get_student_id(ele['Username']))
         data.append(cur)
+
     return render_template('status.html', Data=data, Pages=gen_page(page, max_page),
                            Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
                            is_Admin=is_admin, friendlyName=Login_Manager.get_friendly_name())

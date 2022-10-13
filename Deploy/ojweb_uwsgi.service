@@ -1,0 +1,12 @@
+[Unit]
+Description=TesutoHime Web Service uwsgi
+After=network.target
+
+[Service]
+User=acmoj
+Group=www-data
+WorkingDirectory=/home/acmoj/TesutoHime/Web
+ExecStart=/home/acmoj/.local/bin/uwsgi --ini uwsgi.ini
+
+[Install]
+WantedBy=multi-user.target

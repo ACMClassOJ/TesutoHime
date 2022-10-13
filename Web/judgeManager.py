@@ -62,8 +62,8 @@ class JudgeManager:
                            mem_used: str):
         db = db_connect()
         cursor = db.cursor()
-        if not -2147483648 <= int(time_used) <= 2147483647:
-            time_used = "-1"
+        if not -2147483648 <= score <= 2147483647:
+            score = -1
         if not -2147483648 <= int(mem_used) <= 2147483647:
             mem_used = "-1"
         try:

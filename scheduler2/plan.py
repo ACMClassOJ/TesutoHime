@@ -14,18 +14,17 @@ from zipfile import ZipFile
 from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
                                  CompileResult, CompileSource,
                                  CompileSourceCpp, CompileSourceGit,
-                                 CompileSourceVerilog, CompileSourceGitJava, CompileTask,
-                                 CompileTaskPlan, DirectChecker, FileUrl,
-                                 GroupJudgeResult, JudgePlan, JudgeResult,
-                                 JudgeTask, JudgeTaskPlan, ProblemJudgeResult,
-                                 QuizOption, QuizProblem, ResourceUsage,
-                                 ResultType, RunArgs, SourceLocation,
-                                 SpjChecker, StatusUpdateProgress,
-                                 StatusUpdateStarted, Testpoint,
-                                 TestpointGroup, TestpointJudgeResult,
-                                 UserCode)
+                                 CompileSourceGitJava, CompileSourceVerilog,
+                                 CompileTask, CompileTaskPlan, DirectChecker,
+                                 FileUrl, GroupJudgeResult, JudgePlan,
+                                 JudgeResult, JudgeTask, JudgeTaskPlan,
+                                 ProblemJudgeResult, QuizOption, QuizProblem,
+                                 ResourceUsage, ResultType, RunArgs,
+                                 SourceLocation, SpjChecker,
+                                 StatusUpdateProgress, StatusUpdateStarted,
+                                 Testpoint, TestpointGroup,
+                                 TestpointJudgeResult, UserCode)
 from commons.util import format_exc
-
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
                                quiz_filename, s3_buckets, working_dir)
@@ -618,6 +617,9 @@ async def run_judge_tasks(ctx: ExecutionContext):
         return create_task(run_with_rec())
     while len(ready) > 0 or len(tasks_running) > 0:
         tasks_running.extend(filter(lambda x: x is not None, map(run, ready)))
+        if len(tasks_running) == 0:
+            ready = []
+            break
         try:
             done, pending = await wait(tasks_running,
                 return_when=FIRST_COMPLETED)

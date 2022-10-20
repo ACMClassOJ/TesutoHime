@@ -1000,6 +1000,8 @@ def contest():
                         .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
                         .where(JudgeRecord2.problem_id.in_(problems)) \
                         .where(JudgeRecord2.username.in_(players)) \
+                        .where(JudgeRecord2.created >= datetime.datetime.fromtimestamp(start_time)) \
+                        .where(JudgeRecord2.created < datetime.datetime.fromtimestamp(end_time)) \
                         .all()
             else:
                 submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
@@ -1145,6 +1147,8 @@ def homework():
                         .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
                         .where(JudgeRecord2.problem_id.in_(problems)) \
                         .where(JudgeRecord2.username.in_(players)) \
+                        .where(JudgeRecord2.created >= datetime.datetime.fromtimestamp(start_time)) \
+                        .where(JudgeRecord2.created < datetime.datetime.fromtimestamp(end_time)) \
                         .all()
             else:
                 submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)

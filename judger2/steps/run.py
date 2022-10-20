@@ -8,10 +8,9 @@ from shutil import copy2
 from typing import Dict, List
 
 from commons.task_typing import Input, RunArgs, RunResult
-
 from judger2.cache import ensure_cached
-from judger2.config import (valgrind, valgrind_args, valgrind_errexit_code,
-                            verilog_interpreter, java)
+from judger2.config import (java, valgrind, valgrind_args,
+                            valgrind_errexit_code, verilog_interpreter)
 from judger2.sandbox import run_with_limits
 from judger2.steps.compile_ import NotCompiledException, ensure_input
 from judger2.util import copy_supplementary_files, extract_exe_as_tar

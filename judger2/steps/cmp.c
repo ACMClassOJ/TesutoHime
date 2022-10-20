@@ -53,8 +53,10 @@ void cmp_ignore_ws (FILE *file1, FILE *file2, bool is_in_ws) {
   int c1 = fgetc(file1);
   int c2 = fgetc(file2);
   bool c1_is_ws = is_ws(c1);
+  bool c1_is_eof = c1 == EOF;
   if (c1_is_ws) c1 = EOF;
   bool c2_is_ws = is_ws(c2);
+  bool c2_is_eof = c2 == EOF;
   if (c2_is_ws) c2 = EOF;
   if (c1_is_ws && c2_is_ws) return cmp_ignore_ws(file1, file2, true);
   if (is_in_ws) {
@@ -68,7 +70,7 @@ void cmp_ignore_ws (FILE *file1, FILE *file2, bool is_in_ws) {
     }
   }
   /* both not ws or not in ws */
-  if (c1 == EOF && c2 == EOF) return same();
+  if (c1_is_eof && c2_is_eof) return same();
   if (c1 != c2) return different();
   return cmp_ignore_ws(file1, file2, false);
 }

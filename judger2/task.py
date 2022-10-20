@@ -4,11 +4,10 @@ from pathlib import PosixPath
 from typing import List, Optional
 
 from commons.task_typing import (CompileResult, CompileTask,
-                                 InvalidTaskException, JudgeResult, JudgeTask, ProblemJudgeResult,
+                                 InvalidTaskException, JudgeResult, JudgeTask,
                                  Result, StatusUpdateProgress, Task, Testpoint,
                                  TestpointJudgeResult)
 from commons.util import format_exc, serialize
-
 from judger2.config import queues, redis, task_timeout_secs
 from judger2.logging_ import task_logger
 from judger2.steps.check import check

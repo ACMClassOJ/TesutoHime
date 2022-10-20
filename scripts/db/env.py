@@ -11,6 +11,7 @@ if db_url is None or db_url == '':
 
 engine = create_engine(db_url, echo=True)
 Session = sessionmaker(bind=engine)
+DATABASE_VERSION = 1
 
 try:
     with Session() as db:

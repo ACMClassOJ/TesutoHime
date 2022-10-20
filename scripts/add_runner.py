@@ -1,5 +1,4 @@
 from commons.models import JudgeRunner2
-
 from scripts.db.env import Session
 
 

@@ -55,6 +55,8 @@ class NsjailArgs:
     cwd: str
     # time limit (str, but in secs) for the runner.
     time_limit: str
+    # cpu time limit (secs) RLIMIT_CPU.
+    rlimit_cpu: str = '600'
 
     # readonly mount points.
     bindmount_ro: Union[List[str], bool] = False
@@ -129,6 +131,7 @@ async def run_with_limits(
             cwd=str(cwd),
             rlimit_fsize=fsize,
             time_limit=time_limit,
+            rlimit_cpu=str(int(float(time_limit))),
             # the memory limit does not work
             # cgroup_mem_max=memory_limit,
             bindmount_ro=bindmount_ro,

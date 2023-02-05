@@ -692,6 +692,7 @@ def status():
         if is_admin:
             cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.get_student_id(ele['Username']))
         data.append(cur)
+
     return render_template('status.html', Data=data, Pages=gen_page(page, max_page),
                            Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
                            is_Admin=is_admin, friendlyName=Login_Manager.get_friendly_name())

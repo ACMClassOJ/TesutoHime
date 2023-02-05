@@ -18,7 +18,7 @@ $.fn.serializeObject = function () {
     return data;
 }
 
-function formatDate(date) 
+function formatDate(date)
 {
     var date = new Date(date);
     var YY = date.getFullYear() + '-';
@@ -171,7 +171,7 @@ $(function () {
             emailLink: true,
             pageBreak: true
         });
-        editors[editormd_name] = new_editor;           
+        editors[editormd_name] = new_editor;
     }
 
     $("#divProblemHidden").hide();
@@ -244,7 +244,7 @@ $(function () {
                 new_or_modify_content_in_editormd("iptExampleInput", is_empty ? "None" : main_json['Example_Input']);
                 new_or_modify_content_in_editormd("iptExampleOutput", is_empty ? "None" : main_json['Example_Output']);
                 new_or_modify_content_in_editormd("iptDataRange", is_empty ? "None" : main_json['Data_Range']);
-                
+
                 // $("#iptDescription").val(main_json['Description']);
                 // $("#iptInput").val(main_json['Input']);
                 // $("#iptOutput").val(main_json['Output']);
@@ -272,7 +272,7 @@ $(function () {
             });
         }, 1000);
     });
-    
+
 
     $("#btnAddProblem").click(function () {
         op = 0;
@@ -711,7 +711,7 @@ $(function () {
             swal("Success", ret_json['msg'], "success");
     });
 
-    $("#formRejudge").ajaxForm(function (ret_json) {
+    $("#formRejudge2").ajaxForm(function (ret_json) {
         if(ret_json['e'] < 0)
             swal("Error " + ret_json['e'], ret_json['msg'], "error");
         else

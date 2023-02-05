@@ -190,9 +190,16 @@
                                             {% if group[j][4] != -1 -%}
                                             <div class="col-2"> <i class="fa fa-database"></i> {{ "%.2f" | format(group[j][4] / 1024) }} MiB </div>
                                             {%- endif %}
+                                            {% if group[j][5] != '' -%}
+                                            <div class="col testpoint_msg_exp" id="testpoint_msg_exp-{{ group[0] }}_{{ j }}">
+                                                <span style="position: relative; float: right;"> Show details <i class="fa fa-caret-down"></i></span>
+                                            </div>
+                                            {%- endif %}
                                         </div>
                                         {% if group[j][5] != '' -%}
-                                        <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ group[j][5] }}</pre>
+                                        <div class="testpoint_msg" id="testpoint_msg-{{ group[0] }}_{{ j }}">
+                                            <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ group[j][5] }}</pre>
+                                        </div>
                                         {%- endif %}
                                     </td>
                                 <tr>
@@ -200,6 +207,14 @@
                         </table>
                     {%- endfor %}
                 </div>
+                {% if Detail['Problem_ID'] == 1319 -%}
+                <button class="btn btn-block btn-primary" id="1319btn">Show Simulation</button>
+                <iframe id="1319iframe" style="height: 25rem; width: 100%; display: none;" src="https://acm.sjtu.edu.cn/simulator/turing_machine.html"></iframe>
+                {%- endif %}
+                {% if Detail['Problem_ID'] == 1320 -%}
+                <button class="btn btn-block btn-primary" id="1320btn">Show Simulation （长按播放键设置播放速度）</button>
+                <iframe id="1320iframe" style="height: 40rem; width: 100%; display: none;" src="https://acm.sjtu.edu.cn/simulator/analytical_engine.html"></iframe>
+                {%- endif %}
             </div>
         {%- endif %}
     </div>
@@ -251,6 +266,41 @@
                 }, count_down_time * 1000 / origin_interval); 
             }
         });
+
+        {% if Detail['Problem_ID'] == 1319 -%}
+        $("#1319btn").click(function(){
+            document.getElementById('1319iframe').contentWindow.document.getElementsByClassName("card")[0].style.display = "none";
+            document.getElementById('1319iframe').contentWindow.document.getElementsByTagName("nav")[0].style.display = "none";
+            document.getElementById('1319iframe').contentWindow.document.getElementById('buildinfo').value=`{{ Data[0][4][5] }}`;
+            document.getElementById('1319iframe').contentWindow.document.getElementById('start_simulation').click();
+            $("#1319iframe").slideDown(500);
+        });
+        {%- endif %}
+
+        {% if Detail['Problem_ID'] == 1320 -%}
+        $("#1320btn").click(function(){
+            document.getElementById('1320iframe').contentWindow.document.getElementsByClassName("card")[0].style.display = "none";
+            document.getElementById('1320iframe').contentWindow.document.getElementsByTagName("nav")[0].style.display = "none";
+            document.getElementById('1320iframe').contentWindow.document.getElementById('buildinfo').value=`{{ Data[0][4][5] }}`;
+            document.getElementById('1320iframe').contentWindow.document.getElementById('start_simulation').click();
+            $("#1320iframe").slideDown(500);
+        });
+        {%- endif %}
+
+        $(".testpoint_msg").each(function(){
+            if($(this).height() < 60)
+            {
+                var testpoint_id = $(this).attr("id").split("-").at(-1);
+                $("#testpoint_msg_exp-" + testpoint_id).hide();
+            }
+        });
+
+        $(".testpoint_msg_exp").click(function(){
+           var testpoint_id = $(this).attr("id").split("-").at(-1);
+           $("#testpoint_msg-" + testpoint_id).css("max-height", "none");
+           $(this).hide();
+        });
+
     </script>
 {% endblock %}
 

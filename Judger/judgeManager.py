@@ -214,7 +214,7 @@ class JudgeManager:
                         elif problemConfig.SPJ == 2:
                             try:
                                 with open(userOutput) as f:
-                                    return_list = f.read().splitlines()
+                                    return_list = f.read(1024).splitlines()
                                     testPointDetail.score = float(return_list[0])
                                     testPointDetail.result = ResultType.WA if testPointDetail.score != 1 else ResultType.AC
                                     for i in range(1, len(return_list)):

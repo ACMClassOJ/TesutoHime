@@ -859,8 +859,10 @@ def code2(submit_id):
     }, ExpiresIn=60)
     language = language_info[submission.language] \
         if submission.language in language_info else 'Unknown'
+    is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
     abortable = submission.status in \
-        (JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging)
+        (JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging) and \
+        (is_admin or submission.username == Login_Manager.get_username())
     show_score = not abortable and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
 
@@ -870,7 +872,7 @@ def code2(submit_id):
                            language=language, abortable=abortable,
                            show_score=show_score,
                            friendlyName=Login_Manager.get_friendly_name(),
-                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+                           is_Admin=is_admin)
 
 @web.route('/code/<int:submit_id>/void', methods=['POST'])
 def mark_void(submit_id):

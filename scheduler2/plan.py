@@ -68,6 +68,21 @@ class ParseContext:
         self.files_to_upload.add(filename)
         return f'{url_scheme}{self.file_key(filename)}'
 
+    def prefix(self):
+        return f'{self.problem_id}/'
+
+    def open(self, filename: str, *args):
+        return self.zip.open(f'{self.prefix()}{filename}', *args)
+
+    def namelist(self) -> List[str]:
+        return [
+            x.replace(self.prefix(), '') for x in
+                filter(
+                    lambda x: x.startswith(f'{self.prefix()}'),
+                    self.zip.namelist(),
+                )
+        ]
+
 
 def sign_url(url: str):
     if not url.startswith(url_scheme):
@@ -77,7 +92,7 @@ def sign_url(url: str):
 
 async def load_config(ctx: ParseContext):
     try:
-        with ctx.zip.open(problem_config_filename, 'r') as f:
+        with ctx.open(problem_config_filename, 'r') as f:
             cfg = json.load(f)
     except BaseException as e:
         msg = f'cannot read {problem_config_filename}: {e}'
@@ -87,7 +102,7 @@ async def load_config(ctx: ParseContext):
         cfg['Details'] = [ConfigTestpoint(**x) for x in cfg['Details']]
         if 'Quiz' in cfg and cfg['Quiz']:
             try:
-                with ctx.zip.open(quiz_filename, 'r') as f:
+                with ctx.open(quiz_filename, 'r') as f:
                     quiz = json.load(f)
             except BaseException as e:
                 msg = f'cannot read {problem_config_filename}: {e}'
@@ -124,10 +139,10 @@ async def parse_spj(ctx: ParseContext):
     if ctx.check_type == 'spj':
         # A custom checker is needed for judging, so
         # register the checker executable artifact.
-        if checker_precompiled_filename in ctx.zip.namelist():
+        if checker_precompiled_filename in ctx.namelist():
             ctx.checker_artifact = Artifact(
                 ctx.file_url(checker_precompiled_filename))
-        elif checker_source_filename in ctx.zip.namelist():
+        elif checker_source_filename in ctx.namelist():
             ctx.checker_artifact = Artifact(
                 f'{url_scheme}{ctx.file_key(checker_exec_filename)}')
             ctx.checker_to_compile = ctx.file_url(checker_source_filename)
@@ -169,7 +184,7 @@ async def parse_compile(ctx: ParseContext) -> Optional[CompileTaskPlan]:
         else hpp_src_filename
     task.supplementary_files.append(UserCode(src_filename))
 
-    has_main = hpp_main_filename in ctx.zip.namelist()
+    has_main = hpp_main_filename in ctx.namelist()
     if has_main:
         task.source = CompileSourceCpp(ctx.file_url(hpp_main_filename))
         return task
@@ -198,7 +213,7 @@ answer_name_template_alt = '{}.out'
 def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
     id = str(conf.ID)
     infile_name = infile_name_template.format(id)
-    if infile_name in ctx.zip.namelist():
+    if infile_name in ctx.namelist():
         infile = ctx.file_url(infile_name)
     else:
         infile = None
@@ -220,10 +235,10 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
 
     def ans() -> Optional[FileUrl]:
         ans_filename = answer_name_template.format(id)
-        if ans_filename in ctx.zip.namelist():
+        if ans_filename in ctx.namelist():
             return ctx.file_url(ans_filename)
         ans_filename_alt = answer_name_template_alt.format(id)
-        if ans_filename_alt in ctx.zip.namelist():
+        if ans_filename_alt in ctx.namelist():
             return ctx.file_url(ans_filename_alt)
         return None
     if ctx.check_type == 'compare':
@@ -324,12 +339,12 @@ async def parse_groups(ctx: ParseContext) -> List[TestpointGroup]:
 
 
 async def upload_files(ctx: ParseContext):
-    files_not_found = list(filter(lambda file: not file in ctx.zip.namelist(),
+    files_not_found = list(filter(lambda file: not file in ctx.namelist(),
         ctx.files_to_upload))
     if len(files_not_found) > 0:
         raise InvalidProblemException(f'file(s) {files_not_found} not found in problem zip')
     for file in ctx.files_to_upload:
-        with ctx.zip.open(file, 'r') as f:
+        with ctx.open(file, 'r') as f:
             await upload_obj(s3_buckets.problems, ctx.file_key(file), f)
 
 

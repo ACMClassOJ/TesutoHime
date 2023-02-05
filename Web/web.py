@@ -468,38 +468,8 @@ def set_result(submission_id):
     return ''
 
 
-@web.route('/rank')
-def problem_rank():
-    if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
-    problem_id = request.args.get('problem_id')
-    if problem_id is None:
-        abort(404)
-    sort_parameter = request.args.get('sort')
-    record = list(Judge_Manager.search_ac(problem_id))
-    for i in range(len(record)):
-        record[i] = list(record[i])
-        record[i].append(User_Manager.get_friendly_name(record[i][1]))
-        record[i].append(Reference_Manager.Query_Realname(User_Manager.get_student_id(record[i][1])))
-    if sort_parameter == 'memory':
-        record = sorted(record, key=lambda x: x[3])
-    elif sort_parameter == 'submit_time':
-        record = sorted(record, key=lambda x: x[5])
-    else:
-        sort_parameter = 'time'
-        record = sorted(record, key=lambda x: x[2])
-    
-    in_exam = problem_in_exam(problem_id)
-    
-    return render_template('problem_rank.html', Problem_ID=problem_id, Title=Problem_Manager.get_title(problem_id),
-                           Data=record, Sorting=sort_parameter, friendlyName=Login_Manager.get_friendly_name(),
-                           readable_lang=readable_lang, readable_time=readable_time,
-                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN,
-                           In_Exam=in_exam)
-
-
 @web.route('/problem/<int:problem_id>/rank')
-def problem_rank2(problem_id):
+def problem_rank(problem_id):
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
     sort_parameter = request.args.get('sort')
@@ -531,7 +501,7 @@ def problem_rank2(problem_id):
 
     in_exam = problem_in_exam(problem_id)
 
-    return render_template('problem_rank2.html', Problem_ID=problem_id, Title=Problem_Manager.get_title(problem_id),
+    return render_template('problem_rank.html', Problem_ID=problem_id, Title=Problem_Manager.get_title(problem_id),
                            submissions=submissions, Sorting=sort_parameter, friendlyName=Login_Manager.get_friendly_name(),
                            readable_lang=readable_lang, readable_time=readable_time,
                            is_Admin=is_admin, real_names=real_names, languages=languages,
@@ -629,88 +599,6 @@ def status():
     if arg_problem_id == '':
         arg_problem_id = None
     arg_status = request.args.get('status')
-    if arg_status == '-1':
-        arg_status = None
-    arg_lang = request.args.get('lang')
-    if arg_lang == '-1':
-        arg_lang = None
-    username = Login_Manager.get_username()
-    privilege = Login_Manager.get_privilege()
-    is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
-
-    if arg_submitter is None and arg_problem_id is None and arg_status is None and arg_lang is None:
-        page = int(page) if page is not None else 1
-        max_page = int((Judge_Manager.max_id() + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
-        page = max(min(max_page, page), 1)
-        end_id = Judge_Manager.max_id() - (page - 1) * JudgeConfig.Judge_Each_Page
-        start_id = end_id - JudgeConfig.Judge_Each_Page + 1
-        record = Judge_Manager.judge_in_range(start_id, end_id)
-    else:
-        record = Judge_Manager.search_judge(arg_submitter, arg_problem_id, arg_status, arg_lang)
-        max_page = int((len(record) + JudgeConfig.Judge_Each_Page - 1) / JudgeConfig.Judge_Each_Page)
-        page = int(page) if page is not None else 1
-        page = max(min(max_page, page), 1)
-        end_id = len(record) - (page - 1) * JudgeConfig.Judge_Each_Page
-        start_id = max(end_id - JudgeConfig.Judge_Each_Page + 1, 1)
-        record = reversed(record[start_id - 1: end_id])
-    data = []
-
-    exam_id, is_exam_started = Contest_Manager.get_unfinished_exam_info_for_player(username, unix_nano())
-    # if not None, only problems in here are visible to user
-    exam_visible_problems = None
-
-    # only change the visibility when the exam started
-    if exam_id != -1 and is_exam_started: 
-        exam_visible_problems = list()
-        exam_problems_raw = Contest_Manager.list_problem_for_contest(exam_id)
-        for raw_tuple in exam_problems_raw:
-            exam_visible_problems.append(raw_tuple[0])
-
-    for ele in record:
-        cur = {'ID': ele['ID'],
-               'Username': ele['Username'],
-               'Friendly_Name': User_Manager.get_friendly_name(ele['Username']),
-               'Problem_ID': ele['Problem_ID'],
-               'Problem_Title': Problem_Manager.get_title(ele['Problem_ID']),
-               'Status': ele['Status'],
-               'Time_Used': ele['Time_Used'],
-               'Mem_Used': ele['Mem_Used'],
-               'Lang': readable_lang(ele['Lang']),
-               'Visible': 
-                       # This visible check is more effient than call "is_code_visible" each time.
-
-                       # admin: always visible
-                       is_admin or (
-                           # user's own problem: username == ele['Username']
-                           # shared problems are always banned if exam_visible_problems is None (this means user in exam)
-                           (username == ele['Username'] or (exam_visible_problems is None and bool(ele['Share']))) 
-                           # and exam visible check for problems
-                           and (exam_visible_problems is None or ele['Problem_ID'] in exam_visible_problems)
-                       )
-                       ,
-               'Time': readable_time(ele['Time'])}
-        if is_admin:
-            cur['Real_Name'] = Reference_Manager.Query_Realname(User_Manager.get_student_id(ele['Username']))
-        data.append(cur)
-
-    return render_template('status.html', Data=data, Pages=gen_page(page, max_page),
-                           Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
-                           is_Admin=is_admin, friendlyName=Login_Manager.get_friendly_name())
-
-
-@web.route('/status2')
-def status2():
-    if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
-
-    page = request.args.get('page')
-    arg_submitter = request.args.get('submitter')
-    if arg_submitter == '':
-        arg_submitter = None
-    arg_problem_id = request.args.get('problem_id')
-    if arg_problem_id == '':
-        arg_problem_id = None
-    arg_status = request.args.get('status')
     if arg_status == '':
         arg_status = None
     if arg_status is not None:
@@ -725,13 +613,8 @@ def status2():
 
     with SqlSession(expire_on_commit=False) as db:
         page = int(page) if page is not None else 1
-        limit = JudgeConfig.Judge_Each_Page + 1
+        limit = JudgeConfig.Judge_Each_Page
         offset = (page - 1) * JudgeConfig.Judge_Each_Page
-        show_all = all(x is None for x in (arg_submitter, arg_problem_id, arg_status, arg_lang))
-        if show_all:
-            limit = JudgeConfig.Judge_Each_Page
-            count = db.query(func.count(JudgeRecord2.id)).one()[0]
-            max_page = ceil(count / JudgeConfig.Judge_Each_Page)
         query = db.query(JudgeRecord2) \
             .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
             .options(selectinload(JudgeRecord2.user)) \
@@ -745,11 +628,10 @@ def status2():
         if arg_lang is not None:
             query = query.where(JudgeRecord2.language == arg_lang)
         query = query.order_by(JudgeRecord2.id.desc())
+        count = query.count()
+        max_page = ceil(count / JudgeConfig.Judge_Each_Page)
         query = query.limit(limit).offset(offset)
         submissions: List[JudgeRecord2] = query.all()
-        if not show_all:
-            max_page = page + 1 if len(submissions) == limit else page
-            submissions = submissions[:JudgeConfig.Judge_Each_Page]
 
     exam_id, is_exam_started = Contest_Manager.get_unfinished_exam_info_for_player(username, unix_nano())
     # if not None, only problems in here are visible to user
@@ -779,41 +661,12 @@ def status2():
         )
         languages[submission] = 'Unknown' if submission.language not in language_info \
             else language_info[submission.language]
-    return render_template('status2.html', Pages=gen_page(page, max_page, not show_all),
+    return render_template('status.html', Pages=gen_page(page, max_page),
                            judge_status_info=judge_status_info, language_info=language_info,
                            submissions=submissions, real_names=real_names, visible=visible,
                            languages=languages,
                            Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
                            is_Admin=is_admin, friendlyName=Login_Manager.get_friendly_name())
-
-
-@web.route('/code')
-def code():
-    if not Login_Manager.check_user_status():  # not login
-        return redirect('login?next=' + request.full_path)
-    if not str(request.args.get('submit_id')).isdigit():  # bad argument
-        abort(404)
-    run_id = int(request.args.get('submit_id'))
-    if run_id < 0 or run_id > Judge_Manager.max_id():
-        abort(404)
-    detail = Judge_Manager.query_judge(run_id)
-    if not is_code_visible(detail['User'], detail['Problem_ID'], detail['Share']):
-        return abort(403)
-    else:
-        detail['Friendly_Name'] = User_Manager.get_friendly_name(detail['User'])
-        detail['Problem_Title'] = Problem_Manager.get_title(detail['Problem_ID'])
-        detail['Lang'] = readable_lang(detail['Lang'])
-        detail['Time'] = readable_time(int(detail['Time']))
-        data = None
-        if detail['Detail'] != 'None':
-            temp = json.loads(detail['Detail'])
-            detail['Score'] = int(temp[1])
-            data = temp[4:]
-        else:
-            detail['Score'] = 0
-        return render_template('judge_detail.html', Detail=detail, Data=data,
-                               friendlyName=Login_Manager.get_friendly_name(),
-                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
 @web.route('/code/<int:submit_id>/')
@@ -866,7 +719,7 @@ def code2(submit_id):
     show_score = not abortable and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
 
-    return render_template('judge_detail2.html', submission=submission,
+    return render_template('judge_detail.html', submission=submission,
                            enumerate=enumerate, code_url=code_url,
                            details=details, judge_status_info=judge_status_info,
                            language=language, abortable=abortable,
@@ -931,7 +784,6 @@ def contest():
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
     contest_id = request.args.get('contest_id')
-    judger2 = request.args.get('judger2') != '0'
     username = Login_Manager.get_username()
     if contest_id is None:  # display contest list
         contest_list = Contest_Manager.list_contest_and_exam()
@@ -996,27 +848,21 @@ def contest():
             username_to_num = dict(map(lambda entry: [regularize_string(entry[1]), entry[0]], enumerate(players)))
             problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
 
-            if judger2:
-                with SqlSession() as db:
-                    submits = db \
-                        .query(JudgeRecord2) \
-                        .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
-                        .where(JudgeRecord2.problem_id.in_(problems)) \
-                        .where(JudgeRecord2.username.in_(players)) \
-                        .where(JudgeRecord2.created >= datetime.datetime.fromtimestamp(start_time)) \
-                        .where(JudgeRecord2.created < datetime.datetime.fromtimestamp(end_time)) \
-                        .all()
-            else:
-                submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
+            with SqlSession() as db:
+                submits = db \
+                    .query(JudgeRecord2) \
+                    .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
+                    .where(JudgeRecord2.problem_id.in_(problems)) \
+                    .where(JudgeRecord2.username.in_(players)) \
+                    .where(JudgeRecord2.created >= datetime.datetime.fromtimestamp(start_time)) \
+                    .where(JudgeRecord2.created < datetime.datetime.fromtimestamp(end_time)) \
+                    .all()
             for submit in submits:
-                if judger2:
-                    username = submit.username
-                    problem_id = submit.problem_id
-                    status = 2 if submit.status == JudgeStatus.accepted else -1
-                    score = submit.score
-                    submit_time = submit.created.timestamp()
-                else:
-                    [ _submit_id, username, problem_id, status, score, submit_time ] = submit
+                username = submit.username
+                problem_id = submit.problem_id
+                status = 2 if submit.status == JudgeStatus.accepted else -1
+                score = submit.score
+                submit_time = submit.created.timestamp()
 
                 if regularize_string(username) not in username_to_num:
                     continue
@@ -1063,8 +909,8 @@ def contest():
         time_overall = float(end_time - start_time)
         percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
 
-        status_url = 'status2' if judger2 else 'status'
-        ac_status = 'accepted' if judger2 else '2'
+        status_url = 'status'
+        ac_status = 'accepted'
 
         return render_template(
             'contest.html',
@@ -1090,7 +936,6 @@ def homework():
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
     contest_id = request.args.get('homework_id')
-    judger2 = request.args.get('judger2') != '0'
     username = Login_Manager.get_username()
     if contest_id is None:  # display contest list
         contest_list = Contest_Manager.list_contest(1)
@@ -1143,26 +988,19 @@ def homework():
             username_to_num = dict(map(lambda entry: [regularize_string(entry[1]), entry[0]], enumerate(players)))
             problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
 
-            if judger2:
-                with SqlSession() as db:
-                    submits = db \
-                        .query(JudgeRecord2) \
-                        .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
-                        .where(JudgeRecord2.problem_id.in_(problems)) \
-                        .where(JudgeRecord2.username.in_(players)) \
-                        .where(JudgeRecord2.created >= datetime.datetime.fromtimestamp(start_time)) \
-                        .where(JudgeRecord2.created < datetime.datetime.fromtimestamp(end_time)) \
-                        .all()
-            else:
-                submits = Judge_Manager.get_contest_judge(problems, start_time, end_time)
+            with SqlSession() as db:
+                submits = db \
+                    .query(JudgeRecord2) \
+                    .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
+                    .where(JudgeRecord2.problem_id.in_(problems)) \
+                    .where(JudgeRecord2.username.in_(players)) \
+                    .where(JudgeRecord2.created >= datetime.datetime.fromtimestamp(start_time)) \
+                    .where(JudgeRecord2.created < datetime.datetime.fromtimestamp(end_time)) \
+                    .all()
 
             for submit in submits:
-                if judger2:
-                    username = submit.username
-                    problem_id = submit.problem_id
-                    status = 2 if submit.status == JudgeStatus.accepted else -1
-                else:
-                    [ _submit_id, username, problem_id, status, _score, _submit_time ] = submit
+                username = submit.username
+                problem_id = submit.problem_id
 
                 if regularize_string(username) not in username_to_num:
                     continue
@@ -1176,7 +1014,7 @@ def homework():
                     continue
 
                 # FIXME: magic number 2 for AC
-                if int(status) == 2:
+                if submit.status == JudgeStatus.accepted:
                     problem['accepted'] = True
                     user_data['ac_count'] += 1
 
@@ -1197,8 +1035,8 @@ def homework():
         time_overall = float(end_time - start_time)
         percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
 
-        status_url = 'status2' if judger2 else 'status'
-        ac_status = 'accepted' if judger2 else '2'
+        status_url = 'status'
+        ac_status = 'accepted'
 
         return render_template(
             'homework.html',

@@ -9,7 +9,7 @@ from commons.task_typing import (Checker, CheckInput, CheckResult,
                                  CompareChecker, DirectChecker, RunResult, SpjChecker)
 
 from judger2.cache import ensure_cached
-from judger2.config import checker_cmp_limits
+from judger2.config import checker_cmp_limits, diff
 from judger2.sandbox import run_with_limits
 from judger2.steps.compile_ import NotCompiledException, ensure_input
 from judger2.util import TempDir, copy_supplementary_files
@@ -36,22 +36,21 @@ async def check(outfile: CheckInput, checker: Checker, checker_id: int, run_res_
     return await checkers[checker.__class__](inf, ouf, run_res_path, checker, checker_id)
 
 
-cmp_errexit_code = 63
+diff_errexit_code = 1
 
 async def checker_cmp(_infile, outfile: PosixPath, run_res_path: PosixPath, checker: CompareChecker, _checker_id):
-    cmp = PosixPath(__file__).with_name('cmp')
     ans = (await ensure_cached(checker.answer)).path
-    ignore_ws_flag = 'y' if checker.ignore_whitespace else 'n'
-    argv = [str(cmp), str(outfile), str(ans), ignore_ws_flag]
+    flags = '-qZB' if checker.ignore_whitespace else '-q'
+    argv = [str(diff), flags, str(outfile), str(ans)]
     logger.debug(f'about to run {argv}')
     with TempDir() as cwd:
         res = await run_with_limits(
             argv,
             cwd,
             checker_cmp_limits,
-            supplementary_paths=[str(cmp), str(outfile), str(ans)],
+            supplementary_paths=['/bin', '/usr/bin', str(outfile), str(ans)],
         )
-    if res.error == 'runtime_error' and res.code == cmp_errexit_code:
+    if res.error == 'runtime_error' and res.code == diff_errexit_code:
         return CheckResult('wrong_answer', 'Wrong answer')
     if res.error is not None:
         logger.error(f'cmp failed with {res.message}')

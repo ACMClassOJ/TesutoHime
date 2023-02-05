@@ -63,6 +63,8 @@ valgrind_args = [
 java = which('java')
 java_file_name = 'Compiler'
 
+diff = which('diff')
+
 checker_cmp_limits = ResourceUsage(
     time_msecs=10000,
     memory_bytes=67108864,

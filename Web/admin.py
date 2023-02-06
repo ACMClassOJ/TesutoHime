@@ -293,11 +293,8 @@ def rejudge():
         id_list = id.strip().splitlines()
         try:
             for i in id_list:
-                JudgeServer_Scheduler.ReJudge(i)
                 rejudge2(i)
             return ReturnCode.SUC_REJUDGE
-        except RequestException:
-            return ReturnCode.ERR_BAD_DATA
         except NotFoundException:
             return ReturnCode.ERR_BAD_DATA
     elif type == "by_problem_id":
@@ -306,10 +303,9 @@ def rejudge():
             for id in ids:
                 record = Judge_Manager.search_judge(None, id, None, None)
                 for i in record:
-                    JudgeServer_Scheduler.ReJudge(i['ID'])
                     rejudge2(i['ID'])
             return ReturnCode.SUC_REJUDGE
-        except RequestException:
+        except NotFoundException:
             return ReturnCode.ERR_BAD_DATA
 
 @admin.route('/disable_judge', methods=['POST'])
@@ -324,11 +320,8 @@ def disable_judge():
         id_list = id.strip().splitlines()
         try:
             for i in id_list:
-                Judge_Manager.update_after_judge(i, 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, -1, "Your judge result has been disabled manually by admin."]]]', 0, 0)
                 mark_void2(i)
             return ReturnCode.SUC_DISABLE_JUDGE
-        except RequestException:
-            return ReturnCode.ERR_BAD_DATA
         except NotFoundException:
             return ReturnCode.ERR_BAD_DATA
     elif type == "by_problem_id":
@@ -337,11 +330,8 @@ def disable_judge():
             for id in ids:
                 record = Judge_Manager.search_judge(None, id, None, None)
                 for i in record:
-                    Judge_Manager.update_after_judge(i['ID'], 9, 0, '[9, 0, 0, 0, [1, "", 9, 0, [1, 9, 0, 0, -1, "Your judge result has been disabled manually by admin."]]]', 0, 0)
                     mark_void2(i['ID'])
             return ReturnCode.SUC_DISABLE_JUDGE
-        except RequestException:
-            return ReturnCode.ERR_BAD_DATA
         except NotFoundException:
             return ReturnCode.ERR_BAD_DATA
 

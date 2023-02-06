@@ -2,8 +2,8 @@ from asyncio import Task, create_task, sleep
 from dataclasses import dataclass
 from logging import getLogger
 from time import time
-from typing import Dict, Literal, Optional
-from commons.util import format_exc
+from typing import Dict, Optional
+from commons.util import format_exc, Literal
 
 from scheduler2.config import (redis, redis_queues,
                                runner_heartbeat_interval_secs)

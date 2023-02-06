@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from logging import getLogger
 from os import remove
-from typing import Dict, Iterable, List, Literal, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 from zipfile import ZipFile
 
 from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
@@ -24,7 +24,7 @@ from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
                                  StatusUpdateProgress, StatusUpdateStarted,
                                  Testpoint, TestpointGroup,
                                  TestpointJudgeResult, UserCode)
-from commons.util import format_exc
+from commons.util import format_exc, Literal
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
                                quiz_filename, s3_buckets, working_dir)

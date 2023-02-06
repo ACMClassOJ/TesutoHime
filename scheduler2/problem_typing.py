@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from enum import IntEnum, unique
-from typing import List, Literal, Optional, Union
+from typing import List, Optional, Union
+
+from commons.util import Literal
 
 
 @unique

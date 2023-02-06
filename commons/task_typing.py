@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import PosixPath
-from typing import List, Literal, Optional, Union
+from typing import List, Optional, Union
+
+from commons.util import Literal
 
 # scheduler -> runner
 

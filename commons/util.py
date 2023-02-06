@@ -10,12 +10,19 @@ from uuid import uuid4
 
 import yaml
 
-import commons.task_typing
-
 logger = getLogger(__name__)
 
 
 T = TypeVar('T')
+
+class _Literal:
+    def __getitem__(self, _): return
+
+Literal = _Literal()
+
+
+import commons.task_typing
+
 
 async def asyncrun(func: Callable[[], T]) -> T:
     return await get_running_loop().run_in_executor(None, func)

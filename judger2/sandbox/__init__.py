@@ -11,10 +11,10 @@ from signal import strsignal
 from subprocess import DEVNULL, PIPE, Popen
 from sys import platform
 from time import time
-from typing import IO, List, Literal, Union
+from typing import IO, List, Union
 
 from commons.task_typing import ResourceUsage, RunResult
-from commons.util import asyncrun
+from commons.util import asyncrun, Literal
 
 from judger2.config import relative_slowness, task_envp, worker_uid
 from judger2.util import TempDir, format_args

@@ -7,9 +7,6 @@ mysql_connection_string = 'mysql+pymysql://username@/database?unix_socket=/run/m
 # 参考 https://docs.sqlalchemy.org/en/14/core/engines.html?highlight=cycle#sqlalchemy.create_engine.params.pool_recycle
 mysql_connection_pool_recycle = 7200
 
-# 重复上面的 database 段
-mysql_database = 'database'
-
 class RedisConfig:
     host = 'localhost'
     port = 6379

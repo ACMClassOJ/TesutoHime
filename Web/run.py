@@ -1,7 +1,7 @@
 import sys
 from pathlib import PosixPath
 
-sys.path.append(str(PosixPath(__file__).parent.parent))
+sys.path.append(str(PosixPath(__file__).resolve().parent.parent))
 
 from tracker import setup_log
 from web import oj

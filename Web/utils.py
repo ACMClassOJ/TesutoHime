@@ -2,7 +2,7 @@ import datetime
 import time
 from dataclasses import dataclass
 from typing import Optional
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from urllib.parse import urljoin, urlsplit, urlparse, urlunsplit
 
 import boto3
 import redis
@@ -16,6 +16,14 @@ from config import *
 
 engine = create_engine(mysql_connection_string, pool_recycle=mysql_connection_pool_recycle)
 SqlSession = sessionmaker(bind=engine)
+
+mysql_url = urlparse(mysql_connection_string)
+mysql_database = mysql_url.path[1:]
+mysql_password = mysql_url.netloc.split('@')[0].split(':')[1:]
+if len(mysql_password) > 0:
+    mysql_password = { 'password': mysql_password[0] }
+else:
+    mysql_password = {}
 
 cfg = Config(signature_version='s3v4')
 s3_public = boto3.client('s3', **S3Config.Connections.public, config=cfg)
@@ -31,7 +39,7 @@ def generate_s3_public_url(*args, **kwargs):
 
 
 def db_connect():
-    return engine.dialect.connect(database=mysql_database, autocommit=True)
+    return engine.dialect.connect(database=mysql_database, autocommit=True, **mysql_password)
 
 
 def redis_connect():

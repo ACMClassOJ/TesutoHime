@@ -14,7 +14,6 @@ from commons.task_typing import ProblemJudgeResult
 from commons.util import load_dataclass, serialize
 from flask import (Blueprint, Flask, abort, make_response, redirect,
                    render_template, request, send_from_directory)
-from sqlalchemy import func
 from sqlalchemy.orm import defer, joinedload, selectinload
 
 from admin import admin
@@ -25,8 +24,6 @@ from contestCache import Contest_Cache
 from contestManager import Contest_Manager
 from discussManager import Discuss_Manager
 from judgeManager import Judge_Manager
-from judgeServerManager import JudgeServer_Manager
-from judgeServerScheduler import JudgeServer_Scheduler
 from problemManager import Problem_Manager
 from quizManager import Quiz_Manager
 from referenceManager import Reference_Manager
@@ -375,34 +372,16 @@ def submit_problem():
                 int(problem_id)) and Login_Manager.get_privilege() < Privilege.ADMIN:
             return '-1'
         username = Login_Manager.get_username()
-        lang = -1
         lang_request_str = str(request.form.get('lang'))
-        if lang_request_str == 'cpp': 
-            lang = 0
-        elif lang_request_str == 'git':
-            lang = 1
-        elif lang_request_str == 'Verilog':
-            lang = 2
-        elif lang_request_str == 'quiz':
-            lang = 3
-        elif lang_request_str == 'git_java':
-            lang = 4
-        else:
-            return '-1'
-        # cpp or git or Verilog or quiz
-        if lang == 3:
+        if lang_request_str == 'quiz':
             user_code = json.dumps(request.form.to_dict())
         else:
             user_code = request.form.get('code')
         if len(str(user_code)) > ProblemConfig.Max_Code_Length:
             return '-1'
-        submission_id = JudgeServer_Scheduler.Start_Judge(problem_id, username, user_code, lang, share)
-        if submission_id is None:
-            return '-1'
         lang_str = lang_request_str.lower()
         with SqlSession() as db:
             rec = JudgeRecord2(
-                id=submission_id,
                 public=share,
                 language=lang_str,
                 username=username,
@@ -411,6 +390,7 @@ def submit_problem():
             )
             db.add(rec)
             db.commit()
+            submission_id = rec.id
         key = key_from_submission_id(submission_id)
         bucket = S3Config.Buckets.submissions
         s3_internal.put_object(Bucket=bucket, Key=key, Body=user_code.encode())
@@ -669,12 +649,36 @@ def status():
                            is_Admin=is_admin, friendlyName=Login_Manager.get_friendly_name())
 
 
-@web.route('/code/<int:submit_id>/')
-def code2(submit_id):
+def codeOld(run_id):
     if not Login_Manager.check_user_status():  # not login
         return redirect('login?next=' + request.full_path)
-    if submit_id < 0 or submit_id > Judge_Manager.max_id():
+    if run_id < 0 or run_id > Judge_Manager.max_id():
         abort(404)
+    detail = Judge_Manager.query_judge(run_id)
+    if not is_code_visible(detail['User'], detail['Problem_ID'], detail['Share']):
+        return abort(403)
+    else:
+        detail['Friendly_Name'] = User_Manager.get_friendly_name(detail['User'])
+        detail['Problem_Title'] = Problem_Manager.get_title(detail['Problem_ID'])
+        detail['Lang'] = readable_lang(detail['Lang'])
+        detail['Time'] = readable_time(int(detail['Time']))
+        data = None
+        if detail['Detail'] != 'None':
+            temp = json.loads(detail['Detail'])
+            detail['Score'] = int(temp[1])
+            data = temp[4:]
+        else:
+            detail['Score'] = 0
+        return render_template('judge_detail_old.html', Detail=detail, Data=data,
+                               friendlyName=Login_Manager.get_friendly_name(),
+                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+
+@web.route('/code/<int:submit_id>/')
+def code(submit_id):
+    if not Login_Manager.check_user_status():  # not login
+        return redirect('login?next=' + request.full_path)
+    if submit_id <= Judge_Manager.max_id():
+        return codeOld(submit_id)
     with SqlSession(expire_on_commit=False) as db:
         submission: JudgeRecord2 = db \
             .query(JudgeRecord2) \

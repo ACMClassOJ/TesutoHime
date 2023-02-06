@@ -1,10 +1,6 @@
 const max_len = 1048576;
 
 $(function() {
-    $("#shared").change(function() {
-        localStorage.setItem("share", $(this).is(":checked"));
-        console.log(this);
-    });
     $("#code").keyup(function() {
         if (this.value.length > max_len) {
             swal("超过长度上限！", "最多提交" + max_len + "个字符", "error");

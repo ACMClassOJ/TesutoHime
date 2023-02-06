@@ -77,16 +77,4 @@
 {% block script %}
     <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}?v=20220707"></script>
-    {% if not In_Exam -%}
-        <script>
-            $(function () {
-                let share = localStorage.getItem("share");
-                if (share == null) {
-                    localStorage.setItem("share", "false");
-                    share = "false";
-                }
-                $("#shared").prop("checked", share === "true");
-            });
-        </script>
-    {%- endif %}
 {% endblock %}

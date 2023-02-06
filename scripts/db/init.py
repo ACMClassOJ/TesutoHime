@@ -8,6 +8,7 @@ def init_db():
         v = DatabaseVersion()
         v.version = DATABASE_VERSION
         db.add(v)
+        db.commit()
 
 if __name__ == '__main__':
     init_db()

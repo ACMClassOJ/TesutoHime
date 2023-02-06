@@ -118,7 +118,7 @@ class JudgeRecord(Base):
     score = Column('Score', INTEGER(11), server_default=text("-1"))
     time = Column('Time', BIGINT(20))
     time_msecs = Column('Time_Used', INTEGER(11), server_default=text("-1"))
-    memory_bytes = Column('Mem_Used', INTEGER(11), server_default=text("-1"))
+    memory_kbytes = Column('Mem_Used', INTEGER(11), server_default=text("-1"))
     detail = Column('Detail', MEDIUMTEXT)
     public = Column('Share', TINYINT(1), server_default=text("0"))
 

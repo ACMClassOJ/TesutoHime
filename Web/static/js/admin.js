@@ -656,7 +656,7 @@ $(function () {
                 if (res.status !== 200) {
                     throw new Error(`网络错误: ${res.status}`)
                 }
-                const displayUrl = new URL(url)
+                const displayUrl = new URL(url, location.href)
                 displayUrl.search = ''
                 var swal_content = document.createElement("p");
                 swal_content.innerHTML = `

@@ -191,18 +191,21 @@ class JudgeStatus(Enum):
 
 class JudgeRecord2(Base):
     __tablename__ = 'judge_records2'
-    __table_args__ = {'mysql_charset': 'utf8mb4'}
+    __table_args__ = (
+        Index('problem_id_created', 'problem_id', 'created'),
+        {'mysql_charset': 'utf8mb4'},
+    )
 
     id = Column(Integer, primary_key=True)
     public = Column(Boolean)
     language = Column(Text)
     created = Column(DateTime, server_default=text('NOW()'))
-    username = Column(String(20), ForeignKey(User.username))
+    username = Column(String(20), ForeignKey(User.username), index=True)
     user = relationship(User)
     problem_id = Column(INTEGER(11), ForeignKey(Problem.id))
     problem = relationship(Problem)
 
-    status = Column(SqlEnum(JudgeStatus))
+    status = Column(SqlEnum(JudgeStatus), index=True)
     score = Column(BIGINT, default=0)
     message = Column(MEDIUMTEXT)
     details = Column(MEDIUMTEXT) # actually JSON of ProblemJudgeResult

@@ -153,14 +153,21 @@
                                             </div>
                                             {% if testpoint.resource_usage != None -%}
                                             <div class="col-2"> <i class="fa fa-clock"></i> {{ testpoint.resource_usage.time_msecs }} ms </div>
-                                            <div class="col-2"> <i class="fa fa-memory"></i> {{ "%.2f" % (testpoint.resource_usage.memory_bytes / 1024) }} KiB </div>
+                                            <div class="col-2"> <i class="fa fa-memory"></i> {{ "%.0f" % (testpoint.resource_usage.memory_bytes / 1024) }} KiB </div>
                                             {% if testpoint.resource_usage.file_size_bytes > 0 -%}
                                             <div class="col-2"> <i class="fa fa-database"></i> {{ "%.2f" | format(testpoint.resource_usage.file_size_bytes / 1048576) }} MiB </div>
                                             {%- endif %}
                                             {%- endif %}
+                                            {% if testpoint.message != '' -%}
+                                            <div class="col testpoint_msg_exp" id="testpoint_msg_exp-{{ j }}_{{ testpoint.id }}">
+                                                <span style="position: relative; float: right;"> Show details <i class="fa fa-caret-down"></i></span>
+                                            </div>
+                                            {%- endif %}
                                         </div>
                                         {% if testpoint.message != '' -%}
-                                        <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ testpoint.message }}</pre>
+                                        <div class="testpoint_msg" id="testpoint_msg-{{ j }}_{{ testpoint.id }}">
+                                            <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ testpoint.message }}</pre>
+                                        </div>
                                         {%- endif %}
                                     </td>
                                 </tr>
@@ -218,5 +225,19 @@
             }, count_down_time * 1000 / origin_interval); 
         });
         {%- endif %}
+
+        $(".testpoint_msg").each(function(){
+            if($(this).height() < 60)
+            {
+                var testpoint_id = $(this).attr("id").split("-").at(-1);
+                $("#testpoint_msg_exp-" + testpoint_id).hide();
+            }
+        });
+
+        $(".testpoint_msg_exp").click(function(){
+           var testpoint_id = $(this).attr("id").split("-").at(-1);
+           $("#testpoint_msg-" + testpoint_id).css("max-height", "none");
+           $(this).hide();
+        });
     </script>
 {% endblock %}

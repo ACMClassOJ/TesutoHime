@@ -51,11 +51,11 @@ async def checker_cmp(_infile, outfile: PosixPath, run_res_path: PosixPath, chec
             supplementary_paths=['/bin', '/usr/bin', str(outfile), str(ans)],
         )
     if res.error == 'runtime_error' and res.code == diff_errexit_code:
-        return CheckResult('wrong_answer', 'Wrong answer')
+        return CheckResult('wrong_answer', '')
     if res.error is not None:
         logger.error(f'cmp failed with {res.message}')
         return CheckResult('system_error', f'checker failed: {res.message}')
-    return CheckResult('accepted', 'Accepted', 1.0)
+    return CheckResult('accepted', '', 1.0)
 
 
 def checker_read_float(outfile: PosixPath, message: str = ''):

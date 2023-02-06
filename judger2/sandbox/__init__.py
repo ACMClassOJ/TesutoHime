@@ -212,11 +212,9 @@ async def run_with_limits(
             # won't be accurate in this case. Therefore,
             # do not move this check down after the check
             # for exit code.
-            msg = 'Time limit exceeded'
-            return RunResult('time_limit_exceeded', msg, usage)
+            return RunResult('time_limit_exceeded', '', usage)
         if usage_is_accurate and mem > limits.memory_bytes:
-            msg = 'Memory limit exceeded'
-            return RunResult('memory_limit_exceeded', msg, usage)
+            return RunResult('memory_limit_exceeded', '', usage)
         if code != 0:
             # code is ./runner's exit code, so there must be something wrong.
             msg = f'Task runner exited with status {code}{errmsg}'

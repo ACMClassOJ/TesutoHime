@@ -36,7 +36,7 @@
                     {% if is_Admin -%}<th>实名</th>{%- endif %}
                     {% if problems_visible -%}
                         {% for problem in Problems -%}
-                            <th><a href="/OnlineJudge/problem?problem_id={{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
+                            <th><a href="/OnlineJudge/problem/{{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
                         {%- endfor %}
                     {%- endif %}
                     <th>总通过数</th>

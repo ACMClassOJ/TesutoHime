@@ -178,7 +178,7 @@ $(function () {
 
     $("#btnGoToProblemPage").click(function(){
         if($("#iptProblemID").val() != "")
-            window.location.replace('/OnlineJudge/problem?problem_id=' + $("#iptProblemID").val());
+            window.location.replace('/OnlineJudge/problem/' + $("#iptProblemID").val());
     });
 
     $("#btnGetProblemAutoIncreseID").click(function(){
@@ -312,7 +312,7 @@ $(function () {
 
     $("#btnGoToContestPage").click(function(){
         if($("#iptContestID").val() != "")
-            window.location.replace('/OnlineJudge/contest?contest_id=' + $("#iptContestID").val());
+            window.location.replace('/OnlineJudge/contest/' + $("#iptContestID").val());
     });
 
     $("#btnGetContestAutoIncreseID").click(function(){

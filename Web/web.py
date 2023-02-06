@@ -9,7 +9,7 @@ from urllib.parse import quote, urlencode, urljoin
 from uuid import uuid4
 
 import commons.task_typing
-from commons.models import JudgeRecord2, JudgeRunner2, JudgeStatus
+from commons.models import JudgeRecord2, JudgeRunner2, JudgeStatus, Contest
 from commons.task_typing import ProblemJudgeResult
 from commons.util import load_dataclass, serialize
 from flask import (Blueprint, Flask, abort, make_response, redirect,
@@ -261,7 +261,7 @@ def register():
         return val
 
 
-@web.route('/problems')
+@web.route('/problem')
 def problem_list():
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
@@ -272,6 +272,8 @@ def problem_list():
     problem_id = request.args.get('problem_id')
     if problem_id == '':
         problem_id = None
+    if problem_id != None:
+        return redirect(f'/OnlineJudge/problem/{problem_id}')
     problem_name_keyword = request.args.get('problem_name_keyword')
     if problem_name_keyword == '':
         problem_name_keyword = None
@@ -318,12 +320,11 @@ def problem_list():
                             friendlyName=Login_Manager.get_friendly_name(),
                             is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)                        
 
-@web.route('/problem')
-def problem_detail():
+@web.route('/problem/<int:problem_id>')
+def problem_detail(problem_id):
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
-    problem_id = request.args.get('problem_id')
-    if problem_id is None or int(problem_id) < 1000 or (int(problem_id) > Problem_Manager.get_max_id() and int(problem_id) < 11000) or int(problem_id) > Problem_Manager.get_real_max_id():
+    if problem_id is None or problem_id < 1000 or (problem_id > Problem_Manager.get_max_id() and problem_id < 11000) or problem_id > Problem_Manager.get_real_max_id():
         abort(404)  # No argument fed
     if Problem_Manager.get_release_time(problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
@@ -335,14 +336,11 @@ def problem_detail():
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
-@web.route('/submit', methods=['GET', 'POST'])
-def submit_problem():
+@web.route('/problem/<int:problem_id>/submit', methods=['GET', 'POST'])
+def submit_problem(problem_id):
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.full_path)
-        if request.args.get('problem_id') is None:
-            abort(404)
-        problem_id = int(request.args.get('problem_id'))
         if Problem_Manager.get_release_time(
                 problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
             abort(404)
@@ -360,7 +358,6 @@ def submit_problem():
     else:
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.full_path)
-        problem_id = int(request.form.get('problem_id'))
         if Problem_Manager.get_release_time(
                 problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
             return '-1'
@@ -488,15 +485,12 @@ def problem_rank(problem_id):
                            In_Exam=in_exam)
 
 
-@web.route('/discuss', methods=['GET', 'POST'])
-def discuss():
+@web.route('/problem/<int:problem_id>/discuss', methods=['GET', 'POST'])
+def discuss(problem_id):
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
             return redirect('login?next=' + request.full_path)
-        problem_id = request.args.get('problem_id')
-        if problem_id is None:
-            abort(404)
-        
+
         in_exam = problem_in_exam(problem_id)
 
         if in_exam:  # Problem in Contest or Homework and Current User is NOT administrator
@@ -527,7 +521,6 @@ def discuss():
         try:
             form = request.json
             action = form.get('action')  # post, edit, delete
-            problem_id = form.get('problem_id')  # this argument must be given
             if action == 'post':
                 text = form.get('text')
                 username = Login_Manager.get_username()
@@ -535,7 +528,7 @@ def discuss():
                     Discuss_Manager.add_discuss(problem_id, username, text)
                     return ReturnCode.SUC
                 else:
-                    print('Access Dined in Discuss: Add')
+                    print('Access Denied in Discuss: Add')
                     return ReturnCode.ERR_PERMISSION_DENIED
             if action == 'edit':
                 discuss_id = form.get('discuss_id')
@@ -546,7 +539,7 @@ def discuss():
                     Discuss_Manager.modify_discuss(discuss_id, text)
                     return ReturnCode.SUC
                 else:
-                    print('Access Dined in Discuss: Edit')
+                    print('Access Denied in Discuss: Edit')
                     return ReturnCode.ERR_PERMISSION_DENIED
             if action == 'delete':
                 discuss_id = form.get('discuss_id')
@@ -649,7 +642,7 @@ def status():
                            is_Admin=is_admin, friendlyName=Login_Manager.get_friendly_name())
 
 
-def codeOld(run_id):
+def code_old(run_id):
     if not Login_Manager.check_user_status():  # not login
         return redirect('login?next=' + request.full_path)
     if run_id < 0 or run_id > Judge_Manager.max_id():
@@ -678,7 +671,7 @@ def code(submit_id):
     if not Login_Manager.check_user_status():  # not login
         return redirect('login?next=' + request.full_path)
     if submit_id <= Judge_Manager.max_id():
-        return codeOld(submit_id)
+        return code_old(submit_id)
     with SqlSession(expire_on_commit=False) as db:
         submission: JudgeRecord2 = db \
             .query(JudgeRecord2) \
@@ -757,8 +750,6 @@ def rejudge(submit_id):
 def abort_judge(submit_id):
     if not Login_Manager.check_user_status():  # not login
         return redirect('login?next=' + request.full_path)
-    if submit_id < 0 or submit_id > Judge_Manager.max_id():
-        abort(404)
     with SqlSession(expire_on_commit=False) as db:
         submission: Optional[Tuple[str, int]] = db \
             .query(JudgeRecord2.username) \
@@ -784,282 +775,292 @@ def abort_judge(submit_id):
 
 
 @web.route('/contest')
-def contest():
+def contest_list():
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
     contest_id = request.args.get('contest_id')
+    if contest_id is not None:
+        return redirect(f'/OnlineJudge/contest/{contest_id}')
     username = Login_Manager.get_username()
-    if contest_id is None:  # display contest list
-        contest_list = Contest_Manager.list_contest_and_exam()
-        data = []
-        cur_time = unix_nano()
-        is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
-        exam_id, _ = Contest_Manager.get_unfinished_exam_info_for_player(username, cur_time)
-        # here exam_id is an *arbitary* unfinished exam in which the player is in 
+    contest_list = Contest_Manager.list_contest_and_exam()
+    data = []
+    cur_time = unix_nano()
+    is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+    exam_id, _ = Contest_Manager.get_unfinished_exam_info_for_player(username, cur_time)
+    # here exam_id is an *arbitary* unfinished exam in which the player is in 
 
-        # Blocked: indicate whether the join button should be disabled because time is over
-        # Joined: indicate whether the user has joined the contest, join button should also be disabled
-        # Exam_Blocked: indicate that the user is in an *arbitary* exam, so even if there are available contests, join button should be disabled
-        for ele in contest_list:
-            cur = {'ID': int(ele[0]),
-                   'Title': str(ele[1]),
-                   'Start_Time': readable_time(int(ele[2])),
-                   'End_Time': readable_time(int(ele[3])),
-                   'Joined': Contest_Manager.check_player_in_contest(ele[0], username),
-                   'Blocked': unix_nano() > int(ele[3]),
-                   'Exam_Blocked': (exam_id != -1 and ele[4] == 2 and exam_id != int(ele[0]))}
-            if cur_time < int(ele[2]):
-                cur['Status'] = 'Pending'
-            elif cur_time > int(ele[3]):
-                cur['Status'] = 'Finished'
-            else:
-                cur['Status'] = 'Going On'
-            data.append(cur)
-        
-        return render_template('contest_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name(),
-                               is_Admin=is_admin)
-    elif not contest_id.isdigit():
-        abort(404)
-    else:
-        contest_id = int(contest_id)
-        if contest_id < 0 or contest_id > Contest_Manager.get_max_id():
-            abort(404)  # No argument fed
-        start_time, end_time = Contest_Manager.get_time(contest_id)
-        is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
-        problems = Contest_Manager.list_problem_for_contest(contest_id)
-        problems_visible = is_admin or unix_nano() >= start_time
-        players = Contest_Manager.list_player_for_contest(contest_id)
-
-        data = Contest_Cache.get(contest_id)
-        if len(data) == 0:
-            data = [
-                {
-                    'score': 0,
-                    'penalty': 0,
-                    'friendly_name': User_Manager.get_friendly_name(username),
-                    'problems': [
-                        {
-                            'score': 0,
-                            'count': 0,
-                            'accepted': False,
-                        } for _ in problems
-                    ],
-                    'realname': Reference_Manager.Query_Realname(User_Manager.get_student_id(username)),
-                    'student_id': User_Manager.get_student_id(username),
-                    'username': username,
-                } for username in players
-            ]
-            username_to_num = dict(map(lambda entry: [regularize_string(entry[1]), entry[0]], enumerate(players)))
-            problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
-
-            with SqlSession() as db:
-                submits = db \
-                    .query(JudgeRecord2) \
-                    .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
-                    .where(JudgeRecord2.problem_id.in_(problems)) \
-                    .where(JudgeRecord2.username.in_(players)) \
-                    .where(JudgeRecord2.created >= datetime.datetime.fromtimestamp(start_time)) \
-                    .where(JudgeRecord2.created < datetime.datetime.fromtimestamp(end_time)) \
-                    .all()
-            for submit in submits:
-                username = submit.username
-                problem_id = submit.problem_id
-                status = 2 if submit.status == JudgeStatus.accepted else -1
-                score = submit.score
-                submit_time = submit.created.timestamp()
-
-                if regularize_string(username) not in username_to_num:
-                    continue
-
-                rank = username_to_num[regularize_string(username)]
-                problem_index = problem_to_num[problem_id]
-                user_data = data[rank]
-                problem = user_data['problems'][problem_index]
-
-                if problem['accepted'] == True:
-                    continue
-                max_score = problem['score']
-                # FIXME: magic number 2 for AC
-                is_ac = int(status) == 2
-                submit_count = problem['count']
-
-                if int(score) > max_score:
-                    user_data['score'] -= max_score
-                    max_score = int(score)
-                    user_data['score'] += max_score
-
-                submit_count += 1
-
-                if is_ac:
-                    user_data['penalty'] += (int(submit_time) - start_time + (submit_count - 1) * 1200) // 60
-
-                problem['score'] = max_score
-                problem['count'] = submit_count
-                problem['accepted'] = is_ac
-
-            Contest_Cache.put(contest_id, data)    
-
-        cur_time = unix_nano()
-        if cur_time < start_time:
-            contest_status = 'Pending'
-        elif cur_time > end_time:
-            contest_status = 'Finished'
+    # Blocked: indicate whether the join button should be disabled because time is over
+    # Joined: indicate whether the user has joined the contest, join button should also be disabled
+    # Exam_Blocked: indicate that the user is in an *arbitary* exam, so even if there are available contests, join button should be disabled
+    for ele in contest_list:
+        cur = {'ID': int(ele[0]),
+               'Title': str(ele[1]),
+               'Start_Time': readable_time(int(ele[2])),
+               'End_Time': readable_time(int(ele[3])),
+               'Joined': Contest_Manager.check_player_in_contest(ele[0], username),
+               'Blocked': unix_nano() > int(ele[3]),
+               'Exam_Blocked': (exam_id != -1 and ele[4] == 2 and exam_id != int(ele[0]))}
+        if cur_time < int(ele[2]):
+            cur['Status'] = 'Pending'
+        elif cur_time > int(ele[3]):
+            cur['Status'] = 'Finished'
         else:
-            contest_status = 'Going On'
-        data = sorted(data, key=cmp_to_key(lambda x, y: y['score'] - x['score'] if x['score'] != y['score'] else x['penalty'] - y['penalty']))
-        title = Contest_Manager.get_title(contest_id)[0][0]
+            cur['Status'] = 'Going On'
+        data.append(cur)
+    
+    return render_template('contest_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name(),
+                           is_Admin=is_admin)
 
-        time_elapsed = float(unix_nano() - start_time)
-        time_overall = float(end_time - start_time)
-        percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
+@web.route('/contest/<int:contest_id>')
+def contest(contest_id):
+    if not Login_Manager.check_user_status():
+        return redirect('login?next=' + request.full_path)
+    with SqlSession() as db:
+        contest = db.query(Contest.id).where(Contest.id == contest_id).one_or_none()
+        if contest == None:
+            abort(404)
+    start_time, end_time = Contest_Manager.get_time(contest_id)
+    is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+    problems = Contest_Manager.list_problem_for_contest(contest_id)
+    problems_visible = is_admin or unix_nano() >= start_time
+    players = Contest_Manager.list_player_for_contest(contest_id)
 
-        status_url = 'status'
-        ac_status = 'accepted'
+    data = Contest_Cache.get(contest_id)
+    if len(data) == 0:
+        data = [
+            {
+                'score': 0,
+                'penalty': 0,
+                'friendly_name': User_Manager.get_friendly_name(username),
+                'problems': [
+                    {
+                        'score': 0,
+                        'count': 0,
+                        'accepted': False,
+                    } for _ in problems
+                ],
+                'realname': Reference_Manager.Query_Realname(User_Manager.get_student_id(username)),
+                'student_id': User_Manager.get_student_id(username),
+                'username': username,
+            } for username in players
+        ]
+        username_to_num = dict(map(lambda entry: [regularize_string(entry[1]), entry[0]], enumerate(players)))
+        problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
 
-        return render_template(
-            'contest.html',
-            id=contest_id,
-            Title=title,
-            Status=contest_status,
-            StartTime=readable_time(start_time),
-            EndTime=readable_time(end_time),
-            Problems=problems,
-            problems_visible=problems_visible,
-            data=data,
-            status_url=status_url,
-            ac_status=ac_status,
-            is_Admin=is_admin,
-            Percentage=percentage,
-            friendlyName=Login_Manager.get_friendly_name(),
-            enumerate=enumerate,
-        )
+        with SqlSession() as db:
+            submits = db \
+                .query(JudgeRecord2) \
+                .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
+                .where(JudgeRecord2.problem_id.in_(problems)) \
+                .where(JudgeRecord2.username.in_(players)) \
+                .where(JudgeRecord2.created >= datetime.datetime.fromtimestamp(start_time)) \
+                .where(JudgeRecord2.created < datetime.datetime.fromtimestamp(end_time)) \
+                .all()
+        for submit in submits:
+            username = submit.username
+            problem_id = submit.problem_id
+            status = 2 if submit.status == JudgeStatus.accepted else -1
+            score = submit.score
+            submit_time = submit.created.timestamp()
+
+            if regularize_string(username) not in username_to_num:
+                continue
+
+            rank = username_to_num[regularize_string(username)]
+            problem_index = problem_to_num[problem_id]
+            user_data = data[rank]
+            problem = user_data['problems'][problem_index]
+
+            if problem['accepted'] == True:
+                continue
+            max_score = problem['score']
+            # FIXME: magic number 2 for AC
+            is_ac = int(status) == 2
+            submit_count = problem['count']
+
+            if int(score) > max_score:
+                user_data['score'] -= max_score
+                max_score = int(score)
+                user_data['score'] += max_score
+
+            submit_count += 1
+
+            if is_ac:
+                user_data['penalty'] += (int(submit_time) - start_time + (submit_count - 1) * 1200) // 60
+
+            problem['score'] = max_score
+            problem['count'] = submit_count
+            problem['accepted'] = is_ac
+
+        Contest_Cache.put(contest_id, data)    
+
+    cur_time = unix_nano()
+    if cur_time < start_time:
+        contest_status = 'Pending'
+    elif cur_time > end_time:
+        contest_status = 'Finished'
+    else:
+        contest_status = 'Going On'
+    data = sorted(data, key=cmp_to_key(lambda x, y: y['score'] - x['score'] if x['score'] != y['score'] else x['penalty'] - y['penalty']))
+    title = Contest_Manager.get_title(contest_id)[0][0]
+
+    time_elapsed = float(unix_nano() - start_time)
+    time_overall = float(end_time - start_time)
+    percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
+
+    status_url = 'status'
+    ac_status = 'accepted'
+
+    return render_template(
+        'contest.html',
+        id=contest_id,
+        Title=title,
+        Status=contest_status,
+        StartTime=readable_time(start_time),
+        EndTime=readable_time(end_time),
+        Problems=problems,
+        problems_visible=problems_visible,
+        data=data,
+        status_url=status_url,
+        ac_status=ac_status,
+        is_Admin=is_admin,
+        Percentage=percentage,
+        friendlyName=Login_Manager.get_friendly_name(),
+        enumerate=enumerate,
+    )
 
 
 @web.route('/homework')
-def homework():
+def homework_list():
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
     contest_id = request.args.get('homework_id')
+    if contest_id is not None:  # display contest list
+        return redirect(f'/OnlineJudge/homework/{contest_id}')
     username = Login_Manager.get_username()
-    if contest_id is None:  # display contest list
-        contest_list = Contest_Manager.list_contest(1)
-        data = []
-        cur_time = unix_nano()
-        for ele in contest_list:
-            cur = {'ID': int(ele[0]),
-                   'Title': str(ele[1]),
-                   'Start_Time': readable_time(int(ele[2])),
-                   'End_Time': readable_time(int(ele[3])),
-                   'Joined': Contest_Manager.check_player_in_contest(ele[0], username),
-                   'Blocked': unix_nano() > int(ele[3])}
-            if cur_time < int(ele[2]):
-                cur['Status'] = 'Pending'
-            elif cur_time > int(ele[3]):
-                cur['Status'] = 'Finished'
-            else:
-                cur['Status'] = 'Going On'
-            data.append(cur)
-        return render_template('homework_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name(),
-                               is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
-    elif not contest_id.isdigit():
-        abort(404)
-    else:
-        contest_id = int(contest_id)
-        start_time, end_time = Contest_Manager.get_time(contest_id)
-        is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
-        problems = Contest_Manager.list_problem_for_contest(contest_id)
-        problems_visible = is_admin or unix_nano() >= start_time
-        players = Contest_Manager.list_player_for_contest(contest_id)
-
-        data = Contest_Cache.get(contest_id)
-
-        if len(data) == 0:  
-            data = [
-                {
-                    'ac_count': 0,
-                    'friendly_name': User_Manager.get_friendly_name(username),
-                    'problems': [
-                        {
-                            'accepted': False,
-                            'count': 0,
-                        } for _ in problems
-                    ],
-                    'realname': Reference_Manager.Query_Realname(User_Manager.get_student_id(username)),
-                    'student_id': User_Manager.get_student_id(username),
-                    'username': username,
-                } for username in players
-            ]
-            username_to_num = dict(map(lambda entry: [regularize_string(entry[1]), entry[0]], enumerate(players)))
-            problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
-
-            with SqlSession() as db:
-                submits = db \
-                    .query(JudgeRecord2) \
-                    .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
-                    .where(JudgeRecord2.problem_id.in_(problems)) \
-                    .where(JudgeRecord2.username.in_(players)) \
-                    .where(JudgeRecord2.created >= datetime.datetime.fromtimestamp(start_time)) \
-                    .where(JudgeRecord2.created < datetime.datetime.fromtimestamp(end_time)) \
-                    .all()
-
-            for submit in submits:
-                username = submit.username
-                problem_id = submit.problem_id
-
-                if regularize_string(username) not in username_to_num:
-                    continue
-
-                user_num = username_to_num[regularize_string(username)]
-                problem_index = problem_to_num[problem_id]
-                user_data = data[user_num]
-                problem = user_data['problems'][problem_index]
-
-                if problem['accepted'] == True:
-                    continue
-
-                # FIXME: magic number 2 for AC
-                if submit.status == JudgeStatus.accepted:
-                    problem['accepted'] = True
-                    user_data['ac_count'] += 1
-
-                problem['count'] += 1
-
-            Contest_Cache.put(contest_id, data)    
-
-        cur_time = unix_nano()
-        if cur_time < start_time:
-            contest_status = 'Pending'
-        elif cur_time > end_time:
-            contest_status = 'Finished'
+    contest_list = Contest_Manager.list_contest(1)
+    data = []
+    cur_time = unix_nano()
+    for ele in contest_list:
+        cur = {'ID': int(ele[0]),
+               'Title': str(ele[1]),
+               'Start_Time': readable_time(int(ele[2])),
+               'End_Time': readable_time(int(ele[3])),
+               'Joined': Contest_Manager.check_player_in_contest(ele[0], username),
+               'Blocked': unix_nano() > int(ele[3])}
+        if cur_time < int(ele[2]):
+            cur['Status'] = 'Pending'
+        elif cur_time > int(ele[3]):
+            cur['Status'] = 'Finished'
         else:
-            contest_status = 'Going On'
-        title = Contest_Manager.get_title(contest_id)[0][0]
+            cur['Status'] = 'Going On'
+        data.append(cur)
+    return render_template('homework_list.html', Data=data, friendlyName=Login_Manager.get_friendly_name(),
+                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
-        time_elapsed = float(unix_nano() - start_time)
-        time_overall = float(end_time - start_time)
-        percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
 
-        status_url = 'status'
-        ac_status = 'accepted'
+@web.route('/homework/<int:contest_id>')
+def homework(contest_id):
+    if not Login_Manager.check_user_status():
+        return redirect('login?next=' + request.full_path)
+    with SqlSession() as db:
+        contest = db.query(Contest.id).where(Contest.id == contest_id).one_or_none()
+        if contest == None:
+            abort(404)            
+    start_time, end_time = Contest_Manager.get_time(contest_id)
+    is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+    problems = Contest_Manager.list_problem_for_contest(contest_id)
+    problems_visible = is_admin or unix_nano() >= start_time
+    players = Contest_Manager.list_player_for_contest(contest_id)
 
-        return render_template(
-            'homework.html',
-            id=contest_id,
-            Title=title,
-            Status=contest_status,
-            StartTime=readable_time(start_time),
-            EndTime=readable_time(end_time),
-            Problems=problems,
-            problems_visible=problems_visible,
-            Players=players,
-            data=data,
-            status_url=status_url,
-            ac_status=ac_status,
-            is_Admin=is_admin,
-            Percentage=percentage,
-            friendlyName=Login_Manager.get_friendly_name(),
-            enumerate=enumerate,
-        )
+    data = Contest_Cache.get(contest_id)
+
+    if len(data) == 0:  
+        data = [
+            {
+                'ac_count': 0,
+                'friendly_name': User_Manager.get_friendly_name(username),
+                'problems': [
+                    {
+                        'accepted': False,
+                        'count': 0,
+                    } for _ in problems
+                ],
+                'realname': Reference_Manager.Query_Realname(User_Manager.get_student_id(username)),
+                'student_id': User_Manager.get_student_id(username),
+                'username': username,
+            } for username in players
+        ]
+        username_to_num = dict(map(lambda entry: [regularize_string(entry[1]), entry[0]], enumerate(players)))
+        problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
+
+        with SqlSession() as db:
+            submits = db \
+                .query(JudgeRecord2) \
+                .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
+                .where(JudgeRecord2.problem_id.in_(problems)) \
+                .where(JudgeRecord2.username.in_(players)) \
+                .where(JudgeRecord2.created >= datetime.datetime.fromtimestamp(start_time)) \
+                .where(JudgeRecord2.created < datetime.datetime.fromtimestamp(end_time)) \
+                .all()
+
+        for submit in submits:
+            username = submit.username
+            problem_id = submit.problem_id
+
+            if regularize_string(username) not in username_to_num:
+                continue
+
+            user_num = username_to_num[regularize_string(username)]
+            problem_index = problem_to_num[problem_id]
+            user_data = data[user_num]
+            problem = user_data['problems'][problem_index]
+
+            if problem['accepted'] == True:
+                continue
+
+            if submit.status == JudgeStatus.accepted:
+                problem['accepted'] = True
+                user_data['ac_count'] += 1
+
+            problem['count'] += 1
+
+        Contest_Cache.put(contest_id, data)    
+
+    cur_time = unix_nano()
+    if cur_time < start_time:
+        contest_status = 'Pending'
+    elif cur_time > end_time:
+        contest_status = 'Finished'
+    else:
+        contest_status = 'Going On'
+    title = Contest_Manager.get_title(contest_id)[0][0]
+
+    time_elapsed = float(unix_nano() - start_time)
+    time_overall = float(end_time - start_time)
+    percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
+
+    status_url = 'status'
+    ac_status = 'accepted'
+
+    return render_template(
+        'homework.html',
+        id=contest_id,
+        Title=title,
+        Status=contest_status,
+        StartTime=readable_time(start_time),
+        EndTime=readable_time(end_time),
+        Problems=problems,
+        problems_visible=problems_visible,
+        Players=players,
+        data=data,
+        status_url=status_url,
+        ac_status=ac_status,
+        is_Admin=is_admin,
+        Percentage=percentage,
+        friendlyName=Login_Manager.get_friendly_name(),
+        enumerate=enumerate,
+    )
 
 @web.route('/profile', methods=['GET', 'POST'])
 def profile():
@@ -1131,4 +1132,3 @@ def favicon():
 oj = Flask('WEB')
 oj.register_blueprint(web, url_prefix='/OnlineJudge')
 oj.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400
-

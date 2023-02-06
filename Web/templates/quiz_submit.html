@@ -14,17 +14,17 @@
         <div class="nav-wrapper">
             <ul class="nav nav-pills nav-fill flex-column flex-md-row">
                 <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem?problem_id={{ Problem_ID }}">题面</a>
+                    <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}">题面</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/submit?problem_id={{ Problem_ID }}">提交</a>
+                    <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ Problem_ID }}/submit">提交</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ Problem_ID }}">评测状态</a>
                 </li>
                 {% if not In_Exam -%}
                 <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/discuss?problem_id={{ Problem_ID }}">讨论</a>
+                    <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}/discuss">讨论</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}/rank">排行榜</a>

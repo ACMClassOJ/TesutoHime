@@ -20,7 +20,7 @@
                 {% for cur in  Data -%}
                     <tr>
                         <td>{{ cur['ID'] }}</td>
-                        <td><a href="/OnlineJudge/homework?homework_id={{ cur['ID'] }}">{{ cur['Title'] }}</a></td>
+                        <td><a href="/OnlineJudge/homework/{{ cur['ID'] }}">{{ cur['Title'] }}</a></td>
                         <td>{{ cur['Start_Time'] }}</td>
                         <td>{{ cur['End_Time'] }}</td>
                         <td>{{ cur['Status'] }}</td>

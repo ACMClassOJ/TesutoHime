@@ -52,7 +52,7 @@ default_compile_limits = ResourceUsage(
 default_run_limits = ResourceUsage(
     time_msecs=1 * Secs,
     memory_bytes=512 * MiB,
-    file_count=0,
+    file_count=unlimited,
     file_size_bytes=0,
 )
 

@@ -281,9 +281,6 @@ async def parse_testpoints(ctx: ParseContext) -> List[JudgeTaskPlan]:
         ctx.plan.compile = None
 
     if any(x.DiskLimit is not None and x.DiskLimit > 0 for x in ctx.cfg.Details):
-        if ctx.compile_type == 'hpp-per-testpoint':
-            msg = 'Per-testpoint compilation is incompatible with persistence testing'
-            raise InvalidProblemException(msg)
         plan: List[JudgeTaskPlan] = []
         for testpoint, conf in zip(testpoints, ctx.cfg.Details):
             if len(plan) == 0 or conf.DiskLimit < 0:

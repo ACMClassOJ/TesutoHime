@@ -14,12 +14,7 @@ $(function() {
                 var detected_type = "cpp";
                 var tmp_code = $("#code").val();
                 if (tmp_code.indexOf("http") == 0 || tmp_code.indexOf("git") == 0)
-                {
-                    if (tmp_code.search("compiler") != -1)
-                        var detected_type = "git_java";
-                    else
-                        var detected_type = "git";
-                }
+                    var detected_type = "git";
                 else if (tmp_code.search("module") != -1 && tmp_code.search("endmodule") != -1)
                     var detected_type = "Verilog";
                 $("#lang").val(detected_type);

@@ -24,7 +24,7 @@ class CompileSourceVerilog:
 
 @dataclass
 class CompileSourceGitJava:
-    url: Url
+    main: Url
 
 
 CompileSource = Union[

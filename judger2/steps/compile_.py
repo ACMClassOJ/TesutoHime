@@ -1,7 +1,7 @@
 __all__ = 'compile', 'ensure_input'
 
 from logging import getLogger
-from os import utime, makedirs, walk, path, listdir
+from os import utime
 from pathlib import PosixPath
 from shutil import copy2, which
 from typing import Any, Callable, Coroutine, Dict, List
@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from commons.task_typing import (CompileLocalResult, CompileResult,
                                  CompileSource, CompileSourceCpp,
-                                 CompileSourceGit, CompileSourceVerilog, CompileSourceGitJava,
+                                 CompileSourceGit, CompileSourceVerilog,
                                  CompileTask, Input, ResourceUsage)
 
 from judger2.cache import CachedFile, ensure_cached, upload
@@ -182,68 +182,6 @@ async def compile_verilog(
     return CompileLocalResult.from_file(exec_file)
 
 
-async def compile_git_java(
-    cwd: PosixPath,
-    source: CompileSourceGitJava,
-    limits: ResourceUsage,
-) -> CompileLocalResult:
-    logger.debug(f'about to compile git repo {repr(source.url)}')
-
-    def run_build_step(argv: List[str], network = False):
-        bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc']
-        if resolv_conf_path is not None:
-            bind.append(resolv_conf_path)
-        return run_with_limits(
-            argv, cwd, limits,
-            supplementary_paths=bind,
-            network_access=network,
-            disable_proc=False
-        )
-
-    # clone
-    git_argv = [which('git'), 'clone', source.url, '.'] + gitflags
-    logger.debug(f'about to run {git_argv}')
-    clone_res = await run_build_step(git_argv, True)
-    if clone_res.error != None:
-        return CompileLocalResult.from_run_failure(clone_res)
-
-    # compile
-    src_path = cwd / 'src'
-    src_txt = cwd / 'src.txt'
-    bin_path = cwd / 'bin'
-    bin_tar = cwd / 'code.tar.gz'
-    jar_name = ''
-    for j in listdir(cwd.as_posix()):
-        if j.endswith('.jar'):
-            jar_name = j
-    jar_path = cwd / jar_name
-    makedirs(bin_path.as_posix())
-    with open(src_txt.as_posix(), 'w') as src:
-        for root, dirs, files in walk(src_path.as_posix()):
-            for name in files:
-                if name.endswith('.java'):
-                    src.write(path.join(root, name) + '\n')
-    res = await run_build_step([which('javac'), '@' + src_txt.as_posix(),'-encoding', 'UTF8', 
-          '-d', bin_path.as_posix(), '-cp', jar_path.as_posix()])
-    if res.error != None:
-        return CompileLocalResult.from_run_failure(res)
-    res = await run_build_step([which('tar'), '-czvf', bin_tar.as_posix(), bin_path.as_posix()])
-    print(res)
-    if res.error != None:
-        return CompileLocalResult.from_run_failure(res)
-
-    # check
-    if not bin_tar.is_file():
-        msg = f'Java class tarball not found.'
-        return CompileLocalResult(
-            CompileResult('runtime_error', msg),
-            None,
-        )
-
-    # done
-    return CompileLocalResult.from_file(bin_tar)
-
-
 Compiler = Callable[
     [PosixPath, CompileSource, ResourceUsage],
     Coroutine[Any, Any, CompileLocalResult],
@@ -252,5 +190,4 @@ compilers: Dict[Any, Compiler] = {
     CompileSourceCpp: compile_cpp,
     CompileSourceGit: compile_git,
     CompileSourceVerilog: compile_verilog,
-    CompileSourceGitJava: compile_git_java,
 }

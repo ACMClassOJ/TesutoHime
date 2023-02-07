@@ -561,7 +561,7 @@ $(function () {
         }
         const file = $("#iptDataZipUpload").prop("files")[0]
         JSZip.loadAsync(file).then(function (zip) {
-            zip.file("config.json").async("string").then(function (config) {
+            zip.file(problemId + "/config.json").async("string").then(function (config) {
                 var config_json = JSON.parse(config);
                 let limit_config = {};
                 limit_config["length"] = config_json["Details"].length;

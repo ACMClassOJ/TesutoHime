@@ -60,9 +60,6 @@ valgrind_args = [
     '--quiet',
 ]
 
-java = which('java')
-java_file_name = 'Compiler'
-
 diff = which('diff')
 
 checker_cmp_limits = ResourceUsage(

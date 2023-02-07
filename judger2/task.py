@@ -13,7 +13,7 @@ from judger2.logging_ import task_logger
 from judger2.steps.check import check
 from judger2.steps.compile_ import compile
 from judger2.steps.run import run
-from judger2.util import TempDir, copy_supplementary_files, run_result_as_file
+from judger2.util import TempDir, copy_supplementary_files
 
 logger = getLogger(__name__)
 
@@ -80,7 +80,6 @@ async def judge_testpoint(testpoint: Testpoint, result: JudgeResult, \
                 cwd)
             output = await run(oufdir, cwd, testpoint.input, testpoint.run)
             logger.debug(f'run result: {output}')
-            run_res_path = run_result_as_file(output, oufdir)
             rusage.value = output.resource_usage
             if output.error is not None:
                 return TestpointJudgeResult(
@@ -92,7 +91,7 @@ async def judge_testpoint(testpoint: Testpoint, result: JudgeResult, \
         else:
             output = testpoint.input
 
-        check_res = await check(output, testpoint.check, run_res_path)
+        check_res = await check(output, testpoint.check)
         logger.debug(f'check result: {check_res}')
         res = TestpointJudgeResult(
             **check_res.__dict__,

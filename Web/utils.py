@@ -256,7 +256,6 @@ language_info = {
     'git': 'Git',
     'verilog': 'Verilog',
     'quiz': 'Quiz',
-    'git_java': 'Git (Java)',
 }
 
 @dataclass

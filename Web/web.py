@@ -62,8 +62,7 @@ def readable_lang(lang: int) -> str:
         0: 'C++',
         1: 'Git',
         2: 'Verilog',
-        3: 'Quiz',
-        4: 'Git (Java)'
+        3: 'Quiz'
     }
     try:
         return lang_str[lang]

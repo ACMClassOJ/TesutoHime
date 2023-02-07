@@ -14,17 +14,18 @@ from zipfile import ZipFile
 from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
                                  CompileResult, CompileSource,
                                  CompileSourceCpp, CompileSourceGit,
-                                 CompileSourceGitJava, CompileSourceVerilog,
-                                 CompileTask, CompileTaskPlan, DirectChecker,
-                                 FileUrl, GroupJudgeResult, JudgePlan,
-                                 JudgeResult, JudgeTask, JudgeTaskPlan,
-                                 ProblemJudgeResult, QuizOption, QuizProblem,
-                                 ResourceUsage, ResultType, RunArgs,
-                                 SourceLocation, SpjChecker,
-                                 StatusUpdateProgress, StatusUpdateStarted,
-                                 Testpoint, TestpointGroup,
-                                 TestpointJudgeResult, UserCode)
+                                 CompileSourceVerilog, CompileTask,
+                                 CompileTaskPlan, DirectChecker, FileUrl,
+                                 GroupJudgeResult, JudgePlan, JudgeResult,
+                                 JudgeTask, JudgeTaskPlan, ProblemJudgeResult,
+                                 QuizOption, QuizProblem, ResourceUsage,
+                                 ResultType, RunArgs, SourceLocation,
+                                 SpjChecker, StatusUpdateProgress,
+                                 StatusUpdateStarted, Testpoint,
+                                 TestpointGroup, TestpointJudgeResult,
+                                 UserCode)
 from commons.util import format_exc, Literal
+
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
                                quiz_filename, s3_buckets, working_dir)
@@ -463,11 +464,6 @@ async def get_compile_source(ctx: ExecutionContext, filename: str) \
         return CompileSourceGit(url)
     if ctx.lang == CodeLanguage.VERILOG:
         return CompileSourceVerilog(ctx.file_url(UrlType.CODE, filename))
-    if ctx.lang == CodeLanguage.GIT_JAVA:
-        url = (await read_file(ctx.code.bucket, ctx.code.key)).strip()
-        if url.startswith('/'):
-            raise InvalidCodeException('Local clone not allowed')
-        return CompileSourceGitJava(url)
     raise InvalidCodeException('Unknown language')
 
 async def prepare_compile_task(ctx: ExecutionContext, plan: CompileTaskPlan) \

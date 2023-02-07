@@ -22,16 +22,11 @@ class CompileSourceGit:
 class CompileSourceVerilog:
     main: FileUrl
 
-@dataclass
-class CompileSourceGitJava:
-    main: Url
-
 
 CompileSource = Union[
     CompileSourceCpp,
     CompileSourceGit,
     CompileSourceVerilog,
-    CompileSourceGitJava,
 ]
 
 
@@ -59,7 +54,7 @@ Input = Union[CompileTask, Artifact]
 
 @dataclass
 class RunArgs:
-    type: Literal['elf', 'valgrind', 'verilog', 'java']
+    type: Literal['elf', 'valgrind', 'verilog']
     limits: ResourceUsage
     infile: Optional[FileUrl]
     supplementary_files: List[FileUrl]
@@ -229,7 +224,6 @@ class CodeLanguage(Enum):
     GIT = 'git'
     VERILOG = 'verilog'
     QUIZ = 'quiz'
-    GIT_JAVA = 'git_java'
 
 
 @dataclass

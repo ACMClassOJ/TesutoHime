@@ -92,7 +92,7 @@ async def judge_testpoint(testpoint: Testpoint, result: JudgeResult, \
         else:
             output = testpoint.input
 
-        check_res = await check(output, testpoint.check, testpoint.id, run_res_path)
+        check_res = await check(output, testpoint.check, run_res_path)
         logger.debug(f'check result: {check_res}')
         res = TestpointJudgeResult(
             **check_res.__dict__,

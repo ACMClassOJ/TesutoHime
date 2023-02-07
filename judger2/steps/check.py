@@ -17,8 +17,8 @@ from judger2.util import TempDir, copy_supplementary_files
 logger = getLogger(__name__)
 
 
-async def check(outfile: CheckInput, checker: Checker, checker_id: int, run_res_path: PosixPath) -> CheckResult:
-    logger.info(f'checking with {checker}, checker_id {checker_id}')
+async def check(outfile: CheckInput, checker: Checker, run_res_path: PosixPath) -> CheckResult:
+    logger.info(f'checking with {checker}')
     # get output file to check
     if not isinstance(outfile, RunResult):
         try:
@@ -33,12 +33,12 @@ async def check(outfile: CheckInput, checker: Checker, checker_id: int, run_res_
         return CheckResult('system_error', 'Nothing to check')
 
     # check
-    return await checkers[checker.__class__](inf, ouf, run_res_path, checker, checker_id)
+    return await checkers[checker.__class__](inf, ouf, run_res_path, checker)
 
 
 diff_errexit_code = 1
 
-async def checker_cmp(_infile, outfile: PosixPath, run_res_path: PosixPath, checker: CompareChecker, _checker_id):
+async def checker_cmp(_infile, outfile: PosixPath, run_res_path: PosixPath, checker: CompareChecker):
     ans = (await ensure_cached(checker.answer)).path
     flags = '-qZB' if checker.ignore_whitespace else '-q'
     argv = [str(diff), flags, str(outfile), str(ans)]
@@ -71,12 +71,12 @@ def checker_read_float(outfile: PosixPath, message: str = ''):
     result = 'accepted' if score >= 1.0 else 'wrong_answer'
     return CheckResult(result, message, score)
 
-async def checker_direct(_infile, outfile: PosixPath, run_res_path, _checker, _checker_id):
+async def checker_direct(_infile, outfile: PosixPath, run_res_path, _checker):
     return checker_read_float(outfile)
 
 
 async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
-    run_res_path: PosixPath, checker: SpjChecker, checker_id: int):
+    run_res_path: PosixPath, checker: SpjChecker):
     # get spj binary
     if checker.format == 'scorer':
         raise NotImplementedError()
@@ -89,7 +89,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
     with TempDir() as cwd:
         run_res_file = cwd / 'run_res'
         copy2(run_res_path, run_res_file)
-        exec_file = cwd / f'spj_{str(checker_id)}'
+        exec_file = cwd / 'spj'
         copy2(exe, exec_file)
         exec_file.chmod(0o550)
 
@@ -109,6 +109,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
         message = cwd / 'message'
         argv = [exec_file, infile, outfile, ans, score, message, run_res_file]
         argv = [str(x) for x in argv]
+        print(argv)
         logger.debug(f'about to run spj: {argv}')
 
         res = await run_with_limits(argv, cwd, checker.limits,

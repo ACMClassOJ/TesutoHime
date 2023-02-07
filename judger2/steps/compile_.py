@@ -227,7 +227,8 @@ async def compile_git_java(
           '-d', bin_path.as_posix(), '-cp', jar_path.as_posix()])
     if res.error != None:
         return CompileLocalResult.from_run_failure(res)
-    res = await run_build_step([which('tar'), '-czvf', bin_tar.as_posix(), './bin', jar_name])
+    res = await run_build_step([which('tar'), '-czvf', bin_tar.as_posix(), bin_path.as_posix()])
+    print(res)
     if res.error != None:
         return CompileLocalResult.from_run_failure(res)
 

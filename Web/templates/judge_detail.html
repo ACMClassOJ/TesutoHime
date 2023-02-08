@@ -52,7 +52,7 @@
                     </td>
                     {% if details != None and details.resource_usage != None -%}
                         <td>{{ details.resource_usage.time_msecs }} ms</td>
-                        <td>{{ "%.2f" % (details.resource_usage.memory_bytes / 1024) }} KiB</td>
+                        <td>{{ "%.0f" % (details.resource_usage.memory_bytes / 1024) }} KiB</td>
                     {%- endif %}
                     {%- if show_score %}
                         <td>{{ submission.score }}</td>

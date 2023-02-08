@@ -96,7 +96,7 @@
                 {%- endif %}
 
                 {%- if submission.memory_bytes != None -%}
-                <td>{{ "%.2f" % (submission.memory_bytes / 1024) }} KiB</td>
+                <td>{{ "%.0f" % (submission.memory_bytes / 1024) }} KiB</td>
                 {% else -%}
                 <td>N/A</td>
                 {%- endif %}

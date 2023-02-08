@@ -53,8 +53,8 @@ async def checker_cmp(_infile, outfile: PosixPath, checker: CompareChecker):
     if res.error == 'runtime_error' and res.code == diff_errexit_code:
         return CheckResult('wrong_answer', '')
     if res.error is not None:
-        logger.error(f'cmp failed with {res.message}')
-        return CheckResult('system_error', f'checker failed: {res.message}')
+        logger.error(f'cmp failed with {res.error}: {res.message}')
+        return CheckResult('system_error', f'checker failed with {res.error}: {res.message}')
     return CheckResult('accepted', '', 1.0)
 
 

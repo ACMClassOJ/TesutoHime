@@ -57,6 +57,8 @@ class NsjailArgs:
     time_limit: str
     # cpu time limit (secs) RLIMIT_CPU.
     rlimit_cpu: str = '600'
+    # address space limit (mbytes) RLIMIT_AS.
+    rlimit_as: str = '1536'
 
     # readonly mount points.
     bindmount_ro: Union[List[str], bool] = False
@@ -66,7 +68,7 @@ class NsjailArgs:
     # number of file descriptors that could be simultaneously opened by a single
     # process. NOT file size limit. pretty much useless.
     rlimit_fsize: str = 'inf'
-    # memory limit: not working.
+    # cgroup-based memory limit: not working.
     # cgroup_mem_max: str
 
     # whether to enable network access in the container.
@@ -132,7 +134,7 @@ async def run_with_limits(
             rlimit_fsize=fsize,
             time_limit=time_limit,
             rlimit_cpu=str(int(float(time_limit))),
-            # the memory limit does not work
+            # cgroups-based memory limit is not working
             # cgroup_mem_max=memory_limit,
             bindmount_ro=bindmount_ro,
             bindmount=[str(result_dir)] + bindmount_rw,

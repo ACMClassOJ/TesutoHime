@@ -64,7 +64,7 @@ diff = which('diff')
 
 checker_cmp_limits = ResourceUsage(
     time_msecs=10000,
-    memory_bytes=67108864,
+    memory_bytes=1073741824,
     file_count=-1,
     file_size_bytes=-1,
 )

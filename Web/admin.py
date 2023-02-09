@@ -247,6 +247,8 @@ def data_upload(problem_id):
 
 @admin.route('/problem/<int:problem_id>/update', methods=['POST'])
 def data_update(problem_id):
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(404)
     url = urljoin(SchedulerConfig.base_url, f'problem/{problem_id}/update')
     res = requests.post(url).json()
     if res['result'] == 'ok':

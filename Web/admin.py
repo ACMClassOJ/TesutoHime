@@ -9,14 +9,15 @@ from requests.exceptions import RequestException
 from config import ProblemConfig, S3Config, SchedulerConfig
 from const import *
 from contestManager import Contest_Manager
-from judgeManager import Judge_Manager
 from judgeServerScheduler import JudgeServer_Scheduler
 from problemManager import Problem_Manager
 from referenceManager import Reference_Manager
 from sessionManager import Login_Manager
 from userManager import User_Manager
 from utils import (NotFoundException, generate_s3_public_url, mark_void2,
-                   rejudge2)
+                   problem_mark_void, problem_rejudge, rejudge2, SqlSession)
+
+from commons.models import Problem
 
 admin = Blueprint('admin', __name__, static_folder='static')
 
@@ -127,35 +128,43 @@ def user_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-@admin.route('/problem', methods=['post'])
-def problem_manager():
+@admin.route('/problem-description', methods=['post'])
+def problem_description():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
     form = request.json
-    # err = _validate_problem_data(form)
-    # if err is not None:
-    #     return err
     try:
-        op = int(form[String.TYPE])
-        if op == 0:
-            Problem_Manager.add_problem(int(form[String.PROBLEM_ID]), form.get(String.TITLE, None),
-                                        form.get(String.DESCRIPTION, None), form.get(String.INPUT, None),
-                                        form.get(String.OUTPUT, None), form.get(String.EXAMPLE_INPUT, None),
-                                        form.get(String.EXAMPLE_OUTPUT, None), form.get(String.DATA_RANGE, None),
-                                        form.get(String.RELEASE_TIME, None), form.get(String.PROBLEM_TYPE, None))
-            return ReturnCode.SUC_ADD_PROBLEM
-        elif op == 1:
-            Problem_Manager.modify_problem(int(form[String.PROBLEM_ID]), form.get(String.TITLE, None),
-                                           form.get(String.DESCRIPTION, None), form.get(String.INPUT, None),
-                                           form.get(String.OUTPUT, None), form.get(String.EXAMPLE_INPUT, None),
-                                           form.get(String.EXAMPLE_OUTPUT, None), form.get(String.DATA_RANGE, None),
-                                           form.get(String.RELEASE_TIME, None), form.get(String.PROBLEM_TYPE, None))
-            return ReturnCode.SUC_MOD_PROBLEM
-        elif op == 2:
-            Problem_Manager.delete_problem(form[String.PROBLEM_ID])
-            return ReturnCode.SUC_DEL_PROBLEM
-        else:
-            return ReturnCode.ERR_BAD_DATA
+        Problem_Manager.modify_problem_description(int(form[String.PROBLEM_ID]),
+           form.get(String.DESCRIPTION, None), form.get(String.INPUT, None),
+           form.get(String.OUTPUT, None), form.get(String.EXAMPLE_INPUT, None),
+           form.get(String.EXAMPLE_OUTPUT, None), form.get(String.DATA_RANGE, None))
+        return ReturnCode.SUC_MOD_PROBLEM
+    except KeyError:
+        return ReturnCode.ERR_BAD_DATA
+    except TypeError:
+        return ReturnCode.ERR_BAD_DATA
+
+@admin.route('/problem-create', methods=['post'])
+def problem_create():
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(404)
+    with SqlSession() as db:
+        problem = Problem()
+        problem.release_time = 253402216962
+        db.add(problem)
+        db.commit()
+        return redirect(f'/OnlineJudge/problem/{problem.id}/admin', SEE_OTHER)
+
+@admin.route('/problem', methods=['post'])
+def problem_info():
+    if Login_Manager.get_privilege() < Privilege.ADMIN:
+        abort(404)
+    form = request.json
+    try:
+        Problem_Manager.modify_problem(int(form[String.PROBLEM_ID]),
+           form.get(String.TITLE, None), form.get(String.RELEASE_TIME, None),
+           form.get(String.PROBLEM_TYPE, None))
+        return ReturnCode.SUC_MOD_PROBLEM
     except KeyError:
         return ReturnCode.ERR_BAD_DATA
     except TypeError:
@@ -301,9 +310,7 @@ def rejudge():
         ids = request.form['problem_id'].strip().splitlines()
         try:
             for id in ids:
-                record = Judge_Manager.search_judge(None, id, None, None)
-                for i in record:
-                    rejudge2(i['ID'])
+                problem_rejudge(id)
             return ReturnCode.SUC_REJUDGE
         except NotFoundException:
             return ReturnCode.ERR_BAD_DATA
@@ -328,9 +335,7 @@ def disable_judge():
         ids = request.form['problem_id'].strip().splitlines()
         try:
             for id in ids:
-                record = Judge_Manager.search_judge(None, id, None, None)
-                for i in record:
-                    mark_void2(i['ID'])
+                problem_mark_void(id)
             return ReturnCode.SUC_DISABLE_JUDGE
         except NotFoundException:
             return ReturnCode.ERR_BAD_DATA

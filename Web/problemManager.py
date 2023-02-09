@@ -22,15 +22,29 @@ class ProblemManager:
         db.close()
         return
 
-    def modify_problem(self, problem_id: int, title: str, description: str, problem_input: str, problem_output: str,
-                       example_input: str, example_output: str, data_range: str, release_time: int, problem_type: int):
+    def modify_problem_description(self, problem_id: int, description: str, problem_input: str, problem_output: str,
+                       example_input: str, example_output: str, data_range: str):
         db = db_connect()
         cursor = db.cursor()
         try:
             cursor.execute(
-                "UPDATE Problem SET Title = %s, Description = %s, Input = %s, Output = %s, Example_Input = %s, Example_Output = %s, Data_Range = %s, Release_Time = %s, Problem_Type = %s WHERE ID = %s",
-                (title, description, problem_input, problem_output, example_input, example_output, data_range,
-                 release_time, problem_type, problem_id))
+                "UPDATE Problem SET Description = %s, Input = %s, Output = %s, Example_Input = %s, Example_Output = %s, Data_Range = %s WHERE ID = %s",
+                (description, problem_input, problem_output, example_input, example_output, data_range,
+                 problem_id))
+            db.commit()
+        except pymysql.Error:
+            db.rollback()
+            sys.stderr.write("SQL Error in ProblemManager: Modify_Problem\n")
+            db.close()
+        return
+
+    def modify_problem(self, problem_id: int, title: str, release_time: int, problem_type: int):
+        db = db_connect()
+        cursor = db.cursor()
+        try:
+            cursor.execute(
+                "UPDATE Problem SET Title = %s, Release_Time = %s, Problem_Type = %s WHERE ID = %s",
+                (title, release_time, problem_type, problem_id))
             db.commit()
         except pymysql.Error:
             db.rollback()

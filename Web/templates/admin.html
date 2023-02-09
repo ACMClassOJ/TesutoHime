@@ -22,16 +22,7 @@
                     <a class="nav-link mb-sm-2 mb-md-0" id="contest_tab_btn" data-toggle="tab" href="#contest_tab" role="tab" aria-controls="contest_tab" aria-selected="false">比赛与作业</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" id="data_zip_tab_btn" data-toggle="tab" href="#data_zip_tab" role="tab" aria-controls="data_zip_tab" aria-selected="false">数据（ZIP）</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" id="data_tab_btn" data-toggle="tab" href="#data_tab" role="tab" aria-controls="data_tab" aria-selected="false">数据（GUI）</a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" id="judge_tab_btn" data-toggle="tab" href="#judge_tab" role="tab" aria-controls="judge_tab" aria-selected="false">评测</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" id="pic_tab_btn" data-toggle="tab" href="#pic_tab" role="tab" aria-controls="pic_tab" aria-selected="false">图床</a>
                 </li>
                 {% if privilege>=Privilege.SUPER %}
                 <li class="nav-item">
@@ -149,103 +140,23 @@
                         </form>
                     </div>
                     <div class="tab-pane fade show active" id="problem_tab" role="tabpanel" aria-labelledby="problem_tab-tab">
-                        <form id="formProblem">
+                        <h3>管理已有题目</h3>
+                        <form id="form-jump-problem">
                             <div class="form-row">
                                 <div class="form-group col-md-3">
-                                    <label for="iptProblemID"> 题号 <span class="badge" id="iptProblemStatusBadge"></span></label>
-                                    <input class="form-control" type="number" name="id" id="iptProblemID">
+                                    <label for="problem-id">题目 ID</label>
+                                    <input class="form-control" type="number" id="problem-id" required>
                                 </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnGoToProblemPage"> 跳转到题目详情页面 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetProblemAutoIncreseID"> 获取最新空题号 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetProblemDetails"> 查看题目状态 </button>
+                                <div class="d-flex mb-3 pr-1">
+                                    <button type="submit" class="btn btn-outline-primary mt-auto">跳转</button>
                                 </div>
                             </div>
-                            <div id="divProblemHidden">
-                                <div class="form-row">
-                                    <div class="form-group col-md-3">
-                                        <label for="iptTitle"> 题目标题 </label>
-                                        <input class="form-control" type="text" name="title" id="iptTitle">
-                                    </div>
-                                    <div class="form-group col-md-3">
-                                        <label for="iptReleaseTime"> 发布时间 (YYYY-MM-DDThh:mm:ss) </label>
-                                        <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime">
-                                    </div>
-                                    <div class="form-group col-md-3">
-                                        <label for="iptProblemType"> 题目类型 </label>
-                                        <select class="form-control selectpicker" name="problem_type" id="iptProblemType"
-                                                data-style="form-control font-weight-normal border-grey shadow-none">
-                                            <option value="0">代码题</option>
-                                            <option value="1">填选题</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label for="iptDescription"> 题目描述 </label>
-                                    <div class="init_editormd" id="iptDescription">
-                                        <textarea name="description" style="display: none" autocomplete="off"></textarea>
-                                    </div>
-                                    <label for="iptInput"> 输入格式 </label>
-                                    <div class="init_editormd" id="iptInput">
-                                        <textarea name="input" style="display: none"></textarea>
-                                    </div>
-                                    <label for="iptOutput"> 输出格式 </label>
-                                    <div class="init_editormd" id="iptOutput">
-                                        <textarea name="output" style="display: none"></textarea>
-                                    </div>
-                                    <label for="iptExampleInput"> 样例输入 </label>
-                                    <div class="init_editormd" id="iptExampleInput">
-                                        <textarea name="example_input" style="display: none"></textarea>
-                                    </div>
-                                    <label for="iptExampleOutput"> 样例输出 </label>
-                                    <div class="init_editormd" id="iptExampleOutput">
-                                        <textarea name="example_output" style="display: none"></textarea>
-                                    </div>
-                                    <label for="iptDataRange"> 数据范围 </label>
-                                    <div class="init_editormd" id="iptDataRange">
-                                        <textarea name="range" style="display: none"></textarea>
-                                    </div>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblem"> 添加问题 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyProblem"> 修改问题 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblem" onclick="return confirm('确认要删除吗？');"> 删除问题 </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="tab-pane fade" id="data_zip_tab" role="tabpanel" aria-labelledby="data_zip_tab-tab">
-                        <h3> 上传数据压缩包 </h3>
-                        <form id="formDataZipUpload">
-                            <div class="form-row">
-                                <div class="form-group col-md-3 mb-3">
-                                    <label> 题号 </label>
-                                    <input class="form-control" type="number" name="id" id="iptDataZipUploadProblemID" required="required" min="1">
-                                </div>
-                                <div class="form-group custom-file col-md-3 mb-3">
-                                    <label> 数据包 </label>
-                                    <div style="position: relative">
-                                        <label class="custom-file-label ml-1 mr-1" for="iptDataZipUpload"> 请选择数据压缩包 </label>
-                                        <input class="custom-file-input" type="file" name="file" id="iptDataZipUpload" accept=".zip" required="required">
-                                    </div>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipUpload"> 点击上传 </button>
-                                </div>
-                            </div>
-                            <progress id="data-upload-progress" class="w-100" max="1" value="0"></progress>
                         </form>
                         <hr>
-                        <h3>下载数据压缩包 </h3>
-                        <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
+                        <h3>新建题目</h3>
+                        <form action="/OnlineJudge/admin/problem-create" method="POST">
                             <div class="form-row">
-                                <div class="form-group col-md-3 mb-3">
-                                    <label for="iptDataZipDownload"> 题号 </label>
-                                    <input class="form-control" type="number" name="id" id="iptDataZipDownloadProblemID" required="required" min="1">
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipDownload"> 点击下载 </button>
-                                </div>
+                                <button type="submit" class="btn btn-outline-primary">新建题目</button>
                             </div>
                         </form>
                     </div>
@@ -281,11 +192,11 @@
                         </form>
 
                         <hr>
-                        <h3> 批量取消评测 </h3>
+                        <h3>批量取消成绩</h3>
                         <p> 
-                            将指定的评测记录内容设置为 System Error 并判零分。请注意，对于一条已在 Running and Judging 状态的评测任务，设置为 System Error 状态后，
-                            评测机仍有可能返回评测结果，此时 System Error 状态将被真实的评测记录覆盖。
-                            因此，建议在如下情况使用此功能：需要作废一条已经出了结果的评测记录；因评测列表积压等待的评测任务过多，需要手动取消一部分任务；因评测机故障需要取消一条极长时间卡 running 的评测任务（请管理员留意是否还需要清空 busy_flag）。
+                            将指定的评测记录内容设置为 Voided 并判零分。请注意，对于一条已在 Running and Judging 状态的评测任务，设置为 Voided 状态后，
+                            评测机仍有可能返回评测结果，此时 Voided 状态将被真实的评测记录覆盖。若想中断评测，请使用 abort 功能。
+                            因此，建议在如下情况使用此功能：需要作废一条已经出了结果的评测记录。
                         </p>
                         <form id="formDisableJudge" action="/OnlineJudge/admin/disable_judge" method="POST">
                             <div class="form-row">
@@ -295,12 +206,12 @@
                                     <textarea class="form-control" name="judge_id" id="iptDisableJudgeJudgeID"></textarea>
                                 </div>
                                 <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge"> 批量取消评测 </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge">批量取消成绩</button>
                                 </div>
                             </div>
                         </form>
                         <hr>
-                        <h3> 批量题目取消评测 </h3>
+                        <h3>批量题目取消成绩</h3>
                         <form id="formDisableJudge2" action="/OnlineJudge/admin/disable_judge" method="POST">
                             <div class="form-row">
                                 <input type="hidden" name="type" value="by_problem_id">
@@ -309,150 +220,11 @@
                                     <textarea class="form-control" name="problem_id" id="iptDisableJudgeJudgeID2"></textarea>
                                 </div>
                                 <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge2"> 批量题目取消评测 </button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge2">批量题目取消成绩</button>
                                 </div>
                             </div>
                         </form>
                         <hr>
-                    </div>
-                    <div class="tab-pane fade" id="pic_tab" role="tabpanel" aria-labelledby="pic_tab-tab">
-                        <h3> 上传图片到 ACM OJ 图床 </h3>
-                        <form id="formPicUpload" enctype="multipart/form-data">
-                            <div class="form-row">
-                                <div class="form-group custom-file col-md-3 mb-3">
-                                    <label class="custom-file-label ml-1 mr-1" for="iptPicUpload"> gif，jpg/jpeg，png，svg </label>
-                                    <input class="custom-file-input" type="file" name="file" id="iptPicUpload" accept="image/gif,image/jpeg,image/jpg,image/png,image/svg+xml" required="required">
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnPicUpload"> 点击上传 </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="tab-pane fade" id="data_tab" role="tabpanel" aria-labelledby="data_tab-tab">
-                        <form id="formData">
-                            <div class="form-row">
-                                <div class="form-group col-md-3 mb-3">
-                                    <label for="iptDataProblemID"> 题号 </label>
-                                    <input class="form-control" type="number" name="id" id="iptDataProblemID">
-                                </div>
-                                <div class="form-group col-md-3 mb-3">
-                                    <label for="iptCompileTime"> 编译时长限制 (ms) </label>
-                                    <input class="form-control" type="number" name="time" id="iptCompileTime">
-                                </div>
-                                <div class="form-group col-md-3 mb-3">
-                                    <label for="iptSpjType"> SPJ类型 </label>
-                                    <select class="form-control selectpicker" name="type" id="iptSpjType"
-                                            data-style="form-control font-weight-normal border-grey shadow-none">
-                                        <option value="0">Classic</option>
-                                        <option value="1">Special Judge</option>
-                                        <option value="2">Interaction</option>
-                                        <option value="3">Scorer</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group custom-file col-md-3 mb-3">
-                                    <label class="custom-file-label ml-1 mr-1" for="iptDescriptionMd"> 题面 (md doc(x) txt) </label>
-                                    <input class="custom-file-input" type="file" name="description_md" id="iptDescriptionMd" 
-                                           accept=".md,.doc,.docx,.txt">
-                                </div>
-                                <div class="form-group custom-file col-md-3 mb-3">
-                                    <label class="custom-file-label ml-1 mr-1" for="iptData"> 测试数据 (in out ans 多选) </label>
-                                    <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans,.out"
-                                           multiple>
-                                </div>
-                                <div class="form-group custom-file col-md-3 mb-3">
-                                    <label class="custom-file-label ml-1 mr-1" for="iptSolution"> 标答 std (cpp hpp v 多选) </label>
-                                    <input class="custom-file-input" type="file" name="solution" id="iptSolution" accept=".cpp, .hpp, .v"
-                                           multiple>
-                                </div>
-                                <div class="form-group custom-file col-md-3 mb-3">
-                                    <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge (cpp) </label>
-                                    <input class="custom-file-input" type="file" name="data" id="iptSpj">
-                                </div>
-                                <!-- <div class="form-group custom-file col-md-3 mb-3">
-                                    <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
-                                    <input class="custom-file-input" type="file" name="data" id="iptScorer" accept=".py">
-                                </div> -->
-                                <!--
-                                <div class="form-group custom-file col-md-3 mb-3">
-                                    <label class="custom-file-label ml-1 mr-1" for="iptConfig"> Config (json) </label>
-                                    <input class="custom-file-input" type="file" name="config" id="iptConfig" accept=".json">
-                                </div>
-                                -->
-                            </div>
-                            <p>*此处的题面上传仅会留在数据包中，暂不会修改数据库中题面，请切换至题面选项卡手动修改。</p>
-                            <div class="card card-body">
-                                <h5 class="mt-2"> 评测组配置（新增行会自动复制上一行内容） </h5>
-                                <div class="table-responsive mb-3">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                        <tr>
-                                            <th scope="col">Group ID</th>
-                                            <th scope="col">Group Name</th>
-                                            <th scope="col">Group Score</th>
-                                            <th scope="col">Test Points (separated by ",")</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody contenteditable="true" id="tableGroups">
-                                        <tr>
-                                            <td>1</td>
-                                            <td>1</td>
-                                            <td>10</td>
-                                            <td>1</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    <div class="float-right">
-                                        <button class="btn btn-outline-primary" type="button" id="btnAddGroupsRow">Add Row</button>
-                                        <button class="btn btn-outline-primary" type="button" id="btnRemoveGroupsRow">Remove Row
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card card-body">
-                                <h5 class="mt-2"> 数据点配置（新增行会自动复制上一行内容） </h5>
-                                <div class="table-responsive mb-3">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                        <tr>
-                                            <th scope="col">ID</th>
-                                            <th scope="col">Dependency</th>
-                                            <th scope="col">Time Limit (ms)</th>
-                                            <th scope="col">Memory Limit (Byte)</th>
-                                            <th scope="col">Disk Limit (Byte)</th>
-                                            <th scope="col">Valgrind</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody contenteditable="true" id="tableDetails">
-                                        <tr>
-                                            <td>1</td>
-                                            <td>0</td>
-                                            <td>1000</td>
-                                            <td>256000000</td>
-                                            <td>0</td>
-                                            <td contenteditable="false">
-                                                <div class="custom-checkbox ml-3">
-                                                    <input class="form-check-input" type="checkbox" id="iptValgrind1">
-                                                    <label class="form-check-label" for="iptValgrind1"></label>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    <div class="float-right">
-                                        <button class="btn btn-outline-primary" type="button" id="btnAddDetailsRow">Add Row</button>
-                                        <button class="btn btn-outline-primary" type="button" id="btnRemoveDetailsRow">Remove Row
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <progress id="data-gui-progress" class="w-100" max="1" value="0"></progress>
-                            <div class="float-right d-flex ml-auto pr-1 mb-3">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemData"> 打包上传所有数据 </button>
-                            </div>
-                        </form>
                     </div>
                     <div class="tab-pane fade" id="realname_tab" role="tabpanel" aria-labelledby="realname_tab-tab">
                         <h3> 批量添加实名信息 </h3>

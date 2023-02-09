@@ -9,7 +9,7 @@ from urllib.parse import quote, urlencode, urljoin
 from uuid import uuid4
 
 import commons.task_typing
-from commons.models import JudgeRecord2, JudgeRunner2, JudgeStatus, Contest
+from commons.models import JudgeRecord2, JudgeRunner2, JudgeStatus, Contest, Problem
 from commons.task_typing import ProblemJudgeResult
 from commons.util import load_dataclass, serialize
 from flask import (Blueprint, Flask, abort, make_response, redirect,
@@ -333,6 +333,26 @@ def problem_detail(problem_id):
     return render_template('problem_details.html', ID=problem_id, Title=Problem_Manager.get_title(problem_id),
                            In_Exam=in_exam, friendlyName=Login_Manager.get_friendly_name(),
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+
+
+@web.route('/problem/<int:problem_id>/admin')
+def problem_admin(problem_id):
+    if not Login_Manager.check_user_status():
+        return redirect('login?next=' + request.full_path)
+    is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+    if not is_admin:
+        abort(404)
+    with SqlSession(expire_on_commit=False) as db:
+        problem = db.query(Problem).where(Problem.id == problem_id).one_or_none()
+    if problem is None:
+        abort(404)
+
+    in_exam = problem_in_exam(problem_id)
+
+    return render_template('problem_admin.html', ID=problem_id, Title=problem.title,
+                           In_Exam=in_exam, friendlyName=Login_Manager.get_friendly_name(),
+                           problem=problem,
+                           is_Admin=is_admin)
 
 
 @web.route('/problem/<int:problem_id>/submit', methods=['GET', 'POST'])

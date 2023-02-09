@@ -210,6 +210,12 @@ def mark_void2(id):
         submission.score = 0
         db.commit()
 
+def problem_mark_void(id):
+    with SqlSession() as db:
+        submissions = db.query(JudgeRecord2.id).where(JudgeRecord2.problem_id == id).all()
+        for submission in submissions:
+            mark_void2(submission.id)
+
 def rejudge2(id):
     with SqlSession() as db:
         submission: JudgeRecord2 = db.query(JudgeRecord2).where(JudgeRecord2.id == id).one_or_none()
@@ -221,6 +227,12 @@ def rejudge2(id):
             submission.language,
             submission.username,
         )
+
+def problem_rejudge(id):
+    with SqlSession() as db:
+        submissions = db.query(JudgeRecord2.id).where(JudgeRecord2.problem_id == id).all()
+        for submission in submissions:
+            rejudge2(submission.id)
 
 @dataclass
 class JudgeStatusInfo:

@@ -19,6 +19,16 @@ $.fn.serializeObject = function () {
     return data;
 }
 
+function formatDate(date) {
+    var date = new Date(date);
+    var YY = date.getFullYear() + '-';
+    var MM = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+    var DD = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate());
+    var hh = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
+    var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
+    return YY + MM + DD +"T"+ hh + mm;
+}
+
 function getUrlArg(arg) {
     var query = window.location.search.substring(1);
     var vars = query.split("&");

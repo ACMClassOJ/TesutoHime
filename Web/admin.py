@@ -148,12 +148,14 @@ def problem_description():
 def problem_create():
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
+    id = Problem_Manager.get_max_id() + 1
     with SqlSession() as db:
         problem = Problem()
+        problem.id = id
         problem.release_time = 253402216962
         db.add(problem)
         db.commit()
-        return redirect(f'/OnlineJudge/problem/{problem.id}/admin', SEE_OTHER)
+    return redirect(f'/OnlineJudge/problem/{id}/admin', SEE_OTHER)
 
 @admin.route('/problem', methods=['post'])
 def problem_info():

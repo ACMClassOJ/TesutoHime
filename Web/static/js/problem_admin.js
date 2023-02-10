@@ -82,6 +82,12 @@ $(() => {
     $('#iptTitle').on('keyup', updateDisplayTitle)
 
     // description
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        editormd.defaults.theme = 'dark'
+        editormd.defaults.previewTheme = 'dark'
+        editormd.defaults.editorTheme = 'pastel-on-dark'
+    }
+
     const editors = {}
     function new_or_modify_content_in_editormd(editormd_name, content) {
         editors[editormd_name] = editormd(editormd_name, {
@@ -130,7 +136,7 @@ $(() => {
         },
         error: () => alert('无法获取题面，请刷新重试'),
     })
-    document.getElementById('description-tab-link').addEventListener('click', reloadDescription)
+    document.getElementById('description-tab-link').addEventListener('click', () => setTimeout(reloadDescription, 500))
 
     setInterval(function() {
         $('.markdown-body').each(function() {

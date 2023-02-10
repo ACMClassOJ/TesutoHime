@@ -52,7 +52,6 @@ def validate(username: Optional['str'] = None, password: Optional['str'] = None,
     if student_id is not None and re.match(student_id_reg, student_id) is None:
         return ReturnCode.ERR_VALIDATE_INVALID_STUDENT_ID
     if username is not None and not User_Manager.validate_username(username):
-        print("12121")
         return ReturnCode.ERR_VALIDATE_USERNAME_EXISTS
     return ReturnCode.SUC_VALIDATE
 

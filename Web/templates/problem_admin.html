@@ -60,6 +60,7 @@
         <div class="card-body">
             <div class="tab-content" id="main_tab_content">
                 <div class="tab-pane fade show active" id="overview_tab" role="tabpanel" aria-labelledby="overview_tab-tab">
+                    <h3>基本信息</h3>
                     <form action="/OnlineJudge/admin/problem" method="POST" id="form-overview">
                         <input type="hidden" name="id" value="{{ ID }}">
                         <div class="form-row">
@@ -84,6 +85,63 @@
                             </div>
                         </div>
                     </form>
+                    <h3>题目状态</h3>
+                    <div class="d-flex align-items-center mb-2">
+                        <span>发布状态：</span>
+                        {% if problem.release_time < now -%}
+                            <span class="text-green">已发布</span>
+                            <form method="POST">
+                                <input type="hidden" name="action" value="hide">
+                                <button class="btn btn-outline-primary ml-3" type="submit">取消发布</button>
+                            </form>
+                        {%- else -%}
+                            <span class="text-red">未发布</span>
+                            <form method="POST">
+                                <input type="hidden" name="action" value="show">
+                                <button class="btn btn-outline-primary ml-3" type="submit">立即发布</button>
+                            </form>
+                        {%- endif %}
+                    </div>
+                    <p>
+                        提交状态：
+                        {% if submission_count > 0 %}
+                        共 {{ submission_count }} 次提交，其中 {{ ac_count }} 次通过，正确率 {{ "%.1f" % (ac_count / submission_count * 100) }}%
+                        {% else %}
+                        暂无提交
+                        {% endif %}
+                    </p>
+                    <p>
+                        {% if contests | length == 0 %}
+                        题目当前未在考试/作业中
+                        {% else %}
+                        题目在以下考试/作业中：
+                        {% for contest in contests %}
+                        <a href="/OnlineJudge/contest/{{ contest }}">{{ contest }}</a>
+                        {% endfor %}
+                        {% endif %}
+                    </p>
+                    <h3>删除题目</h3>
+                    {% if submission_count > 0 or contests | length > 0 %}
+                    {% if submission_count > 0 and contests | length > 0 %}
+                    当前题目已有提交记录，且已存在于作业/考试中，
+                    {% elif submission_count > 0 %}
+                    当前题目已有提交记录，
+                    {% elif contests | length > 0 %}
+                    当前题目已存在于作业/考试中，
+                    {% endif %}
+                    删除题目将会导致不可预料的后果，请联系 OJ 运维组删除题目。
+                    {% else %}
+                    <p>删除题目将会不可逆地从数据库中删除题目的基本信息及题面信息。如您确认要删除题目，请在下方文本框中输入本题编号以确认：</p>
+                    <form method="POST">
+                        <div class="form-row d-flex">
+                            <input type="hidden" name="action" value="delete">
+                            <div class="col-md-3">
+                                <input class="form-control" type="text" name="confirm" pattern="{{ ID }}" required>
+                            </div>
+                            <button class="btn btn-outline-primary ml-3" type="submit">删除题目</button>
+                        </div>
+                    </form>
+                    {% endif %}
                 </div>
 
                 <div class="tab-pane fade" id="description_tab" role="tabpanel" aria-labelledby="description_tab-tab">

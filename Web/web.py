@@ -9,7 +9,7 @@ from urllib.parse import quote, urlencode, urljoin
 from uuid import uuid4
 
 import commons.task_typing
-from commons.models import JudgeRecord2, JudgeRunner2, JudgeStatus, Contest, Problem
+from commons.models import JudgeRecord2, JudgeRunner2, JudgeStatus, Contest, Problem, ContestProblem
 from commons.task_typing import ProblemJudgeResult
 from commons.util import load_dataclass, serialize
 from flask import (Blueprint, Flask, abort, make_response, redirect,
@@ -335,23 +335,55 @@ def problem_detail(problem_id):
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
 
-@web.route('/problem/<int:problem_id>/admin')
+@web.route('/problem/<int:problem_id>/admin', methods=['GET', 'POST'])
 def problem_admin(problem_id):
     if not Login_Manager.check_user_status():
         return redirect('login?next=' + request.full_path)
     is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
     if not is_admin:
         abort(404)
+
+    now = datetime.datetime.now().timestamp()
+    if request.method == 'POST':
+        action = request.form['action']
+        if action == 'hide':
+            with SqlSession() as db:
+                db.query(Problem).where(Problem.id == problem_id).one().release_time = 253402216962
+                db.commit()
+        elif action == 'show':
+            with SqlSession() as db:
+                db.query(Problem).where(Problem.id == problem_id).one().release_time = now - 1
+                db.commit()
+        elif action == 'delete':
+            if request.form['confirm'] != str(problem_id):
+                abort(400)
+            with SqlSession() as db:
+                submission_count = db.query(JudgeRecord2.id).where(JudgeRecord2.problem_id == problem_id).count()
+                contest_count = db.query(ContestProblem.id).where(ContestProblem.problem_id == problem_id).count()
+                if submission_count > 0 or contest_count > 0:
+                    abort(400)
+                problem = db.query(Problem).where(Problem.id == problem_id).one_or_none()
+                db.delete(problem)
+                db.commit()
+            return redirect('/OnlineJudge/admin/')
+        else:
+            abort(400)
+
     with SqlSession(expire_on_commit=False) as db:
         problem = db.query(Problem).where(Problem.id == problem_id).one_or_none()
-    if problem is None:
-        abort(404)
+        if problem is None:
+            abort(404)
+        submission_count = db.query(JudgeRecord2.id).where(JudgeRecord2.problem_id == problem_id).count()
+        ac_count = db.query(JudgeRecord2.id).where(JudgeRecord2.problem_id == problem_id).where(JudgeRecord2.status == JudgeStatus.accepted).count()
+        contests = db.query(ContestProblem.contest_id).where(ContestProblem.problem_id == problem_id).all()
+        contests = [ x.contest_id for x in contests ]
 
     in_exam = problem_in_exam(problem_id)
 
     return render_template('problem_admin.html', ID=problem_id, Title=problem.title,
                            In_Exam=in_exam, friendlyName=Login_Manager.get_friendly_name(),
-                           problem=problem,
+                           problem=problem, now=now, contests=contests,
+                           submission_count=submission_count, ac_count=ac_count,
                            is_Admin=is_admin)
 
 

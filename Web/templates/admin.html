@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% set page="管理员" %}
+{% set page="管理" %}
 
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
@@ -16,7 +16,7 @@
         <div class="nav-wrapper">
             <ul class="nav nav-pills nav-fill flex-column flex-md-row" id="main_tab" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0 active" id="problem_tab_btn" data-toggle="tab" href="#problem_tab" role="tab" aria-controls="problem_tab" aria-selected="true">题面</a>
+                    <a class="nav-link mb-sm-2 mb-md-0 active" id="problem_tab_btn" data-toggle="tab" href="#problem_tab" role="tab" aria-controls="problem_tab" aria-selected="true">题目</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" id="contest_tab_btn" data-toggle="tab" href="#contest_tab" role="tab" aria-controls="contest_tab" aria-selected="false">比赛与作业</a>
@@ -141,6 +141,7 @@
                     </div>
                     <div class="tab-pane fade show active" id="problem_tab" role="tabpanel" aria-labelledby="problem_tab-tab">
                         <h3>管理已有题目</h3>
+                        <p>题面、数据、图床等功能移动到了单独的管理页面，数据包格式不变。2023.2.11</p>
                         <form id="form-jump-problem">
                             <div class="form-row">
                                 <div class="form-group col-md-3">
@@ -154,6 +155,7 @@
                         </form>
                         <hr>
                         <h3>新建题目</h3>
+                        <p>请勿连续多次点击此按钮。</p>
                         <form action="/OnlineJudge/admin/problem-create" method="POST">
                             <div class="form-row">
                                 <button type="submit" class="btn btn-outline-primary" onclick="setTimeout(() => this.disabled = true)">新建题目</button>

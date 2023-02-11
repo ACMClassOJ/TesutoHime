@@ -3,18 +3,18 @@ from urllib.parse import urljoin
 from uuid import uuid4
 
 import requests
-from flask import Blueprint, abort, redirect, render_template, request
-from requests.exceptions import RequestException
-
 from config import S3Config, SchedulerConfig
 from const import *
 from contestManager import Contest_Manager
+from flask import Blueprint, abort, redirect, render_template, request
+from judgeManager import (NotFoundException, abort_judge, mark_void,
+                          problem_judge_foreach, rejudge)
 from problemManager import Problem_Manager
 from referenceManager import Reference_Manager
+from requests.exceptions import RequestException
 from sessionManager import Login_Manager
 from userManager import User_Manager
-from utils import (NotFoundException, generate_s3_public_url, mark_void2,
-                   problem_mark_void, problem_rejudge, rejudge2, SqlSession)
+from utils import SqlSession, generate_s3_public_url
 
 from commons.models import Problem
 
@@ -293,8 +293,8 @@ def pic_upload():
         'ContentType': type,
     }, ExpiresIn=3600)
 
-@admin.route('/rejudge', methods=['POST'])
-def rejudge():
+
+def problem_admin_api(callback, success_retcode):
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(404)
 
@@ -305,43 +305,30 @@ def rejudge():
         id_list = id.strip().splitlines()
         try:
             for i in id_list:
-                rejudge2(i)
-            return ReturnCode.SUC_REJUDGE
+                callback(i)
+            return success_retcode
         except NotFoundException:
             return ReturnCode.ERR_BAD_DATA
     elif type == "by_problem_id":
         ids = request.form['problem_id'].strip().splitlines()
         try:
             for id in ids:
-                problem_rejudge(id)
-            return ReturnCode.SUC_REJUDGE
+                problem_judge_foreach(callback, id)
+            return success_retcode
         except NotFoundException:
             return ReturnCode.ERR_BAD_DATA
+
+@admin.route('/rejudge', methods=['POST'])
+def admin_rejudge():
+    return problem_admin_api(rejudge, ReturnCode.SUC_REJUDGE)
 
 @admin.route('/disable_judge', methods=['POST'])
-def disable_judge():
-    if Login_Manager.get_privilege() < Privilege.ADMIN:
-        abort(404)
+def admin_mark_void():
+    return problem_admin_api(mark_void, ReturnCode.SUC_DISABLE_JUDGE)
 
-    type = request.form['type']
-
-    if type == "by_judge_id":
-        id = request.form['judge_id']
-        id_list = id.strip().splitlines()
-        try:
-            for i in id_list:
-                mark_void2(i)
-            return ReturnCode.SUC_DISABLE_JUDGE
-        except NotFoundException:
-            return ReturnCode.ERR_BAD_DATA
-    elif type == "by_problem_id":
-        ids = request.form['problem_id'].strip().splitlines()
-        try:
-            for id in ids:
-                problem_mark_void(id)
-            return ReturnCode.SUC_DISABLE_JUDGE
-        except NotFoundException:
-            return ReturnCode.ERR_BAD_DATA
+@admin.route('/abort_judge', methods=['POST'])
+def admin_abort_judge():
+    return problem_admin_api(abort_judge, ReturnCode.SUC_ABORT_JUDGE)
 
 
 @admin.route('/add_realname', methods=['POST'])

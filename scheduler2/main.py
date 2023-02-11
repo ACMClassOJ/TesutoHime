@@ -89,16 +89,22 @@ async def run_judge(problem_id: str, submission_id: str,
     res = None
     logger.info(f'judging submission {submission_id} for problem {problem_id}')
     try:
-        plan = await read_file(s3_buckets.problems, plan_key(problem_id))
-        plan = deserialize(plan)
-        logger.debug(f'plan for problem {problem_id} loaded')
-        res = await execute_plan(plan, submission_id, problem_id, language,
-            source, rate_limit_group)
+        plan = None
+        try:
+            plan = await read_file(s3_buckets.problems, plan_key(problem_id))
+        except ClientError:
+            msg = 'Cannot get judge plan'
+            res = ProblemJudgeResult(result='system_error', message=msg)
+        if plan is not None:
+            plan = deserialize(plan)
+            logger.debug(f'plan for problem {problem_id} loaded')
+            res = await execute_plan(plan, submission_id, problem_id, language,
+                source, rate_limit_group)
     except CancelledError:
         if res is None:
             res = ProblemJudgeResult(result='aborted', message='Aborted')
-    except ClientError:
-        msg = 'Cannot get judge plan'
+    except ClientError as e:
+        msg = f'Unknown error: {e}'
         res = ProblemJudgeResult(result='system_error', message=msg)
     except InvalidProblemException as e:
         logger.warning(f'invalid problem encountered in judging: {format_exc(e)}')

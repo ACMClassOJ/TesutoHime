@@ -8,28 +8,33 @@ from typing import List, Optional, Tuple
 from urllib.parse import quote, urlencode, urljoin
 from uuid import uuid4
 
-import commons.task_typing
-from commons.models import JudgeRecord2, JudgeRunner2, JudgeStatus, Contest, Problem, ContestProblem
-from commons.task_typing import ProblemJudgeResult
-from commons.util import load_dataclass, serialize
-from flask import (Blueprint, Flask, abort, make_response, redirect,
-                   render_template, request, send_from_directory)
-from sqlalchemy.orm import defer, joinedload, selectinload
-
 from admin import admin
 from config import JudgeConfig, LoginConfig, ProblemConfig, WebConfig
-from const import Privilege, ReturnCode
+from const import (Privilege, ReturnCode, contributors, judge_status_info,
+                   language_info, mntners, runner_status_info)
 from contestCache import Contest_Cache
 from contestManager import Contest_Manager
 from discussManager import Discuss_Manager
+from flask import (Blueprint, Flask, abort, make_response, redirect,
+                   render_template, request, send_from_directory)
+from judgeManager import (NotFoundException, abort_judge,
+                          key_from_submission_id, mark_void, rejudge,
+                          schedule_judge)
 from oldJudgeManager import Judge_Manager
 from problemManager import Problem_Manager
 from quizManager import Quiz_Manager
 from referenceManager import Reference_Manager
 from sessionManager import Login_Manager
+from sqlalchemy.orm import defer, joinedload, selectinload
 from tracker import tracker
 from userManager import User_Manager
 from utils import *
+
+import commons.task_typing
+from commons.models import (Contest, ContestProblem, JudgeRecord2,
+                            JudgeRunner2, JudgeStatus, Problem)
+from commons.task_typing import ProblemJudgeResult
+from commons.util import load_dataclass, serialize
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -435,7 +440,7 @@ def submit_problem(problem_id):
         key = key_from_submission_id(submission_id)
         bucket = S3Config.Buckets.submissions
         s3_internal.put_object(Bucket=bucket, Key=key, Body=user_code.encode())
-        schedule_judge2(problem_id, submission_id, lang_str, username)
+        schedule_judge(problem_id, submission_id, lang_str, username)
         return '0'
 
 
@@ -710,6 +715,13 @@ def code_old(run_id):
                                friendlyName=Login_Manager.get_friendly_name(),
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 
+@web.route('/code')
+def code_compat():
+    submit_id = request.args.get('submit_id')
+    if submit_id is None:
+        abort(404)
+    return redirect(f'/OnlineJudge/code/{submit_id}/')
+
 @web.route('/code/<int:submit_id>/')
 def code(submit_id):
     if not Login_Manager.check_user_status():  # not login
@@ -769,29 +781,29 @@ def code(submit_id):
                            is_Admin=is_admin)
 
 @web.route('/code/<int:submit_id>/void', methods=['POST'])
-def mark_void(submit_id):
+def web_mark_void(submit_id):
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(403)
     try:
-        mark_void2(submit_id)
+        mark_void(submit_id)
     except NotFoundException:
         abort(404)
     return redirect('.', SEE_OTHER)
 
 
 @web.route('/code/<int:submit_id>/rejudge', methods=['POST'])
-def rejudge(submit_id):
+def web_rejudge(submit_id):
     if Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(403)
     try:
-        rejudge2(submit_id)
+        rejudge(submit_id)
     except NotFoundException:
         abort(404)
     return redirect('.', SEE_OTHER)
 
 
 @web.route('/code/<int:submit_id>/abort', methods=['POST'])
-def abort_judge(submit_id):
+def web_abort_judge(submit_id):
     if not Login_Manager.check_user_status():  # not login
         return redirect('login?next=' + request.full_path)
     with SqlSession(expire_on_commit=False) as db:
@@ -805,14 +817,8 @@ def abort_judge(submit_id):
     if username != Login_Manager.get_username() \
         and Login_Manager.get_privilege() < Privilege.ADMIN:
         abort(403)
-    # not quoting here as submit_id is int
-    url = urljoin(SchedulerConfig.base_url, f'submission/{submit_id}/abort')
     try:
-        res = requests.post(url)
-        if res.status_code == NOT_FOUND:
-            return redirect('.', SEE_OTHER)
-        if res.json()['result'] != 'ok':
-            abort(500, 'runner error')
+        abort_judge(submit_id)
     except BaseException as e:
         abort(500, str(e))
     return redirect('.', SEE_OTHER)

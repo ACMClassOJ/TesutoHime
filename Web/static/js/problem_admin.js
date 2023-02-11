@@ -496,7 +496,7 @@ $(() => {
     })
 
     // judge
-    for (const id of ['#form-overview', '#form-rejudge', '#form-void']) {
+    for (const id of ['#form-overview', '#form-rejudge', '#form-void', '#form-abort']) {
         $(id).ajaxForm(function (ret_json) {
             if (ret_json.e < 0) {
                 swal('Error ' + ret_json.e, ret_json.msg, 'error')

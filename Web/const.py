@@ -1,3 +1,7 @@
+from dataclasses import dataclass
+from typing import Optional
+
+
 class String:
     TYPE = 'type'
     SESSION = 'username'
@@ -60,6 +64,7 @@ class ReturnCode:
     SUC_REJUDGE = {'e': 0, 'msg': 'rejudge successfully'}
     SUC_ADD_JUDGE = {'e': 0, 'msg': 'add judge successfully'}
     SUC_DISABLE_JUDGE = {'e': 0, 'msg': 'disable judge successfully'}
+    SUC_ABORT_JUDGE = {'e': 0, 'msg': 'abort judge successfully'}
     SUC_ADD_REALNAME = {'e': 0, 'msg': "add realname successfully"}
 
     ERR_BAD_DATA = {'e': -1, 'msg': 'bad data'}
@@ -105,3 +110,88 @@ class Privilege:
     NORMAL = 0
     ADMIN = 1
     SUPER = 2
+
+
+@dataclass
+class JudgeStatusInfo:
+    name: str
+    color: str
+    abbrev: Optional[str] = None
+    badge_type: Optional[str] = None
+
+judge_status_info = {
+    'accepted': JudgeStatusInfo('Accepted', 'green', 'AC', 'success'),
+    'wrong_answer': JudgeStatusInfo('Wrong Answer', 'red', 'WA', 'danger'),
+
+    'compile_error': JudgeStatusInfo('Compile Error', 'yellow', 'CE', 'warning'),
+    'runtime_error': JudgeStatusInfo('Runtime Error', 'red', 'RE', 'warning'),
+    'time_limit_exceeded': JudgeStatusInfo('Time Limit Exceeded', 'orange', 'TLE', 'warning'),
+    'memory_limit_exceeded': JudgeStatusInfo('Memory Limit Exceeded', 'orange', 'MLE', 'warning'),
+    'disk_limit_exceeded': JudgeStatusInfo('Disk Limit Exceeded', 'purple', 'DLE', 'warning'),
+    'memory_leak': JudgeStatusInfo('Memory Leak', 'purple', 'Leak', 'warning'),
+
+    'pending': JudgeStatusInfo('Pending', 'gray-dark', 'Pending', 'secondary'),
+    'compiling': JudgeStatusInfo('Compiling', 'blue', 'Compiling', 'info'),
+    'judging': JudgeStatusInfo('Judging', 'blue', 'Judging', 'info'),
+    'void': JudgeStatusInfo('Voided', 'brown', 'Void', 'warning'),
+    'aborted': JudgeStatusInfo('Aborted', 'gray-dark', 'Aborted', 'secondary'),
+
+    'skipped': JudgeStatusInfo('Skipped', 'black', 'Skip', 'secondary'),
+    'system_error': JudgeStatusInfo('System Error', 'gray-dark', 'SE', 'default'),
+    'unknown_error': JudgeStatusInfo('Unknown Error', 'gray-dark', 'UKE', 'default'),
+}
+
+language_info = {
+    'cpp': 'C++',
+    'git': 'Git',
+    'verilog': 'Verilog',
+    'quiz': 'Quiz',
+}
+
+@dataclass
+class RunnerStatus:
+    name: str
+    color: str
+
+runner_status_info = {
+    'invalid': RunnerStatus('Invalid', 'black-50'),
+    'idle': RunnerStatus('Idle', 'blue'),
+    'offline': RunnerStatus('Offline', 'black-50'),
+    'busy': RunnerStatus('Busy', 'orange'),
+}
+
+@dataclass
+class Mntner:
+    name: str
+    link: str
+    email: str
+    avatar: str
+
+@dataclass
+class Contributor:
+    name: str
+    year: int
+    link: str
+    description: str
+    avatar: str
+
+def gh(x): return f'https://github.com/{x}'
+
+mntners = [
+    Mntner('Alan Liang', gh('Alan-Liang'), 'liangyalun@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010333-292122.png'),
+    Mntner('Sakits', gh('Sakits'), 'sakits_tjm@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010147-269063.jpg'),
+    Mntner('SiriusNEO', gh('SiriusNEO'), 'siriusneo@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-011839-997531.jpg'),
+]
+
+contributors = [
+    Contributor('Amagi_Yukisaki', 19, gh('cmd2001'), '原项目主管 & 数据库结构', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005300-112984.jpg'),
+    Contributor('cong258258', 19, gh('cong258258'), '全栈', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005352-493603.jpg'),
+    Contributor('Pioooooo', 19, gh('Pioooooo'), '管理界面 & 前端美化', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005321-601010.jpg'),
+    Contributor('acrazyczy', 19, gh('acrazyczy'), '原评测端主管 & 接口', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005436-860153.jpg'),
+    Contributor('Anoxiacxy', 19, gh('Anoxiacxy'), '原评测 & 编译沙箱', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005335-226765.jpg'),
+    Contributor('XOR-op', 19, gh('XOR-op'), '原评测沙箱', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005240-615633.jpg'),
+    Contributor('stneng', 19, gh('stneng'), '原数据服务 & 数据库', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005212-276113.jpg'),
+    Contributor('SiriusNEO', 20, gh('SiriusNEO'), 'Web', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-011839-997531.jpg'),
+    Contributor('Sakits', 20, gh('Sakits'), '管理界面', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010147-269063.jpg'),
+    Contributor('Alan Liang', 21, gh('Alan-Liang'), '评测端 & 全栈', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010333-292122.png'),
+]

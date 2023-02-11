@@ -195,7 +195,7 @@
                         <h3>批量取消成绩</h3>
                         <p> 
                             将指定的评测记录内容设置为 Voided 并判零分。请注意，对于一条已在 Running and Judging 状态的评测任务，设置为 Voided 状态后，
-                            评测机仍有可能返回评测结果，此时 Voided 状态将被真实的评测记录覆盖。若想中断评测，请使用 abort 功能。
+                            评测机仍有可能返回评测结果，此时 Voided 状态将被真实的评测记录覆盖。若想中断评测，请使用终止评测 (abort) 功能。
                             因此，建议在如下情况使用此功能：需要作废一条已经出了结果的评测记录。
                         </p>
                         <form id="formDisableJudge" action="/OnlineJudge/admin/disable_judge" method="POST">
@@ -221,6 +221,36 @@
                                 </div>
                                 <div class="float-right d-flex mb-3 ml-auto pr-1">
                                     <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge2">批量题目取消成绩</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <hr>
+                        <h3>批量终止评测</h3>
+                        <p>若指定的评测记录还在评测中，则将其状态设置为 Aborted (已测完的点不受影响)，使评测机终止评测任务，并判零分。</p>
+                        <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
+                            <div class="form-row">
+                                <input type="hidden" name="type" value="by_judge_id">
+                                <div class="form-group col-md-3 mb-3">
+                                    <label for="iptAbortJudgeJudgeID">评测编号（回车分隔）</label>
+                                    <textarea class="form-control" name="judge_id" id="iptAbortJudgeJudgeID"></textarea>
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAbortJudge">批量终止评测</button>
+                                </div>
+                            </div>
+                        </form>
+                        <hr>
+                        <h3>批量题目终止评测</h3>
+                        <form id="form-abort-2" action="/OnlineJudge/admin/abort_judge" method="POST">
+                            <div class="form-row">
+                                <input type="hidden" name="type" value="by_problem_id">
+                                <div class="form-group col-md-3 mb-3">
+                                    <label for="iptAbortJudgeJudgeID2">题目编号（回车分隔）</label>
+                                    <textarea class="form-control" name="problem_id" id="iptAbortJudgeJudgeID2"></textarea>
+                                </div>
+                                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAbortJudge2">批量题目终止评测</button>
                                 </div>
                             </div>
                         </form>

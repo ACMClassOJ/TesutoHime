@@ -237,6 +237,19 @@
                             </div>
                         </div>
                     </form>
+
+                    <hr>
+                    <h3>终止评测全部提交</h3>
+                    <p>如果想终止评测单份提交，请进入代码页面，点击代码上方的「终止评测」按钮。</p>
+                    <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
+                        <div class="form-row">
+                            <input type="hidden" name="type" value="by_problem_id">
+                            <input type="hidden" name="problem_id" value="{{ ID }}">
+                            <div class="d-flex mb-3 pr-1">
+                                <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要终止所有 {{ ID }} 的评测？')">全部终止评测</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
 
                 <div class="tab-pane fade" id="pic_tab" role="tabpanel" aria-labelledby="pic_tab-tab">

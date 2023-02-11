@@ -210,31 +210,13 @@ $(function () {
     });
 
 
-    $("#formRejudge").ajaxForm(function (ret_json) {
-        if(ret_json['e'] < 0)
-            swal("Error " + ret_json['e'], ret_json['msg'], "error");
-        else
-            swal("Success", ret_json['msg'], "success");
-    });
-
-    $("#formRejudge2").ajaxForm(function (ret_json) {
-        if(ret_json['e'] < 0)
-            swal("Error " + ret_json['e'], ret_json['msg'], "error");
-        else
-            swal("Success", ret_json['msg'], "success");
-    });
-
-    $("#formDisableJudge").ajaxForm(function (ret_json) {
-        if(ret_json['e'] < 0)
-            swal("Error " + ret_json['e'], ret_json['msg'], "error");
-        else
-            swal("Success", ret_json['msg'], "success");
-    });
-
-    $("#formRealname").ajaxForm(function (ret_json) {
-        if(ret_json['e'] < 0)
-            swal("Error " + ret_json['e'], ret_json['msg'], "error");
-        else
-            swal("Success", ret_json['msg'], "success");
-    });
+    var ajaxForms = [ '#formRejudge', '#formRejudge2', '#formDisableJudge', '#formDisableJudge2', '#formRealname', '#form-abort', '#form-abort-2' ]
+    for (form of ajaxForms) {
+        $(form).ajaxForm(function (ret_json) {
+            if(ret_json['e'] < 0)
+                swal("Error " + ret_json['e'], ret_json['msg'], "error");
+            else
+                swal("Success", ret_json['msg'], "success");
+        });
+    }
 });

@@ -6,10 +6,9 @@ import requests
 from flask import Blueprint, abort, redirect, render_template, request
 from requests.exceptions import RequestException
 
-from config import ProblemConfig, S3Config, SchedulerConfig
+from config import S3Config, SchedulerConfig
 from const import *
 from contestManager import Contest_Manager
-from judgeServerScheduler import JudgeServer_Scheduler
 from problemManager import Problem_Manager
 from referenceManager import Reference_Manager
 from sessionManager import Login_Manager
@@ -344,49 +343,6 @@ def disable_judge():
         except NotFoundException:
             return ReturnCode.ERR_BAD_DATA
 
-@admin.route('/add_judge', methods=['POST'])
-def add_judge():
-    if Login_Manager.get_privilege() < Privilege.ADMIN:
-        abort(404)
-    server_friendly_name = request.form['server']
-    problem_id = int(request.form['problem_id'])
-    if problem_id < 1000 or (problem_id > Problem_Manager.get_max_id() and problem_id < 11000) or problem_id > Problem_Manager.get_real_max_id():
-        return ReturnCode.ERR_ADD_JUDGE_PROBLEM_ID
-    username = str(request.form['username'])
-    if User_Manager.validate_username(username):
-        return ReturnCode.ERR_ADD_JUDGE_USERNAME
-    lang = -1
-    lang_request_str = str(request.form['lang'])
-    if lang_request_str == 'cpp': 
-        lang = 0
-    elif lang_request_str == 'git':
-        lang = 1
-    elif lang_request_str == 'Verilog':
-        lang = 2
-    elif lang_request_str == 'quiz':
-        lang = 3
-    user_code = request.form['user_code']
-    if len(str(user_code)) > ProblemConfig.Max_Code_Length:
-        return ReturnCode.ERR_ADD_JUDGE_CODE_LENGTH
-    share = request.form['share']
-    if(share == '1'):
-        share = True
-    else:
-        share = False
-    try:
-        if len(server_friendly_name) == 0: # no server specified. normal submit
-            JudgeServer_Scheduler.Start_Judge(problem_id, username, user_code, lang, share)
-            return ReturnCode.SUC_ADD_JUDGE
-        else:
-            exit_code = JudgeServer_Scheduler.Start_Targeted_Judge(problem_id, username, user_code, lang, share, server_friendly_name)
-            if exit_code == 0:
-                return ReturnCode.SUC_ADD_JUDGE
-            elif exit_code == -1:
-                return ReturnCode.ERR_ADD_JUDGE_SERVER_INVALID
-            else:
-                return ReturnCode.ERR_ADD_JUDGE_BUSY
-    except RequestException:
-        return ReturnCode.ERR_BAD_DATA
 
 @admin.route('/add_realname', methods=['POST'])
 def add_realname():

@@ -17,13 +17,12 @@ from flask import (Blueprint, Flask, abort, make_response, redirect,
 from sqlalchemy.orm import defer, joinedload, selectinload
 
 from admin import admin
-from api import api
 from config import JudgeConfig, LoginConfig, ProblemConfig, WebConfig
 from const import Privilege, ReturnCode
 from contestCache import Contest_Cache
 from contestManager import Contest_Manager
 from discussManager import Discuss_Manager
-from judgeManager import Judge_Manager
+from oldJudgeManager import Judge_Manager
 from problemManager import Problem_Manager
 from quizManager import Quiz_Manager
 from referenceManager import Reference_Manager
@@ -34,7 +33,6 @@ from utils import *
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
-web.register_blueprint(api, url_prefix='/api')
 
 
 def validate(username: Optional['str'] = None, password: Optional['str'] = None, friendly_name: Optional['str'] = None,
@@ -100,10 +98,6 @@ def is_code_visible(code_owner, problem_id, shared):
     else:
         # otherwise, the user can see his own and shared problems
         return code_owner == username or shared
-
-@web.errorhandler(500)
-def error_500():
-    return "Internal Server Error: invalid Request"
 
 
 @web.before_request
@@ -1149,7 +1143,11 @@ def about():
     else:
         query = urlencode({'id': ','.join(str(x.id) for x in runner2s)})
         url = urljoin(SchedulerConfig.base_url, f'status?{query}')
-        runner2_res = requests.get(url)
+        try:
+            runner2_res = requests.get(url)
+        except Exception as e:
+            print(e)
+            abort(500, '无法获取评测机状态')
         if runner2_res.status_code != OK:
             abort(500)
         runner2_dict = runner2_res.json()
@@ -1170,6 +1168,7 @@ def about():
             runner2_list.append(r)
     return render_template('about.html',
                            runner2=runner2_list,
+                           mntners=mntners, contributors=contributors,
                            friendlyName=Login_Manager.get_friendly_name(),
                            is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
 

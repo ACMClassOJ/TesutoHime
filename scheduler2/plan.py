@@ -245,7 +245,7 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
     if ctx.check_type == 'compare':
         check = CompareChecker(True, ans())
         if check.answer is None:
-            raise InvalidProblemException(f'Answer file needed')
+            raise InvalidProblemException(f'Answer file needed for testpoint {id}')
     elif ctx.check_type == 'direct':
         check = DirectChecker()
     elif ctx.check_type == 'spj':

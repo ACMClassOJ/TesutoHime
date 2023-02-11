@@ -94,12 +94,14 @@
                                 <input type="hidden" name="action" value="hide">
                                 <button class="btn btn-outline-primary ml-3" type="submit">取消发布</button>
                             </form>
+                            <span>（点击会将发布时间设为遥远的未来）</span>
                         {%- else -%}
                             <span class="text-red">未发布</span>
                             <form method="POST">
                                 <input type="hidden" name="action" value="show">
                                 <button class="btn btn-outline-primary ml-3" type="submit">立即发布</button>
                             </form>
+                            <span>（点击会将发布时间设为现在）</span>
                         {%- endif %}
                     </div>
                     <p>
@@ -212,24 +214,26 @@
 
                 <div class="tab-pane fade" id="judge_tab" role="tabpanel" aria-labelledby="judge_tab-tab">
                     <h3>重测全部提交</h3>
+                    <p>如果想重测单份代码，请进入代码页面，点击代码上方的「重测」按钮。</p>
                     <form id="form-rejudge" action="/OnlineJudge/admin/rejudge" method="POST">
                         <input type="hidden" name="type" value="by_problem_id">
                         <input type="hidden" name="problem_id" value="{{ ID }}">
                         <div class="form-row">
                             <div class="d-flex mb-3 pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要重测所有 {{ ID }} 的评测吗？')">重测</button>
+                                <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要重测所有 {{ ID }} 的评测吗？')">全部重测</button>
                             </div>
                         </div>
                     </form>
 
                     <hr>
                     <h3>取消全部提交成绩</h3>
+                    <p>如果想取消单份代码的成绩，请进入代码页面，点击代码上方的「VOID」按钮。</p>
                     <form id="form-void" action="/OnlineJudge/admin/disable_judge" method="POST">
                         <div class="form-row">
                             <input type="hidden" name="type" value="by_problem_id">
                             <input type="hidden" name="problem_id" value="{{ ID }}">
                             <div class="d-flex mb-3 pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要取消所有 {{ ID }} 评测的成绩吗？')">取消成绩</button>
+                                <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要取消所有 {{ ID }} 评测的成绩吗？')">全部取消成绩</button>
                             </div>
                         </div>
                     </form>

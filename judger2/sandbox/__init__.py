@@ -203,7 +203,8 @@ async def run_with_limits(
             file_size_bytes=file_size_bytes,
         )
         err = '' if disable_stderr else \
-            (await asyncrun(lambda: proc.stderr.read(4096))).decode()
+            (await asyncrun(lambda: proc.stderr.read(4096))).decode() \
+            .replace(str(cwd), '')
         errmsg = '' if err == '' else f': {err}'
 
         # check for errors

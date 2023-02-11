@@ -7,9 +7,12 @@ html .bg-secondary {
 }
 
 html .bg-white,
-html .footer,
 html .card {
   background-color: #1e1e1e !important;
+}
+
+html .footer {
+  background-color: transparent !important;
 }
 
 html h1,

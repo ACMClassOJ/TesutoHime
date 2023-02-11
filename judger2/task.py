@@ -19,7 +19,8 @@ logger = getLogger(__name__)
 
 
 async def run_task(task: Task, task_id: str) -> Result:
-    task_logger.info(f'received task {task_id}: {task}')
+    task_logger.info(f'received task {task_id}')
+    task_logger.debug(f'received task {task_id}: {task}')
     if isinstance(task, CompileTask):
         return await compile_task(task)
     elif isinstance(task, JudgeTask):
@@ -67,7 +68,7 @@ async def judge_testpoint(testpoint: Testpoint, result: JudgeResult, \
     cwd: PosixPath, rusage: Ref):
     skip_reason = get_skip_reason(testpoint, result.testpoints)
     if skip_reason != None:
-        task_logger.info(f'skipping {testpoint.id} due to {skip_reason}')
+        task_logger.debug(f'skipping {testpoint.id} due to {skip_reason}')
         return TestpointJudgeResult(
             id=testpoint.id,
             result='skipped',
@@ -98,7 +99,7 @@ async def judge_testpoint(testpoint: Testpoint, result: JudgeResult, \
             id=testpoint.id,
             resource_usage=rusage.value,
         )
-        task_logger.info(f'testpoint {testpoint.id} finished with {res}')
+        task_logger.debug(f'testpoint {testpoint.id} finished with {res}')
         return res
 
 async def judge_task(task: JudgeTask, task_id: str) -> JudgeResult:

@@ -772,7 +772,7 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
                 await sleep(1)
                 await remove_file(bucket, key)
             except BaseException as e:
-                logger.info(f'Error clearing object: {format_exc(e)}')
+                logger.warn(f'Error clearing object: {format_exc(e)}')
 
 async def get_partial_result(submission_id):
     if not submission_id in ctx_from_submission:

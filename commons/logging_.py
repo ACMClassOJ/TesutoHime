@@ -4,12 +4,18 @@ from logging import (DEBUG, INFO, NOTSET, WARNING, Formatter, LogRecord,
                      StreamHandler, root)
 from logging.handlers import WatchedFileHandler
 from pathlib import PosixPath
+from re import sub
 
-format = Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s', '%c')
+class RemoveSignaturesFormatter(Formatter):
+    def __init__(self):
+        super().__init__('%(asctime)s [%(levelname)s] %(name)s: %(message)s', '%c')
+    def format(self, record):
+        formatted = super().format(record)
+        return sub('\?X-Amz.+\'', '\'', formatted)
 
 def add_handler(level, handler, target = root):
     handler.setLevel(level)
-    handler.setFormatter(format)
+    handler.setFormatter(RemoveSignaturesFormatter())
     handler.addFilter(no_boto_filter)
     target.addHandler(handler)
 

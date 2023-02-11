@@ -36,7 +36,7 @@ async def run_task(
 
     async def retry(msg):
         if retries_left <= 0:
-            logger.info(f'Task {task_id} failed: {msg}')
+            logger.warn(f'Task {task_id} failed: {msg}')
             raise Exception(msg)
         logger.info(f'Task {task_id} failed: {msg}, retrying')
         await sleep(task_retry_interval_secs)

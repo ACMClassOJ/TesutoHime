@@ -18,7 +18,7 @@ logger = getLogger(__name__)
 
 
 async def check(outfile: CheckInput, checker: Checker) -> CheckResult:
-    logger.info(f'checking with {checker}')
+    logger.debug(f'checking with {checker}')
     # get output file to check
     if not isinstance(outfile, RunResult):
         try:

@@ -86,20 +86,20 @@
                         </div>
                     </form>
                     <h3>题目状态</h3>
-                    <div class="d-flex align-items-center mb-2">
+                    <div class="mb-2">
                         <span>发布状态：</span>
                         {% if problem.release_time < now -%}
-                            <span class="text-green">已发布</span>
-                            <form method="POST">
+                            <span class="text-green mr-3">已发布</span>
+                            <form method="POST" class="d-inline">
                                 <input type="hidden" name="action" value="hide">
-                                <button class="btn btn-outline-primary ml-3" type="submit">取消发布</button>
+                                <button class="btn btn-outline-primary" type="submit">取消发布</button>
                             </form>
                             <span>（点击会将发布时间设为遥远的未来）</span>
                         {%- else -%}
                             <span class="text-red">未发布</span>
-                            <form method="POST">
+                            <form method="POST" class="d-inline mr-3">
                                 <input type="hidden" name="action" value="show">
-                                <button class="btn btn-outline-primary ml-3" type="submit">立即发布</button>
+                                <button class="btn btn-outline-primary" type="submit">立即发布</button>
                             </form>
                             <span>（点击会将发布时间设为现在）</span>
                         {%- endif %}

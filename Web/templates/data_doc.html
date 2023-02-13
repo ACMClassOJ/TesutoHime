@@ -1,829 +1,234 @@
-<!doctype html>
-<html>
-<head>
-<meta charset='UTF-8'><meta name='viewport' content='width=device-width initial-scale=1'>
-
-<link href='https://fonts.loli.net/css?family=Open+Sans:400italic,700italic,700,400&subset=latin,latin-ext' rel='stylesheet' type='text/css' /><style type='text/css'>html {overflow-x: initial !important;}:root { --bg-color:#ffffff; --text-color:#333333; --select-text-bg-color:#B5D6FC; --select-text-font-color:auto; --monospace:"Lucida Console",Consolas,"Courier",monospace; --title-bar-height:20px; }
-.mac-os-11 { --title-bar-height:28px; }
-html { font-size: 14px; background-color: var(--bg-color); color: var(--text-color); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
-body { margin: 0px; padding: 0px; height: auto; inset: 0px; font-size: 1rem; line-height: 1.42857; overflow-x: hidden; background: inherit; tab-size: 4; }
-iframe { margin: auto; }
-a.url { word-break: break-all; }
-a:active, a:hover { outline: 0px; }
-.in-text-selection, ::selection { text-shadow: none; background: var(--select-text-bg-color); color: var(--select-text-font-color); }
-#write { margin: 0px auto; height: auto; width: inherit; word-break: normal; overflow-wrap: break-word; position: relative; white-space: normal; overflow-x: visible; padding-top: 36px; }
-#write.first-line-indent p { text-indent: 2em; }
-#write.first-line-indent li p, #write.first-line-indent p * { text-indent: 0px; }
-#write.first-line-indent li { margin-left: 2em; }
-.for-image #write { padding-left: 8px; padding-right: 8px; }
-body.typora-export { padding-left: 30px; padding-right: 30px; }
-.typora-export .footnote-line, .typora-export li, .typora-export p { white-space: pre-wrap; }
-.typora-export .task-list-item input { pointer-events: none; }
-@media screen and (max-width: 500px) {
-  body.typora-export { padding-left: 0px; padding-right: 0px; }
-  #write { padding-left: 20px; padding-right: 20px; }
-  .CodeMirror-sizer { margin-left: 0px !important; }
-  .CodeMirror-gutters { display: none !important; }
-}
-#write li > figure:last-child { margin-bottom: 0.5rem; }
-#write ol, #write ul { position: relative; }
-img { max-width: 100%; vertical-align: middle; image-orientation: from-image; }
-button, input, select, textarea { color: inherit; font: inherit; }
-input[type="checkbox"], input[type="radio"] { line-height: normal; padding: 0px; }
-*, ::after, ::before { box-sizing: border-box; }
-#write h1, #write h2, #write h3, #write h4, #write h5, #write h6, #write p, #write pre { width: inherit; }
-#write h1, #write h2, #write h3, #write h4, #write h5, #write h6, #write p { position: relative; }
-p { line-height: inherit; }
-h1, h2, h3, h4, h5, h6 { break-after: avoid-page; break-inside: avoid; orphans: 4; }
-p { orphans: 4; }
-h1 { font-size: 2rem; }
-h2 { font-size: 1.8rem; }
-h3 { font-size: 1.6rem; }
-h4 { font-size: 1.4rem; }
-h5 { font-size: 1.2rem; }
-h6 { font-size: 1rem; }
-.md-math-block, .md-rawblock, h1, h2, h3, h4, h5, h6, p { margin-top: 1rem; margin-bottom: 1rem; }
-.hidden { display: none; }
-.md-blockmeta { color: rgb(204, 204, 204); font-weight: 700; font-style: italic; }
-a { cursor: pointer; }
-sup.md-footnote { padding: 2px 4px; background-color: rgba(238, 238, 238, 0.7); color: rgb(85, 85, 85); border-radius: 4px; cursor: pointer; }
-sup.md-footnote a, sup.md-footnote a:hover { color: inherit; text-transform: inherit; text-decoration: inherit; }
-#write input[type="checkbox"] { cursor: pointer; width: inherit; height: inherit; }
-figure { overflow-x: auto; margin: 1.2em 0px; max-width: calc(100% + 16px); padding: 0px; }
-figure > table { margin: 0px; }
-tr { break-inside: avoid; break-after: auto; }
-thead { display: table-header-group; }
-table { border-collapse: collapse; border-spacing: 0px; width: 100%; overflow: auto; break-inside: auto; text-align: left; }
-table.md-table td { min-width: 32px; }
-.CodeMirror-gutters { border-right: 0px; background-color: inherit; }
-.CodeMirror-linenumber { user-select: none; }
-.CodeMirror { text-align: left; }
-.CodeMirror-placeholder { opacity: 0.3; }
-.CodeMirror pre { padding: 0px 4px; }
-.CodeMirror-lines { padding: 0px; }
-div.hr:focus { cursor: none; }
-#write pre { white-space: pre-wrap; }
-#write.fences-no-line-wrapping pre { white-space: pre; }
-#write pre.ty-contain-cm { white-space: normal; }
-.CodeMirror-gutters { margin-right: 4px; }
-.md-fences { font-size: 0.9rem; display: block; break-inside: avoid; text-align: left; overflow: visible; white-space: pre; background: inherit; position: relative !important; }
-.md-fences-adv-panel { width: 100%; margin-top: 10px; text-align: center; padding-top: 0px; padding-bottom: 8px; overflow-x: auto; }
-#write .md-fences.mock-cm { white-space: pre-wrap; }
-.md-fences.md-fences-with-lineno { padding-left: 0px; }
-#write.fences-no-line-wrapping .md-fences.mock-cm { white-space: pre; overflow-x: auto; }
-.md-fences.mock-cm.md-fences-with-lineno { padding-left: 8px; }
-.CodeMirror-line, twitterwidget { break-inside: avoid; }
-.footnotes { opacity: 0.8; font-size: 0.9rem; margin-top: 1em; margin-bottom: 1em; }
-.footnotes + .footnotes { margin-top: 0px; }
-.md-reset { margin: 0px; padding: 0px; border: 0px; outline: 0px; vertical-align: top; background: 0px 0px; text-decoration: none; text-shadow: none; float: none; position: static; width: auto; height: auto; white-space: nowrap; cursor: inherit; -webkit-tap-highlight-color: transparent; line-height: normal; font-weight: 400; text-align: left; box-sizing: content-box; direction: ltr; }
-li div { padding-top: 0px; }
-blockquote { margin: 1rem 0px; }
-li .mathjax-block, li p { margin: 0.5rem 0px; }
-li blockquote { margin: 1rem 0px; }
-li { margin: 0px; position: relative; }
-blockquote > :last-child { margin-bottom: 0px; }
-blockquote > :first-child, li > :first-child { margin-top: 0px; }
-.footnotes-area { color: rgb(136, 136, 136); margin-top: 0.714rem; padding-bottom: 0.143rem; white-space: normal; }
-#write .footnote-line { white-space: pre-wrap; }
-@media print {
-  body, html { border: 1px solid transparent; height: 99%; break-after: avoid; break-before: avoid; font-variant-ligatures: no-common-ligatures; }
-  #write { margin-top: 0px; padding-top: 0px; border-color: transparent !important; }
-  .typora-export * { -webkit-print-color-adjust: exact; }
-  .typora-export #write { break-after: avoid; }
-  .typora-export #write::after { height: 0px; }
-  .is-mac table { break-inside: avoid; }
-  .typora-export-show-outline .typora-export-sidebar { display: none; }
-}
-.footnote-line { margin-top: 0.714em; font-size: 0.7em; }
-a img, img a { cursor: pointer; }
-pre.md-meta-block { font-size: 0.8rem; min-height: 0.8rem; white-space: pre-wrap; background: rgb(204, 204, 204); display: block; overflow-x: hidden; }
-p > .md-image:only-child:not(.md-img-error) img, p > img:only-child { display: block; margin: auto; }
-#write.first-line-indent p > .md-image:only-child:not(.md-img-error) img { left: -2em; position: relative; }
-p > .md-image:only-child { display: inline-block; width: 100%; }
-#write .MathJax_Display { margin: 0.8em 0px 0px; }
-.md-math-block { width: 100%; }
-.md-math-block:not(:empty)::after { display: none; }
-.MathJax_ref { fill: currentcolor; }
-[contenteditable="true"]:active, [contenteditable="true"]:focus, [contenteditable="false"]:active, [contenteditable="false"]:focus { outline: 0px; box-shadow: none; }
-.md-task-list-item { position: relative; list-style-type: none; }
-.task-list-item.md-task-list-item { padding-left: 0px; }
-.md-task-list-item > input { position: absolute; top: 0px; left: 0px; margin-left: -1.2em; margin-top: calc(1em - 10px); border: none; }
-.math { font-size: 1rem; }
-.md-toc { min-height: 3.58rem; position: relative; font-size: 0.9rem; border-radius: 10px; }
-.md-toc-content { position: relative; margin-left: 0px; }
-.md-toc-content::after, .md-toc::after { display: none; }
-.md-toc-item { display: block; color: rgb(65, 131, 196); }
-.md-toc-item a { text-decoration: none; }
-.md-toc-inner:hover { text-decoration: underline; }
-.md-toc-inner { display: inline-block; cursor: pointer; }
-.md-toc-h1 .md-toc-inner { margin-left: 0px; font-weight: 700; }
-.md-toc-h2 .md-toc-inner { margin-left: 2em; }
-.md-toc-h3 .md-toc-inner { margin-left: 4em; }
-.md-toc-h4 .md-toc-inner { margin-left: 6em; }
-.md-toc-h5 .md-toc-inner { margin-left: 8em; }
-.md-toc-h6 .md-toc-inner { margin-left: 10em; }
-@media screen and (max-width: 48em) {
-  .md-toc-h3 .md-toc-inner { margin-left: 3.5em; }
-  .md-toc-h4 .md-toc-inner { margin-left: 5em; }
-  .md-toc-h5 .md-toc-inner { margin-left: 6.5em; }
-  .md-toc-h6 .md-toc-inner { margin-left: 8em; }
-}
-a.md-toc-inner { font-size: inherit; font-style: inherit; font-weight: inherit; line-height: inherit; }
-.footnote-line a:not(.reversefootnote) { color: inherit; }
-.md-attr { display: none; }
-.md-fn-count::after { content: "."; }
-code, pre, samp, tt { font-family: var(--monospace); }
-kbd { margin: 0px 0.1em; padding: 0.1em 0.6em; font-size: 0.8em; color: rgb(36, 39, 41); background: rgb(255, 255, 255); border: 1px solid rgb(173, 179, 185); border-radius: 3px; box-shadow: rgba(12, 13, 14, 0.2) 0px 1px 0px, rgb(255, 255, 255) 0px 0px 0px 2px inset; white-space: nowrap; vertical-align: middle; }
-.md-comment { color: rgb(162, 127, 3); opacity: 0.8; font-family: var(--monospace); }
-code { text-align: left; vertical-align: initial; }
-a.md-print-anchor { white-space: pre !important; border-width: initial !important; border-style: none !important; border-color: initial !important; display: inline-block !important; position: absolute !important; width: 1px !important; right: 0px !important; outline: 0px !important; background: 0px 0px !important; text-decoration: initial !important; text-shadow: initial !important; }
-.os-windows.monocolor-emoji .md-emoji { font-family: "Segoe UI Symbol", sans-serif; }
-.md-diagram-panel > svg { max-width: 100%; }
-[lang="flow"] svg, [lang="mermaid"] svg { max-width: 100%; height: auto; }
-[lang="mermaid"] .node text { font-size: 1rem; }
-table tr th { border-bottom: 0px; }
-video { max-width: 100%; display: block; margin: 0px auto; }
-iframe { max-width: 100%; width: 100%; border: none; }
-.highlight td, .highlight tr { border: 0px; }
-mark { background: rgb(255, 255, 0); color: rgb(0, 0, 0); }
-.md-html-inline .md-plain, .md-html-inline strong, mark .md-inline-math, mark strong { color: inherit; }
-.md-expand mark .md-meta { opacity: 0.3 !important; }
-mark .md-meta { color: rgb(0, 0, 0); }
-@media print {
-  .typora-export h1, .typora-export h2, .typora-export h3, .typora-export h4, .typora-export h5, .typora-export h6 { break-inside: avoid; }
-}
-.md-diagram-panel .messageText { stroke: none !important; }
-.md-diagram-panel .start-state { fill: var(--node-fill); }
-.md-diagram-panel .edgeLabel rect { opacity: 1 !important; }
-.md-require-zoom-fix { height: auto; margin-top: 16px; margin-bottom: 16px; }
-.md-require-zoom-fix foreignobject { font-size: var(--mermaid-font-zoom); }
-.md-fences.md-fences-math { font-size: 1em; }
-.md-fences-advanced:not(.md-focus) { padding: 0px; white-space: nowrap; border: 0px; }
-.md-fences-advanced:not(.md-focus) { background: inherit; }
-.typora-export-show-outline .typora-export-content { max-width: 1440px; margin: auto; display: flex; flex-direction: row; }
-.typora-export-sidebar { width: 300px; font-size: 0.8rem; margin-top: 80px; margin-right: 18px; }
-.typora-export-show-outline #write { --webkit-flex:2; flex: 2 1 0%; }
-.typora-export-sidebar .outline-content { position: fixed; top: 0px; max-height: 100%; overflow: hidden auto; padding-bottom: 30px; padding-top: 60px; width: 300px; }
-@media screen and (max-width: 1024px) {
-  .typora-export-sidebar, .typora-export-sidebar .outline-content { width: 240px; }
-}
-@media screen and (max-width: 800px) {
-  .typora-export-sidebar { display: none; }
-}
-.outline-content li, .outline-content ul { margin-left: 0px; margin-right: 0px; padding-left: 0px; padding-right: 0px; list-style: none; }
-.outline-content ul { margin-top: 0px; margin-bottom: 0px; }
-.outline-content strong { font-weight: 400; }
-.outline-expander { width: 1rem; height: 1.42857rem; position: relative; display: table-cell; vertical-align: middle; cursor: pointer; padding-left: 4px; }
-.outline-expander::before { content: ""; position: relative; font-family: Ionicons; display: inline-block; font-size: 8px; vertical-align: middle; }
-.outline-item { padding-top: 3px; padding-bottom: 3px; cursor: pointer; }
-.outline-expander:hover::before { content: ""; }
-.outline-h1 > .outline-item { padding-left: 0px; }
-.outline-h2 > .outline-item { padding-left: 1em; }
-.outline-h3 > .outline-item { padding-left: 2em; }
-.outline-h4 > .outline-item { padding-left: 3em; }
-.outline-h5 > .outline-item { padding-left: 4em; }
-.outline-h6 > .outline-item { padding-left: 5em; }
-.outline-label { cursor: pointer; display: table-cell; vertical-align: middle; text-decoration: none; color: inherit; }
-.outline-label:hover { text-decoration: underline; }
-.outline-item:hover { border-color: rgb(245, 245, 245); background-color: var(--item-hover-bg-color); }
-.outline-item:hover { margin-left: -28px; margin-right: -28px; border-left: 28px solid transparent; border-right: 28px solid transparent; }
-.outline-item-single .outline-expander::before, .outline-item-single .outline-expander:hover::before { display: none; }
-.outline-item-open > .outline-item > .outline-expander::before { content: ""; }
-.outline-children { display: none; }
-.info-panel-tab-wrapper { display: none; }
-.outline-item-open > .outline-children { display: block; }
-.typora-export .outline-item { padding-top: 1px; padding-bottom: 1px; }
-.typora-export .outline-item:hover { margin-right: -8px; border-right: 8px solid transparent; }
-.typora-export .outline-expander::before { content: "+"; font-family: inherit; top: -1px; }
-.typora-export .outline-expander:hover::before, .typora-export .outline-item-open > .outline-item > .outline-expander::before { content: "−"; }
-.typora-export-collapse-outline .outline-children { display: none; }
-.typora-export-collapse-outline .outline-item-open > .outline-children, .typora-export-no-collapse-outline .outline-children { display: block; }
-.typora-export-no-collapse-outline .outline-expander::before { content: "" !important; }
-.typora-export-show-outline .outline-item-active > .outline-item .outline-label { font-weight: 700; }
-.md-inline-math-container mjx-container { zoom: 0.95; }
-
-
-.CodeMirror { height: auto; }
-.CodeMirror.cm-s-inner { background: inherit; }
-.CodeMirror-scroll { overflow: auto hidden; z-index: 3; }
-.CodeMirror-gutter-filler, .CodeMirror-scrollbar-filler { background-color: rgb(255, 255, 255); }
-.CodeMirror-gutters { border-right: 1px solid rgb(221, 221, 221); background: inherit; white-space: nowrap; }
-.CodeMirror-linenumber { padding: 0px 3px 0px 5px; text-align: right; color: rgb(153, 153, 153); }
-.cm-s-inner .cm-keyword { color: rgb(119, 0, 136); }
-.cm-s-inner .cm-atom, .cm-s-inner.cm-atom { color: rgb(34, 17, 153); }
-.cm-s-inner .cm-number { color: rgb(17, 102, 68); }
-.cm-s-inner .cm-def { color: rgb(0, 0, 255); }
-.cm-s-inner .cm-variable { color: rgb(0, 0, 0); }
-.cm-s-inner .cm-variable-2 { color: rgb(0, 85, 170); }
-.cm-s-inner .cm-variable-3 { color: rgb(0, 136, 85); }
-.cm-s-inner .cm-string { color: rgb(170, 17, 17); }
-.cm-s-inner .cm-property { color: rgb(0, 0, 0); }
-.cm-s-inner .cm-operator { color: rgb(152, 26, 26); }
-.cm-s-inner .cm-comment, .cm-s-inner.cm-comment { color: rgb(170, 85, 0); }
-.cm-s-inner .cm-string-2 { color: rgb(255, 85, 0); }
-.cm-s-inner .cm-meta { color: rgb(85, 85, 85); }
-.cm-s-inner .cm-qualifier { color: rgb(85, 85, 85); }
-.cm-s-inner .cm-builtin { color: rgb(51, 0, 170); }
-.cm-s-inner .cm-bracket { color: rgb(153, 153, 119); }
-.cm-s-inner .cm-tag { color: rgb(17, 119, 0); }
-.cm-s-inner .cm-attribute { color: rgb(0, 0, 204); }
-.cm-s-inner .cm-header, .cm-s-inner.cm-header { color: rgb(0, 0, 255); }
-.cm-s-inner .cm-quote, .cm-s-inner.cm-quote { color: rgb(0, 153, 0); }
-.cm-s-inner .cm-hr, .cm-s-inner.cm-hr { color: rgb(153, 153, 153); }
-.cm-s-inner .cm-link, .cm-s-inner.cm-link { color: rgb(0, 0, 204); }
-.cm-negative { color: rgb(221, 68, 68); }
-.cm-positive { color: rgb(34, 153, 34); }
-.cm-header, .cm-strong { font-weight: 700; }
-.cm-del { text-decoration: line-through; }
-.cm-em { font-style: italic; }
-.cm-link { text-decoration: underline; }
-.cm-error { color: red; }
-.cm-invalidchar { color: red; }
-.cm-constant { color: rgb(38, 139, 210); }
-.cm-defined { color: rgb(181, 137, 0); }
-div.CodeMirror span.CodeMirror-matchingbracket { color: rgb(0, 255, 0); }
-div.CodeMirror span.CodeMirror-nonmatchingbracket { color: rgb(255, 34, 34); }
-.cm-s-inner .CodeMirror-activeline-background { background: inherit; }
-.CodeMirror { position: relative; overflow: hidden; }
-.CodeMirror-scroll { height: 100%; outline: 0px; position: relative; box-sizing: content-box; background: inherit; }
-.CodeMirror-sizer { position: relative; }
-.CodeMirror-gutter-filler, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-vscrollbar { position: absolute; z-index: 6; display: none; outline: 0px; }
-.CodeMirror-vscrollbar { right: 0px; top: 0px; overflow: hidden; }
-.CodeMirror-hscrollbar { bottom: 0px; left: 0px; overflow: auto hidden; }
-.CodeMirror-scrollbar-filler { right: 0px; bottom: 0px; }
-.CodeMirror-gutter-filler { left: 0px; bottom: 0px; }
-.CodeMirror-gutters { position: absolute; left: 0px; top: 0px; padding-bottom: 10px; z-index: 3; overflow-y: hidden; }
-.CodeMirror-gutter { white-space: normal; height: 100%; box-sizing: content-box; padding-bottom: 30px; margin-bottom: -32px; display: inline-block; }
-.CodeMirror-gutter-wrapper { position: absolute; z-index: 4; background: 0px 0px !important; border: none !important; }
-.CodeMirror-gutter-background { position: absolute; top: 0px; bottom: 0px; z-index: 4; }
-.CodeMirror-gutter-elt { position: absolute; cursor: default; z-index: 4; }
-.CodeMirror-lines { cursor: text; }
-.CodeMirror pre { border-radius: 0px; border-width: 0px; background: 0px 0px; font-family: inherit; font-size: inherit; margin: 0px; white-space: pre; overflow-wrap: normal; color: inherit; z-index: 2; position: relative; overflow: visible; }
-.CodeMirror-wrap pre { overflow-wrap: break-word; white-space: pre-wrap; word-break: normal; }
-.CodeMirror-code pre { border-right: 30px solid transparent; width: fit-content; }
-.CodeMirror-wrap .CodeMirror-code pre { border-right: none; width: auto; }
-.CodeMirror-linebackground { position: absolute; inset: 0px; z-index: 0; }
-.CodeMirror-linewidget { position: relative; z-index: 2; overflow: auto; }
-.CodeMirror-wrap .CodeMirror-scroll { overflow-x: hidden; }
-.CodeMirror-measure { position: absolute; width: 100%; height: 0px; overflow: hidden; visibility: hidden; }
-.CodeMirror-measure pre { position: static; }
-.CodeMirror div.CodeMirror-cursor { position: absolute; visibility: hidden; border-right: none; width: 0px; }
-.CodeMirror div.CodeMirror-cursor { visibility: hidden; }
-.CodeMirror-focused div.CodeMirror-cursor { visibility: inherit; }
-.cm-searching { background: rgba(255, 255, 0, 0.4); }
-span.cm-underlined { text-decoration: underline; }
-span.cm-strikethrough { text-decoration: line-through; }
-.cm-tw-syntaxerror { color: rgb(255, 255, 255); background-color: rgb(153, 0, 0); }
-.cm-tw-deleted { text-decoration: line-through; }
-.cm-tw-header5 { font-weight: 700; }
-.cm-tw-listitem:first-child { padding-left: 10px; }
-.cm-tw-box { border-style: solid; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-color: inherit; border-top-width: 0px !important; }
-.cm-tw-underline { text-decoration: underline; }
-@media print {
-  .CodeMirror div.CodeMirror-cursor { visibility: hidden; }
-}
-
-
-:root {
-    --side-bar-bg-color: #fafafa;
-    --control-text-color: #777;
-}
-
-@include-when-export url(https://fonts.loli.net/css?family=Open+Sans:400italic,700italic,700,400&subset=latin,latin-ext);
-
-/* open-sans-regular - latin-ext_latin */
-  /* open-sans-italic - latin-ext_latin */
-    /* open-sans-700 - latin-ext_latin */
-    /* open-sans-700italic - latin-ext_latin */
-  html {
-    font-size: 16px;
-    -webkit-font-smoothing: antialiased;
-}
-
-body {
-    font-family: "Open Sans","Clear Sans", "Helvetica Neue", Helvetica, Arial, 'Segoe UI Emoji', sans-serif;
-    color: rgb(51, 51, 51);
-    line-height: 1.6;
-}
-
-#write {
-    max-width: 860px;
-  	margin: 0 auto;
-  	padding: 30px;
-    padding-bottom: 100px;
-}
-
-@media only screen and (min-width: 1400px) {
-	#write {
-		max-width: 1024px;
-	}
-}
-
-@media only screen and (min-width: 1800px) {
-	#write {
-		max-width: 1200px;
-	}
-}
-
-#write > ul:first-child,
-#write > ol:first-child{
-    margin-top: 30px;
-}
-
-a {
-    color: #4183C4;
-}
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-    position: relative;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    font-weight: bold;
-    line-height: 1.4;
-    cursor: text;
-}
-h1:hover a.anchor,
-h2:hover a.anchor,
-h3:hover a.anchor,
-h4:hover a.anchor,
-h5:hover a.anchor,
-h6:hover a.anchor {
-    text-decoration: none;
-}
-h1 tt,
-h1 code {
-    font-size: inherit;
-}
-h2 tt,
-h2 code {
-    font-size: inherit;
-}
-h3 tt,
-h3 code {
-    font-size: inherit;
-}
-h4 tt,
-h4 code {
-    font-size: inherit;
-}
-h5 tt,
-h5 code {
-    font-size: inherit;
-}
-h6 tt,
-h6 code {
-    font-size: inherit;
-}
-h1 {
-    font-size: 2.25em;
-    line-height: 1.2;
-    border-bottom: 1px solid #eee;
-}
-h2 {
-    font-size: 1.75em;
-    line-height: 1.225;
-    border-bottom: 1px solid #eee;
-}
-
-/*@media print {
-    .typora-export h1,
-    .typora-export h2 {
-        border-bottom: none;
-        padding-bottom: initial;
-    }
-
-    .typora-export h1::after,
-    .typora-export h2::after {
-        content: "";
-        display: block;
-        height: 100px;
-        margin-top: -96px;
-        border-top: 1px solid #eee;
-    }
-}*/
-
-h3 {
-    font-size: 1.5em;
-    line-height: 1.43;
-}
-h4 {
-    font-size: 1.25em;
-}
-h5 {
-    font-size: 1em;
-}
-h6 {
-   font-size: 1em;
-    color: #777;
-}
-p,
-blockquote,
-ul,
-ol,
-dl,
-table{
-    margin: 0.8em 0;
-}
-li>ol,
-li>ul {
-    margin: 0 0;
-}
-hr {
-    height: 2px;
-    padding: 0;
-    margin: 16px 0;
-    background-color: #e7e7e7;
-    border: 0 none;
-    overflow: hidden;
-    box-sizing: content-box;
-}
-
-li p.first {
-    display: inline-block;
-}
-ul,
-ol {
-    padding-left: 30px;
-}
-ul:first-child,
-ol:first-child {
-    margin-top: 0;
-}
-ul:last-child,
-ol:last-child {
-    margin-bottom: 0;
-}
-blockquote {
-    border-left: 4px solid #dfe2e5;
-    padding: 0 15px;
-    color: #777777;
-}
-blockquote blockquote {
-    padding-right: 0;
-}
-table {
-    padding: 0;
-    word-break: initial;
-}
-table tr {
-    border: 1px solid #dfe2e5;
-    margin: 0;
-    padding: 0;
-}
-table tr:nth-child(2n),
-thead {
-    background-color: #f8f8f8;
-}
-table th {
-    font-weight: bold;
-    border: 1px solid #dfe2e5;
-    border-bottom: 0;
-    margin: 0;
-    padding: 6px 13px;
-}
-table td {
-    border: 1px solid #dfe2e5;
-    margin: 0;
-    padding: 6px 13px;
-}
-table th:first-child,
-table td:first-child {
-    margin-top: 0;
-}
-table th:last-child,
-table td:last-child {
-    margin-bottom: 0;
-}
-
-.CodeMirror-lines {
-    padding-left: 4px;
-}
-
-.code-tooltip {
-    box-shadow: 0 1px 1px 0 rgba(0,28,36,.3);
-    border-top: 1px solid #eef2f2;
-}
-
-.md-fences,
-code,
-tt {
-    border: 1px solid #e7eaed;
-    background-color: #f8f8f8;
-    border-radius: 3px;
-    padding: 0;
-    padding: 2px 4px 0px 4px;
-    font-size: 0.9em;
-}
-
-code {
-    background-color: #f3f4f4;
-    padding: 0 2px 0 2px;
-}
-
-.md-fences {
-    margin-bottom: 15px;
-    margin-top: 15px;
-    padding-top: 8px;
-    padding-bottom: 6px;
-}
-
-
-.md-task-list-item > input {
-  margin-left: -1.3em;
-}
-
-@media print {
-    html {
-        font-size: 13px;
-    }
-    table,
-    pre {
-        page-break-inside: avoid;
-    }
-    pre {
-        word-wrap: break-word;
-    }
-}
-
-.md-fences {
-	background-color: #f8f8f8;
-}
-#write pre.md-meta-block {
-	padding: 1rem;
-    font-size: 85%;
-    line-height: 1.45;
-    background-color: #f7f7f7;
-    border: 0;
-    border-radius: 3px;
-    color: #777777;
-    margin-top: 0 !important;
-}
-
-.mathjax-block>.code-tooltip {
-	bottom: .375rem;
-}
-
-.md-mathjax-midline {
-    background: #fafafa;
-}
-
-#write>h3.md-focus:before{
-	left: -1.5625rem;
-	top: .375rem;
-}
-#write>h4.md-focus:before{
-	left: -1.5625rem;
-	top: .285714286rem;
-}
-#write>h5.md-focus:before{
-	left: -1.5625rem;
-	top: .285714286rem;
-}
-#write>h6.md-focus:before{
-	left: -1.5625rem;
-	top: .285714286rem;
-}
-.md-image>.md-meta {
-    /*border: 1px solid #ddd;*/
-    border-radius: 3px;
-    padding: 2px 0px 0px 4px;
-    font-size: 0.9em;
-    color: inherit;
-}
-
-.md-tag {
-    color: #a7a7a7;
-    opacity: 1;
-}
-
-.md-toc { 
-    margin-top:20px;
-    padding-bottom:20px;
-}
-
-.sidebar-tabs {
-    border-bottom: none;
-}
-
-#typora-quick-open {
-    border: 1px solid #ddd;
-    background-color: #f8f8f8;
-}
-
-#typora-quick-open-item {
-    background-color: #FAFAFA;
-    border-color: #FEFEFE #e5e5e5 #e5e5e5 #eee;
-    border-style: solid;
-    border-width: 1px;
-}
-
-/** focus mode */
-.on-focus-mode blockquote {
-    border-left-color: rgba(85, 85, 85, 0.12);
-}
-
-header, .context-menu, .megamenu-content, footer{
-    font-family: "Segoe UI", "Arial", sans-serif;
-}
-
-.file-node-content:hover .file-node-icon,
-.file-node-content:hover .file-node-open-state{
-    visibility: visible;
-}
-
-.mac-seamless-mode #typora-sidebar {
-    background-color: #fafafa;
-    background-color: var(--side-bar-bg-color);
-}
-
-.md-lang {
-    color: #b4654d;
-}
-
-/*.html-for-mac {
-    --item-hover-bg-color: #E6F0FE;
-}*/
-
-#md-notification .btn {
-    border: 0;
-}
-
-.dropdown-menu .divider {
-    border-color: #e5e5e5;
-    opacity: 0.4;
-}
-
-.ty-preferences .window-content {
-    background-color: #fafafa;
-}
-
-.ty-preferences .nav-group-item.active {
-    color: white;
-    background: #999;
-}
-
-.menu-item-container a.menu-style-btn {
-    background-color: #f5f8fa;
-    background-image: linear-gradient( 180deg , hsla(0, 0%, 100%, 0.8), hsla(0, 0%, 100%, 0)); 
-}
-
-
-
-mjx-container[jax="SVG"] {
-  direction: ltr;
-}
-
-mjx-container[jax="SVG"] > svg {
-  overflow: visible;
-  min-height: 1px;
-  min-width: 1px;
-}
-
-mjx-container[jax="SVG"] > svg a {
-  fill: blue;
-  stroke: blue;
-}
-
-mjx-assistive-mml {
-  position: absolute !important;
-  top: 0px;
-  left: 0px;
-  clip: rect(1px, 1px, 1px, 1px);
-  padding: 1px 0px 0px 0px !important;
-  border: 0px !important;
-  display: block !important;
-  width: auto !important;
-  overflow: hidden !important;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-mjx-assistive-mml[display="block"] {
-  width: 100% !important;
-}
-
-mjx-container[jax="SVG"][display="true"] {
-  display: block;
-  text-align: center;
-  margin: 1em 0;
-}
-
-mjx-container[jax="SVG"][display="true"][width="full"] {
-  display: flex;
-}
-
-mjx-container[jax="SVG"][justify="left"] {
-  text-align: left;
-}
-
-mjx-container[jax="SVG"][justify="right"] {
-  text-align: right;
-}
-
-g[data-mml-node="merror"] > g {
-  fill: red;
-  stroke: red;
-}
-
-g[data-mml-node="merror"] > rect[data-background] {
-  fill: yellow;
-  stroke: none;
-}
-
-g[data-mml-node="mtable"] > line[data-line], svg[data-table] > g > line[data-line] {
-  stroke-width: 70px;
-  fill: none;
-}
-
-g[data-mml-node="mtable"] > rect[data-frame], svg[data-table] > g > rect[data-frame] {
-  stroke-width: 70px;
-  fill: none;
-}
-
-g[data-mml-node="mtable"] > .mjx-dashed, svg[data-table] > g > .mjx-dashed {
-  stroke-dasharray: 140;
-}
-
-g[data-mml-node="mtable"] > .mjx-dotted, svg[data-table] > g > .mjx-dotted {
-  stroke-linecap: round;
-  stroke-dasharray: 0,140;
-}
-
-g[data-mml-node="mtable"] > g > svg {
-  overflow: visible;
-}
-
-[jax="SVG"] mjx-tool {
-  display: inline-block;
-  position: relative;
-  width: 0;
-  height: 0;
-}
-
-[jax="SVG"] mjx-tool > mjx-tip {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-mjx-tool > mjx-tip {
-  display: inline-block;
-  padding: .2em;
-  border: 1px solid #888;
-  font-size: 70%;
-  background-color: #F8F8F8;
-  color: black;
-  box-shadow: 2px 2px 5px #AAAAAA;
-}
-
-g[data-mml-node="maction"][data-toggle] {
-  cursor: pointer;
-}
-
-mjx-status {
-  display: block;
-  position: fixed;
-  left: 1em;
-  bottom: 1em;
-  min-width: 25%;
-  padding: .2em .4em;
-  border: 1px solid #888;
-  font-size: 90%;
-  background-color: #F8F8F8;
-  color: black;
-}
-
-foreignObject[data-mjx-xml] {
-  font-family: initial;
-  line-height: normal;
-  overflow: visible;
-}
-
-mjx-container[jax="SVG"] path[data-c], mjx-container[jax="SVG"] use[data-c] {
-  stroke-width: 3;
-}
-
-g[data-mml-node="xypic"] path {
-  stroke-width: inherit;
-}
-
-.MathJax g[data-mml-node="xypic"] path {
-  stroke-width: inherit;
-}
-
-</style><title>300. 数据格式规范</title>
-</head>
-<body class='typora-export os-windows'><div class='typora-export-content'>
-<div id='write'  class=''><h1 id='数据格式规范'><span>数据格式规范</span></h1><p><span>by cong258258，Anoxiacxy，Alan-Liang，更新于 2023.2.6</span></p><h2 id='zip总格式'><span>ZIP总格式</span></h2><ul><li><p><strong><span>数据包名称</span></strong><span>：题号.zip 如</span><code>1000.zip</code><span>，</span><strong><span>请确认题号与题面中的id（即数据库主键）保持一致再上传传输数据包</span></strong><span>。</span></p></li><li><p><strong><span>数据包目录结构</span></strong><span>：题号.zip/题号/所有文件，如</span><code>1000.zip/1000/1.in</code></p></li><li><p><strong><span>可能包含的内容及大致情况</span></strong><span>：</span></p><ul><li><span>（所有题目类型必须）一个</span><code>config.json</code><span>，包含所有评测方法的信息。</span></li><li><span>（除特殊情况外，所有题目类型必须）一个</span><code>description.md</code><span>，即题面信息。请参考 题面格式规范.md。</span></li><li><span>（强烈建议）</span><code>solution.cpp</code><span>，即标程。</span></li><li><span>（大部分情况下需要，verilog评测不支持）若干</span><code>数字.in</code><span>，即传统 oi 题中的输入文件。</span><strong><span>文件名请采用连续编号的，从1开始的纯数字</span></strong><span>，与</span><code>.out</code><span>对应。</span></li><li><span>（大部分情况下需要，spj不需要）若干</span><code>数字.out</code><span>，即传统 oi 题中的正确输出。</span><strong><span>文件名请采用连续编号的，从1开始的纯数字</span></strong><span>，与</span><code>.in</code><span>对应。</span></li><li><span>（评测.h头文件需要）若干</span><code>数字.cpp</code><span>，他们将引用学生上传的头文件（评测时保存在</span><code>src.hpp</code><span>）进行评测。</span><strong><span>文件名请采用连续编号的，从1开始的纯数字</span></strong><span>。你需要</span><code>#include &quot;src.hpp&quot;</code><span>。</span></li><li><span>（spj需要）一个</span><code>spj.cpp</code><span>，传入参数见详情。</span></li><li><span>（Verilog需要）若干</span><code>数字.v</code><span>，他们将引用学生上传的.v模块（评测时保存在</span><code>answer.v</code><span>）进行评测。</span><strong><span>文件名请采用连续编号的，从 1 开始的纯数字</span></strong><span>。你需要</span><code>include &quot;answer.v&quot;</code><span>。</span></li><li><span>（评测cpp时可选）任意 .h 或 .hpp ，如果在评测时（如评测头文件，评测spj）需要引入其他头文件，可以放在这里。</span><strong><span>同时将文件名填入</span><code>config.json</code><span>的</span><code>SupportedFiles</code></strong><span>，详情见下。</span></li><li><span>（可选）任意题目可能需要的文件，如：插图（</span><strong><span>请确保插图上传到OJ自带图床，能从互联网访问后引用url而不是直接本地引用</span></strong><span>），数据生成脚本，config.json 生成脚本，数据随机种子，辅助网页等信息。</span></li></ul></li></ul><h2 id='configjson'><span>config.json</span></h2><ul><li><p><span>Groups</span></p><ul><li><span>GroupID：连续编号，从 1 开始的纯数字</span></li><li><span>GroupName：若不存在可填</span><code>&quot;&quot;</code></li><li><span>GroupScore：该评测组的满分。</span></li><li><span>TestPoints：一个数组，数组元素为本组包含的一个/多个测试点在 Details 列表中的次序。将这些测试点的得分</span><strong><span>取最小值</span></strong><span>，乘以上述 GroupScore（该评测组的满分），即得到该测试组的最终得分。（一般情况下，我们要求 SPJ 给出的测试点得分为一个 0 ~ 1 之间的小数；对于非 SPJ 的情况，通过此测试点为 1 ，否则为 0）。作为</span><strong><span>取最小值</span></strong><span>这一行为的一个特例，非 SPJ 给分的测试组需要其下所有测试点 AC ，才能得到该评测组的分数。</span><strong><span>即使本组只有一个测试点，TestPoints 也必须是一个数组！</span></strong></li></ul></li><li><p><span>Details</span></p><ul><li><span>ID：这个ID和数据包下的文件名对应，</span><code>1</code><span> 对应 1.in / 1.out / 1.ans / 1.cpp</span></li><li><span>Dependency：依赖测试点，如果某个测试点需要在其他测试点通过后再进行测试，可以填写其他测试点的编号，无依赖性的时候填写</span><code>0</code><span>。注意，这里的编号不是上述的ID，而是测试点在 Details 列表中的次序。当然，如果你的 ID 编号从 1 开始且连续递增，那么 ID 和 Details 列表中的次序是一样的。</span></li><li><span>TimeLimit：建议值 1000（1秒），单位 ms</span></li><li><span>MemoryLimit：建议值 268435456（256MB），单位 byte。python 脚本与沙箱启动有一定量的内存 overhead，</span><strong><span>因此请不要将内存占用设定为低于20 MB！</span></strong></li><li><span>DiskLimit：如果不使用，建议值 0，单位 byte。要支持空间回收，将此数值设为负的即可。如，测试组1的 Details 包含测试点1, 2, 3，通过将他们的 DiskLimit 分别设置为 512000000, 512000000, -512000000，就可以实现这三个点共享约512MB的测试磁盘空间，且在1, 2运行结束时留下的文件不会被删除，仍可被接下来运行的测试点读取；仅在测试点3运行结束后销毁所有文件。</span></li><li><span>FileNumberLimit：文件数量限制</span></li><li><span>ValgrindTestOn：True / False，是否开启精细化的内存泄漏检测</span></li></ul></li><li><p><span>CompileTimeLimit：建议值 10000（10秒），单位 ms，如需从 git 拉取编译评测可适当增加。</span></p></li><li><p><span>SPJ：</span></p><ul><li><p><span>spj 0 single file with diff</span></p><ul><li><span>这是通常类型题目将会使用到的评测类型，将会直接编译用户提交的代码，使用 </span><code>*.in</code><span>作为程序输入，</span><code>*.out/ans</code><span>作为标准答案，直接和程序输出进行 </span><code>diff</code><span> 比较来给分</span></li></ul></li><li><p><span>spj 1 single file with spj</span></p><ul><li><span>这是答案不唯一的题目可能会使用到的评测类型，流程和 spj 0 基本相同，只是在获取了程序输出之后，会将程序输出，</span><code>*.in</code><span>和</span><code>*.out/ans</code><span> 文件交付给出题人自定义的 </span><code>spj.cpp</code><span> 文件进行评测，</span><code>spj.cpp</code><span> 详情 见下方</span></li></ul></li><li><p><span>spj 2 hpp without diff</span></p><ul><li><span>这是需要对头文件进行测试的评测类型，用户提交的代码将会被保存在 </span><code>src.hpp</code><span> 中。在数据包的根目录下需要有  </span><code>main.cpp</code><span>或者</span><code>1.cpp</code><span>、</span><code>2.cpp</code><span> 这样的文件，文件中需要 </span><code>#include &quot;src.hpp&quot;</code><span>，即可调用用户提交的代码进行测试。程序输出的就是最终的得分，所以你需要有一些奇特的方法来避免用户在</span><code>src.hpp</code><span>中输出一些奇怪的内容而影响最终的评分。更好的评测方式应该是使用 spj 4。注意，该评测类型可能不需要使用到 </span><code>*.out/ans</code><span> 文件。</span></li></ul></li><li><p><span>spj 3 hpp with diff</span></p><ul><li><span>这同样是对头文件进行测试的评测类型，但是在最终的评分环节，是将输出和 </span><code>*.out/ans</code><span> 进行 </span><code>diff</code><span> 比对而给分的。</span></li></ul></li><li><p><span>spj 4 hpp with spj</span></p><ul><li><span>这是一个 spj 2/3 的完美替代品，用户提交的代码会被保存在 </span><code>src.hpp</code><span> 里面，数据包内需要包含 </span><code>main.cpp</code><span>或者</span><code>1.cpp</code><span>、</span><code>2.cpp</code><span> ，这些文件将会被一起编译成用户程序 </span><code>program</code><span>，数据包还需要有另外的 </span><code>spj.cpp</code><span>，它接受</span><code>program</code><span>程序的输出，</span><code>*.in</code><span> 、</span><code>*.out/ans</code><span> 作为参数。一个解决 spj 2 中用户输出或者输入的方法是将文件 </span><code>*.in</code><span>加密，并加入完整性检测的 </span><code>MD5</code><span> ，以防止用户程序擅自在 </span><code>src.hpp</code><span> 中读入，可以在 </span><code>program</code><span> 的输出也加入完整性检测的</span><code>MD5</code><span>，同时使用 </span><code>spj.cpp</code><span> 对 </span><code>program</code><span> 的输出进行检测，以防止用户程序擅自在 </span><code>src.hpp</code><span> 中输出。</span></li></ul></li><li><p><span>spj 5 output only</span></p><ul><li><span>这里将直接把用户提交的文件作为 </span><code>userOutput</code><span>传递给 </span><code>spj.cpp</code><span>，如果你的</span><code>spj.cpp</code><span>中内置了一个编译器，理论上你可以支持所有程序语言的评测。</span></li></ul></li></ul></li><li><p><span>Scorer：该部分内容不用于评测，仅仅用于分数的统计（将各个测试点的结果总和成最终的分数），请使用python完成该分数统计器的编写。具体功能可能暂未测试，详情请参考OJ源代码。</span></p></li><li><p><span>SupportedFiles：一个数组，包含运行时需要额外引用的非库的头文件。</span><strong><span>注意</span></strong><span>，这里引入的文件需要被放入数据包的根目录下，而且该文件只会在文件的编译期被使用，程序运行时是不可以使用到这里的文件的。例：</span></p><pre class="md-fences md-end-block ty-contain-cm modeLoaded" spellcheck="false" lang="python"><div class="CodeMirror cm-s-inner cm-s-null-scroll CodeMirror-wrap" lang="python"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 9.5px; left: 8px;"><textarea autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" style="position: absolute; bottom: -1em; padding: 0px; width: 1000px; height: 1em; outline: none;"></textarea></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1"><div class="CodeMirror-sizer" style="margin-left: 0px; margin-bottom: 0px; border-right-width: 0px; padding-right: 0px; padding-bottom: 0px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div role="presentation" style="position: relative; outline: none;"><div class="CodeMirror-measure"></div><div class="CodeMirror-measure"></div><div style="position: relative; z-index: 1;"></div><div class="CodeMirror-code" role="presentation" style=""><div class="CodeMirror-activeline" style="position: relative;"><div class="CodeMirror-activeline-background CodeMirror-linebackground"></div><div class="CodeMirror-gutter-background CodeMirror-activeline-gutter" style="left: 0px; width: 0px;"></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;<span class="cm-string">"SupportedFiles"</span>: [</span></pre></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">"utility.hpp"</span>,</span></pre><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">"exceptions.hpp"</span>,</span></pre><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">"class-bint.hpp"</span>,</span></pre><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">"class-integer.hpp"</span>,</span></pre><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">"class-matrix.hpp"</span></span></pre><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;  ]</span></pre></div></div></div></div></div><div style="position: absolute; height: 0px; width: 1px; border-bottom: 0px solid transparent; top: 161px;"></div><div class="CodeMirror-gutters" style="display: none; height: 161px;"></div></div></div></pre></li><li><p><span>Verilog: 是否启用 Verilog 评测，启用为 true，否则为 false 或者不填。</span></p></li><li><p><span>Quiz: 是否是填选题，填选题为 true，否则为 false 或者不填。</span></p></li></ul><h2 id='descriptionmd'><span>description.md</span></h2><ul><li><span>题面信息请参考 </span><code>题面格式规范.md</code><span>。</span></li><li><span>在数据包中放</span><code>description.md</code><span>仅仅是为了数据包的完整性给以后的助教和管理员提供便利，其本身与数据库和网页题面显示并没有关联。</span></li><li><span>因此重新上传数据包，</span><code>description.md</code><span>中的改动并不会体现在网页上；</span></li><li><span>通过网页或其他方式修改题面后，改动也不会同步到数据包里，请知悉。</span></li><li><span>同时，若存在难以给出题面情况（比如大作业的题面在github上），这一项可不放或用txt，word代替等。</span></li><li><span>若需要插入图片，建议上传到 ACM OJ 图床服务，建议使用</span><code>&lt;img&gt;</code><span>标签插入题面以更好的控制题目格式。</span></li><li><span>建议将时空限制在数据范围中注明。</span></li></ul><h2 id='solutioncpp'><span>solution.cpp</span></h2><ul><li><span>在数据包中放标程仅仅是为了数据包的完整性给以后的助教和管理员提供便利，其本身与评测并没有关联。</span></li><li><span>若存在难以给出标程情况（比如大作业），这一项可不放。</span></li><li><span>也欢迎放上部分分解法，命名可以是</span><code>solution60.cpp</code><span>，</span><code>solution_n2.cpp</code><span>等。</span></li><li><span>对于所有评测cpp类题目，避免将标答命名为</span><code>main.cpp</code><span>。</span></li><li><span>对于评测头文件类题目，避免将标答命名为</span><code>src.h</code><span>、</span><code>src.hpp</code><span>。</span></li><li><span>对于评测verilog类题目，避免将标答命名为</span><code>answer.v</code><span>。</span></li><li><span>对于存在从stdin读取信息的评测，不需要freopen。</span></li><li><span>对于传统的输出stdout与各测试点简单比对结果的评测，不需要freopen。</span></li></ul><h2 id='1in'><span>1.in</span></h2><ul><li><span>即传统oi题中从stdin输入的文件。</span></li><li><span>命名规范：若干</span><code>数字.in</code><span>，</span><strong><span>文件名请采用连续编号的，从1开始的纯数字</span></strong><span>，与</span><code>.out/ans</code><span>对应。</span></li><li><span>在评测.h头文件时，可能不需要从stdin读取信息而将测试点嵌在各个cpp（</span><code>1.cpp</code><span>）里，此时可不存在</span><code>.in</code><span>。</span></li><li><span>在使用spj.cpp时，可能不需要从stdin读取信息而将测试点嵌在spj（</span><code>spj.cpp</code><span>）里，此时可不存在</span><code>.in</code><span>。</span></li><li><span>在评测verilog时，尚不支持任何方式的读取输入，请将测试点内嵌至testbench（</span><code>1.v</code><span>）。</span></li><li><span>注意：我们的 OJ 评测均采用 Linux 环境，默认 diff 时有行末空格过滤。虽然对于许多题目，换行符为 Windows 的</span><code>CRLF(\r\n)</code><span>还是 Linux 的</span><code>LF(\n)</code><span>并不会产生很大的影响，但请各位出数据的助教尽可能不要出现</span><code>CRLF</code><span>。</span></li></ul><h2 id='1out--1ans'><span>1.out / 1.ans</span></h2><ul><li><span>即传统oi题中的正确输出，他们将与程序的stdout输出进行比对。</span></li><li><span>命名规范：若干</span><code>数字.out</code><span>或</span><code>数字.ans</code><span>，</span><strong><span>文件名请采用连续编号的，从1开始的纯数字</span></strong><span>，与</span><code>.in</code><span>对应。同时存在</span><code>.out</code><span>和</span><code>.ans</code><span>时后者优先级高。</span></li><li><span>在使用spj.cpp时，可能不需要比对stdout，此时可不存在</span><code>.out</code><span>。</span></li><li><span>注意：我们的 OJ 评测均采用 Linux 环境，默认 diff 时有行末空格过滤。虽然对于许多题目，换行符为 Windows 的</span><code>CRLF(\r\n)</code><span>还是 Linux 的</span><code>LF(\n)</code><span>并不会产生很大的影响，但请各位出数据的助教尽可能不要出现</span><code>CRLF</code><span>。</span></li></ul><h2 id='spjcpp'><span>spj.cpp</span></h2><ul><li><span>通过命令行（argv[]）传参，具体如下：</span></li></ul><pre class="md-fences md-end-block ty-contain-cm modeLoaded" spellcheck="false" lang="{.python .input .c++}"><div class="CodeMirror cm-s-inner cm-s-null-scroll CodeMirror-wrap" lang="{.python .input .c++}"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 9.5px; left: 8px;"><textarea autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" style="position: absolute; bottom: -1em; padding: 0px; width: 1000px; height: 1em; outline: none;"></textarea></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1"><div class="CodeMirror-sizer" style="margin-left: 0px; margin-bottom: 0px; border-right-width: 0px; padding-right: 0px; padding-bottom: 0px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div role="presentation" style="position: relative; outline: none;"><div class="CodeMirror-measure"><pre><span>xxxxxxxxxx</span></pre></div><div class="CodeMirror-measure"></div><div style="position: relative; z-index: 1;"></div><div class="CodeMirror-code" role="presentation" style=""><div class="CodeMirror-activeline" style="position: relative;"><div class="CodeMirror-activeline-background CodeMirror-linebackground"></div><div class="CodeMirror-gutter-background CodeMirror-activeline-gutter" style="left: 0px; width: 0px;"></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-variable">FILE</span> <span class="cm-operator">*</span><span class="cm-builtin">input</span> &nbsp; &nbsp; = <span class="cm-variable">fopen</span>(<span class="cm-variable">argv</span>[<span class="cm-number">1</span>], <span class="cm-string">"r"</span>); <span class="cm-operator">//</span> <span class="cm-variable">题目的输入文件</span></span></pre></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-variable">FILE</span> <span class="cm-operator">*</span><span class="cm-variable">output</span> &nbsp;  = <span class="cm-variable">fopen</span>(<span class="cm-variable">argv</span>[<span class="cm-number">2</span>], <span class="cm-string">"r"</span>); <span class="cm-operator">//</span> <span class="cm-variable">用户输出</span></span></pre><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-variable">FILE</span> <span class="cm-operator">*</span><span class="cm-variable">answer</span> &nbsp;  = <span class="cm-variable">fopen</span>(<span class="cm-variable">argv</span>[<span class="cm-number">3</span>], <span class="cm-string">"r"</span>); <span class="cm-operator">//</span> <span class="cm-variable">题目的答案</span></span></pre><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-variable">FILE</span> <span class="cm-operator">*</span><span class="cm-variable">score</span> &nbsp; &nbsp; = <span class="cm-variable">fopen</span>(<span class="cm-variable">argv</span>[<span class="cm-number">4</span>], <span class="cm-string">"w"</span>); <span class="cm-operator">//</span> <span class="cm-variable">把评测的分数输出到这里</span></span></pre><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-variable">FILE</span> <span class="cm-operator">*</span><span class="cm-variable">message</span> &nbsp; = <span class="cm-variable">fopen</span>(<span class="cm-variable">argv</span>[<span class="cm-number">5</span>], <span class="cm-string">"w"</span>); <span class="cm-operator">//</span> <span class="cm-variable">这里输出错误</span><span class="cm-operator">/</span><span class="cm-variable">提示信息</span></span></pre></div></div></div></div></div><div style="position: absolute; height: 0px; width: 1px; border-bottom: 0px solid transparent; top: 115px;"></div><div class="CodeMirror-gutters" style="display: none; height: 115px;"></div></div></div></pre><ul><li><span>score 中只有一个 double 类型的数，如果值为 1，那么该测试点会被判断为 AC，否则为</span>
-<span>WA。此功能可以实现部分赋分，例如将一个groupScore设为 100，且只包含一个测试点，如果score中的double数为</span>
-<span>0.5，那么该group的得分就是 50 分。</span></li><li><span>message 功能：这部分信息将显示到 OJ 上供选手查看。</span></li></ul><h2 id='1v'><span>1.v</span></h2><ul><li><span>无</span></li></ul></div></div>
-</body>
-</html>
+{% extends 'base.html' %} {% set page='数据包格式规范' %} {% block content %}
+<div class="card card-body">
+<h1 id="数据格式规范">数据格式规范</h1>
+<p>by cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.2.13</p>
+<h2 id="zip总格式">ZIP总格式</h2>
+<ul>
+<li><strong>数据包名称</strong>：<code>题号.zip</code>（如
+<code>1000.zip</code>），<strong>请确认题号与题面中的
+id（即数据库主键）保持一致再上传传输数据包</strong>。</li>
+<li><strong>数据包目录结构</strong>：<code>题号.zip/题号/所有文件</code>，如
+<code>1000.zip/1000/1.in</code></li>
+<li><strong>可能包含的内容及大致情况</strong>：
+<ul>
+<li>（所有题目类型必须）一个
+<code>config.json</code>，包含所有评测方法的信息。</li>
+<li>（除特殊情况外，所有题目类型必须）一个
+<code>description.md</code>，即题面信息。请参考<a
+href="problem_format_doc">题面格式规范文档</a>。</li>
+<li>（强烈建议）<code>solution.cpp</code>，即标程。</li>
+<li>（大部分情况下需要，verilog 评测不支持）若干
+<code>数字.in</code>，即传统 OI
+题中的输入文件。<strong>文件名请采用连续编号的，从1开始的纯数字</strong>，与
+<code>.out</code> 对应。</li>
+<li>（大部分情况下需要，部分 spj 不需要）若干
+<code>数字.out</code>，即传统 OI
+题中的正确输出。<strong>文件名请采用连续编号的，从1开始的纯数字</strong>，与
+<code>.in</code> 对应。</li>
+<li>（评测 .h 头文件需要）若干
+<code>数字.cpp</code>，他们将引用学生上传的头文件（评测时保存在
+<code>src.hpp</code>）进行评测。<strong>文件名请采用连续编号的，从1开始的纯数字</strong>。你需要
+<code>#include "src.hpp"</code>。</li>
+<li>（spj 需要）一个 <code>spj.cpp</code>，传入参数见详情。</li>
+<li>（可选）任意题目可能需要的文件，如：插图（<strong>请确保插图上传到OJ自带图床，能从互联网访问后引用
+url 而不是直接本地引用</strong>），数据生成脚本，config.json
+生成脚本，数据随机种子，辅助网页等信息。</li>
+</ul></li>
+</ul>
+<h3 id="cpp-评测">CPP 评测</h3>
+<p>除上述要求外，还需包含 <code>.h</code> 或
+<code>.hpp</code>，如果在评测时（如评测头文件，评测
+spj）需要引入其他头文件。同时将文件名填入 <code>config.json</code> 的
+<code>SupportedFiles</code>，参见<a
+href="#supportedfiles">SupportedFiles 章节</a>。</p>
+<h3 id="verilog-评测">Verilog 评测</h3>
+<p>若干 <code>数字.v</code>，他们将引用学生上传的 .v 模块（评测时保存在
+<code>answer.v</code>）进行评测。<strong>文件名请采用连续编号的，从 1
+开始的纯数字</strong>。你需要 <code>`include “answer.v”</code>。</p>
+<h2 id="config.json">config.json</h2>
+<h3 id="groups">Groups</h3>
+<ul>
+<li>GroupID：连续编号，从 1 开始的纯数字。</li>
+<li>GroupName：若不存在可填<code>""</code>。</li>
+<li>GroupScore：该评测组的满分。</li>
+<li>TestPoints：一个数组，数组元素为本组包含的一个/多个测试点在 Details
+列表中的次序。将这些测试点的得分<strong>取最小值</strong>，乘以上述
+GroupScore（该评测组的满分），即得到该测试组的最终得分。（一般情况下，我们要求
+SPJ 给出的测试点得分为一个 0 ~ 1 之间的小数；对于非 SPJ
+的情况，通过此测试点为 1 ，否则为
+0）。作为<strong>取最小值</strong>这一行为的一个特例，非 SPJ
+给分的测试组需要其下所有测试点 AC
+，才能得到该评测组的分数。<strong>即使本组只有一个测试点，TestPoints
+也必须是一个数组！</strong></li>
+</ul>
+<h3 id="details">Details</h3>
+<ul>
+<li>ID：这个ID和数据包下的文件名对应，<code>1</code> 对应 1.in / 1.out /
+1.ans / 1.cpp。</li>
+<li>Dependency：依赖测试点，如果某个测试点需要在其他测试点通过后再进行测试，可以填写其他测试点的编号，无依赖性的时候填写
+<code>0</code>。注意，这里的编号不是上述的ID，而是测试点在 Details
+列表中的次序。当然，如果你的 ID 编号从 1 开始且连续递增，那么 ID 和
+Details 列表中的次序是一样的。</li>
+<li>TimeLimit：建议值 1000（1秒），单位 ms。</li>
+<li>MemoryLimit：建议值 268435456（256MB），单位 byte。</li>
+<li>DiskLimit：如果不使用，建议值 0，单位
+byte。要支持空间回收，将此数值设为负的即可。如，测试组1的 Details
+包含测试点1, 2, 3，通过将他们的 DiskLimit 分别设置为 512000000,
+512000000, -512000000，就可以实现这三个点共享约 512MiB
+的测试磁盘空间，且在1,
+2运行结束时留下的文件不会被删除，仍可被接下来运行的测试点读取；仅在测试点
+3 运行结束后销毁所有文件。</li>
+<li>FileNumberLimit：文件数量限制。</li>
+<li>ValgrindTestOn：True / False，是否开启精细化的内存泄漏检测。</li>
+</ul>
+<h3 id="compiletimelimit">CompileTimeLimit</h3>
+<p>建议值 10000（10秒），单位 ms，如需从 Git
+拉取编译评测可适当增加。</p>
+<h3 id="spj">SPJ</h3>
+<ul>
+<li>spj 0 single file with diff
+<ul>
+<li>这是通常类型题目将会使用到的评测类型，将会直接编译用户提交的代码，使用
+<code>*.in</code> 作为程序输入，<code>*.out/ans</code>
+作为标准答案，直接和程序输出进行 <code>diff</code> 比较来给分。</li>
+</ul></li>
+<li>spj 1 single file with spj
+<ul>
+<li>这是答案不唯一的题目可能会使用到的评测类型，流程和 spj 0
+基本相同，只是在获取了程序输出之后，会将程序输出，<code>*.in</code> 和
+<code>*.out/ans</code> 文件交付给出题人自定义的 <code>spj.cpp</code>
+文件进行评测，<code>spj.cpp</code> 详情见下方。</li>
+</ul></li>
+<li>spj 2 hpp without diff
+<ul>
+<li>这是需要对头文件进行测试的评测类型，用户提交的代码将会被保存在
+<code>src.hpp</code> 中。在数据包的根目录下需要有 <code>main.cpp</code>
+或者<code>1.cpp</code>、<code>2.cpp</code> 这样的文件，文件中需要
+<code>#include "src.hpp"</code>，即可调用用户提交的代码进行测试。程序输出的就是最终的得分，所以你需要有一些奇特的方法来避免用户在
+<code>src.hpp</code>
+中输出一些奇怪的内容而影响最终的评分。更好的评测方式应该是使用 spj
+4。注意，该评测类型可能不需要使用到 <code>*.out/ans</code> 文件。</li>
+</ul></li>
+<li>spj 3 hpp with diff
+<ul>
+<li>这同样是对头文件进行测试的评测类型，但是在最终的评分环节，是将输出和
+<code>*.out/ans</code> 进行 <code>diff</code> 比对而给分的。</li>
+</ul></li>
+<li>spj 4 hpp with spj
+<ul>
+<li>这是一个 spj 2/3 的完美替代品，用户提交的代码会被保存在
+<code>src.hpp</code> 里面，数据包内需要包含 <code>main.cpp</code> 或者
+<code>1.cpp</code>、<code>2.cpp</code>，这些文件将会被一起编译成用户程序
+<code>program</code>，数据包还需要有另外的 <code>spj.cpp</code>，它接受
+<code>program</code> 程序的输出，<code>*.in</code>
+、<code>*.out/ans</code> 作为参数。一个解决 spj 2
+中用户输出或者输入的方法是将文件 <code>*.in</code>
+加密，并加入完整性检测的 <code>MD5</code> ，以防止用户程序擅自在
+<code>src.hpp</code> 中读入，可以在 <code>program</code>
+的输出也加入完整性检测的<code>MD5</code>，同时使用 <code>spj.cpp</code>
+对 <code>program</code> 的输出进行检测，以防止用户程序擅自在
+<code>src.hpp</code> 中输出。</li>
+</ul></li>
+<li>spj 5 output only
+<ul>
+<li>这里将直接把用户提交的文件作为 <code>userOutput</code>传递给
+<code>spj.cpp</code>，如果你的<code>spj.cpp</code>中内置了一个编译器，理论上你可以支持所有程序语言的评测。</li>
+</ul></li>
+</ul>
+<h3 id="supportedfiles">SupportedFiles</h3>
+<p>一个数组，包含运行时需要额外引用的非库的头文件。<strong>注意</strong>，这里引入的文件需要被放入数据包的根目录下，而且该文件只会在文件的编译期被使用，程序运行时是不可以使用到这里的文件的。例：</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SupportedFiles&quot;:</span> <span class="ot">[</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;utility.hpp&quot;</span><span class="ot">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;exceptions.hpp&quot;</span><span class="ot">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;class-bint.hpp&quot;</span><span class="ot">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;class-integer.hpp&quot;</span><span class="ot">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;class-matrix.hpp&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span></code></pre></div>
+<h3 id="verilog">Verilog</h3>
+<p>是否启用 Verilog 评测，启用为 <code>true</code>，否则为
+<code>false</code> 。默认为
+<code>false</code>。请注意，如果启用该选项，所有的提交的将会<strong>强制</strong>被视作
+Verilog。关于 Verilog 评测的更多信息，请参阅<a
+href="#verilog-评测">Verilog 评测章节</a>。</p>
+<h3 id="quiz">Quiz</h3>
+<p>是否是填选题，填选题为 <code>true</code>，否则为
+<code>false</code>。默认为 <code>false</code>。</p>
+<h2 id="description.md">description.md</h2>
+<ul>
+<li>题面信息请参考<a
+href="problem_format_doc">题面格式规范文档</a>。</li>
+<li>在数据包中放<code>description.md</code>仅仅是为了数据包的完整性给以后的助教和管理员提供便利，其本身与数据库和网页题面显示并没有关联。</li>
+<li>因此重新上传数据包，<code>description.md</code>
+中的改动并不会体现在网页上；</li>
+<li>通过网页或其他方式修改题面后，改动也不会同步到数据包里，请知悉；</li>
+<li>若 Markdown 格式不方便，也可以使用 txt/word 等文本格式。</li>
+<li>若无必要给出题面情况（比如大作业的题面在 GitHub
+上），这一项可不放。</li>
+<li>若需要插入图片，建议上传到 ACM OJ 图床服务，建议使用
+<code>&lt;img&gt;</code> 标签插入题面以更好的控制题目格式。</li>
+<li>建议将时空限制在数据范围中注明。</li>
+</ul>
+<h2 id="solution.cpp">solution.cpp</h2>
+<ul>
+<li>在数据包中放标程仅仅是为了数据包的完整性给以后的助教和管理员提供便利，其本身与评测并没有关联。</li>
+<li>若存在难以给出标程情况（比如大作业），这一项可不放。</li>
+<li>也欢迎放上部分分解法，命名可以是
+<code>solution60.cpp</code>，<code>solution_n2.cpp</code> 等。</li>
+<li>对于所有评测 cpp 类题目，避免将标答命名为
+<code>main.cpp</code>。</li>
+<li>对于评测头文件类题目，避免将标答命名为
+<code>src.h</code>、<code>src.hpp</code>。</li>
+<li>对于评测 verilog 类题目，避免将标答命名为
+<code>answer.v</code>。</li>
+<li>对于存在从 stdin 读取信息的评测，不需要 freopen。</li>
+<li>对于传统的输出 stdout 与各测试点简单比对结果的评测，不需要
+freopen。</li>
+</ul>
+<h2 id="in">1.in</h2>
+<ul>
+<li>即传统 OI 题中从 stdin 输入的文件。</li>
+<li>命名规范：若干
+<code>数字.in</code>，<strong>文件名请采用连续编号的，从1开始的纯数字</strong>，与
+<code>.out/ans</code> 对应。</li>
+<li>在评测 <code>.h</code> 头文件时，可能不需要从 stdin
+读取信息而将测试点嵌在各个 cpp（<code>1.cpp</code>）里，此时可不存在
+<code>.in</code>。</li>
+<li>在使用 spj.cpp 时，可能不需要从 stdin 读取信息而将测试点嵌在
+spj（<code>spj.cpp</code>）里，此时可不存在<code>.in</code>。</li>
+<li>在评测 verilog
+时，尚不支持任何方式的读取输入，请将测试点内嵌至testbench（<code>1.v</code>）。</li>
+<li>注意：我们的 OJ 评测均采用 Linux 环境，默认 diff
+时有行末空格过滤。虽然对于许多题目，换行符为 Windows 的
+CRLF(<code>\r\n</code>) 还是 Linux 的 LF(<code>\n</code>)
+并不会产生很大的影响，但请各位出数据的助教尽可能不要出现 CRLF。</li>
+</ul>
+<h2 id="out-1.ans">1.out / 1.ans</h2>
+<ul>
+<li>即传统 OI 题中的正确输出，他们将与程序的 stdout 输出进行比对。</li>
+<li>命名规范：若干 <code>数字.out</code> 或
+<code>数字.ans</code>，<strong>文件名请采用连续编号的，从1开始的纯数字</strong>，与
+<code>.in</code> 对应。同时存在 <code>.out</code> 和 <code>.ans</code>
+时后者优先级高。</li>
+<li>在使用 spj.cpp 时，可能不需要比对 stdout，此时可不存在
+<code>.out</code>。</li>
+<li>注意：我们的 OJ 评测均采用 Linux 环境，默认 diff
+时有行末空格过滤。虽然对于许多题目，换行符为 Windows 的
+CRLF(<code>\r\n</code>) 还是 Linux 的 LF(<code>\n</code>)
+并不会产生很大的影响，但请各位出数据的助教尽可能不要出现 CRLF。</li>
+</ul>
+<h2 id="spj.cpp">spj.cpp</h2>
+<p>通过命令行（argv[]）传参，具体如下：</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>input     <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">1</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的输入文件</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>output    <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">2</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 用户输出</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>answer    <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">3</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的答案</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>score     <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">4</span><span class="op">],</span> <span class="st">&quot;w&quot;</span><span class="op">);</span> <span class="co">// 把评测的分数输出到这里</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>message   <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">5</span><span class="op">],</span> <span class="st">&quot;w&quot;</span><span class="op">);</span> <span class="co">// 这里输出错误/提示信息</span></span></code></pre></div>
+<p>score 中只有一个 double 类型的数，如果值为 1，那么该测试点会被判断为
+AC，否则为WA。此功能可以实现部分赋分，例如将一个 groupScore 设为
+100，且只包含一个测试点，如果 score 中的 double 数为 0.5，那么该 group
+的得分就是 50 分。</p>
+<p>message 功能：这部分信息将显示到 OJ 上供选手查看。</p>
+</div>
+{% endblock %}

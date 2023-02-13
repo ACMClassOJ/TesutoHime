@@ -1,4 +1,14 @@
-{% extends 'base.html' %} {% set page='管理界面使用指南' %} {% block content %}
+{% extends 'base.html' %}
+{% set page='管理界面使用指南' %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'countdown_svg.css') }}">
+{% endblock %}
+
+{% block content %}
 <div class="card card-body">
 <h1 id="管理界面使用指南">管理界面使用指南</h1>
 <p>by cong258258，LauYeeYu，更新于 2023.2.13</p>

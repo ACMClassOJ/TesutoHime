@@ -1,4 +1,14 @@
-{% extends 'base.html' %} {% set page='数据包格式规范' %} {% block content %}
+{% extends 'base.html' %}
+{% set page='数据包格式规范' %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'countdown_svg.css') }}">
+{% endblock %}
+
+{% block content %}
 <div class="card card-body">
 <h1 id="数据格式规范">数据格式规范</h1>
 <p>by cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.2.13</p>
@@ -39,7 +49,7 @@ url 而不是直接本地引用</strong>），数据生成脚本，config.json
 <p>除上述要求外，还需包含 <code>.h</code> 或
 <code>.hpp</code>，如果在评测时（如评测头文件，评测
 spj）需要引入其他头文件。同时将文件名填入 <code>config.json</code> 的
-<code>SupportedFiles</code>，参见<a
+<code>SupportedFiles</code>，参见 <a
 href="#supportedfiles">SupportedFiles 章节</a>。</p>
 <h3 id="verilog-评测">Verilog 评测</h3>
 <p>若干 <code>数字.v</code>，他们将引用学生上传的 .v 模块（评测时保存在
@@ -49,7 +59,7 @@ href="#supportedfiles">SupportedFiles 章节</a>。</p>
 <h3 id="groups">Groups</h3>
 <ul>
 <li>GroupID：连续编号，从 1 开始的纯数字。</li>
-<li>GroupName：若不存在可填<code>""</code>。</li>
+<li>GroupName：若不存在可填 <code>""</code>。</li>
 <li>GroupScore：该评测组的满分。</li>
 <li>TestPoints：一个数组，数组元素为本组包含的一个/多个测试点在 Details
 列表中的次序。将这些测试点的得分<strong>取最小值</strong>，乘以上述

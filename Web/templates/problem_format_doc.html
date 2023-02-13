@@ -1,5 +1,14 @@
-<!-- Author: Pioooooo -->
-{% extends 'base.html' %} {% set page='题面格式规范' %} {% block content %}
+{% extends 'base.html' %}
+{% set page='题面格式规范' %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'countdown_svg.css') }}">
+{% endblock %}
+
+{% block content %}
 <div class="card card-body">
 <h1 id="title-标题">Title 标题</h1>
 <h2 id="题目描述">题目描述</h2>

@@ -96,8 +96,8 @@
                             </form>
                             <span>（点击会将发布时间设为遥远的未来）</span>
                         {%- else -%}
-                            <span class="text-red">未发布</span>
-                            <form method="POST" class="d-inline mr-3">
+                            <span class="text-red mr-3">未发布</span>
+                            <form method="POST" class="d-inline">
                                 <input type="hidden" name="action" value="show">
                                 <button class="btn btn-outline-primary" type="submit">立即发布</button>
                             </form>
@@ -407,6 +407,7 @@
                         </div>
                         <progress id="data-gui-progress" class="w-100" max="1" value="0"></progress>
                         <div class="float-right d-flex ml-auto pr-1 mb-3">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btn-download-config">下载 config.json</button>
                             <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemData"> 打包上传所有数据 </button>
                         </div>
                     </form>

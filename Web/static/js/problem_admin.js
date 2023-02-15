@@ -215,8 +215,7 @@ $(() => {
     }
 
     function generateConfig() {
-        let tableGroups = $('#tableGroups'), tableDetails = $('#tableDetails'), config = '';
-        config += `{'Groups':[`;
+        let tableGroups = $('#tableGroups'), tableDetails = $('#tableDetails')
         const Groups = []
         tableGroups.children().each(function (i, e) {
             let d = e.children
@@ -253,6 +252,16 @@ $(() => {
         }, null, 2)
     }
 
+    $('#btn-download-config').click(e => {
+        e.preventDefault()
+        const conf = generateConfig()
+        const file = new Blob([ conf ], { type: 'application/json' })
+        const url = URL.createObjectURL(file)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'config.json'
+        a.click()
+    })
 
     $('#btnAddGroupsRow').click(function () {
         let t = $('#tableGroups'), r = t.find('tr:last').clone(), td = r.children();

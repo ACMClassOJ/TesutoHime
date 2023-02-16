@@ -875,8 +875,8 @@ def contest(contest_id):
     problems_visible = is_admin or unix_nano() >= start_time
     players = Contest_Manager.list_player_for_contest(contest_id)
 
-    data = Contest_Cache.get(contest_id)
-    if len(data) == 0:
+    data = Contest_Cache.get('contest', contest_id)
+    if data is None:
         data = [
             {
                 'score': 0,
@@ -942,7 +942,7 @@ def contest(contest_id):
             problem['count'] = submit_count
             problem['accepted'] = is_ac
 
-        Contest_Cache.put(contest_id, data)    
+        Contest_Cache.put('contest', contest_id, data)    
 
     cur_time = unix_nano()
     if cur_time < start_time:
@@ -1023,9 +1023,9 @@ def homework(contest_id):
     problems_visible = is_admin or unix_nano() >= start_time
     players = Contest_Manager.list_player_for_contest(contest_id)
 
-    data = Contest_Cache.get(contest_id)
+    data = Contest_Cache.get('homework', contest_id)
 
-    if len(data) == 0:  
+    if data is None:
         data = [
             {
                 'ac_count': 0,
@@ -1075,7 +1075,7 @@ def homework(contest_id):
 
             problem['count'] += 1
 
-        Contest_Cache.put(contest_id, data)    
+        Contest_Cache.put('homework', contest_id, data)    
 
     cur_time = unix_nano()
     if cur_time < start_time:

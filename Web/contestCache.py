@@ -7,15 +7,18 @@ class ContestCache:
 
     def __init__(self):
         self.redis = redis_connect()
-        self.prefix = RedisConfig.prefix + "ContestCache_"
+        self.prefix = RedisConfig.prefix + "ranking"
 
-    def get(self, contest_id: int):
-        rst = self.redis.get(self.prefix + str(contest_id))
-        return json.loads(rst) if rst != None else []
+    def _key(self, type, id):
+        return f'{self.prefix}-{type}-{id}'
 
-    def put(self, contest_id: int, data: list):
+    def get(self, type, contest_id: int):
+        rst = self.redis.get(self._key(type, contest_id))
+        return json.loads(rst) if rst != None else None
+
+    def put(self, type, contest_id: int, data: list):
         self.redis.set(
-            self.prefix + str(contest_id),
+            self._key(type, contest_id),
             json.dumps(data, ensure_ascii=False),
             ex = self.expire_time
         )

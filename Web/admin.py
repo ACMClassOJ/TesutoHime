@@ -97,6 +97,13 @@ def data_doc():
         abort(404)
     return render_template('data_doc.html')
 
+@admin.route('/package_sample')
+def package_sample():
+    privilege = Login_Manager.get_privilege()
+    if privilege < Privilege.ADMIN:
+        abort(404)
+    return render_template('package_sample.html')
+
 @admin.route('/user', methods=['post'])
 def user_manager():
     if Login_Manager.get_privilege() < Privilege.SUPER:

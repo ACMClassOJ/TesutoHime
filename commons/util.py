@@ -8,7 +8,6 @@ from traceback import format_exception
 from typing import Any, Callable, Dict, Optional, Type, TypeVar
 from uuid import uuid4
 
-import yaml
 
 logger = getLogger(__name__)
 
@@ -29,6 +28,7 @@ async def asyncrun(func: Callable[[], T]) -> T:
 
 
 def load_config(name: str, program_version: str) -> dict:
+    import yaml
     filename = f'{name}.yml'
     with open(filename) as f:
         config = yaml.safe_load(f)

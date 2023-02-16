@@ -563,4 +563,12 @@ pre {
   color: rgba(255, 255, 255, .8);
 }
 
+#width-toggle__icon {
+  fill: rgba(255, 255, 255, 0.9);
+}
+
+#width-toggle:before {
+  background-color: #fff;
+}
+
 }

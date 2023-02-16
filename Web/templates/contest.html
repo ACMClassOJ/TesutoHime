@@ -12,6 +12,9 @@
 
 {% block content %}
     <div class="card card-body">
+        <a id="width-toggle" role="button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" id="width-toggle__icon"><path d="M0 0h24v24H0z" fill="none"/><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 20h16v2H4zM4 2h16v2H4zm9 7h3l-4-4-4 4h3v6H8l4 4 4-4h-3z"/></svg>
+        </a>
         <h1 class="text-center"> {{ id }}. {{ Title }} </h1>
         <h5 class="text-center"> {{ StartTime }} ~ {{ EndTime }} {{ Status }} </h5>
         <div class="progress-wrapper">
@@ -109,6 +112,10 @@
         }, 2000);
     });
 
+    $('#width-toggle').click(() => {
+        $('.container').toggleClass('fullwidth')
+    })
+
 {% if is_Admin %}
     $(function(){
         var table = $("#contest").DataTable({
@@ -138,11 +145,6 @@
         });
         var manage_button = '<a class="btn btn-secondary" href="/OnlineJudge/admin/?contest_id={{ id }}"> 管理比赛 </a>';
         $(".dt-buttons").append(manage_button);
-        var word_wrap_button = '<button class="btn btn-secondary" id="word_wrap_button"> 禁用自动换行 </button>';
-        $(".dt-buttons").append(word_wrap_button);
-        $("#word_wrap_button").click(function(){
-            $("#contest").attr("style", "white-space: nowrap;");
-        });
     });
 {% endif %}
 </script>

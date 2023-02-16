@@ -23986,3 +23986,52 @@ pre > code.highlight {
     transition: 1s max-height;
 }
 /*# sourceMappingURL=kit-free.css.map */
+
+#homework, #contest {
+    white-space: nowrap;
+}
+
+.card-body {
+    position: relative;
+}
+#width-toggle {
+    position: absolute;
+    display: block;
+    width: 48px;
+    height: 48px;
+    top: 12px;
+    right: 12px;
+    padding: 12px;
+    box-sizing: border-box;
+}
+#width-toggle:before {
+    content: ' ';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #cbcbda;
+    opacity: 0;
+    border-radius: 50%;
+    transition: opacity .2s ease;
+}
+#width-toggle:focus:before,
+#width-toggle:hover:before {
+    opacity: .2;
+}
+#width-toggle:active:before {
+    opacity: .4;
+}
+@media (max-width: 600px) {
+    #width-toggle {
+        display: none;
+    }
+}
+#width-toggle__icon {
+    fill: #32325d;
+    transform: rotate(90deg);
+}
+.container.fullwidth {
+    max-width: 100%;
+}

@@ -87,7 +87,7 @@
         $.ajax({
             type: "POST",
             contentType: "application/json",
-            url: "/OnlineJudge/discuss",
+            url: "/OnlineJudge/problem/{{ Problem_ID }}/discuss",
             dataType: "json",
             data: JSON.stringify(data),
             success: function(ret) {
@@ -155,7 +155,7 @@
         $.ajax({
             type: "POST",
             contentType: "application/json",
-            url: "/OnlineJudge/discuss",
+            url: "/OnlineJudge/problem/{{ Problem_ID }}/discuss",
             dataType: "json",
             data: JSON.stringify(data),
             success: function(ret) {
@@ -223,7 +223,7 @@
             $.ajax({
                 type: "POST",
                 contentType: "application/json",
-                url: "/OnlineJudge/discuss",
+                url: "/OnlineJudge/problem/{{ Problem_ID }}/discuss",
                 dataType: "json",
                 data: JSON.stringify(data),
                 success: function(ret) {

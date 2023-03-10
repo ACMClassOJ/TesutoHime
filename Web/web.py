@@ -261,7 +261,7 @@ def register():
 @web.route('/problem')
 def problem_list():
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
     is_admin = bool(Login_Manager.get_privilege() >= Privilege.ADMIN)
     page = request.args.get('page')
     page = int(page) if page is not None else 1
@@ -320,7 +320,7 @@ def problem_list():
 @web.route('/problem/<int:problem_id>')
 def problem_detail(problem_id):
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
     if problem_id is None or problem_id < 1000 or (problem_id > Problem_Manager.get_max_id() and problem_id < 11000) or problem_id > Problem_Manager.get_real_max_id():
         abort(404)  # No argument fed
     if Problem_Manager.get_release_time(problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
@@ -336,7 +336,7 @@ def problem_detail(problem_id):
 @web.route('/problem/<int:problem_id>/admin', methods=['GET', 'POST'])
 def problem_admin(problem_id):
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
     is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
     if not is_admin:
         abort(404)
@@ -389,7 +389,7 @@ def problem_admin(problem_id):
 def submit_problem(problem_id):
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
-            return redirect('login?next=' + request.full_path)
+            return redirect('/OnlineJudge/login?next=' + request.full_path)
         if Problem_Manager.get_release_time(
                 problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
             abort(404)
@@ -406,7 +406,7 @@ def submit_problem(problem_id):
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     else:
         if not Login_Manager.check_user_status():
-            return redirect('login?next=' + request.full_path)
+            return redirect('/OnlineJudge/login?next=' + request.full_path)
         if Problem_Manager.get_release_time(
                 problem_id) > unix_nano() and Login_Manager.get_privilege() < Privilege.ADMIN:
             return '-1'
@@ -497,7 +497,7 @@ def set_result(submission_id):
 @web.route('/problem/<int:problem_id>/rank')
 def problem_rank(problem_id):
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
     sort_parameter = request.args.get('sort')
     is_admin = Login_Manager.get_privilege() >= Privilege.ADMIN
     with SqlSession(expire_on_commit=False) as db:
@@ -538,7 +538,7 @@ def problem_rank(problem_id):
 def discuss(problem_id):
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
-            return redirect('login?next=' + request.full_path)
+            return redirect('/OnlineJudge/login?next=' + request.full_path)
 
         in_exam = problem_in_exam(problem_id)
 
@@ -611,7 +611,7 @@ def discuss(problem_id):
 @web.route('/status')
 def status():
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
 
     page = request.args.get('page')
     arg_submitter = request.args.get('submitter')
@@ -693,7 +693,7 @@ def status():
 
 def code_old(run_id):
     if not Login_Manager.check_user_status():  # not login
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
     if run_id < 0 or run_id > Judge_Manager.max_id():
         abort(404)
     detail = Judge_Manager.query_judge(run_id)
@@ -725,7 +725,7 @@ def code_compat():
 @web.route('/code/<int:submit_id>/')
 def code(submit_id):
     if not Login_Manager.check_user_status():  # not login
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
     if submit_id <= Judge_Manager.max_id():
         return code_old(submit_id)
     with SqlSession(expire_on_commit=False) as db:
@@ -805,7 +805,7 @@ def web_rejudge(submit_id):
 @web.route('/code/<int:submit_id>/abort', methods=['POST'])
 def web_abort_judge(submit_id):
     if not Login_Manager.check_user_status():  # not login
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
     with SqlSession(expire_on_commit=False) as db:
         submission: Optional[Tuple[str, int]] = db \
             .query(JudgeRecord2.username) \
@@ -827,7 +827,7 @@ def web_abort_judge(submit_id):
 @web.route('/contest')
 def contest_list():
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
     contest_id = request.args.get('contest_id')
     if contest_id is not None:
         return redirect(f'/OnlineJudge/contest/{contest_id}')
@@ -864,7 +864,7 @@ def contest_list():
 @web.route('/contest/<int:contest_id>')
 def contest(contest_id):
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
     with SqlSession() as db:
         contest = db.query(Contest.id).where(Contest.id == contest_id).one_or_none()
         if contest == None:
@@ -983,7 +983,7 @@ def contest(contest_id):
 @web.route('/homework')
 def homework_list():
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
     contest_id = request.args.get('homework_id')
     if contest_id is not None:  # display contest list
         return redirect(f'/OnlineJudge/homework/{contest_id}')
@@ -1012,7 +1012,7 @@ def homework_list():
 @web.route('/homework/<int:contest_id>')
 def homework(contest_id):
     if not Login_Manager.check_user_status():
-        return redirect('login?next=' + request.full_path)
+        return redirect('/OnlineJudge/login?next=' + request.full_path)
     with SqlSession() as db:
         contest = db.query(Contest.id).where(Contest.id == contest_id).one_or_none()
         if contest == None:
@@ -1116,7 +1116,7 @@ def homework(contest_id):
 def profile():
     if request.method == 'GET':
         if not Login_Manager.check_user_status():
-            return redirect('login?next=' + request.full_path)
+            return redirect('/OnlineJudge/login?next=' + request.full_path)
         return render_template('profile.html', friendlyName=Login_Manager.get_friendly_name(),
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
     else:

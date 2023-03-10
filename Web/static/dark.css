@@ -49,6 +49,15 @@ html a:hover {
   text-decoration: none;
 }
 
+html blockquote {
+  color: rgba(255, 255, 255, .7);
+  border-color: #555;
+}
+
+html table {
+  color: inherit;
+}
+
 html .navbar-collapse.collapsing,
 html .navbar-collapse.show {
   background: #232323;

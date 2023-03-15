@@ -24035,3 +24035,12 @@ pre > code.highlight {
 .container.fullwidth {
     max-width: 100%;
 }
+
+.contest-title {
+    padding: 20px;
+}
+@media (max-width: 600px) {
+    .contest-title {
+        padding: 0;
+    }
+}

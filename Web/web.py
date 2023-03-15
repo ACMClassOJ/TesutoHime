@@ -40,8 +40,30 @@ web = Blueprint('web', __name__, static_folder='static', template_folder='templa
 web.register_blueprint(admin, url_prefix='/admin')
 
 
-def validate(username: Optional['str'] = None, password: Optional['str'] = None, friendly_name: Optional['str'] = None,
+def validate(username: Optional['str'] = None,
+             password: Optional['str'] = None,
+             friendly_name: Optional['str'] = None,
              student_id: Optional['str'] = None) -> int:
+    """Validate a user.
+
+    This function is used in registering and updating user information.
+
+    Args:
+        username: The username to validate.
+        password: The password to validate.
+        friendly_name: The friendly name to validate.
+        student_id: The student id to validate.
+    
+    Returns:
+        ReturnCode.SUC_VALIDATE if all the fields are valid.
+        ReturnCode.ERR_VALIDATE_INVALID_USERNAME if the username is invalid.
+        ReturnCode.ERR_VALIDATE_INVALID_PASSWD if the password is invalid.
+        ReturnCode.ERR_VALIDATE_INVALID_FRIENDLY_NAME if the friendly name is invalid.
+        ReturnCode.ERR_VALIDATE_INVALID_STUDENT_ID if the student id is invalid.
+        ReturnCode.ERR_VALIDATE_USERNAME_EXISTS if the username already exists.
+
+        The definition of ReturnCode is at Web/const.py.
+    """
     username_reg = '([a-zA-Z][a-zA-Z0-9_]{0,19})$'
     password_reg = '([a-zA-Z0-9_\!\@\#\$\%\^&\*\(\)]{6,30})$'
     friendly_name_reg = '([a-zA-Z0-9_]{1,60})$'
@@ -60,24 +82,29 @@ def validate(username: Optional['str'] = None, password: Optional['str'] = None,
 
 
 def readable_lang(lang: int) -> str:
+    # Get the readable language name.
     lang_str = {
         0: 'C++',
         1: 'Git',
         2: 'Verilog',
-        3: 'Quiz'
+        3: 'Quiz',
     }
     try:
         return lang_str[lang]
     except KeyError:
         return 'UNKNOWN'
 
+
 """
-    The exam visibility part.
+The exam visibility part.
 """
 
 def problem_in_exam(problem_id):
-    # in exam means: 1. user is not admin. 2. the problem is in a running exam.
-    # this is mainly for closing the discussion & rank part
+    """This is mainly for closing the discussion & rank part.
+    In exam means:
+    1. user is not admin.
+    2. the problem is in a ongoing exam.
+    """
     exam_id, is_exam_started = Contest_Manager.get_unfinished_exam_info_for_player(Login_Manager.get_username(), unix_nano())
     
     if exam_id == -1 or is_exam_started == False:
@@ -87,7 +114,7 @@ def problem_in_exam(problem_id):
 
 
 def is_code_visible(code_owner, problem_id, shared):
-    # check whether the code is visible
+    # Check whether the code is visible.
 
     # admin always visible
     if Login_Manager.get_privilege() >= Privilege.ADMIN:
@@ -107,15 +134,20 @@ def is_code_visible(code_owner, problem_id, shared):
 
 @web.before_request
 def log():
-    if request.full_path.startswith(('/OnlineJudge/static', '/OnlineJudge/api/heartBeat')) or request.full_path.endswith(('.js', '.css', '.ico')):
+    if (request.full_path.startswith(('/OnlineJudge/static',
+                                      '/OnlineJudge/api/heartBeat')) or
+        request.full_path.endswith(('.js', '.css', '.ico'))):
         return
     tracker.log()
 
 
 @web.route('/')
 def index():
-    return render_template('index.html', friendlyName=Login_Manager.get_friendly_name(),
-                           is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
+    return render_template(
+        'index.html',
+        friendlyName = Login_Manager.get_friendly_name(),
+        is_Admin = Login_Manager.get_privilege() >= Privilege.ADMIN
+    )
 
 
 @web.route('/index.html')

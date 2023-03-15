@@ -1,7 +1,7 @@
 {% extends 'base.html' %} {% set page='数据包样例' %} {% block content %}
 <div class="card card-body">
 <h1 id="数据包样例">数据包样例</h1>
-<p>by LauYeeYu，更新于 2023.2.16</p>
+<p>by LauYeeYu，更新于 2023.3.15</p>
 <p><em>警告：错误的 json
 将会导致各种意料之外的错误，因此在编辑时请务必确保格式符合！除非对 json
 非常了解，或必须自定义 json，否则强烈建议使用数据 (GUI) 标签页下的下载
@@ -333,7 +333,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href=
 <div class="sourceCode" id="cb12"><pre
 class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> argc<span class="op">,</span> <span class="dt">char</span> <span class="op">*</span>argv<span class="op">[])</span> <span class="op">{</span></span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FILE</span> <span class="op">*</span>input <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">1</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的输入文件</span></span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FILE</span> <span class="op">*</span>output <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">2</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 用户输出</span></span>
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FILE</span> <span class="op">*</span>answer <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">3</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的答案</span></span>
@@ -408,7 +408,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href=
 <div class="sourceCode" id="cb15"><pre
 class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> argc<span class="op">,</span> <span class="dt">char</span> <span class="op">*</span>argv<span class="op">[])</span> <span class="op">{</span></span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FILE</span> <span class="op">*</span>input <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">1</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的输入文件</span></span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FILE</span> <span class="op">*</span>output <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">2</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 用户提交的文件</span></span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FILE</span> <span class="op">*</span>answer <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">3</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的答案</span></span>

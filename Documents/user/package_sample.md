@@ -356,7 +356,7 @@ int main() {
 ```cpp
 #include <iostream>
 
-int main() {
+int main(int argc, char *argv[]) {
     FILE *input = fopen(argv[1], "r"); // 题目的输入文件
     FILE *output = fopen(argv[2], "r"); // 用户输出
     FILE *answer = fopen(argv[3], "r"); // 题目的答案
@@ -438,7 +438,7 @@ int main() {
 ```cpp
 #include <iostream>
 
-int main() {
+int main(int argc, char *argv[]) {
     FILE *input = fopen(argv[1], "r"); // 题目的输入文件
     FILE *output = fopen(argv[2], "r"); // 用户提交的文件
     FILE *answer = fopen(argv[3], "r"); // 题目的答案

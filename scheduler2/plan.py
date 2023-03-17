@@ -569,27 +569,44 @@ async def run_compile_task(ctx: ExecutionContext) -> Optional[CompileResult]:
 def skipped_result(name, message = 'Skipped'):
     return TestpointJudgeResult(name, 'skipped', message)
 
-def update_dependent_on(ctx: ExecutionContext, record: JudgeTaskRecord,
-    task: JudgeTask):
-    # FIXME: make the following code comprehensible
-    removed_testpoints = []
-    for i, testpoint in enumerate(task.testpoints):
-        if testpoint.dependent_on is not None:
-            for tp1 in record.task.testpoints:
-                if testpoint.dependent_on == tp1.id:
-                    status = list(filter(lambda x: x.id == tp1.id,
-                        record.result.testpoints))
-                    if len(status) > 0 and status[0].result == 'accepted':
-                        testpoint.dependent_on = None
-                    else:
-                        testpoint.dependent_on = DependencyNotSatisfied()
-                        removed_testpoints.append(i)
-                        ctx.results[testpoint.id] = skipped_result(testpoint.id,
-                            f'testpoint {tp1.id} failed')
-                    break
-    task.testpoints = [task.testpoints[i] for i in
-        filter(lambda i: not i in removed_testpoints,
-            range(len(task.testpoints)))]
+def remove_skipped_testpoints_from_task(ctx: ExecutionContext,
+                                        plan: JudgeTaskPlan,
+                                        accepted: List[Testpoint],
+                                        unaccepted: List[Testpoint]):
+    # for all dependent tasks...
+    for dependent in plan.dependents:
+        rec = ctx.judge[dependent]
+        removed_testpoints: List[Testpoint] = []
+        testpoints_removed = True
+        while testpoints_removed:
+            testpoints_removed = False
+            # for all testpoints with dependencies in task...
+            for testpoint in rec.task.testpoints:
+                if testpoint.dependent_on is not None:
+                    # for all testpoints we have just decided to be unaccepted...
+                    for tp1 in accepted:
+                        # if it is the dependency...
+                        if testpoint.dependent_on == tp1.id:
+                            testpoint.dependent_on = None
+                            break
+                    if testpoint.dependent_on is None:
+                        continue
+                    for tp1 in unaccepted:
+                        # if it is the dependency...
+                        if testpoint.dependent_on == tp1.id:
+                            testpoint.dependent_on = DependencyNotSatisfied()
+                            ctx.results[testpoint.id] = \
+                                skipped_result(testpoint.id,
+                                               f'testpoint {tp1.id} failed')
+                            removed_testpoints.append(testpoint)
+                            unaccepted.append(testpoint)
+                            break
+        rec.task.testpoints = list(filter(lambda x: x not in removed_testpoints,
+                                          rec.task.testpoints))
+        # do it recursively until no testpoints are removed
+        if len(removed_testpoints) > 0:
+            remove_skipped_testpoints_from_task(ctx, rec.plan, [],
+                                                removed_testpoints)
 
 async def run_judge_tasks(ctx: ExecutionContext):
     await update_status(ctx.id, 'judging')
@@ -648,16 +665,28 @@ async def run_judge_tasks(ctx: ExecutionContext):
                     message=str(error),
                 ) for x in record.plan.task.testpoints])
             record.result = res
+
             for testpoint in res.testpoints:
                 if testpoint is not None:
                     ctx.results[testpoint.id] = testpoint
             for testpoint in record.task.testpoints:
                 if not testpoint.id in ctx.results:
                     ctx.results[testpoint.id] = skipped_result(testpoint.id)
-            dependents_task = record.plan.dependents
-            dependents.update(dependents_task)
-            for dependent in dependents_task:
-                update_dependent_on(ctx, record, records[dependent].task)
+
+            unaccepted_testpoints = []
+            accepted_testpoints = []
+            for testpoint in record.task.testpoints:
+                status = list(filter(lambda x: x.id == testpoint.id,
+                    record.result.testpoints))
+                if len(status) == 1 and status[0].result == 'accepted':
+                    accepted_testpoints.append(testpoint)
+                else:
+                    unaccepted_testpoints.append(testpoint)
+            remove_skipped_testpoints_from_task(ctx, record.plan,
+                                                accepted_testpoints,
+                                                unaccepted_testpoints)
+
+            dependents.update(record.plan.dependents)
         dependents = (records[id] for id in dependents)
         ready = list(filter(ctx.dependencies_satisfied, dependents))
 

@@ -86,7 +86,7 @@ Web 模块使用 [Redis](https://redis.io/) 存储用户登录状态。
 
 ## 评测数据管理
 
-评测数据由 `judgeManager.py` 负责，其可以查询提交、为尚未评测的提交交给 [Scheduler 模块](scheduler.md)排程、中止 (abort) 评测、将评测标记为无效 (voided)、重新评测提交。数据参见 MySQL 数据库的[评测数据表](#judge_records2-表)章节。
+评测数据由 `judgeManager.py` 负责，其可以查询提交、为尚未评测的提交交给 [Scheduler2 模块](scheduler2.md)排程、中止 (abort) 评测、将评测标记为无效 (voided)、重新评测提交。数据参见 MySQL 数据库的[评测数据表](#judge_records2-表)章节。
 
 旧版评测数据由 `oldJudgeManager.py` 负责。由于架构的不兼容性，目前仅可以查询提交，数据视为只读（数据参见 MySQL 数据库的[旧评测数据表](#judge-表)章节）。
 

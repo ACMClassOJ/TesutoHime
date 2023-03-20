@@ -444,10 +444,12 @@ def submit_problem(problem_id):
             return '-1'
         share = bool(request.form.get('shared', 0))  # 0 or 1
         
-        if problem_id < 1000 or (problem_id > Problem_Manager.get_max_id() and problem_id < 11000) or problem_id > Problem_Manager.get_real_max_id():
+        if (problem_id < 1000 or
+            (problem_id > Problem_Manager.get_max_id() and problem_id < 11000) or
+            problem_id > Problem_Manager.get_real_max_id()):
             abort(404)
-        if unix_nano() < Problem_Manager.get_release_time(
-                int(problem_id)) and Login_Manager.get_privilege() < Privilege.ADMIN:
+        if (unix_nano() < Problem_Manager.get_release_time(int(problem_id)) and
+            Login_Manager.get_privilege() < Privilege.ADMIN):
             return '-1'
         username = Login_Manager.get_username()
         lang_request_str = str(request.form.get('lang'))

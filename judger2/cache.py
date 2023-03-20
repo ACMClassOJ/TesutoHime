@@ -56,13 +56,17 @@ async def ensure_cached(url: str) -> CachedFile:
         if resp.status != OK:
             raise Exception(f'Unknown response status {resp.status} while fetching object')
         logger.debug(f'{cache.filename} is modified, downloading file')
-        with open(cache.path, 'wb') as f:
-            async for data, _ in resp.content.iter_chunks():
-                f.write(data)
-        last_modified = datetime \
-            .strptime(resp.headers['Last-Modified'], utc_time_format) \
-            .timestamp()
-        utime(cache.path, (time(), last_modified))
+        try:
+            with open(cache.path, 'wb') as f:
+                async for data, _ in resp.content.iter_chunks():
+                    f.write(data)
+            last_modified = datetime \
+                .strptime(resp.headers['Last-Modified'], utc_time_format) \
+                .timestamp()
+            utime(cache.path, (time(), last_modified))
+        except CancelledError:
+            remove(cache.path)
+            raise
         return cache
 
 

@@ -73,36 +73,65 @@ def index():
     privilege = Login_Manager.get_privilege()
     if privilege < Privilege.ADMIN:
         abort(404)
-    return render_template('admin.html', privilege=privilege, Privilege=Privilege, is_Admin=True,
-                           friendlyName=Login_Manager.get_friendly_name())
+    return render_template(
+        'admin.html',
+        privilege=privilege,
+        Privilege=Privilege,
+        is_Admin=True,
+        friendlyName=Login_Manager.get_friendly_name()
+    )
 
-@admin.route('/admin_doc')
+@admin.route('/admin-doc')
 def admin_doc():
     privilege = Login_Manager.get_privilege()
     if privilege < Privilege.ADMIN:
         abort(404)
-    return render_template('admin_doc.html')
+    return render_template(
+        'admin_doc.html',
+        privilege=privilege,
+        Privilege=Privilege,
+        is_Admin=True,
+        friendlyName=Login_Manager.get_friendly_name(),
+    )
 
-@admin.route('/problem_format_doc')
+@admin.route('/problem-format-doc')
 def problem_format_doc():
     privilege = Login_Manager.get_privilege()
     if privilege < Privilege.ADMIN:
         abort(404)
-    return render_template('problem_format_doc.html')
+    return render_template(
+        'problem_format_doc.html',
+        privilege=privilege,
+        Privilege=Privilege,
+        is_Admin=True,
+        friendlyName=Login_Manager.get_friendly_name(),
+    )
 
-@admin.route('/data_doc')
+@admin.route('/data-doc')
 def data_doc():
     privilege = Login_Manager.get_privilege()
     if privilege < Privilege.ADMIN:
         abort(404)
-    return render_template('data_doc.html')
+    return render_template(
+        'data_doc.html',
+        privilege=privilege,
+        Privilege=Privilege,
+        is_Admin=True,
+        friendlyName=Login_Manager.get_friendly_name(),
+    )
 
-@admin.route('/package_sample')
+@admin.route('/package-sample')
 def package_sample():
     privilege = Login_Manager.get_privilege()
     if privilege < Privilege.ADMIN:
         abort(404)
-    return render_template('package_sample.html')
+    return render_template(
+        'package_sample.html',
+        privilege=privilege,
+        Privilege=Privilege,
+        is_Admin=True,
+        friendlyName=Login_Manager.get_friendly_name(),
+    )
 
 @admin.route('/user', methods=['post'])
 def user_manager():

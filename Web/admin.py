@@ -227,6 +227,9 @@ def contest_manager():
             return ReturnCode.SUC_DEL_PROBLEMS_FROM_CONTEST
         elif op == 5:
             for username in form[String.CONTEST_USERNAMES]:
+                if not User_Manager.has_user(username):
+                    return ReturnCode.ERR_ADDS_USER_TO_CONTEST
+            for username in form[String.CONTEST_USERNAMES]:
                 Contest_Manager.add_player_to_contest(int(form[String.CONTEST_ID]), username)
             return ReturnCode.SUC_ADD_USERS_TO_CONTEST
         elif op == 6:

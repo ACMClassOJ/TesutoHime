@@ -132,6 +132,14 @@ class UserManager:
             db.rollback()
             return
         db.close()
+    
+    def has_user(self, username: str) -> bool:
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM User WHERE Username = %s", username)
+        data = cursor.fetchone()
+        db.close()
+        return data is not None
 
 
 User_Manager = UserManager()

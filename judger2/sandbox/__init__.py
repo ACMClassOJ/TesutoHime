@@ -65,8 +65,7 @@ class NsjailArgs:
     # R/W mount points.
     bindmount: Union[List[str], bool] = False
 
-    # number of file descriptors that could be simultaneously opened by a single
-    # process. NOT file size limit. pretty much useless.
+    # maximum size in bytes of files that the process may create.
     rlimit_fsize: str = 'inf'
     # cgroup-based memory limit: not working.
     # cgroup_mem_max: str
@@ -133,7 +132,7 @@ async def run_with_limits(
             cwd=str(cwd),
             rlimit_fsize=fsize,
             time_limit=time_limit,
-            rlimit_cpu=str(int(float(time_limit))),
+            rlimit_cpu=str(int(float(time_limit) + 1)),
             # cgroups-based memory limit is not working
             # cgroup_mem_max=memory_limit,
             bindmount_ro=bindmount_ro,
@@ -222,6 +221,12 @@ async def run_with_limits(
             # code is ./runner's exit code, so there must be something wrong.
             msg = f'Task runner exited with status {code}{errmsg}'
             return RunResult('system_error', msg, usage, code=code)
+        if file_size_bytes > limits.file_size_bytes >= 0:
+            msg = 'File size too large'
+            return RunResult('disk_limit_exceeded', msg, usage)
+        if file_count > limits.file_count >= 0:
+            msg = 'Too many files are created'
+            return RunResult('disk_limit_exceeded', msg, usage)
         if program_code != 0:
             # runner exited properly, but the program did not
             if program_code >= 256:
@@ -236,12 +241,6 @@ async def run_with_limits(
             else:
                 msg = f'Program exited with status {program_code}{errmsg}'
             return RunResult('runtime_error', msg, usage, code=program_code)
-        if file_size_bytes > limits.file_size_bytes >= 0:
-            msg = 'File size too large'
-            return RunResult('disk_limit_exceeded', msg, usage)
-        if file_count > limits.file_count >= 0:
-            msg = 'Too many files are created'
-            return RunResult('disk_limit_exceeded', msg, usage)
 
         # done
         return RunResult(None, 'OK', usage)

@@ -10,7 +10,8 @@ from uuid import uuid4
 
 from admin import admin
 from config import JudgeConfig, LoginConfig, ProblemConfig, WebConfig
-from const import (Privilege, ReturnCode, contributors, judge_status_info,
+from const import (Privilege, ReturnCode, ContestType,
+                   contributors, judge_status_info,
                    language_info, mntners, runner_status_info)
 from contestCache import Contest_Cache
 from contestManager import Contest_Manager
@@ -857,6 +858,13 @@ def web_abort_judge(submit_id):
         abort(500, str(e))
     return redirect('.', SEE_OTHER)
 
+
+@web.route('/problem-group/<int:contest_id>')
+def problem_group(contest_id):
+    if Contest_Manager.get_contest_type(contest_id) == ContestType.HOMEWORK:
+        return redirect(f'/OnlineJudge/homework/{contest_id}')
+    else:
+        return redirect(f'/OnlineJudge/contest/{contest_id}')
 
 @web.route('/contest')
 def contest_list():

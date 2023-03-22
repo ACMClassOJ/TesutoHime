@@ -218,7 +218,18 @@ class ContestManager:
         db.close()
         if data[0] is None:
             return 0
-        return int(data[0]) 
+        return int(data[0])
+
+    def get_contest_type(self, contest_id: int) -> int:
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT Type FROM Contest WHERE ID = %s",
+                       (str(contest_id)))
+        type = cursor.fetchone()
+        db.close()
+        if type[0] is None:
+            return 0
+        return int(type[0])
 
 
 Contest_Manager = ContestManager()

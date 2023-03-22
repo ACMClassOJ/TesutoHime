@@ -97,7 +97,7 @@ $(function () {
 
     $("#btnGoToContestPage").click(function(){
         if($("#iptContestID").val() != "")
-            window.location.replace('/OnlineJudge/contest/' + $("#iptContestID").val());
+            window.location.replace('/OnlineJudge/problem-group/' + $("#iptContestID").val());
     });
 
     $("#btnGetContestAutoIncreseID").click(function(){

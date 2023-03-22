@@ -112,6 +112,12 @@ class Privilege:
     SUPER = 2
 
 
+class ContestType:
+    CONTEST = 0
+    HOMEWORK = 1
+    EXAM = 2
+
+
 @dataclass
 class JudgeStatusInfo:
     name: str

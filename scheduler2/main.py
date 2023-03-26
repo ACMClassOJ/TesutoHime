@@ -1,6 +1,6 @@
 __import__('scheduler2.logging_')
 
-from asyncio import CancelledError, Future, Task, create_task, wait
+from asyncio import CancelledError, Future, Task, create_task, shield, wait
 from atexit import register
 from dataclasses import asdict
 from http.client import BAD_REQUEST
@@ -11,11 +11,11 @@ from urllib.parse import quote
 
 from aiohttp.web import (Application, HTTPNotFound, Request, Response,
                          RouteTableDef, json_response, run_app)
+from botocore.exceptions import ClientError
+
 from commons.task_typing import (CodeLanguage, ProblemJudgeResult,
                                  SourceLocation)
 from commons.util import deserialize, dump_dataclass, format_exc, serialize
-from botocore.exceptions import ClientError
-
 from scheduler2.config import (host, port, runner_heartbeat_interval_secs,
                                s3_buckets)
 from scheduler2.monitor import get_runner_status
@@ -120,7 +120,11 @@ async def run_judge(problem_id: str, submission_id: str,
         logger.error(f'error judging problem: {msg}')
         if res is None:
             res = ProblemJudgeResult(result='system_error', message=msg)
-    await make_request(f'api/submission/{quote(submission_id)}/result', res)
+    task = make_request(f'api/submission/{quote(submission_id)}/result', res)
+    try:
+        await shield(task)
+    except CancelledError:
+        pass
 
 
 @routes.post('/judge')

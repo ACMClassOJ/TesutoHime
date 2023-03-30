@@ -34,20 +34,12 @@
                 <tr>
                     <th>编号</th>
                     <th>题目名称</th>
-                    <th>标签</th>
                 </tr>
                 </thead>
                 {% for Problem in Problems -%}
                     <tr>
                         <th>{{ Problem[0] }}</th>
                         <td><a href="/OnlineJudge/problem/{{ Problem[0] }}" target="_blank">{{ Problem[1] }}</a></td>
-                        <td>
-                        {%- if Problem[2] == 0 -%}
-                        代码题
-                        {%- elif Problem[2] == 1 -%}
-                        填选题
-                        {%- endif -%}
-                        </td>
                     </tr>
                 {%- endfor %}
             </table>

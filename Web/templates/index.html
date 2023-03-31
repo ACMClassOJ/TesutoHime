@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% set page='主页' %} {% block content %}
 <div class="jumbotron bg-white">
-    <h1>Welcome to ACM Class OnlineJudge</h1>
+    <h1>Welcome to ACM Class OfflineJudge</h1>
     <hr class="my-4">
     <h4>Compiler Options:</h4>
     <p>C++: <code>g++ code.cpp -o code -fmax-errors=10 -O2 -DONLINE_JUDGE -lm -std=c++17</code></p>
@@ -9,6 +9,11 @@
     <p>gcc version: <code>gcc version 9.3.0 (Ubuntu 9.3.0-17ubuntu1~20.04)</code></p>
     <p>cmake version: <code>cmake version 3.16.3</code></p>
     <p>submit code length limit: <code>1048576 bytes</code></p>
+    <hr class="my-4">
+    <p>
+        评测后端近日再次进行了升级，新增对 <strong>Java、Python、Brainf***、System F、汉语</strong>等 <strong>42 种语言</strong>的支持，这些语言正处于公测阶段，后续将视测试情况决定是否上线。2023.4.1
+        <small>新增语言列表: PHP, Java, Go, Rust, Python, Scala, Clojure, Groovy, Kotlin, Erlang, Elixir, Ruby, Bash, Haskell, Idris, Smalltalk, Common Lisp, Scheme, Julia, Racket, JavaScript, Standard ML, OCaml, Coq, Agda, Aya, Untyped LC, STLC, System F, System F<sub>&lt;:</sub>, System F<sub>ω</sub>, Process Calculus, LLVM, AT&T Assembly, NASM, ANSI C, 汉语, Esperanto, Klingon, Brainf***, Solidity, Mx*。具体用法请自行尝试提交。ACMOJ 对使用测试功能造成的一切损失概不负责。</small>
+    </p>
     <hr class="my-4">
     {% if is_Admin -%}
     <p><strong>邀请您加入 ACMOJ 助教 QQ 群: 942621107</strong>（此消息仅对助教显示，请勿拉学生入群。）</p>

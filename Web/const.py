@@ -148,9 +148,9 @@ judge_status_info = {
 }
 
 language_info = {
-    'cpp': 'C++',
-    'git': 'Git',
-    'verilog': 'Verilog',
+    'cpp': 'C+++++C',
+    'git': 'CVS',
+    'verilog': 'VHDL',
     'quiz': 'Quiz',
 }
 
@@ -202,3 +202,281 @@ contributors = [
     Contributor('Alan Liang', 21, gh('Alan-Liang'), '评测端 & 全栈', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010333-292122.png'),
     Contributor('LauYeeYu', 21, gh('LauYeeYu'), '文档 & 前端', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/bb12bce8-11ee-4593-8e8b-8e9cc5843b38'),
 ]
+
+import json
+aflanguages = json.loads('''
+{
+  "Traditional": [
+    {
+      "name": "C++",
+      "value": "cpp"
+    },
+    {
+      "name": "Git",
+      "value": "git"
+    },
+    {
+      "name": "Verilog",
+      "value": "verilog"
+    }
+  ],
+  "Best Language": [
+    {
+      "name": "PHP",
+      "value": "php",
+      "link": "https://www.zhihu.com/question/26498147"
+    }
+  ],
+  "Most Wanted": [
+    {
+      "name": "汉语",
+      "value": "zh",
+      "link": "https://www.bilibili.com/video/av80433022/"
+    },
+    {
+      "name": "Java",
+      "value": "java",
+      "link": "https://www.java.com/"
+    },
+    {
+      "name": "Go",
+      "value": "go",
+      "link": "https://go.dev/"
+    },
+    {
+      "name": "Rust",
+      "value": "rust",
+      "link": "https://www.rust-lang.org/"
+    },
+    {
+      "name": "Python",
+      "value": "python",
+      "link": "https://www.python.org/"
+    }
+  ],
+  "JVM": [
+    {
+      "name": "Java",
+      "value": "java",
+      "link": "https://www.java.com/"
+    },
+    {
+      "name": "Scala",
+      "value": "scala",
+      "link": "https://scala-lang.org/"
+    },
+    {
+      "name": "Clojure",
+      "value": "clojure",
+      "link": "https://clojure.org/"
+    },
+    {
+      "name": "Groovy",
+      "value": "groovy",
+      "link": "https://www.groovy-lang.org/"
+    },
+    {
+      "name": "Kotlin",
+      "value": "kotlin",
+      "link": "https://kotlinlang.org/"
+    }
+  ],
+  "Erlang VM": [
+    {
+      "name": "Erlang",
+      "value": "erlang",
+      "link": "https://www.erlang.org/"
+    },
+    {
+      "name": "Elixir",
+      "value": "elixir",
+      "link": "https://elixir-lang.org/"
+    }
+  ],
+  "Scripting": [
+    {
+      "name": "Python",
+      "value": "python",
+      "link": "https://www.python.org/"
+    },
+    {
+      "name": "Ruby",
+      "value": "ruby",
+      "link": "https://www.ruby-lang.org/"
+    },
+    {
+      "name": "Bash",
+      "value": "bash",
+      "link": "https://www.man7.org/linux/man-pages/man1/bash.1.html"
+    }
+  ],
+  "Functional": [
+    {
+      "name": "Haskell",
+      "value": "haskell",
+      "link": "https://www.haskell.org/"
+    },
+    {
+      "name": "Idris",
+      "value": "idris",
+      "link": "https://www.idris-lang.org/"
+    }
+  ],
+  "Object-Oriented": [
+    {
+      "name": "Smalltalk",
+      "value": "smalltalk",
+      "link": "https://squeak.org/"
+    }
+  ],
+  "Lisps": [
+    {
+      "name": "Common Lisp",
+      "value": "cl",
+      "link": "https://lisp-lang.org/"
+    },
+    {
+      "name": "Scheme",
+      "value": "scheme",
+      "link": "https://www.scheme.org/"
+    },
+    {
+      "name": "Clojure",
+      "value": "clojure",
+      "link": "https://clojure.org/"
+    },
+    {
+      "name": "Julia",
+      "value": "julia",
+      "link": "https://julialang.org/"
+    },
+    {
+      "name": "Racket",
+      "value": "racket",
+      "link": "https://racket-lang.org/"
+    },
+    {
+      "name": "JavaScript",
+      "value": "javascript",
+      "link": "https://www.zhihu.com/question/20423080"
+    }
+  ],
+  "ML": [
+    {
+      "name": "Standard ML",
+      "value": "sml",
+      "link": "https://en.wikipedia.org/wiki/Standard_ML"
+    },
+    {
+      "name": "OCaml",
+      "value": "ocaml",
+      "link": "https://ocaml.org/"
+    }
+  ],
+  "Proof Assistants": [
+    {
+      "name": "Coq",
+      "value": "coq",
+      "link": "https://coq.inria.fr/"
+    },
+    {
+      "name": "Agda",
+      "value": "agda",
+      "link": "https://github.com/agda/agda"
+    },
+    {
+      "name": "Aya",
+      "value": "aya",
+      "link": "https://www.aya-prover.org/"
+    }
+  ],
+  "Academic": [
+    {
+      "name": "Untyped Lambda Calculus",
+      "value": "untypedlc",
+      "link": "https://en.wikipedia.org/wiki/Lambda_calculus"
+    },
+    {
+      "name": "Simply Typed Lambda Calculus",
+      "value": "stlc",
+      "link": "https://en.wikipedia.org/wiki/Simply_typed_lambda_calculus"
+    },
+    {
+      "name": "System F",
+      "value": "sysf",
+      "link": "https://en.wikipedia.org/wiki/System_F"
+    },
+    {
+      "name": "System F<:",
+      "value": "sysfsub",
+      "link": "https://en.wikipedia.org/wiki/System_F#System_F%3C:"
+    },
+    {
+      "name": "System Fω",
+      "value": "sysfomega",
+      "link": "https://en.wikipedia.org/wiki/System_F#System_F%CF%89"
+    },
+    {
+      "name": "Process Calculus",
+      "value": "pc",
+      "link": "https://en.wikipedia.org/wiki/Process_calculus"
+    }
+  ],
+  "Low Level": [
+    {
+      "name": "LLVM",
+      "value": "llvm",
+      "link": "https://llvm.org/docs/LangRef.html"
+    },
+    {
+      "name": "x86_64 assembly (AT&T)",
+      "value": "asm",
+      "link": "https://www.man7.org/linux/man-pages/man1/as.1.html"
+    },
+    {
+      "name": "x86_64 NASM",
+      "value": "nasm",
+      "link": "https://nasm.us/"
+    },
+    {
+      "name": "ANSI C",
+      "value": "c",
+      "link": "https://en.wikipedia.org/wiki/ANSI_C"
+    }
+  ],
+  "Natural Languages": [
+    {
+      "name": "汉语",
+      "value": "zh",
+      "link": "https://www.bilibili.com/video/av80433022/"
+    },
+    {
+      "name": "Esperanto",
+      "value": "eo",
+      "link": "https://eo.wikipedia.org/wiki/Esperanto"
+    },
+    {
+      "name": "Klingon",
+      "value": "klingon",
+      "link": "https://en.wikipedia.org/wiki/Klingon_language"
+    }
+  ],
+  "Miscellaneous": [
+    {
+      "name": "Brainf***",
+      "value": "bf",
+      "link": "https://esolangs.org/wiki/Brainfuck"
+    },
+    {
+      "name": "Solidity",
+      "value": "solidity",
+      "link": "https://soliditylang.org/"
+    },
+    {
+      "name": "Mx*",
+      "value": "mx",
+      "link": "https://github.com/ACMClassCourses/Compiler-Design-Implementation"
+    }
+  ]
+}
+''')

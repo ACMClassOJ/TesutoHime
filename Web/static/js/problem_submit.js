@@ -29,6 +29,8 @@ $(function() {
                 setTimeout(function() {
                     window.location.replace('/OnlineJudge/status');
                 }, 500);
+            } else if (response_text.startsWith('http')) {
+                location = response_text
             } else
                 swal("Oops", "提交失败，网络故障！", "error");
         }

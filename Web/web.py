@@ -12,7 +12,7 @@ from admin import admin
 from config import JudgeConfig, LoginConfig, ProblemConfig, WebConfig
 from const import (Privilege, ReturnCode, ContestType,
                    contributors, judge_status_info,
-                   language_info, mntners, runner_status_info, aflanguages)
+                   language_info, mntners, runner_status_info)
 from contestCache import Contest_Cache
 from contestManager import Contest_Manager
 from discussManager import Discuss_Manager
@@ -418,8 +418,6 @@ def problem_admin(problem_id):
                            is_Admin=is_admin)
 
 
-aflanguages_map = dict([ lang['value'], lang ] for group in aflanguages for lang in aflanguages[group])
-
 @web.route('/problem/<int:problem_id>/submit', methods=['GET', 'POST'])
 def submit_problem(problem_id):
     if request.method == 'GET':
@@ -434,7 +432,6 @@ def submit_problem(problem_id):
         if problem_type == 0:
             return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam,
                                friendlyName=Login_Manager.get_friendly_name(),
-                               aflanguages=aflanguages,
                                is_Admin=Login_Manager.get_privilege() >= Privilege.ADMIN)
         elif problem_type == 1:
             return render_template('quiz_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam,
@@ -464,13 +461,6 @@ def submit_problem(problem_id):
         if len(str(user_code)) > ProblemConfig.Max_Code_Length:
             return '-1'
         lang_str = lang_request_str.lower()
-        if lang_str not in aflanguages_map:
-            abort(400)
-        lang = aflanguages_map[lang_str]
-        if 'link' in lang:
-            with open('af.log', 'a') as f:
-                f.write(lang_str + '\n')
-            return lang['link']
         with SqlSession() as db:
             rec = JudgeRecord2(
                 public=share,

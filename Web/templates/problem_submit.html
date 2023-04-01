@@ -43,35 +43,17 @@
         </div>
     </div>
     <div class="card card-body">
-        <style>
-            .dropdown-header {
-                color: inherit !important;
-            }
-            @media (prefers-color-scheme: dark) {
-                html .dropdown-header {
-                    color: rgba(255, 255, 255, 0.95) !important;
-                }
-            }
-        </style>
         <form method="post" id="problem_submit_form">
             <div class="form-group">
                 <label for="lang">语言</label>
                 <select id="lang" name="lang" class="form-control input-group py-0 selectpicker"
                         data-style="form-control rounded border-grey shadow-none font-weight-normal">
                     <option value="auto_detect" selected="selected">自动检测</option>
-                    {% for group in aflanguages %}
-                    <optgroup label="{{ group }}">
-                        {% for lang in aflanguages[group] %}
-                        <option value="{{ lang['value'] }}">{{ lang['name'] }}</option>
-                        {% endfor %}
-                    </optgroup>
-                    {% endfor %}
+                    <option value="cpp">C++</option>
+                    <option value="git">Git</option>
+                    <option value="Verilog">Verilog</option>
                 </select>
             </div>
-            <p>
-                评测后端近日再次进行了升级，新增对 <strong>Java、Python、Brainf***、System F、汉语</strong>等 <strong>42 种语言</strong>的支持，这些语言正处于公测阶段，后续将视测试情况决定是否上线。2023.4.1
-                <small>具体用法请自行尝试提交。ACMOJ 对使用测试功能造成的一切损失概不负责。</small>
-            </p>
             <div class="row mx-0">
                 <label for="code">代码</label>
                 {% if not In_Exam -%}
@@ -93,5 +75,5 @@
 
 {% block script %}
     <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}?v=20230401"></script>
+    <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}?v=20220707"></script>
 {% endblock %}

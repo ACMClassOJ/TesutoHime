@@ -68,12 +68,15 @@
             </div>
             <textarea class="form-control mb-3" rows="18" id="code" name="code" required="required"></textarea>
             <input type="hidden" name="problem_id" value="{{ Problem_ID }}">
-            <input type="submit" class="btn btn-block btn-primary" value="提交评测">
+            <noscript>
+                <input type="submit" class="btn btn-block btn-primary" value="提交评测">
+            </noscript>
+            <input type="submit" disabled id="submit-button" class="btn btn-block btn-primary" value="提交评测">
         </form>
     </div>
 {% endblock %}
 
 {% block script %}
     <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}?v=20220707"></script>
+    <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}?v=20230402"></script>
 {% endblock %}

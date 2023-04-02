@@ -34,4 +34,6 @@ $(function() {
         }
     };
     $("#problem_submit_form").ajaxForm(submit_options);
+
+    document.getElementById('submit-button').removeAttribute('disabled')
 });

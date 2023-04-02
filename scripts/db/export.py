@@ -71,7 +71,7 @@ for _, tries in groupby(submissions, lambda x: (x.username, x.problem_id)):
     s = score_tries[-1]
     dir = f'export/{s.problem_id}'
     makedirs(dir, exist_ok=True)
-    r = s3.get_object(Bucket=bucket, Key=f'{s.id}.code')['Body'].read().decode()
+    r = s3.get_object(Bucket=bucket, Key=f'{s.id}.code')['Body'].read().decode(errors='replace')
     with open(f'{dir}/{filename(s)}', 'w') as w:
         w.write(prelude(s))
         w.write(r)

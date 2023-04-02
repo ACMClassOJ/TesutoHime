@@ -187,7 +187,8 @@ async def run_with_limits(
         du_code = await wait_for(du_proc.wait(), 10.0)
         if du_code != 0:
             raise Exception(f'du exited with code {du_code}')
-        du_out = (await du_proc.stdout.read(4096)).decode().split('\n')
+        du_out = (await du_proc.stdout.read(4096)).decode(errors='replace') \
+            .split('\n')
         file_size_bytes, file_count = [int(x) for x in du_out[:2]]
         # empty directories could still use disk storage on some FSs.
         # let's ignore them.
@@ -202,7 +203,8 @@ async def run_with_limits(
             file_size_bytes=file_size_bytes,
         )
         err = '' if disable_stderr else \
-            (await asyncrun(lambda: proc.stderr.read(4096))).decode() \
+            (await asyncrun(lambda: proc.stderr.read(4096))) \
+            .decode(errors='replace') \
             .replace(str(cwd), '')
         errmsg = '' if err == '' else f': {err}'
 

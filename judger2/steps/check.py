@@ -62,11 +62,11 @@ def checker_read_float(outfile: PosixPath, message: str = ''):
     try:
         score = float(outfile.read_text())
     except ValueError:
-        return CheckResult('system_error', 'Score not number')
+        return CheckResult('system_error', 'Invalid SPJ checker: score not number')
     if isinf(score):
-        return CheckResult('system_error', 'Score is infinity')
+        return CheckResult('system_error', 'Invalid SPJ checker: score is infinity')
     if isnan(score):
-        return CheckResult('system_error', 'Score is NaN')
+        return CheckResult('system_error', 'Invalid SPJ checker: score is NaN')
 
     result = 'accepted' if score >= 1.0 else 'wrong_answer'
     return CheckResult(result, message, score)

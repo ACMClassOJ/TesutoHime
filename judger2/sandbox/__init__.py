@@ -90,6 +90,8 @@ class NsjailArgs:
     env: List[str] = field(default_factory=lambda: task_envp)
 
 
+time_tolerance_ratio = 1.25
+
 async def run_with_limits(
     argv: List[str],
     cwd: PosixPath,
@@ -108,7 +110,7 @@ async def run_with_limits(
     fsize = 'inf' if limits.file_size_bytes < 0 else \
         str(limits.file_size_bytes + 1024)
     time_limit_scaled = limits.time_msecs * relative_slowness
-    time_limit = str(time_limit_scaled / 1000 + 1)
+    time_limit_nsjail = str(int(time_limit_scaled / 1000 * time_tolerance_ratio + 1))
     # memory_limit = str(limits.memory_bytes + 1048576)
     bindmount_ro = bindmount_ro_base + [str(x) for x in supplementary_paths]
     bindmount_rw = bindmount_rw_base + [str(cwd)] \
@@ -131,8 +133,8 @@ async def run_with_limits(
             chroot=str(chroot),
             cwd=str(cwd),
             rlimit_fsize=fsize,
-            time_limit=time_limit,
-            rlimit_cpu=str(int(float(time_limit) + 1)),
+            time_limit=time_limit_nsjail,
+            rlimit_cpu=str(int(float(time_limit_nsjail) + 1)),
             # cgroups-based memory limit is not working
             # cgroup_mem_max=memory_limit,
             bindmount_ro=bindmount_ro,
@@ -141,7 +143,8 @@ async def run_with_limits(
             disable_proc=disable_proc,
             tmpfsmount='/tmp' if tmpfsmount else False,
         )
-        run_args = [runner_path, str(time_limit_scaled + 1), str(result_file)] \
+        checker_time_limit = str(int(time_limit_scaled * time_tolerance_ratio + 500))
+        run_args = [runner_path, checker_time_limit, str(result_file)] \
             + argv
         nsjail_argv = format_args(asdict(args)) + ['--'] + run_args
         argv_str = ' '.join(quote(x) for x in nsjail_argv)

@@ -784,7 +784,14 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
             status = 'system_error' if compile_res.result == 'system_error' \
                 else 'aborted' if compile_res.result == 'aborted' \
                 else 'compile_error'
-            return ProblemJudgeResult(status, compile_res.message)
+            message = compile_res.message
+            if status == 'compile_error':
+                prefix = compile_res.result.replace('_', ' ')
+                if message != '':
+                    message = f'{prefix}: {message}'
+                else:
+                    message = prefix
+            return ProblemJudgeResult(status, message)
         compiled = True
         await run_judge_tasks(ctx)
         return synthesize_scores(ctx)

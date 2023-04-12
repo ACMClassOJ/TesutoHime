@@ -791,6 +791,9 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
                     message = f'{prefix}: {message}'
                 else:
                     message = prefix
+            gcc_error = 'runtime error: Program exited with status 1: '
+            if message.startswith(gcc_error):
+                message = message.replace(gcc_error, '', 1)
             return ProblemJudgeResult(status, message)
         compiled = True
         await run_judge_tasks(ctx)

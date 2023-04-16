@@ -1,134 +1,113 @@
 # TesutoHime
 
-#### ACM Class OnlineJudge：新一代多线程分布式评测系统
+ACM Class OnlineJudge：新一代多线程分布式评测系统
 
-### 人员分工(对接结构)
+## 功能
 
-```mermaid
-graph TD
-A[周聪:前端美化]
-B[邢泽宇:数据库逻辑&评测机管理]
-C[孙晨曦:管理界面]
-D[史添能:数据服务Server/Client]
-E[陈雪阳&许烨辰:评测内核]
-F[蔡子逸:评测机整体]
-A --- B
-A --- C
-B --- C
-B --- F
-F --- D
-F --- E
-B --- D
-C --- D
-```
+### 用户端
+
+- 题目内容浏览 (支持 markdown 与内嵌 latex)；
+- 题目列表，翻页；
+- 比赛 (按照分数、排名，计算并列后名次，点击跳转指定人指定题评测结果)；
+- 作业 (不排名，表格显示题目通过与否，点击跳转指定人指定题评测结果)；
+- 考试 (按照分数、排名，计算并列后名次，点击跳转指定人指定题评测结果，限制参加者查看他人代码及自己过往代码的权限，不允许查看讨论区)；
+- 代码题提交评测，语言选择，语言自动检测，代码高亮；
+- 填选题与填选评测；
+- 评测序列，搜索，翻页，查看指定用户用户名；
+- 代码查看，代码高亮，(可以查看别人代码，仅在比赛和作业时对参赛选手进行限制)，运行结果查看 (可选输出错误结果、输出 CE 信息)；
+- 讨论区：每道题目自带一个支持 markdown 的论坛式讨论版；
+- 支持锁定题目到指定时间 (Unix Nano)；
+- 图片采用内置图床，详见管理端功能。
+
+### 管理端
+
+- 新增、修改、删除题目 (可设定时间、内存、测试点数量、SPJ)；
+- 新增、修改、删除比赛；
+- 重测、取消成绩、终止评测题目；
+- 添加实名；
+- (仅超级管理员) 修改用户信息。
+### 服务器端
+
+- 评测机、调度机、Web 服务等模块均可独立运行；
+- 支持多语言评测 (C++, Git, Verilog)；
+- 支持 Special Judge (参见[数据包格式规范文档](Documents/user/data_doc.md#spj))；
+- 沙箱 (编译、评测、评分期，使用 [nsjail](https://github.com/google/nsjail) 以限制资源使用)；
+- 以最小评测单元 (而非一整道题) 为调度的最小粒度，并可中途打断。
+
+## 部署
+
+参见[部署概览](Documents/deployment/overview.md)。
+
+## 文档
+
+### 用户文档
+
+- [管理界面使用指南](Documents/user/admin_doc.md)；
+- [题面格式规范](Documents/user/problem_format_doc.md)；
+- [数据格式规范](Documents/user/data_doc.md)；
+- [数据包样例](Documents/user/package_sample.md)。
+
+
+### 开发文档
+
+参见[开发文档概览](Documents/dev/overview.md)。
 
 ### 架构图
 
 ```mermaid
-graph LR;
-	subgraph 评测机
-		评测机1...n
-	end
-	subgraph 核心服务器
-		Web服务
-		数据服务
-		图床服务
-	end
-	评测机1...n --> Web服务
-	评测机1...n --> 数据服务
-	Web服务 --> 数据服务
-	Web服务 --> 图床服务
+graph TD
+    subgraph Web
+      WS[Web server]
+    end
+    subgraph Scheduler
+      SC[scheduler2 server]
+    end
+    subgraph Runner 1
+      J1[judger2 instance 1]
+    end
+    subgraph Runner 2
+      J2[judger2 instance 2]
+    end
+    subgraph Data Services
+      MY[(MariaDB)]
+      R0[(Web Redis)]
+      R1[(Judger Redis)]
+      S3[(S3 Storage)]
+    end
+    SC --- S3
+    J1 --- S3
+    J2 --- S3
+    User --- WS
+    User --- S3
+    WS --- S3
+    WS --- MY
+    WS --- R0
+    SC --- R1
+    J1 --- R1
+    J2 --- R1
+    WS --- SC
 ```
 
-### 模块：
+## LICENSE
 
-#### Web服务
+MIT License
 
-* html模板渲染
-* 逻辑交互核心
-* 评测机调度器
-* 数据服务Client
-* 图床服务Client
-* 数据库服务
+Copyright (c) 2021 TesutoHime Dev Group
 
-#### 评测机：
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-* 编译与评测核心
-* 调度接口Client
-* 数据服务Client
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-#### 数据服务
-
-* 数据服务Server
-
-#### 图床服务
-
-- 图床服务Server
-
-#### 其他
-
-* 管理界面(运行于Web服务器上)
-
-### 功能
-
-#### 用户端
-
-* 题目内容浏览（支持markdown与内嵌latex）
-* 题目列表，翻页
-* 比赛(按照分数、排名，计算并列后名次，点击跳转指定人指定题评测结果)
-* 作业(不排名，表格显示题目通过与否，点击跳转指定人指定题评测结果)
-* 代码题提交评测，语言选择，语言自动检测，代码高亮
-* 填选题与填选评测
-* 评测序列，搜索，翻页，查看指定用户用户名
-* 代码查看，代码高亮，(可以查看别人代码，仅在比赛和作业时对参赛选手进行限制)，运行结果查看(可选输出错误结果、输出CE信息)
-* 讨论区：每道题目自带一个支持markdown的论坛式讨论版，**在题目处于被加入比赛、作业中时禁用**。
-* 支持锁定题目到指定时间(Unix Nano)。
-* 图片采用内置图床，详见管理端功能。
-
-#### 管理端
-
-题目添加(可设定时间、内存、测试点数量、**SPJ**(默认每道题目都有SPJ，全文比较和忽略空白比较是两种特殊的SPJ，由评测器内置实现，编译时限，磁盘空间限制))
-
-#### 题目属性：（详见数据zip格式规范.md）
-
-* 时间
-* 内存
-* 测试点数量(分组测试，失败跳过)(内存测试，并依赖正确性测试的结果(即：如果正确性测试失败，则不进行内存测试))
-* SPJ
-* 编译时限
-* 磁盘空间限制
-* **交互题**
-* 提答
-* 语言支持(C++，Git Repo(基于CMake、Make构建)，Verilog， Quiz)
-* 评分器(Python3)：给定每个测试点的分数、时间限制、空间限制、磁盘限制、答案得分，使用时间、使用空间、使用磁盘，计算本次提交本题获得的分数。**注意这不是SPJ**
-
-#### 接口：
-
-题目属性存储方式：json
-
-评测核心需要实现以下接口：
-
-* 参数：题号、解答、提交ID。返回值：评测结果(每个测试点的得分、时间使用、空间使用、磁盘使用构成的json)
-
-数据服务Client：
-
-* 输入题号，自动获取题目数据，解压到缓存目录，返回解析后的题目配置文件(json解析为字典)和题目数据根目录
-* **为及时同步数据修改，数据服务Client需存储当前zip包的哈希(md5, sha1)，并每次与获取Server端的哈希比较。若哈希值发生改变，说明测试数据已被更新，需要重新拉取**
-
-#### 关于评测机调度：
-
-Web服务器存储当前可用评测机列表。
-
-评测机调度接口Client：
-* Get接口，输入题号、解答、Web服务器ID(一串ASCII字符)，若服务器ID正确，则加入本机评测序列。通过Web服务器上的Get接口返回是否成功。
-* Get接口，表示当前评测机是否正忙。(同样需要两次ID发送，Web服务器ID错误时拒绝响应)
-* 心跳包发送：定期向Web服务器发送当前评测机ID和状态(ID暂定为一串ASCII字符，类似密码，用于防止Web服务器端口暴露后被伪造评测机)。
-* 评测完成后，向Web服务器以Post方式发送评测结果(json)。
-
-评测机调度策略：
-* 评测机离线判定：当前时间-上次心跳包时间>=2*发送周期。
-* 当有在线评测机空闲时，优先使用该评测机。空闲机器较多时，随机一台使用。
-* 当所有评测机忙时，提交加入队列。
-* 当有评测机完成评测时，检查队列，若非空，则取出第一个评测交给该评测机。
-* 如果评测机在评测中离线，显示本次提交为System Error。管理员手动检查评测机是否遭到攻击。
-
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

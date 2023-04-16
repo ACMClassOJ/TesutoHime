@@ -2,7 +2,7 @@
 
 *由于 scheduler 模块是第二代评测架构加入的内容，因此在此项目中，其也被称作 scheduler2。*
 
-Scheduler 模块相关代码位于 [`scheduler2/`](../../scheduler2/) 目录下。本文档中，除非特殊说明，否则所有涉及的文件都以 `Web` 目录为基础。
+Scheduler 模块相关代码位于 [`scheduler2/`](../../scheduler2/) 目录下。本文档中，除非特殊说明，否则所有涉及的文件都以 `scheduler2` 目录为基础。
 
 Scheduler 模块负责
 

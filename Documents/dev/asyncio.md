@@ -1,5 +1,4 @@
-4\. Asyncio
-===========
+# Asyncio
 
 judger2 和 scheduler2 使用了 [asyncio] 来实现任务的并发处理。
 与传统的利用多个线程来执行并行任务不同，asyncio 只使用主线程来处理主要逻辑，

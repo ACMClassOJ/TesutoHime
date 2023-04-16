@@ -1,5 +1,4 @@
-0\. Overview
-============
+# Overview
 
 ## 设计原则
 
@@ -59,6 +58,13 @@ graph TD
     J2 --- R1
     WS --- SC
 ```
+
+- Web 模块: 处理所有用户操作, 并交给对应模块 (参见 [Web 文档](web.md));
+- Scheduler 模块: 规划评测相关事务 (参见 [Scheduler 文档](scheduler.md));
+- Judger 模块: 执行评测任务 (参见 [Judger 文档](judger.md));
+- Redis: 用于辅助各模块间的通信, 充当缓存数据库 (参见 [Redis 文档](redis.md));
+- S3: 用于存储各模块间的数据, 充当文件服务器 (参见 [S3 文档](S3.md));
+
 
 ## 评测流程
 
@@ -142,7 +148,7 @@ end
 
 ```
 
-## 哪些组件需要公网可访问?
+## 公网可访问组件
 
 - Web server
 - s3
@@ -162,3 +168,8 @@ git 版本管理的, 是每台调度机/评测机独有的配置, 更改网络�
 heartbeat 间隔时间、任务超时时间等) 等每台调度/评测机相同的参数,
 或者应该纳入版本控制的参数, 但不应记录密钥、密码、access key
 等敏感内容.
+
+## 另请参见
+
+- [Asyncio 指南](asyncio.md): judger & scheduler 异步编程指南
+- [sandbox 文档](sandbox.md): judger 沙箱

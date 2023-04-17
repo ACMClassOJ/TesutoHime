@@ -436,7 +436,7 @@ code[style="color: black;"] {
 }
 
 hr {
-  border-top: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  border-top: 0.0625rem solid rgba(255, 255, 255, 0.25);
 }
 
 html .popover {
@@ -578,6 +578,10 @@ pre {
 
 #width-toggle:before {
   background-color: #fff;
+}
+
+html .contributor-card {
+    border-color: rgba(255, 255, 255, 0.25);
 }
 
 }

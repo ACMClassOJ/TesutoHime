@@ -510,7 +510,7 @@ hr {
     margin-top: 2rem;
     margin-bottom: 2rem;
     border: 0;
-    border-top: 0.0625rem solid rgba(0, 0, 0, 0.1);
+    border-top: 0.0625rem solid rgba(0, 0, 0, 0.08);
 }
 
 small,
@@ -24043,4 +24043,34 @@ pre > code.highlight {
     .contest-title {
         padding: 0;
     }
+}
+
+@media (min-width: 992px) {
+    .status__row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -15px;
+        margin-left: -15px;
+    }
+    .status__col {
+        position: relative;
+        width: 100px;
+        padding-right: 15px;
+        padding-left: 15px;
+        flex: 0 0 22%;
+        max-width: 22%;
+    }
+}
+
+.contributor-card {
+    display: flex;
+    min-width: 0;
+    word-wrap: break-word;
+    background-clip: border-box;
+    border: 0.0625rem solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.25rem;
+}
+.contributor-card img {
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
 }

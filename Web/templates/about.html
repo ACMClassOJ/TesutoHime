@@ -2,7 +2,7 @@
 <div class="card card-body">
     <h1 class="text-center">关于</h1>
     <h4>使用的技术：</h4>
-    <p>本 OJ 基于 TesutoHime，<wbr>开源地址为 <a href="https://github.com/ACMClassOJ/Open-TesutoHime" target="_blank">Open-TesutoHime</a>。</p>
+    <p>本 OJ 基于 TesutoHime，<wbr>开源地址为 <a href="https://github.com/ACMClassOJ/TesutoHime" target="_blank">github.com/ACMClassOJ/TesutoHime</a>。</p>
     <p>
         <span>服务器部署：</span><wbr><!--
      --><a href="https://www.debian.org/" target="_blank">Debian GNU/Linux</a>，<wbr><!--
@@ -24,79 +24,63 @@
     </p>
     <hr class="mt-3">
     <h4>评测状态解释：</h4>
-    <div class="d-none d-xl-block">
-        <div class="row">
-            <div class="col-sm-3"><span class="text-gray">Pending</span>:</div>
-            <p>等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-blue">Compiling</span>:</div>
-            <p>正在编译。你的程序正在被评测机编译成可执行文件。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-blue">Running & Judging</span>:</div>
-            <p>正在测试。你的程序正在被评测机运行以检查正确性。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-green">Accepted</span>:</div>
-            <p>通过。你的程序正确通过全部测试点。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-gray-dark">Aborted</span>:</div>
-            <p>评测中断。这可能是由于你或管理员手动中断了评测，也可能是因为评测机在评测时下线。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-brown">Voided</span>:</div>
-            <p>成绩无效。你的程序被管理员标记为无效。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-red">Wrong Answer</span>:</div>
-            <p>答案错误。你的程序在某个测试点输出了错误的答案。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-yellow">Compile Error</span>:</div>
-            <p>编译错误。你的程序没有通过编译。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-red">Runtime Error</span>:</div>
-            <p>运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、程序返回值不为 0、除以 0 等。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-orange">Time Limit Exceed</span>:</div>
-            <p>时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-orange">Memory Limit Exceed</span>:</div>
-            <p>内存超限。你的程序请求了过多的内存。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-purple">Memory Leak</span>:</div>
-            <p>内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-purple">Disk Limit Exceed</span>:</div>
-            <p>磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</p>
-        </div>
-        <div class="row">
-            <div class="col-sm-3"><span class="text-gray-dark">System Error</span>:</div>
-            <p>系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</p>
-        </div>
-    </div>
-    <div class="d-block d-xl-none">
-        <p><span class="text-gray">Pending</span>: 等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</p>
-        <p><span class="text-blue">Compiling</span>: 正在编译。你的程序正在被评测机编译成可执行文件。</p>
-        <p><span class="text-blue">Running & Judging</span>: 正在测试。你的程序正在被评测机运行以检查正确性。</p>
-        <p><span class="text-gray-dark">Aborted</span>: 评测中断。这可能是由于你或管理员手动中断了评测，也可能是因为评测机在评测时下线。</p>
-        <p><span class="text-brown">Voided</span>: 成绩无效。你的程序被管理员标记为无效。</p>
-        <p><span class="text-green">Accepted</span>: 通过。你的程序正确通过全部测试点。</p>
-        <p><span class="text-red">Wrong Answer</span>: 答案错误。你的程序在某个测试点输出了错误的答案。</p>
-        <p><span class="text-yellow">Compile Error</span>: 编译错误。你的程序没有通过编译。</p>
-        <p><span class="text-red">Runtime Error</span>: 运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、程序返回值不为 0、除以 0 等。</p>
-        <p><span class="text-orange">Time Limit Exceed</span>: 时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</p>
-        <p><span class="text-orange">Memory Limit Exceed</span>: 内存超限。你的程序请求了过多的内存。</p>
-        <p><span class="text-purple">Memory Leak</span>: 内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</p>
-        <p><span class="text-purple">Disk Limit Exceed</span>: 磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</p>
-        <p><span class="text-gray-dark">System Error</span>：系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</p>
+    <div>
+        <p class="status__row">
+            <span class="status__col"><span class="text-gray">Pending</span>:</span>
+            <span>等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-blue">Compiling</span>:</span>
+            <span>正在编译。你的程序正在被评测机编译成可执行文件。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-blue">Running & Judging</span>:</span>
+            <span>正在测试。你的程序正在被评测机运行以检查正确性。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-green">Accepted</span>:</span>
+            <span>通过。你的程序正确通过全部测试点。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-gray-dark">Aborted</span>:</span>
+            <span>评测中断。这可能是由于你或管理员手动中断了评测，也可能是因为评测机在评测时下线。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-bstatus__rown">Voided</span>:</span>
+            <span>成绩无效。你的程序被管理员标记为无效。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-red">Wrong Answer</span>:</span>
+            <span>答案错误。你的程序在某个测试点输出了错误的答案。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-yellow">Compile Error</span>:</span>
+            <span>编译错误。你的程序没有通过编译。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-red">Runtime Error</span>:</span>
+            <span>运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、程序返回值不为 0、除以 0 等。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-orange">Time Limit Exceed</span>:</span>
+            <span>时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-orange">Memory Limit Exceed</span>:</span>
+            <span>内存超限。你的程序请求了过多的内存。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-purple">Memory Leak</span>:</span>
+            <span>内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-purple">Disk Limit Exceed</span>:</span>
+            <span>磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</span>
+        </p>
+        <p class="status__row">
+            <span class="status__col"><span class="text-gray-dark">System Error</span>:</span>
+            <span>系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</span>
+        </p>
     </div>
     <hr class="mt-3">
     <h4 id="migration">有关从老 OJ 迁移后题面与数据的兼容性问题</h4>
@@ -127,34 +111,36 @@
     <p>另，老 OJ 由于采用不同插件渲染公式，无法保证所有题面正确渲染，请知悉。</p>
     <hr class="mt-3">
     <h4>Current Maintainer:</h4>
-    有任何问题请直接发邮件联系任意一个运维组成员。
-    <div class="row mt-3">
+    <p>有任何问题请直接发邮件联系任意一个运维组成员。</p>
+    <div class="row ml--2 mr--2">
         {% for mntner in mntners %}
-        <div class="col-lg-3 m-auto">
-            <a href="{{ mntner.link }}" target="_blank">
-                <img class="img-fluid w-100" alt="Avatar of {{ mntner.name }}" src="{{ mntner.avatar }}">
-            </a>
-            <p class="text-center">
-                <a href="{{ mntner.link }}" target="_blank" class="text-primary">{{ mntner.name }}</a>
-                <br>
-                <a href="mailto:{{ mntner.email }}" class="text-primary">{{ mntner.email }}</a>
-            </p>
+        <div class="p-2 col-lg-4">
+            <div class="contributor-card">
+                <a href="{{ mntner.link }}" target="_blank">
+                    <img class="img-fluid" width="80" alt="Avatar of {{ mntner.name }}" src="{{ mntner.avatar }}">
+                </a>
+                <div class="m-3 m-lg-2 m-xl-3 d-flex flex-column justify-content-center">
+                    <a href="{{ mntner.link }}" target="_blank" class="text-primary">{{ mntner.name }}</a>
+                    <a href="mailto:{{ mntner.email }}" class="text-primary">{{ mntner.email }}</a>
+                </div>
+            </div>
         </div>
         {% endfor %}
     </div>
     <hr class="mt-3">
     <h4>Contributors (排名不分先后):</h4>
-    <div class="row">
+    <div class="row ml--2 mr--2">
         {% for contributor in contributors %}
-        <div class="col-lg-3 m-auto">
-            <a href="{{ contributor.link }}" target="_blank">
-                <img class="img-fluid w-100" alt="Avatar of {{ contributor.name }}" src="{{ contributor.avatar }}">
-            </a>
-            <p class="text-center">
-                <a href="{{ contributor.link }}" target="_blank" class="text-primary">{{ contributor.name }} ({{ contributor.year }})</a>
-                <br>
-                <span>{{ contributor.description }}</span>
-            </p>
+        <div class="p-2 col-lg-4">
+            <div class="contributor-card">
+                <a href="{{ contributor.link }}" target="_blank">
+                    <img class="img-fluid" width="80" alt="Avatar of {{ contributor.name }}" src="{{ contributor.avatar }}">
+                </a>
+                <div class="m-3 m-lg-2 m-xl-3 d-flex flex-column justify-content-center">
+                    <a href="{{ contributor.link }}" target="_blank" class="text-primary">{{ contributor.name }} ({{ contributor.year }})</a>
+                    <span>{{ contributor.description }}</span>
+                </div>
+            </div>
         </div>
         {% endfor %}
     </div>

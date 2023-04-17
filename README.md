@@ -53,6 +53,10 @@ ACM Class OnlineJudge：新一代多线程分布式评测系统
 
 参见[开发文档概览](Documents/dev/overview.md)。
 
+### 服务器管理工具
+
+参见[服务器管理工具文档](Documents/scripts.md)。
+
 ### 架构图
 
 ```mermaid

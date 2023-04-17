@@ -1,6 +1,16 @@
-# TesutoHime
+# TesutoHime / 评测姬
 
 ACM Class OnlineJudge：新一代多线程分布式评测系统
+
+ACMOJ 是以低年级本科生教学为导向的在线评测服务。在 ACM 班的教学中，有时候会用到一些一般的 OI/ICPC 类 OJ 所不具备的一些功能：
+
+- 头文件评测 (用户提交头文件，`main` 函数包含于数据包中；类似于一些交互题)
+- 多文件编译 (目前通过提交 Git 远端地址的方式实现)
+- 内存泄漏检查 (Valgrind)
+- 基础的 Verilog 评测
+- 带文件 I/O 的评测 (多个数据点之间不删除用户程序产生的文件)
+
+除了经典的算法题之外，OJ 上还有很多 ACM 班助教自编的程序设计、经典数据结构 (如红黑树、B+ 树等) 等题目，以适应课程的需要。
 
 ## 功能
 
@@ -27,35 +37,35 @@ ACM Class OnlineJudge：新一代多线程分布式评测系统
 - 添加实名；
 - (仅超级管理员) 修改用户信息。
 
-### 服务器端
+### 评测端
 
 - 评测机、调度机、Web 服务等模块均可独立运行；
 - 支持多语言评测 (C++, Git, Verilog)；
-- 支持 Special Judge (参见[数据包格式规范文档](Documents/user/data_doc.md#spj))；
+- 支持 Special Judge (参见[数据包格式规范文档](docs/user/data_doc.md#spj))；
 - 沙箱 (编译、评测、评分期，使用 [nsjail](https://github.com/google/nsjail) 以限制资源使用)；
 - 以最小评测单元 (而非一整道题) 为调度的最小粒度，并可中途打断。
 
 ## 部署
 
-参见[部署概览](Documents/deployment/overview.md)。
+参见[部署概览](docs/deployment/overview.md)。
 
 ## 文档
 
 ### 用户文档
 
-- [管理界面使用指南](Documents/user/admin_doc.md)；
-- [题面格式规范](Documents/user/problem_format_doc.md)；
-- [数据格式规范](Documents/user/data_doc.md)；
-- [数据包样例](Documents/user/package_sample.md)。
+- [管理界面使用指南](docs/user/admin_doc.md)；
+- [题面格式规范](docs/user/problem_format_doc.md)；
+- [数据格式规范](docs/user/data_doc.md)；
+- [数据包样例](docs/user/package_sample.md)。
 
 
 ### 开发文档
 
-参见[开发文档概览](Documents/dev/overview.md)。
+参见[开发文档概览](docs/dev/overview.md)。
 
 ### 服务器管理工具
 
-参见[服务器管理工具文档](Documents/scripts.md)。
+参见[服务器管理工具文档](docs/scripts.md)。
 
 ### 架构图
 
@@ -92,18 +102,6 @@ graph TD
     J2 --- R1
     WS --- SC
 ```
-
-## 想要贡献此项目？
-
-我们非常欢迎您的贡献！如果您的代码最终被合入，我们会将您加到「关于」页面的 Contributors 下。
-
-但是在您贡献前，请确保您的代码遵循以下要求：
-
-- 除已有代码（或者调用已有代码）外，所有代码均应遵循 [Google Style Guide](https://google.github.io/styleguide/)；
-- 如果您需要对文档做出修改，请确保您的修改符合以下要求：
-  - 所有文档均需保证文档的易读性，中文、英文、数字间需要加入空格，除括号、引号外的标点前不加空格，括号、引号与其中的内容间不加空格；
-  - 对于用户文档（位于 `Documents/user` 下），请尽可能保证文档不要出现大量重定向，以便于用户快速且方便地找到所需信息；
-  - 对于开发文档（位于 `Documents/dev` 下），请尽可能保证文档中不要出现重复的内容，允许出现大量重定向，以保证文档的一致性，减少变更后需要改动的内容量。
 
 ## LICENSE
 

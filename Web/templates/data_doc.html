@@ -105,8 +105,9 @@ False，是否开启精细化的内存泄漏检测。请注意，Valgrind
 <ul>
 <li>这是答案不唯一的题目可能会使用到的评测类型，流程和 spj 0
 基本相同，只是在获取了程序输出之后，会将程序输出，<code>*.in</code> 和
-<code>*.out/ans</code> 文件交付给出题人自定义的 <code>spj.cpp</code>
-文件进行评测，<code>spj.cpp</code> 详情见下方。</li>
+<code>*.out/ans</code> 文件交付给出题人自定义的 <code>spj_bin</code> 或
+<code>spj.cpp</code> 文件进行评测，具体参见 <a
+href="#spj_bin--spjcpp">spj_bin / spj.cpp 部分</a>。</li>
 </ul></li>
 <li>spj 2 hpp without diff
 <ul>
@@ -128,20 +129,25 @@ False，是否开启精细化的内存泄漏检测。请注意，Valgrind
 <li>这是一个 spj 2/3 的完美替代品，用户提交的代码会被保存在
 <code>src.hpp</code> 里面，数据包内需要包含 <code>main.cpp</code> 或者
 <code>1.cpp</code>、<code>2.cpp</code>，这些文件将会被一起编译成用户程序
-<code>program</code>，数据包还需要有另外的 <code>spj.cpp</code>，它接受
-<code>program</code> 程序的输出，<code>*.in</code>
-、<code>*.out/ans</code> 作为参数。一个解决 spj 2
-中用户输出或者输入的方法是将文件 <code>*.in</code>
-加密，并加入完整性检测的 MD5，以防止用户程序擅自在 <code>src.hpp</code>
-中读入，可以在 <code>program</code> 的输出也加入完整性检测的
-MD5，同时使用 <code>spj.cpp</code> 对 <code>program</code>
+<code>program</code>，数据包还需要有另外的 <code>spj_bin</code> 或
+<code>spj.cpp</code>，它接受 <code>program</code>
+程序的输出，<code>*.in</code> 、<code>*.out/ans</code>
+作为参数，具体参见 <a href="#spj_bin--spjcpp">spj_bin / spj.cpp
+部分</a>。一个解决 spj 2 中用户输出或者输入的方法是将文件
+<code>*.in</code> 加密，并加入完整性检测的 MD5，以防止用户程序擅自在
+<code>src.hpp</code> 中读入，可以在 <code>program</code>
+的输出也加入完整性检测的 MD5，同时使用 <code>spj_bin</code> 或
+<code>spj.cpp</code> 对 <code>program</code>
 的输出进行检测，以防止用户程序擅自在 <code>src.hpp</code> 中输出。</li>
 </ul></li>
 <li>spj 5 output only
 <ul>
 <li>这里将直接把用户提交的文件作为 <code>userOutput</code> 传递给
-<code>spj.cpp</code>，如果你的 <code>spj.cpp</code>
-中内置了一个编译器，理论上你可以支持所有程序语言的评测。</li>
+<code>spj_bin</code> 或 <code>spj.cpp</code>，如果你的
+<code>spj_bin</code> 或 <code>spj.cpp</code>
+中内置了一个编译器，理论上你可以支持所有程序语言的评测。关于
+<code>spj_bin</code> 或 <code>spj.cpp</code>，具体参见 <a
+href="#spj_bin--spjcpp">spj_bin / spj.cpp 部分</a>。</li>
 </ul></li>
 </ul>
 <h3 id="supportedfiles">SupportedFiles</h3>
@@ -227,14 +233,34 @@ CRLF(<code>\r\n</code>) 还是 Linux 的 LF(<code>\n</code>)
 CRLF(<code>\r\n</code>) 还是 Linux 的 LF(<code>\n</code>)
 并不会产生很大的影响，但请各位出数据的助教尽可能不要出现 CRLF。</li>
 </ul>
-<h2 id="spj.cpp">spj.cpp</h2>
-<p>通过命令行（argv[]）传参，具体如下：</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>input     <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">1</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的输入文件</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>output    <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">2</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 用户输出</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>answer    <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">3</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的答案</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>score     <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">4</span><span class="op">],</span> <span class="st">&quot;w&quot;</span><span class="op">);</span> <span class="co">// 把评测的分数输出到这里</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>message   <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">5</span><span class="op">],</span> <span class="st">&quot;w&quot;</span><span class="op">);</span> <span class="co">// 这里输出错误/提示信息</span></span></code></pre></div>
+<h2 id="spj_bin-spj.cpp">spj_bin / spj.cpp</h2>
+<p>如果需要编写特定的 spj 程序，如 spj1、spj4、spj5，可以使用
+<code>spj_bin</code> 或 <code>spj.cpp</code>。</p>
+<p>当存在 <code>spj_bin</code> 时，会优先使用 <code>spj_bin</code>。</p>
+<p><code>spj_bin</code> 是一个可执行文件（OJ
+会自动给予执行权限）；<code>spj.cpp</code> 是一个 C++ 源文件，OJ
+会将其编译成可执行文件。</p>
+<h3 id="spj_bin">spj_bin</h3>
+<p><code>spj_bin</code> 通过命令行（argv[]）传参，具体如下：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./spj</span> input output answer score message</span></code></pre></div>
+<p>其中：</p>
+<ul>
+<li>input 是题目的输入文件</li>
+<li>output 是用户输出</li>
+<li>answer 是题目的答案</li>
+<li>score 是把评测的分数</li>
+<li>message 是错误/提示信息</li>
+</ul>
+<p><code>spj_bin</code> 可以是二进制文件，也可以是 shell/python
+脚本。</p>
+<h3 id="spj.cpp">spj.cpp</h3>
+<p><code>spj.cpp</code> 通过命令行（argv[]）传参，具体如下：</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>input   <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">1</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的输入文件</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>output  <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">2</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 用户输出</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>answer  <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">3</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的答案</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>score   <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">4</span><span class="op">],</span> <span class="st">&quot;w&quot;</span><span class="op">);</span> <span class="co">// 把评测的分数输出到这里</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>message <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">5</span><span class="op">],</span> <span class="st">&quot;w&quot;</span><span class="op">);</span> <span class="co">// 这里输出错误/提示信息</span></span></code></pre></div>
 <p>score 中只有一个 double 类型的数，如果值为 1，那么该测试点会被判断为
 AC，否则为 WA。此功能可以实现部分赋分，例如将一个 groupScore 设为
 100，且只包含一个测试点，如果 score 中的 double 数为 0.5，那么该 group

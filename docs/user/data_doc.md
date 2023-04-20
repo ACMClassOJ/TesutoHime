@@ -49,7 +49,7 @@ by cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.2.16
   - 这是通常类型题目将会使用到的评测类型，将会直接编译用户提交的代码，使用 `*.in` 作为程序输入，`*.out/ans` 作为标准答案，直接和程序输出进行 `diff` 比较来给分。
 
 - spj 1 single file with spj
-  - 这是答案不唯一的题目可能会使用到的评测类型，流程和 spj 0 基本相同，只是在获取了程序输出之后，会将程序输出，`*.in` 和 `*.out/ans` 文件交付给出题人自定义的 `spj_bin` 或 `spj.cpp` 文件进行评测，具体参见 [spj_bin / spj.cpp 部分](#spj_bin--spjcpp)。
+  - 这是答案不唯一的题目可能会使用到的评测类型，流程和 spj 0 基本相同，只是在获取了程序输出之后，会将程序输出，`*.in` 和 `*.out/ans` 文件交付给出题人自定义的 `spj_bin` 或 `spj.cpp` 文件进行评测，具体参见 [SPJ File 部分](#spj-file)。
 
 - spj 2 hpp without diff
   - 这是需要对头文件进行测试的评测类型，用户提交的代码将会被保存在 `src.hpp` 中。在数据包的根目录下需要有 `main.cpp` 或者 `1.cpp`、`2.cpp` 这样的文件，文件中需要 `#include "src.hpp"`，即可调用用户提交的代码进行测试。程序输出的就是最终的得分，所以你需要有一些奇特的方法来避免用户在 `src.hpp` 中输出一些奇怪的内容而影响最终的评分。更好的评测方式应该是使用 spj 4。注意，该评测类型可能不需要使用到 `*.out/ans` 文件。
@@ -58,10 +58,10 @@ by cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.2.16
   - 这同样是对头文件进行测试的评测类型，但是在最终的评分环节，是将输出和 `*.out/ans` 进行 `diff` 比对而给分的。
 
 - spj 4 hpp with spj
-  - 这是一个 spj 2/3 的完美替代品，用户提交的代码会被保存在 `src.hpp` 里面，数据包内需要包含 `main.cpp` 或者 `1.cpp`、`2.cpp`，这些文件将会被一起编译成用户程序 `program`，数据包还需要有另外的 `spj_bin` 或 `spj.cpp`，它接受 `program` 程序的输出，`*.in` 、`*.out/ans` 作为参数，具体参见 [spj_bin / spj.cpp 部分](#spj_bin--spjcpp)。一个解决 spj 2 中用户输出或者输入的方法是将文件 `*.in` 加密，并加入完整性检测的 MD5，以防止用户程序擅自在 `src.hpp` 中读入，可以在 `program` 的输出也加入完整性检测的 MD5，同时使用 `spj_bin` 或 `spj.cpp` 对 `program` 的输出进行检测，以防止用户程序擅自在 `src.hpp` 中输出。
+  - 这是一个 spj 2/3 的完美替代品，用户提交的代码会被保存在 `src.hpp` 里面，数据包内需要包含 `main.cpp` 或者 `1.cpp`、`2.cpp`，这些文件将会被一起编译成用户程序 `program`，数据包还需要有另外的 `spj_bin` 或 `spj.cpp`，它接受 `program` 程序的输出，`*.in` 、`*.out/ans` 作为参数，具体参见 [SPJ File 部分](#spj-file)。一个解决 spj 2 中用户输出或者输入的方法是将文件 `*.in` 加密，并加入完整性检测的 MD5，以防止用户程序擅自在 `src.hpp` 中读入，可以在 `program` 的输出也加入完整性检测的 MD5，同时使用 `spj_bin` 或 `spj.cpp` 对 `program` 的输出进行检测，以防止用户程序擅自在 `src.hpp` 中输出。
 
 - spj 5 output only
-  - 这里将直接把用户提交的文件作为 `userOutput` 传递给 `spj_bin` 或 `spj.cpp`，如果你的 `spj_bin` 或 `spj.cpp` 中内置了一个编译器，理论上你可以支持所有程序语言的评测。关于 `spj_bin` 或 `spj.cpp`，具体参见 [spj_bin / spj.cpp 部分](#spj_bin--spjcpp)。
+  - 这里将直接把用户提交的文件作为 `userOutput` 传递给 `spj_bin` 或 `spj.cpp`，如果你的 `spj_bin` 或 `spj.cpp` 中内置了一个编译器，理论上你可以支持所有程序语言的评测。关于 `spj_bin` 或 `spj.cpp`，具体参见 [SPJ File 部分](#spj-file)。
 
 ### SupportedFiles
 一个数组，包含运行时需要额外引用的非库的头文件。**注意**，这里引入的文件需要被放入数据包的根目录下，而且该文件只会在文件的编译期被使用，程序运行时是不可以使用到这里的文件的。例：
@@ -116,7 +116,7 @@ by cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.2.16
 - 在使用 spj.cpp 时，可能不需要比对 stdout，此时可不存在 `.out`。
 - 注意：我们的 OJ 评测均采用 Linux 环境，默认 diff 时有行末空格过滤。虽然对于许多题目，换行符为 Windows 的 CRLF(`\r\n`) 还是 Linux 的 LF(`\n`) 并不会产生很大的影响，但请各位出数据的助教尽可能不要出现 CRLF。
 
-## spj_bin / spj.cpp
+## SPJ File
 
 如果需要编写特定的 spj 程序，如 spj1、spj4、spj5，可以使用 `spj_bin` 或 `spj.cpp`。
 

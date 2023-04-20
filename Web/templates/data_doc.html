@@ -106,8 +106,8 @@ False，是否开启精细化的内存泄漏检测。请注意，Valgrind
 <li>这是答案不唯一的题目可能会使用到的评测类型，流程和 spj 0
 基本相同，只是在获取了程序输出之后，会将程序输出，<code>*.in</code> 和
 <code>*.out/ans</code> 文件交付给出题人自定义的 <code>spj_bin</code> 或
-<code>spj.cpp</code> 文件进行评测，具体参见 <a
-href="#spj_bin--spjcpp">spj_bin / spj.cpp 部分</a>。</li>
+<code>spj.cpp</code> 文件进行评测，具体参见 <a href="#spj-file">SPJ File
+部分</a>。</li>
 </ul></li>
 <li>spj 2 hpp without diff
 <ul>
@@ -132,13 +132,13 @@ href="#spj_bin--spjcpp">spj_bin / spj.cpp 部分</a>。</li>
 <code>program</code>，数据包还需要有另外的 <code>spj_bin</code> 或
 <code>spj.cpp</code>，它接受 <code>program</code>
 程序的输出，<code>*.in</code> 、<code>*.out/ans</code>
-作为参数，具体参见 <a href="#spj_bin--spjcpp">spj_bin / spj.cpp
-部分</a>。一个解决 spj 2 中用户输出或者输入的方法是将文件
-<code>*.in</code> 加密，并加入完整性检测的 MD5，以防止用户程序擅自在
-<code>src.hpp</code> 中读入，可以在 <code>program</code>
-的输出也加入完整性检测的 MD5，同时使用 <code>spj_bin</code> 或
-<code>spj.cpp</code> 对 <code>program</code>
-的输出进行检测，以防止用户程序擅自在 <code>src.hpp</code> 中输出。</li>
+作为参数，具体参见 <a href="#spj-file">SPJ File 部分</a>。一个解决 spj 2
+中用户输出或者输入的方法是将文件 <code>*.in</code>
+加密，并加入完整性检测的 MD5，以防止用户程序擅自在 <code>src.hpp</code>
+中读入，可以在 <code>program</code> 的输出也加入完整性检测的
+MD5，同时使用 <code>spj_bin</code> 或 <code>spj.cpp</code> 对
+<code>program</code> 的输出进行检测，以防止用户程序擅自在
+<code>src.hpp</code> 中输出。</li>
 </ul></li>
 <li>spj 5 output only
 <ul>
@@ -147,7 +147,7 @@ href="#spj_bin--spjcpp">spj_bin / spj.cpp 部分</a>。</li>
 <code>spj_bin</code> 或 <code>spj.cpp</code>
 中内置了一个编译器，理论上你可以支持所有程序语言的评测。关于
 <code>spj_bin</code> 或 <code>spj.cpp</code>，具体参见 <a
-href="#spj_bin--spjcpp">spj_bin / spj.cpp 部分</a>。</li>
+href="#spj-file">SPJ File 部分</a>。</li>
 </ul></li>
 </ul>
 <h3 id="supportedfiles">SupportedFiles</h3>
@@ -233,7 +233,7 @@ CRLF(<code>\r\n</code>) 还是 Linux 的 LF(<code>\n</code>)
 CRLF(<code>\r\n</code>) 还是 Linux 的 LF(<code>\n</code>)
 并不会产生很大的影响，但请各位出数据的助教尽可能不要出现 CRLF。</li>
 </ul>
-<h2 id="spj_bin-spj.cpp">spj_bin / spj.cpp</h2>
+<h2 id="spj-file">SPJ File</h2>
 <p>如果需要编写特定的 spj 程序，如 spj1、spj4、spj5，可以使用
 <code>spj_bin</code> 或 <code>spj.cpp</code>。</p>
 <p>当存在 <code>spj_bin</code> 时，会优先使用 <code>spj_bin</code>。</p>

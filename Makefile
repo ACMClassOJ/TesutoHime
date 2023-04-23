@@ -38,8 +38,11 @@ Web/templates/package_sample.html: docs/user/package_sample.html
 	@echo "</div>" >> '$@'
 	@echo "{% endblock %}" >> '$@'
 
-docs/user/%.html: docs/user/%.md
+docs/user/%.html.raw: docs/user/%.md
 	pandoc '$<' -t html -o '$@'
+
+docs/user/%.html: docs/user/%.html.raw
+	sed 's/admin_doc.md/admin-doc/g;s/data_doc.md/data-doc/g;s/package_sample.md/package-sample/g;s/problem_format_doc.md/problem-format-doc/g' $< > $@
 
 .PHONY: clean
 clean:
@@ -48,6 +51,4 @@ clean:
 	@echo 'you should execute `make user-docs` before using the web page.'
 	rm -f $(USER_DOCS)
 	rm -f docs/user/*.html
-
-.PHONY: install
-install:
+	rm -f docs/user/*.html.raw

@@ -53,6 +53,7 @@ class TaskInfo:
     task: Task
     submission_id: Optional[str]
     problem_id: str
+    group: str
     message: str
     id: str = ''
 

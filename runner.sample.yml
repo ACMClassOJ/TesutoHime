@@ -1,6 +1,7 @@
-runner_config: v1
+runner_config: v2
 
 id: 1
+group: default
 relative_slowness: 10
 working_dir: /var/oj/runner
 cache_dir: /var/cache/oj/runner

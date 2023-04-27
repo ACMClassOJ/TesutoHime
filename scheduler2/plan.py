@@ -358,7 +358,8 @@ async def compile_checker(ctx: ParseContext):
         limits=ctx.compile_limits,
     )
     msg = f'Compiling SPJ for problem {ctx.problem_id}'
-    res = await run_task(TaskInfo(task, None, ctx.problem_id, msg))
+    res = await run_task(TaskInfo(task, None, ctx.problem_id,
+                                  ctx.cfg.RunnerGroup, msg))
     if res.result != 'compiled':
         msg = f'Cannot compile checker ({res.result}): {res.message}'
         raise InvalidProblemException(msg)
@@ -373,6 +374,7 @@ async def generate_plan(problem_id: str) -> JudgePlan:
         with ZipFile(zip_path) as zip:
             ctx = ParseContext(problem_id, zip)
             await load_config(ctx)
+            ctx.plan.group = ctx.cfg.RunnerGroup
             if ctx.plan.quiz is not None:
                 return ctx.plan
             await parse_spj(ctx)
@@ -562,7 +564,7 @@ async def run_compile_task(ctx: ExecutionContext) -> Optional[CompileResult]:
         if isinstance(status, StatusUpdateStarted):
             await update_status(ctx.id, 'compiling')
     msg = f'Compiling code for submission #{ctx.id}'
-    task = TaskInfo(ctx.compile, ctx.id, ctx.problem_id, msg)
+    task = TaskInfo(ctx.compile, ctx.id, ctx.problem_id, ctx.plan.group, msg)
     return await run_task(task, onprogress, ctx.rate_limit_group)
 
 
@@ -632,7 +634,8 @@ async def run_judge_tasks(ctx: ExecutionContext):
         async def run_with_rec():
             try:
                 msg = f'Running test for submission #{ctx.id}'
-                taskinfo = TaskInfo(task.task, ctx.id, ctx.problem_id, msg)
+                taskinfo = TaskInfo(task.task, ctx.id, ctx.problem_id,
+                                    ctx.plan.group, msg)
                 return (task, True, await run_task(taskinfo, onprogress,
                     ctx.rate_limit_group))
             except CancelledError:

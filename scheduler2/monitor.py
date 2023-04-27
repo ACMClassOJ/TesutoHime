@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from logging import getLogger
 from time import time
 from typing import Dict, Optional
-from commons.util import format_exc, Literal
+from commons.util import RedisQueues, format_exc, Literal
 
 from scheduler2.config import (redis, redis_queues,
                                runner_heartbeat_interval_secs)
@@ -21,7 +21,8 @@ class RunnerStatus:
 async def get_runner_status(runner_id: str):
     heartbeat = None
     try:
-        runner_queues = redis_queues.runner(runner_id)
+        runner_info = RedisQueues.RunnerInfo(runner_id, '')
+        runner_queues = redis_queues.runner(runner_info)
         heartbeat = await redis.get(runner_queues.heartbeat)
         if heartbeat is not None:
             heartbeat = float(heartbeat)
@@ -60,7 +61,8 @@ def wait_until_offline(runner_id: str):
         return watch_tasks[runner_id]
     logger.debug(f'Polling runner {runner_id} for offline signal')
     async def task():
-        key = redis_queues.runner(runner_id).heartbeat
+        runner_info = RedisQueues.RunnerInfo(runner_id, '')
+        key = redis_queues.runner(runner_info).heartbeat
         while True:
             await sleep(runner_heartbeat_interval_secs * 2)
             heartbeat = await redis.get(key)

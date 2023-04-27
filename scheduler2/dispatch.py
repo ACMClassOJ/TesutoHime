@@ -50,7 +50,7 @@ async def run_task(
             queues = redis_queues.task(task_id)
             await redis.lpush(queues.task, serialize(task))
             await redis.expire(queues.task, task_timeout_secs)
-            await redis.lpush(redis_queues.tasks, task_id)
+            await redis.lpush(redis_queues.tasks_group(taskinfo.group), task_id)
             task_timeout = time() + task_timeout_secs
 
             offline_task = None

@@ -4,9 +4,10 @@ from commons.task_typing import ResourceUsage
 from commons.util import RedisQueues, load_config
 from redis.asyncio import Redis
 
-config = load_config('runner', 'v1')
+config = load_config('runner', 'v2')
 
-runner_id: str = config['id']
+runner_id: str = str(config['id'])
+runner_group: str = config['group']
 relative_slowness: float = config['relative_slowness']
 working_dir: str = config['working_dir']
 cache_dir: str = config['cache_dir']
@@ -18,7 +19,8 @@ worker_uid = int(config['worker_uid'])
 heartbeat_interval_secs = 2.0
 task_timeout_secs = 3600
 
-queues = RedisQueues(config['redis']['prefix'], runner_id)
+runner_info = RedisQueues.RunnerInfo(runner_id, runner_group)
+queues = RedisQueues(config['redis']['prefix'], runner_info)
 poll_timeout_secs = 10
 redis = Redis(
     **config['redis']['connection'],

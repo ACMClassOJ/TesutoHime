@@ -1,6 +1,6 @@
 import json
 from asyncio import get_running_loop
-from dataclasses import is_dataclass
+from dataclasses import dataclass, is_dataclass
 from logging import getLogger
 from pathlib import PosixPath
 from shutil import rmtree
@@ -117,15 +117,20 @@ class TempDir:
 
 
 class RedisQueues:
-    def __init__(self, prefix: str, runner_id: Optional[str] = None):
+    @dataclass
+    class RunnerInfo:
+        id: str
+        group: str
+
+    def __init__(self, prefix: str, runner: Optional[RunnerInfo] = None):
         def queue(name):
             return f'{prefix}-{name}'
         def rqueue(name):
-            return f'{queue(name)}-runner{runner_id}'
-        self.tasks = queue('tasks')
+            return f'{queue(name)}-runner{runner.id}'
         self._prefix = prefix
         self._task_prefix = queue('task')
-        if runner_id is not None:
+        if runner is not None:
+            self.tasks = queue(f'{runner.group}-tasks')
             self.in_progress = rqueue('in-progress')
             self.heartbeat = rqueue('heartbeat')
 
@@ -139,8 +144,11 @@ class RedisQueues:
     def task(self, task_id: str) -> TaskRedisQueues:
         return RedisQueues.TaskRedisQueues(self._task_prefix, task_id)
 
-    def runner(self, runner_id: str):
-        return RedisQueues(self._prefix, runner_id)
+    def tasks_group(self, group: str):
+        return f'{self._prefix}-{group}-tasks'
+
+    def runner(self, runner: RunnerInfo):
+        return RedisQueues(self._prefix, runner)
 
 
 def format_exc(e):

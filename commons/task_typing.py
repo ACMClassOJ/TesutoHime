@@ -266,8 +266,11 @@ class QuizProblem:
     options: List
 
 
+DEFAULT_GROUP = 'default'
+
 @dataclass
 class JudgePlan:
+    group: str = DEFAULT_GROUP
     compile: Optional[CompileTaskPlan] = None
     judge: List[JudgeTaskPlan] = None
     score: List[TestpointGroup] = None

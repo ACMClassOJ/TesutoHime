@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from enum import IntEnum, unique
 from typing import List, Optional, Union
 
+from commons.task_typing import DEFAULT_GROUP
 from commons.util import Literal
 
 
@@ -43,3 +44,4 @@ class ProblemConfig:
     SupportedFiles: List[str] = field(default_factory=lambda: [])
     Verilog: bool = False
     Quiz: bool = False
+    RunnerGroup: str = DEFAULT_GROUP

@@ -35,7 +35,9 @@ judge_task_args: Dict[Task, Tuple[str, str, CodeLanguage, SourceLocation]] = {}
 def register_judge_task(problem_id, submission_id, language, source,
     rate_limit_group):
     if submission_id in judge_tasks_from_submission_id:
-        raise Exception('already judging')
+        # raise Exception('already judging')
+        # should not raise error, or the submission will temporarily be System Error
+        return
     task = create_task(run_judge(problem_id, submission_id, language, source,
         rate_limit_group))
     if not problem_id in judge_tasks:

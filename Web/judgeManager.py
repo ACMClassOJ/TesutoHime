@@ -65,11 +65,13 @@ def rejudge(id):
         submission: JudgeRecord2 = db.query(JudgeRecord2).where(JudgeRecord2.id == id).one_or_none()
         if submission is None:
             raise NotFoundException()
+        # to avoid blocking judge queue too much,
+        # use '_rejudge' as rate limit group
         schedule_judge(
             submission.problem_id,
             id,
             submission.language,
-            submission.username,
+            '_rejudge',
         )
 
 def abort_judge(id):

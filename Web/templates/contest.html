@@ -76,7 +76,7 @@
                                         {%- endif %}
                                     {%- else -%}
                                         {% if is_Admin -%}
-                                        <a class="text-green" href="/OnlineJudge/{{ status_url }}?submitter={{ player['username'] }}&problem_id={{ Problems[j][0] }}&status={{ ac_status }}"> ({{ problem['count'] }}Y)</a>
+                                        <a class="text-green" href="/OnlineJudge/{{ status_url }}?submitter={{ player['username'] }}&problem_id={{ Problems[j][0] }}"> ({{ problem['count'] }}Y)</a>
                                         {% else -%}
                                         <span class="text-green"> ({{ problem['count'] }}Y)</span>
                                         {%- endif %}

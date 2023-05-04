@@ -352,7 +352,7 @@ html .table-hover .table:hover > td,
 }
 
 html .table-striped tbody tr:nth-of-type(2n + 1) {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(255, 255, 255, 0.035);
 }
 
 html .table {
@@ -492,6 +492,35 @@ html .btn-secondary:hover {
 
 html img {
   filter: saturate(.8) brightness(.8);
+}
+
+
+html .contest--participant {
+    background-color: rgba(249, 230, 195, 0.1);
+}
+html .contest--running {
+    background-color: rgba(171, 205, 239, 0.1);
+}
+html .contest--pending {
+    background-color: rgba(255, 255, 255, 0.035);
+}
+html .table-striped tbody tr.contest--participant:nth-of-type(2n+1) {
+    background-color: rgba(249, 230, 195, 0.15);
+}
+html .table-striped tbody tr.contest--running:nth-of-type(2n+1) {
+    background-color: rgba(171, 205, 239, 0.15);
+}
+html .table-striped tbody tr.contest--pending:nth-of-type(2n+1) {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+html .table-hover tbody tr.contest--participant:hover {
+    background-color: rgba(249, 230, 195, 0.25);
+}
+html .table-hover tbody tr.contest--running:hover {
+    background-color: rgba(147, 177, 208, 0.25);
+}
+html .table-hover tbody tr.contest--pending:hover {
+    background-color: rgba(255, 255, 255, 0.075);
 }
 
 

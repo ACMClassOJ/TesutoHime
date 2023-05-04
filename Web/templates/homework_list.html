@@ -20,12 +20,11 @@
                 {% for cur in Data -%}
                     <tr {%
                         if cur['Joined']
-                    %}class="tr-participant"{%
-                    else %}{%
-                        if cur['Status'] == 'Going On'
-                    %}class="tr-running"{% else %}{%
-                        if cur['Status'] == 'Pending'
-                    %}class="tr-pending"{% endif %}{% endif %}{% endif %}>
+                    %} class="contest--participant" {%
+                        elif cur['Status'] == 'Going On'
+                    %} class="contest--running" {%
+                        elif cur['Status'] == 'Pending'
+                    %} class="contest--pending" {% endif %}>
                         <td>{{ cur['ID'] }}</td>
                         <td><a href="/OnlineJudge/homework/{{ cur['ID'] }}">{{ cur['Title'] }}</a></td>
                         <td>{{ cur['Start_Time'] }}</td>

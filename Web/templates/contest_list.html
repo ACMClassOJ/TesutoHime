@@ -6,7 +6,7 @@
     <div class="card card-body">
         <h1 class="text-center">比赛列表</h1>
         <div class="table-responsive">
-            <table class="table table-striped table-bordered table-hover" id="contest_list">
+            <table class="table table-striped table-bordered table-hover">
                 <thead>
                 <tr>
                     <th>编号</th>
@@ -19,13 +19,12 @@
                 </thead>
                 {% for cur in Data -%}
                     <tr {%
-                        if cur['Joined'] and not cur['Exam_Blocked']
-                    %}class="tr-participant"{%
-                    else %}{%
-                        if cur['Status'] == 'Going On'
-                    %}class="tr-running"{% else %}{%
-                        if cur['Status'] == 'Pending'
-                    %}class="tr-pending"{% endif %}{% endif %}{% endif %}>
+                        if cur['Joined']
+                    %} class="contest--participant" {%
+                        elif cur['Status'] == 'Going On'
+                    %} class="contest--running" {%
+                        elif cur['Status'] == 'Pending'
+                    %} class="contest--pending" {% endif %}>
                         <td>{{ cur['ID'] }}</td>
                         <td><a href="/OnlineJudge/contest/{{ cur['ID'] }}">{{ cur['Title'] }}</a></td>
                         <td>{{ cur['Start_Time'] }}</td>

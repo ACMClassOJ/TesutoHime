@@ -1659,7 +1659,7 @@ pre code {
 
 .table th,
 .table td {
-    padding: 0.5rem;
+    padding: 0.7rem;
     vertical-align: top;
     border-top: 0.0625rem solid #dee2e6;
 }
@@ -1707,17 +1707,6 @@ pre code {
     color: #525f7f;
     background-color: rgba(0, 0, 0, 0.075);
 }
-.tr-participant {
-    background-color: #fdf5e6;
-}
-.tr-running {
-    background-color:  rgba(171, 205, 239, 0.25);
-}
-.tr-pending {
-    background-color: rgba(0,0,0,0.05)
-}
-
-
 
 .table-primary,
 .table-primary > th,
@@ -23998,8 +23987,20 @@ pre > code.highlight {
 }
 /*# sourceMappingURL=kit-free.css.map */
 
+/* --------------- begin oj styles -------------- */
+
 #homework, #contest {
     white-space: nowrap;
+}
+
+.tr-participant {
+    background-color: #fdf5e6;
+}
+.tr-running {
+    background-color: rgba(171, 205, 239, 0.25);
+}
+.tr-pending {
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .card-body {

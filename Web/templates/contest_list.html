@@ -3,56 +3,62 @@
 {% set page='比赛列表' %}
 
 {% block content %}
- <div class="card card-body">
-  <h1 class="text-center"> 比赛列表 </h1>
-  <div class="table-responsive">
-<table class="table table-bordered table-hover dataTable" id="contest_list">
-<thead>
-<tr>
- <th>编号</th>
- <th>比赛名称</th>
- <th>开始时间</th>
- <th>结束时间</th>
- <th>报名</th>
-</tr>
-</thead>
-{% for cur in Data -%}
-<tr {%
-  if cur['Joined'] and not cur['Exam_Blocked']
-%}class="tr-participant"{%
-else %}{%
-  if cur['Status'] == 'Going On'
-%}class="tr-running"{% else %}{%
-  if cur['Status'] == 'Pending'
-%}class='tr-pending'{% endif %}{% endif %}>
- <td>{{ cur['ID'] }}</td>
- <td><a href="/OnlineJudge/contest/{{ cur['ID'] }}">{{ cur['Title'] }}</a></td>
- <td>{{ cur['Start_Time'] }}</td>
- <td>{{ cur['End_Time'] }}</td>
- <td>
- {%if cur['Exam_Blocked']
- -%}<button disabled class="btn btn-primary btn-sm">已于考试中</button>{%-
- else
- -%}{% if cur['Blocked'] -%}
-  {%- if cur['Joined']
-  -%}<button disabled class="btn btn-primary btn-sm">已报名</button>{%-
- else
-  -%}<button disabled class="btn btn-primary btn-sm">报名</button>{%-
- endif
- %}{% else -%}{%- if cur['Joined']
-  -%}<button disabled class="btn btn-primary btn-sm">已报名</button>{%-
-  else
- -%}<button id="join_button_{{ cur['ID'] }}" onclick="post_join({{ cur['ID'] }})" class="btn btn-primary btn-sm">报名</button>{%-
- endif -%}
- {%- endif %}{%- endif %}
- </td>
-</tr>
-{%- endfor %}
-</table>
-</div>
- </div>
+    <div class="card card-body">
+        <h1 class="text-center">比赛列表</h1>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered table-hover" id="contest_list">
+                <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>比赛名称</th>
+                    <th>开始时间</th>
+                    <th>结束时间</th>
+                    <th>状态</th>
+                    <th>报名</th>
+                </tr>
+                </thead>
+                {% for cur in Data -%}
+                    <tr {%
+                        if cur['Joined'] and not cur['Exam_Blocked']
+                    %}class="tr-participant"{%
+                    else %}{%
+                        if cur['Status'] == 'Going On'
+                    %}class="tr-running"{% else %}{%
+                        if cur['Status'] == 'Pending'
+                    %}class="tr-pending"{% endif %}{% endif %}{% endif %}>
+                        <td>{{ cur['ID'] }}</td>
+                        <td><a href="/OnlineJudge/contest/{{ cur['ID'] }}">{{ cur['Title'] }}</a></td>
+                        <td>{{ cur['Start_Time'] }}</td>
+                        <td>{{ cur['End_Time'] }}</td>
+                        <td>{{ cur['Status'] }}</td>
+                        <td>
+                            {% if cur['Exam_Blocked'] -%}
+                                <button disabled class="btn btn-primary btn-sm">已于考试中</button>
+                            {%- else -%}
+                                {% if cur['Blocked'] -%}
+                                    {%- if cur['Joined'] -%}
+                                        <button disabled class="btn btn-primary btn-sm">已报名</button>
+                                    {%- else -%}
+                                        <button disabled class="btn btn-primary btn-sm">报名</button>
+                                    {%- endif %}
+                                {% else -%}
+                                    {%- if cur['Joined'] -%}
+                                        <button disabled class="btn btn-primary btn-sm">已报名</button>
+                                    {%- else -%}
+                                        <button id="join_button_{{ cur['ID'] }}" onclick="post_join({{ cur['ID'] }})" class="btn btn-primary btn-sm">报名
+                                        </button>
+                                    {%- endif -%}
+                                {%- endif %}
+                        {%- endif %}
+                        </td>
+                    </tr>
+                {%- endfor %}
+            </table>
+        </div>
+    </div>
 {% endblock %}
 
 {% block script %}
- <script src="{{ url_for('.static', filename = 'js/post_join.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'js/post_join.js') }}"></script>
 {% endblock %}
+

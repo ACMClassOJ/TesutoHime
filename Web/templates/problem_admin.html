@@ -81,7 +81,7 @@
                                 </select>
                             </div>
                             <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" onclick="this.disabled = true; setTimeout(() => this.disabled = false, 2000);">保存</button>
+                                <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
                             </div>
                         </div>
                     </form>
@@ -92,14 +92,14 @@
                             <span class="text-green mr-3">已发布</span>
                             <form method="POST" class="d-inline">
                                 <input type="hidden" name="action" value="hide">
-                                <button class="btn btn-outline-primary" type="submit" onclick="this.disabled = true; setTimeout(() => this.disabled = false, 2000);">取消发布</button>
+                                <button class="btn btn-outline-primary" type="submit">取消发布</button>
                             </form>
                             <span>（点击会将发布时间设为遥远的未来）</span>
                         {%- else -%}
                             <span class="text-red mr-3">未发布</span>
                             <form method="POST" class="d-inline">
                                 <input type="hidden" name="action" value="show">
-                                <button class="btn btn-outline-primary" type="submit" onclick="this.disabled = true; setTimeout(() => this.disabled = false, 2000);">立即发布</button>
+                                <button class="btn btn-outline-primary" type="submit">立即发布</button>
                             </form>
                             <span>（点击会将发布时间设为现在）</span>
                         {%- endif %}
@@ -176,7 +176,7 @@
                             </div>
                         </div>
                         <div class="float-right d-flex mb-3 ml-auto pr-1">
-                            <button class="btn btn-outline-primary mt-auto" type="submit" onclick="this.disabled = true; setTimeout(() => this.disabled = false, 2000);">保存</button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
                         </div>
                     </form>
                 </div>
@@ -193,7 +193,7 @@
                                 </div>
                             </div>
                             <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipUpload" onclick="this.disabled = true; setTimeout(() => this.disabled = false, 2000);">点击上传</button>
+                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipUpload">点击上传</button>
                             </div>
                         </div>
                         <progress id="data-upload-progress" class="w-100" max="1" value="0"></progress>
@@ -205,7 +205,7 @@
                             <div class="form-row">
                                 <input type="hidden" name="id" value="{{ ID }}">
                                 <div class="d-flex mb-3 pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" onclick="this.disabled = true; setTimeout(() => this.disabled = false, 2000);">点击下载</button>
+                                    <button class="btn btn-outline-primary mt-auto" type="submit">点击下载</button>
                                 </div>
                             </div>
                         </form>
@@ -283,7 +283,7 @@
                                 <input class="custom-file-input" type="file" name="file" id="iptPicUpload" accept="image/gif,image/jpeg,image/jpg,image/png,image/svg+xml" required="required">
                             </div>
                             <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnPicUpload" onclick="this.disabled = true; setTimeout(() => this.disabled = false, 2000);">点击上传</button>
+                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnPicUpload">点击上传</button>
                             </div>
                         </div>
                     </form>

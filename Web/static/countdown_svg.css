@@ -1,14 +1,14 @@
 #svgContainer {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 60px;
-  }
-  #svgContainer > svg {
-    position: absolute;
-  }
-  circle {
-    -webkit-transition: stroke-dasharray .25s;
-    transition: stroke-dasharray .25s;
-  }
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+}
+#svgContainer > svg {
+  position: absolute;
+}
+circle {
+  -webkit-transition: stroke-dasharray .25s;
+  transition: stroke-dasharray .25s;
+}

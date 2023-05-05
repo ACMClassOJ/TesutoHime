@@ -48,5 +48,20 @@
 {% endblock %}
 
 {% block script %}
-    <script src="{{ url_for('.static', filename = 'js/post_join.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'js/post_join.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/dataTables.buttons.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/buttons.html5.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/buttons.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/jszip.min.js') }}"></script>
+<script>
+$(function(){
+        var table = $("#homework_list").DataTable({
+            paging: false,
+            info: false,
+            ordering: false
+        });
+    });
+</script>
 {% endblock %}

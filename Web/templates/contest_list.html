@@ -13,7 +13,7 @@
     <div class="card card-body">
         <h1 class="text-center">比赛列表</h1>
         <div class="table-responsive">
-            <table class="table table-bordered table-hover" id="contests">
+            <table class="table table-bordered table-hover" id="contest_list">
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -64,7 +64,7 @@
 <script src="{{ url_for('.static', filename = 'lib/jszip.min.js') }}"></script>
 <script>
 $(function(){
-        var table = $("#contests").DataTable({
+        var table = $("#contest_list").DataTable({
             paging: false,
             info: false,
             ordering: false

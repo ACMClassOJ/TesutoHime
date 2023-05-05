@@ -23997,28 +23997,19 @@ pre > code.highlight {
     background-color: #fdf5e6;
 }
 .contest--running {
-    background-color: rgba(171, 205, 239, 0.2);
-}
-.contest--pending {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: #e6eefd;
 }
 .table-striped tbody tr.contest--participant:nth-of-type(2n+1) {
-    background-color: #f7eede;
+    background-color: #fbeccebb;
 }
 .table-striped tbody tr.contest--running:nth-of-type(2n+1) {
-    background-color: rgba(139, 167, 196, 0.2);
-}
-.table-striped tbody tr.contest--pending:nth-of-type(2n+1) {
-    background-color: rgba(0, 0, 0, 0.075);
+    background-color: #cedefbbb;
 }
 .table-hover tbody tr.contest--participant:hover {
     background-color: #e8dece;
 }
 .table-hover tbody tr.contest--running:hover {
-    background-color: rgba(134, 161, 189, 0.3);
-}
-.table-hover tbody tr.contest--pending:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: #cfd6e3;
 }
 
 .card-body {

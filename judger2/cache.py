@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from http.client import NOT_MODIFIED, OK
 from logging import getLogger
-from os import chmod, path, remove, scandir, stat, utime
+from os import chmod, path, remove, rename, scandir, stat, utime
 from pathlib import PosixPath
 from shutil import copy
 from time import time
@@ -11,8 +11,8 @@ from urllib.parse import urlsplit
 from uuid import NAMESPACE_URL, uuid5
 
 from aiohttp import request
-from commons.util import format_exc
 
+from commons.util import format_exc
 from judger2.config import (cache_clear_interval_secs, cache_dir,
                             cache_max_age_secs)
 
@@ -56,16 +56,21 @@ async def ensure_cached(url: str) -> CachedFile:
         if resp.status != OK:
             raise Exception(f'Unknown response status {resp.status} while fetching object')
         logger.debug(f'{cache.filename} is modified, downloading file')
+        part_path = cache.path.with_suffix('.part')
         try:
-            with open(cache.path, 'wb') as f:
+            with open(part_path, 'wb') as f:
                 async for data, _ in resp.content.iter_chunks():
                     f.write(data)
             last_modified = datetime \
                 .strptime(resp.headers['Last-Modified'], utc_time_format) \
                 .timestamp()
-            utime(cache.path, (time(), last_modified))
+            utime(part_path, (time(), last_modified))
+            rename(part_path, cache.path)
         except CancelledError:
-            remove(cache.path)
+            try:
+                remove(part_path)
+            except:
+                pass
             raise
         return cache
 

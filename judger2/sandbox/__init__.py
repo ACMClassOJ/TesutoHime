@@ -119,7 +119,7 @@ async def run_with_limits(
     runner_path = str(PosixPath(__file__).with_name('runner'))
     du_path = str(PosixPath(__file__).with_name('du'))
 
-    with TempDir() as tmp_dir:
+    with TempDir() as tmp_dir, open(tmp_dir / 'stderr', 'w+b') as errfile:
         # make needed files and dirs
         tmp_dir.chmod(0o700)
         chroot = tmp_dir / 'root'
@@ -155,7 +155,7 @@ async def run_with_limits(
         proc = Popen(
             [nsjail] + nsjail_argv,
             stdin=infile, stdout=outfile,
-            stderr=DEVNULL if disable_stderr else PIPE,
+            stderr=DEVNULL if disable_stderr else errfile,
         )
         _, status, rusage = await asyncrun(lambda: wait4(proc.pid, 0))
         code = waitstatus_to_exitcode(status)
@@ -205,8 +205,9 @@ async def run_with_limits(
             file_count=file_count,
             file_size_bytes=file_size_bytes,
         )
+        errfile.seek(0)
         err = '' if disable_stderr else \
-            (await asyncrun(lambda: proc.stderr.read(4096))) \
+            (await asyncrun(lambda: errfile.read(4096))) \
             .decode(errors='replace') \
             .replace(str(cwd), '')
         errmsg = '' if err == '' else f': {err}'

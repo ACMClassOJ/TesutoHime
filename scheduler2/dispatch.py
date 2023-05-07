@@ -56,7 +56,7 @@ async def run_task(
             offline_task = None
             try:
                 while True:
-                    progress_task = create_task(redis.blpop(queues.progress,
+                    progress_task = create_task(redis.brpop(queues.progress,
                         int(task_timeout - time())))
                     tasks = (progress_task,)
                     if offline_task is not None:

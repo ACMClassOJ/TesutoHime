@@ -45,14 +45,14 @@ async def poll_for_tasks():
                 await redis.lpush(task_queues.progress, serialize(status))
                 await redis.expire(task_queues.progress, task_timeout_secs)
 
-            task = deserialize(await redis.lpop(task_queues.task))
+            task = deserialize(await redis.rpop(task_queues.task))
             aio_task = create_task(run_task(task, task_id))
             await report_progress(StatusUpdateStarted(runner_id))
 
             async def poll_for_abort_signal():
                 while True:
                     try:
-                        message = await redis.blpop(task_queues.abort,
+                        message = await redis.brpop(task_queues.abort,
                             poll_timeout_secs)
                         if message == None: continue
                         aio_task.cancel()

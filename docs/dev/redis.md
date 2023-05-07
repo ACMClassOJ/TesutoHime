@@ -21,7 +21,7 @@ Task 的具体类型见 commons.task_typing 模块里的类型定义。
 - get: 获取一个字符串。
 - set: 把一个 key 设置为一个字符串。
 - del: 删除一个 key。
-- lpush: 向一个数组的小端推一个值。
+- lpush: 向一个数组的大端推一个值。
 - lpop: 从一个数组的大端取出一个值，若数组为空则返回 null / None。
 - blpop: 从一个数组的大端取出一个值，若数组为空则暂时阻塞，直到数组不为空。
   若有多个 blpop 阻塞在同一个 key 上时，这个 key 被 push 进来了一个值，

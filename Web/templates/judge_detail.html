@@ -39,6 +39,9 @@
                         {% else -%}
                         <span>{{ submission.user.friendly_name }}</span>
                         {%- endif %}
+                        {% if is_Admin -%}
+                            <span class="text-black-50 float-right"><small>{{ real_names[submission] }}</small></span>
+                        {%- endif %}
                     </td>
                     <td>
                         <a href="/OnlineJudge/problem/{{ submission.problem_id }}">{{ submission.problem_id }}. {{ submission.problem.title }}</a>

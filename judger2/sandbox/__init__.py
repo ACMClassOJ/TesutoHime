@@ -59,6 +59,8 @@ class NsjailArgs:
     rlimit_cpu: str = '600'
     # address space limit (mbytes) RLIMIT_AS.
     rlimit_as: str = '1536'
+    # number of open file descriptors, defaults to 32 by nsjail which is too low.
+    rlimit_nofile: str = '1024'
 
     # readonly mount points.
     bindmount_ro: Union[List[str], bool] = False

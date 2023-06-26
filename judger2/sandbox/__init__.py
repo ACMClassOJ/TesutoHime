@@ -67,7 +67,7 @@ class NsjailArgs:
     # R/W mount points.
     bindmount: Union[List[str], bool] = False
 
-    # maximum size in bytes of files that the process may create.
+    # maximum size in megabytes of files that the process may create.
     rlimit_fsize: str = 'inf'
     # cgroup-based memory limit: not working.
     # cgroup_mem_max: str
@@ -110,7 +110,7 @@ async def run_with_limits(
 ) -> RunResult:
     # these are nsjail args
     fsize = 'inf' if limits.file_size_bytes < 0 else \
-        str(limits.file_size_bytes + 1024)
+        str(int(limits.file_size_bytes / 1048576 + 256))
     time_limit_scaled = limits.time_msecs * relative_slowness
     time_limit_nsjail = str(int(time_limit_scaled / 1000 * time_tolerance_ratio + 1))
     # memory_limit = str(limits.memory_bytes + 1048576)

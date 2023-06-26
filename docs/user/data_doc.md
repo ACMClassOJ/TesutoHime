@@ -2,6 +2,8 @@
 
 by cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.2.16
 
+**请注意：输出文件大于 256 MiB 时会报错 (File size limit exceeded)，请确保题目的标准答案不会超过 256 MiB。**
+
 ## ZIP总格式
 
 - **数据包名称**：`题号.zip`（如 `1000.zip`），**请确认题号与题面中的 id（即数据库主键）保持一致再上传传输数据包**。

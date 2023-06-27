@@ -17,7 +17,7 @@ from judger2.util import TempDir, copy_supplementary_files
 logger = getLogger(__name__)
 
 
-async def check(outfile: CheckInput, checker: Checker) -> CheckResult:
+async def check(outfile: CheckInput, cwd: PosixPath, checker: Checker) -> CheckResult:
     logger.debug(f'checking with {checker}')
     # get output file to check
     if not isinstance(outfile, RunResult):
@@ -33,12 +33,12 @@ async def check(outfile: CheckInput, checker: Checker) -> CheckResult:
         return CheckResult('system_error', 'Nothing to check')
 
     # check
-    return await checkers[checker.__class__](inf, ouf, checker)
+    return await checkers[checker.__class__](inf, ouf, cwd, checker)
 
 
 diff_errexit_code = 1
 
-async def checker_cmp(_infile, outfile: PosixPath, checker: CompareChecker):
+async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker):
     ans = (await ensure_cached(checker.answer)).path
     flags = '-qZB' if checker.ignore_whitespace else '-q'
     argv = [str(diff), flags, str(outfile), str(ans)]
@@ -71,12 +71,12 @@ def checker_read_float(outfile: PosixPath, message: str = ''):
     result = 'accepted' if score >= 1.0 else 'wrong_answer'
     return CheckResult(result, message, score)
 
-async def checker_direct(_infile, outfile: PosixPath, _checker):
+async def checker_direct(_infile, outfile: PosixPath, _cwd, _checker):
     return checker_read_float(outfile)
 
 
 async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
-    checker: SpjChecker):
+                      user_cwd: PosixPath, checker: SpjChecker):
     # get spj binary
     if checker.format == 'scorer':
         raise NotImplementedError()
@@ -94,6 +94,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
         await copy_supplementary_files(checker.supplementary_files, cwd)
 
         bindmount = ['/bin', '/usr/bin', str(outfile)]
+        bindmount.append(str(user_cwd))
         if infile is None:
             infile = PosixPath(devnull)
         else:
@@ -105,7 +106,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
             bindmount.append(str(ans))
         score = cwd / 'score'
         message = cwd / 'message'
-        argv = [exec_file, infile, outfile, ans, score, message]
+        argv = [exec_file, infile, outfile, ans, score, message, user_cwd]
         argv = [str(x) for x in argv]
         logger.debug(f'about to run spj: {argv}')
 
@@ -119,7 +120,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
 
 
 Checker = Callable[
-    [Optional[PosixPath], PosixPath, Checker],
+    [Optional[PosixPath], PosixPath, PosixPath, Checker],
     Coroutine[Any, Any, CheckResult],
 ]
 checkers: Dict[Any, Checker] = {

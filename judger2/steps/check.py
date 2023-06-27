@@ -94,7 +94,6 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
         await copy_supplementary_files(checker.supplementary_files, cwd)
 
         bindmount = ['/bin', '/usr/bin', str(outfile)]
-        bindmount.append(str(user_cwd))
         if infile is None:
             infile = PosixPath(devnull)
         else:
@@ -111,7 +110,8 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
         logger.debug(f'about to run spj: {argv}')
 
         res = await run_with_limits(argv, cwd, checker.limits,
-            supplementary_paths=bindmount)
+                                    supplementary_paths=bindmount,
+                                    supplementary_paths_rw=[str(user_cwd)])
         if res.error is not None:
             return CheckResult('system_error', f'checker error: {res.message}')
 

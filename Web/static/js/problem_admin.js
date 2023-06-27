@@ -385,7 +385,13 @@ $(() => {
                 return
             }
             config.async('string').then(function (config) {
-                var config_json = JSON.parse(config)
+                let config_json
+                try {
+                    config_json = JSON.parse(config)
+                } catch (e) {
+                    zipError(`无法解析 config.json: ${e}`, doUpload)
+                    return
+                }
                 let limit_config = {}
                 limit_config.length = config_json.Details.length
                 limit_config.mem = []

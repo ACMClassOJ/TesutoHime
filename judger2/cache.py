@@ -1,6 +1,6 @@
 from asyncio import CancelledError, sleep
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from http.client import NOT_MODIFIED, OK
 from logging import getLogger
 from os import chmod, path, remove, rename, scandir, stat, utime
@@ -63,6 +63,7 @@ async def ensure_cached(url: str) -> CachedFile:
                     f.write(data)
             last_modified = datetime \
                 .strptime(resp.headers['Last-Modified'], utc_time_format) \
+                .replace(tzinfo=timezone.utc) \
                 .timestamp()
             utime(part_path, (time(), last_modified))
             rename(part_path, cache.path)

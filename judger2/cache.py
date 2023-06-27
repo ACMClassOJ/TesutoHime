@@ -43,7 +43,7 @@ async def ensure_cached(url: str) -> CachedFile:
     headers = {}
     try:
         mtime = stat(cache.path).st_mtime
-        date = datetime.fromtimestamp(mtime)
+        date = datetime.fromtimestamp(mtime).astimezone(timezone.utc)
         utc_string = date.strftime(utc_time_format)
         headers['If-Modified-Since'] = utc_string
     except FileNotFoundError:

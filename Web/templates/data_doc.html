@@ -1,10 +1,11 @@
 {% extends 'base.html' %} {% set page='数据格式规范' %} {% block content %}
 <div class="card card-body">
 <h1 id="数据格式规范">数据格式规范</h1>
-<p>by cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.2.16</p>
+<p>by cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.6.29</p>
 <p><strong>请注意：输出文件大于 256 MiB 时会报错 (File size limit
 exceeded)，请确保题目的标准答案不会超过 256 MiB。</strong></p>
 <h2 id="zip总格式">ZIP总格式</h2>
+<p><em>注：请尽量使用避免任何未在文档上出现的特性或问题（特别是做出某个特定文件名的文件存在的假设），因为这可能在评测后端升级后发生变化。</em></p>
 <ul>
 <li><strong>数据包名称</strong>：<code>题号.zip</code>（如
 <code>1000.zip</code>），<strong>请确认题号与题面中的
@@ -27,9 +28,10 @@ href="problem-format-doc">题面格式规范文档</a>。</li>
 <code>数字.out</code>，即传统 OI
 题中的正确输出。<strong>文件名请采用连续编号的，从1开始的纯数字</strong>，与
 <code>.in</code> 对应。</li>
-<li>（评测 .h 头文件需要）若干
-<code>数字.cpp</code>，他们将引用学生上传的头文件（评测时保存在
-<code>src.hpp</code>）进行评测。<strong>文件名请采用连续编号的，从1开始的纯数字</strong>。你需要
+<li>（评测 <code>.h</code> 头文件需要）若干 <code>数字.cpp</code> 或
+<code>main.cpp</code>，他们将引用学生上传的头文件（评测时保存在
+<code>src.hpp</code>）进行评测。<strong>文件名请采用连续编号的，从 1
+开始的纯数字</strong>。你需要在 C++ 源文件中加上
 <code>#include "src.hpp"</code>。</li>
 <li>（spj 需要）一个 <code>spj.cpp</code>，传入参数见详情。</li>
 <li>（可选）任意题目可能需要的文件，如：插图（<strong>请确保插图上传到
@@ -239,6 +241,8 @@ CRLF(<code>\r\n</code>) 还是 Linux 的 LF(<code>\n</code>)
 <p>如果需要编写特定的 spj 程序，如 spj1、spj4、spj5，可以使用
 <code>spj_bin</code> 或 <code>spj.cpp</code>。</p>
 <p>当存在 <code>spj_bin</code> 时，会优先使用 <code>spj_bin</code>。</p>
+<p><strong>注意：为保证数据包的兼容性，<code>spj_bin</code>
+应当是文本文件，不建议是二进制文件。</strong></p>
 <p><code>spj_bin</code> 是一个可执行文件（OJ
 会自动给予执行权限）；<code>spj.cpp</code> 是一个 C++ 源文件，OJ
 会将其编译成可执行文件。</p>

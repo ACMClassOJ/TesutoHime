@@ -80,6 +80,8 @@ by cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.6.29
     ]
 ```
 
+**请不要将 `main.cpp` 以及 `src.hpp` (spj2-4) 写在 `supportedFiles` 中！**
+
 ### Verilog
 是否启用 Verilog 评测，启用为 `true`，否则为 `false` 。默认为 `false`。请注意，如果启用该选项，所有的提交的将会**强制**被视作 Verilog。关于 Verilog 评测的更多信息，请参阅 [Verilog 评测章节](#verilog-评测)。
 

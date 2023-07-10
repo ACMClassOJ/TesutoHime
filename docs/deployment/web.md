@@ -21,7 +21,7 @@ sudo adduser ojweb
 获取项目源代码，或将服务器 ssh 公钥加入 github ssh key 或 deploy key 后输入
 
 ```sh
-sudo su ojweb
+sudo -iu ojweb
 git clone git@github.com:ACMClassOJ/TesutoHime.git
 ```
 
@@ -57,7 +57,7 @@ FLUSH PRIVILEGES;
 创建数据表。
 
 ```sh
-sudo su ojweb
+sudo -iu ojweb
 cd TesutoHime
 export DB='mysql+pymysql://ojweb@/OJ?unix_socket=/run/mysqld/mysqld.sock'
 python3 -m scripts.db.init

@@ -8,7 +8,7 @@
 ssh 10.0.0.3 # 登录到 sched 机
 sudo apt install python3 python3-pip
 sudo adduser ojsched
-sudo su ojsched
+sudo -iu ojsched
 cd
 git clone ...
 cd TesutoHime

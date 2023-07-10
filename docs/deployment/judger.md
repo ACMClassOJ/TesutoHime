@@ -8,7 +8,7 @@
 ssh 10.0.0.4 # 登录到 judge 机
 sudo apt install python3 python3-pip pkg-config autoconf bison flex libprotobuf-dev libnl-route-3-dev libtool protobuf-compiler uidmap build-essential cmake valgrind iverilog
 sudo adduser ojrunner
-sudo su ojrunner
+sudo -iu ojrunner
 cd
 git clone ...
 cd TesutoHime

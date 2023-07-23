@@ -8,7 +8,7 @@ from shutil import copy2
 from typing import Dict, List
 
 from commons.task_typing import Input, RunArgs, RunResult
-from judger2.cache import ensure_cached
+from judger2.cache import ensure_cached, upload
 from judger2.config import (valgrind, valgrind_args, valgrind_errexit_code,
                             verilog_interpreter)
 from judger2.sandbox import run_with_limits
@@ -112,6 +112,10 @@ async def run(oufdir: PosixPath, cwd: PosixPath, input: Input, args: RunArgs) \
     # return result
     if res.error != None:
         return res
+
+    # upload artifact
+    if args.outfile != None:
+        await upload(outfile, args.outfile.url)
 
     return RunResult(
         error=None,

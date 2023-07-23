@@ -58,6 +58,7 @@ class RunArgs:
     limits: ResourceUsage
     infile: Optional[FileUrl]
     supplementary_files: List[FileUrl]
+    outfile: Optional[Artifact] = None
 
 
 @dataclass

@@ -184,21 +184,21 @@ class Contributor:
 def gh(x): return f'https://github.com/{x}'
 
 mntners = [
-    Mntner('Alan Liang', gh('Alan-Liang'), 'liangyalun@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211124-010333-292122.png'),
-    Mntner('Sakits', gh('Sakits'), 'sakits_tjm@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211124-010147-269063.jpg'),
-    Mntner('SiriusNEO', gh('SiriusNEO'), 'siriusneo@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211116-011839-997531.jpg'),
+    Mntner('Alan Liang', gh('Alan-Liang'), 'liangyalun@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010333-292122.png'),
+    Mntner('Sakits', gh('Sakits'), 'sakits_tjm@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010147-269063.jpg'),
+    Mntner('SiriusNEO', gh('SiriusNEO'), 'siriusneo@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-011839-997531.jpg'),
 ]
 
 contributors = [
-    Contributor('Amagi_Yukisaki', 19, gh('cmd2001'), '原项目主管 & 数据库结构', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211116-005300-112984.jpg'),
-    Contributor('cong258258', 19, gh('cong258258'), '全栈', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211116-005352-493603.jpg'),
-    Contributor('Pioooooo', 19, gh('Pioooooo'), '管理界面 & 前端美化', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211116-005321-601010.jpg'),
-    Contributor('acrazyczy', 19, gh('acrazyczy'), '原评测端主管 & 接口', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211116-005436-860153.jpg'),
-    Contributor('Anoxiacxy', 19, gh('Anoxiacxy'), '原评测 & 编译沙箱', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211116-005335-226765.jpg'),
-    Contributor('XOR-op', 19, gh('XOR-op'), '原评测沙箱', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211116-005240-615633.jpg'),
-    Contributor('stneng', 19, gh('stneng'), '原数据服务 & 数据库', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211116-005212-276113.jpg'),
-    Contributor('SiriusNEO', 20, gh('SiriusNEO'), 'Web', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211116-011839-997531.jpg'),
-    Contributor('Sakits', 20, gh('Sakits'), '管理界面', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211124-010147-269063.jpg'),
-    Contributor('Alan Liang', 21, gh('Alan-Liang'), '评测端 & 全栈', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler-pic/20211124-010333-292122.png'),
-    Contributor('LauYeeYu', 21, gh('LauYeeYu'), '文档 & 前端', 'https://acm.sjtu.edu.cn/OnlineJudge/compiler/oj-images/bb12bce8-11ee-4593-8e8b-8e9cc5843b38'),
+    Contributor('Amagi_Yukisaki', 19, gh('cmd2001'), '原项目主管 & 数据库结构', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005300-112984.jpg'),
+    Contributor('cong258258', 19, gh('cong258258'), '全栈', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005352-493603.jpg'),
+    Contributor('Pioooooo', 19, gh('Pioooooo'), '管理界面 & 前端美化', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005321-601010.jpg'),
+    Contributor('acrazyczy', 19, gh('acrazyczy'), '原评测端主管 & 接口', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005436-860153.jpg'),
+    Contributor('Anoxiacxy', 19, gh('Anoxiacxy'), '原评测 & 编译沙箱', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005335-226765.jpg'),
+    Contributor('XOR-op', 19, gh('XOR-op'), '原评测沙箱', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005240-615633.jpg'),
+    Contributor('stneng', 19, gh('stneng'), '原数据服务 & 数据库', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-005212-276113.jpg'),
+    Contributor('SiriusNEO', 20, gh('SiriusNEO'), 'Web', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-011839-997531.jpg'),
+    Contributor('Sakits', 20, gh('Sakits'), '管理界面', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010147-269063.jpg'),
+    Contributor('Alan Liang', 21, gh('Alan-Liang'), '评测端 & 全栈', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010333-292122.png'),
+    Contributor('LauYeeYu', 21, gh('LauYeeYu'), '文档 & 前端', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/bb12bce8-11ee-4593-8e8b-8e9cc5843b38'),
 ]

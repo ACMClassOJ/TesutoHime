@@ -110,7 +110,7 @@ class RedisConfig:
 
 class S3Config: # 文件存储配置
     # S3 反代地址
-    public_url = '/OnlineJudge/'
+    public_url = '/OnlineJudge/compiler/'
     class Connections:
         public = {
             # 反代后面的地址，需要保证反向代理发给 s3 的 host 与之一致
@@ -177,31 +177,31 @@ class LogConfig:
 python3 TesutoHime/Web/run.py
 ```
 
-在浏览器中访问 ``http://web_url:web_port/OnlineJudge/``查看是否可以访问 OJ 首页。
+在浏览器中访问 ``http://web_url:web_port/OnlineJudge/compiler/``查看是否可以访问 OJ 首页。
 
 调度器 URL 填为 <http://10.0.0.3:5100/>，S3 public endpoint 填
-http://10.0.0.1:9000，S3 public URL 填 <https://acm.sjtu.edu.cn/OnlineJudge/>。
+http://10.0.0.1:9000，S3 public URL 填 <https://acm.sjtu.edu.cn/OnlineJudge/compiler/>。
 
 配置 pub 机上的反向代理使得:
 
 ```
-https://acm.sjtu.edu.cn/OnlineJudge/* -> http://10.0.0.2:5000/OnlineJudge/*
+https://acm.sjtu.edu.cn/OnlineJudge/compiler/* -> http://10.0.0.2:5000/OnlineJudge/compiler/*
 ```
 
 示例 nginx 配置:
 
 ```
 client_max_body_size 4096M; # 最大上传文件大小为 4 GiB
-location /OnlineJudge/oj-problems/ {
+location /OnlineJudge/compiler/oj-problems/ {
   proxy_pass http://10.0.0.1:9000/oj-problems/;
 }
-location /OnlineJudge/oj-images/ {
+location /OnlineJudge/compiler/oj-images/ {
   proxy_pass http://10.0.0.1:9000/oj-images/;
 }
-location /OnlineJudge/oj-submissions/ {
+location /OnlineJudge/compiler/oj-submissions/ {
   proxy_pass http://10.0.0.1:9000/oj-submissions/;
 }
-location /OnlineJudge/ {
-  proxy_pass http://10.0.0.2:5000/OnlineJudge/;
+location /OnlineJudge/compiler/ {
+  proxy_pass http://10.0.0.2:5000/OnlineJudge/compiler/;
 }
 ```

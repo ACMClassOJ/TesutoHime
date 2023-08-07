@@ -8,31 +8,31 @@
     <div class="nav-wrapper">
         <ul class="nav nav-pills nav-fill flex-column flex-md-row">
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ ID }}">题面</a>
+                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/compiler/problem/{{ ID }}">题面</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/submit">提交</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ ID }}/submit">提交</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ ID }}">评测状态</a>
+            <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/status?problem_id={{ ID }}">评测状态</a>
             </li>
             {% if not In_Exam -%}
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/discuss">讨论</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ ID }}/discuss">讨论</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/rank">排行榜</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ ID }}/rank">排行榜</a>
             </li>
             {% endif %}
             {% if is_Admin %}
             <li class="nav-item">
-                <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
+                <form id="formDataZipDownload" action="/OnlineJudge/compiler/admin/data_download" method="post">
                     <input type="hidden" name="id" id="datazip_download_problem_ID" value="{{ ID }}">    
                 </form>
                 <a class="nav-link mb-sm-2 mb-md-0" href="javascript:document.getElementById('formDataZipDownload').submit();"> 下载本题数据 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/admin"> 管理 </a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ ID }}/admin"> 管理 </a>
             </li>
             {% endif %}
         </ul>
@@ -73,10 +73,10 @@
 <br>
 <div class="row">
     <div class="btn-group m-auto">
-        <a href="/OnlineJudge/problem/{{ ID }}/submit" class="btn btn-primary"> 提交 </a>
-        <a href="/OnlineJudge/status?problem_id={{ ID }}" class="btn btn-info"> 评测状态 </a> {% if not In_Exam -%}
-        <a href="/OnlineJudge/problem/{{ ID }}/discuss" class="btn btn-success"> 讨论 </a>
-        <a href="/OnlineJudge/problem/{{ ID }}/rank" class="btn btn-light"> 排行榜 </a> {%- endif %}
+        <a href="/OnlineJudge/compiler/problem/{{ ID }}/submit" class="btn btn-primary"> 提交 </a>
+        <a href="/OnlineJudge/compiler/status?problem_id={{ ID }}" class="btn btn-info"> 评测状态 </a> {% if not In_Exam -%}
+        <a href="/OnlineJudge/compiler/problem/{{ ID }}/discuss" class="btn btn-success"> 讨论 </a>
+        <a href="/OnlineJudge/compiler/problem/{{ ID }}/rank" class="btn btn-light"> 排行榜 </a> {%- endif %}
         {% if is_Admin %}
         <a href="javascript:document.getElementById('formDataZipDownload').submit();" class="btn btn-warning"> 下载本题数据 </a>
         {%- endif %}

@@ -10,25 +10,25 @@
     <div class="nav-wrapper">
         <ul class="nav nav-pills nav-fill flex-column flex-md-row">
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}">题面</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ ID }}">题面</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/submit">提交</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ ID }}/submit">提交</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ ID }}">评测状态</a>
+            <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/status?problem_id={{ ID }}">评测状态</a>
             </li>
             {% if not In_Exam -%}
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/discuss">讨论</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ ID }}/discuss">讨论</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/rank">排行榜</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ ID }}/rank">排行榜</a>
             </li>
             {% endif %}
             {% if is_Admin %}
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ ID }}/admin"> 管理 </a>
+                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/compiler/problem/{{ ID }}/admin"> 管理 </a>
             </li>
             {% endif %}
         </ul>
@@ -61,7 +61,7 @@
             <div class="tab-content" id="main_tab_content">
                 <div class="tab-pane fade show active" id="overview_tab" role="tabpanel" aria-labelledby="overview_tab-tab">
                     <h3>基本信息</h3>
-                    <form action="/OnlineJudge/admin/problem" method="POST" id="form-overview">
+                    <form action="/OnlineJudge/compiler/admin/problem" method="POST" id="form-overview">
                         <input type="hidden" name="id" value="{{ ID }}">
                         <div class="form-row">
                             <div class="form-group col-md-3">
@@ -118,7 +118,7 @@
                         {% else %}
                         题目在以下考试/作业中：
                         {% for contest in contests %}
-                        <a href="/OnlineJudge/problem-group/{{ contest }}">{{ contest }}</a>
+                        <a href="/OnlineJudge/compiler/problem-group/{{ contest }}">{{ contest }}</a>
                         {% endfor %}
                         {% endif %}
                     </p>
@@ -201,7 +201,7 @@
                     <hr>
                     <h3>
                         下载数据压缩包
-                        <form class="float-right ml-auto" id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
+                        <form class="float-right ml-auto" id="formDataZipDownload" action="/OnlineJudge/compiler/admin/data_download" method="post">
                             <div class="form-row">
                                 <input type="hidden" name="id" value="{{ ID }}">
                                 <div class="d-flex mb-3 pr-1">
@@ -220,7 +220,7 @@
                     {% else %}
                     <p>当前有 {{ submission_count }} 次提交，您确定要重测所有这些代码吗？请在下方文本框中输入题目编号以确认：</p>
                     {% endif %}
-                    <form id="form-rejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+                    <form id="form-rejudge" action="/OnlineJudge/compiler/admin/rejudge" method="POST">
                         <input type="hidden" name="type" value="by_problem_id">
                         <div class="form-row">
                             {% if submission_count < 30 %}
@@ -244,7 +244,7 @@
                     {% else %}
                     <p>当前有 {{ submission_count }} 次提交，您确定要取消所有这些提交的成绩吗？请在下方文本框中输入题目编号以确认：</p>
                     {% endif %}
-                    <form id="form-void" action="/OnlineJudge/admin/disable_judge" method="POST">
+                    <form id="form-void" action="/OnlineJudge/compiler/admin/disable_judge" method="POST">
                         <div class="form-row">
                             <input type="hidden" name="type" value="by_problem_id">
                             {% if submission_count < 30 %}
@@ -263,7 +263,7 @@
                     <hr>
                     <h3>终止评测全部提交</h3>
                     <p>如果想终止评测单份提交，请进入代码页面，点击代码上方的「终止评测」按钮。</p>
-                    <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
+                    <form id="form-abort" action="/OnlineJudge/compiler/admin/abort_judge" method="POST">
                         <div class="form-row">
                             <input type="hidden" name="type" value="by_problem_id">
                             <input type="hidden" name="problem_id" value="{{ ID }}">

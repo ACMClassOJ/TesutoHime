@@ -57,7 +57,7 @@ $(function () {
         e.preventDefault()
         const id = $('#problem-id').val()
         if (id === '' || isNaN(id)) return
-        location = `/OnlineJudge/problem/${id}/admin`
+        location = `/OnlineJudge/compiler/problem/${id}/admin`
     })
 
     $("#btnAddUser").click(function () {
@@ -78,7 +78,7 @@ $(function () {
         $.ajax({
             type: "POST",
             contentType: "application/json",
-            url: "/OnlineJudge/admin/user",
+            url: "/OnlineJudge/compiler/admin/user",
             dataType: "json",
             data: JSON.stringify(data),
             complete: function (ret) {
@@ -97,14 +97,14 @@ $(function () {
 
     $("#btnGoToContestPage").click(function(){
         if($("#iptContestID").val() != "")
-            window.location.replace('/OnlineJudge/problem-group/' + $("#iptContestID").val());
+            window.location.replace('/OnlineJudge/compiler/problem-group/' + $("#iptContestID").val());
     });
 
     $("#btnGetContestAutoIncreseID").click(function(){
         $.ajax({
             type: "POST",
             dataType: "text",
-            url: "/OnlineJudge/api/get_contest_id_autoinc",
+            url: "/OnlineJudge/compiler/api/get_contest_id_autoinc",
             success: function (response_text)
             {
                 $("#iptContestID").val(parseInt(response_text));
@@ -127,7 +127,7 @@ $(function () {
             type: "POST",
             dataType: "text",
             data: {contest_id: $("#iptContestID").val()},
-            url: "/OnlineJudge/api/get_contest_detail",
+            url: "/OnlineJudge/compiler/api/get_contest_detail",
             success: function (response_text)
             {
                 if(response_text == "{}")
@@ -195,7 +195,7 @@ $(function () {
         $.ajax({
             type: "POST",
             contentType: "application/json",
-            url: "/OnlineJudge/admin/contest",
+            url: "/OnlineJudge/compiler/admin/contest",
             dataType: "json",
             data: JSON.stringify(data),
             complete: function (ret) {

@@ -24,7 +24,7 @@ function formatDate(date) {
 
 const uploadData = async (problemId, file, progressBar) => {
     try {
-        const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/upload-url`)
+        const res = await fetch(`/OnlineJudge/compiler/admin/problem/${problemId}/upload-url`)
         if (res.status !== 200) {
             swal('Error', '无法获取上传链接', 'error')
             return
@@ -45,7 +45,7 @@ const uploadData = async (problemId, file, progressBar) => {
                 return
             }
             try {
-                const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/update`, { method: 'POST' })
+                const res = await fetch(`/OnlineJudge/compiler/admin/problem/${problemId}/update`, { method: 'POST' })
                 if (res.status !== 200) {
                     swal('Error', `未知错误: ${res.status}`, 'error')
                     return
@@ -93,7 +93,7 @@ $(() => {
         editors[editormd_name] = editormd(editormd_name, {
             width: '100%',
             height: 400,
-            path: '/OnlineJudge/static/lib/editor.md/lib/',
+            path: '/OnlineJudge/compiler/static/lib/editor.md/lib/',
             toolbarIcons: () => [
                 'undo', 'redo', '|',
                 'bold', 'del', 'italic', 'quote', '|',
@@ -124,7 +124,7 @@ $(() => {
         type: 'POST',
         dataType: 'text',
         data: {problem_id: problemId},
-        url: '/OnlineJudge/api/get_detail',
+        url: '/OnlineJudge/compiler/api/get_detail',
         success: response_text => {
             const main_json = JSON.parse(response_text)
             new_or_modify_content_in_editormd('iptDescription', main_json['Description'])
@@ -160,7 +160,7 @@ $(() => {
         $.ajax({
             type: 'POST',
             contentType: 'application/json',
-            url: '/OnlineJudge/admin/problem-description',
+            url: '/OnlineJudge/compiler/admin/problem-description',
             dataType: 'json',
             data: JSON.stringify(data),
             complete: function (ret) {
@@ -182,7 +182,7 @@ $(() => {
         $.ajax({
             type: 'POST',
             contentType: 'application/json',
-            url: '/OnlineJudge/admin/problem',
+            url: '/OnlineJudge/compiler/admin/problem',
             dataType: 'json',
             data: JSON.stringify(data),
             complete: function (ret) {
@@ -293,7 +293,7 @@ $(() => {
         e.preventDefault()
         e.stopPropagation()
         $.ajax({
-            url: '/OnlineJudge/admin/problem_limit',
+            url: '/OnlineJudge/compiler/admin/problem_limit',
             type: 'POST',
             data: {id: problemId, data: JSON.stringify(extract_limit())},
             dataType: 'json',
@@ -406,7 +406,7 @@ $(() => {
                 });
                 console.log(limit_config)
                 $.ajax({
-                    url: '/OnlineJudge/admin/problem_limit',
+                    url: '/OnlineJudge/compiler/admin/problem_limit',
                     type: 'POST',
                     data: {id: problemId, data: JSON.stringify(limit_config)},
                     dataType: 'json',
@@ -440,7 +440,7 @@ $(() => {
                 if (image.size === 0) {
                     throw new Error('您正在上传一个空文件')
                 }
-                const urlRes = await fetch(`/OnlineJudge/admin/pic-url`, {
+                const urlRes = await fetch(`/OnlineJudge/compiler/admin/pic-url`, {
                     method: 'POST',
                     body: new URLSearchParams({
                         length: image.size,

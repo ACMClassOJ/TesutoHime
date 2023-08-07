@@ -45,7 +45,7 @@
                     <th>编号</th>
                     <th>用户昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
                     <th>题目</th>
-                    <th><span class="mr-2">评测状态</span><a href="/OnlineJudge/about">?</a></th>
+                    <th><span class="mr-2">评测状态</span><a href="/OnlineJudge/compiler/about">?</a></th>
                     <th>运行时间</th>
                     <th>内存</th>
                     <th>语言</th>
@@ -66,7 +66,7 @@
                             {%- endif %}
                         </td>
                         <td>
-                            <a href="/OnlineJudge/problem/{{ submission.problem_id }}">{{ submission.problem_id }}. {{ submission.problem.title }}</a>
+                            <a href="/OnlineJudge/compiler/problem/{{ submission.problem_id }}">{{ submission.problem_id }}. {{ submission.problem.title }}</a>
                         </td>
                         <td>
                             <b>
@@ -88,7 +88,7 @@
                         {%- endif %}
 
                         {% if visible[submission] -%}
-                            <td><a href="/OnlineJudge/code/{{ submission.id }}/">{{ languages[submission] }}</a></td>
+                            <td><a href="/OnlineJudge/compiler/code/{{ submission.id }}/">{{ languages[submission] }}</a></td>
                         {% else -%}
                             <td>{{ languages[submission] }}</td>
                         {%- endif %}
@@ -106,7 +106,7 @@
                         </li>
                     {%- elif x[2] != -1 -%}
                         <li class="page-item">
-                            <a class="page-link btn-light" href="/OnlineJudge/status?page={{ x[1] }}
+                            <a class="page-link btn-light" href="/OnlineJudge/compiler/status?page={{ x[1] }}
                             {%- for arg in Args.items() -%}
                                 &{{ arg[0] }}={{ arg[1] }}
                             {%- endfor -%}

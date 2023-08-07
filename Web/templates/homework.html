@@ -41,7 +41,7 @@
                     {% if is_Admin -%}<th>实名</th>{%- endif %}
                     {% if problems_visible -%}
                         {% for problem in Problems -%}
-                            <th><a href="/OnlineJudge/problem/{{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
+                            <th><a href="/OnlineJudge/compiler/problem/{{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
                         {%- endfor %}
                     {%- endif %}
                     <th>总通过数</th>
@@ -65,13 +65,13 @@
                                 {% if problem['count'] -%}
                                     {%- if not problem['accepted'] -%}
                                         {% if is_Admin -%}
-                                        <a class="text-red" href="/OnlineJudge/{{ status_url }}?submitter={{ player['username'] }}&problem_id={{ Problems[j][0] }}"> (-{{ problem['count'] }})</a>
+                                        <a class="text-red" href="/OnlineJudge/compiler/{{ status_url }}?submitter={{ player['username'] }}&problem_id={{ Problems[j][0] }}"> (-{{ problem['count'] }})</a>
                                         {% else -%}
                                         <span class="text-red"> (-{{ problem['count'] }})</span>
                                         {%- endif %}
                                     {%- else -%}
                                         {% if is_Admin -%}
-                                        <a class="text-green" href="/OnlineJudge/{{ status_url }}?submitter={{ player['username'] }}&problem_id={{ Problems[j][0] }}&status={{ ac_status }}"> ({{ problem['count'] }}Y)</a>
+                                        <a class="text-green" href="/OnlineJudge/compiler/{{ status_url }}?submitter={{ player['username'] }}&problem_id={{ Problems[j][0] }}&status={{ ac_status }}"> ({{ problem['count'] }}Y)</a>
                                         {% else -%}
                                         <span class="text-green"> ({{ problem['count'] }}Y)</span>
                                         {%- endif %}
@@ -139,7 +139,7 @@
                 }
             ]
         });
-        var manage_button = '<a class="btn btn-secondary" href="/OnlineJudge/admin/?contest_id={{ id }}"> 管理作业 </a>';
+        var manage_button = '<a class="btn btn-secondary" href="/OnlineJudge/compiler/admin/?contest_id={{ id }}"> 管理作业 </a>';
         $(".dt-buttons").append(manage_button);
     });
 {% endif %}

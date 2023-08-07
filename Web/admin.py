@@ -190,7 +190,7 @@ def problem_create():
         problem.release_time = 253402216962
         db.add(problem)
         db.commit()
-    return redirect(f'/OnlineJudge/problem/{id}/admin', SEE_OTHER)
+    return redirect(f'/OnlineJudge/compiler/problem/{id}/admin', SEE_OTHER)
 
 @admin.route('/problem', methods=['post'])
 def problem_info():

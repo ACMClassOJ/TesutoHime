@@ -156,7 +156,7 @@
                         <hr>
                         <h3>新建题目</h3>
                         <p>请勿连续多次点击此按钮。</p>
-                        <form action="/OnlineJudge/admin/problem-create" method="POST">
+                        <form action="/OnlineJudge/compiler/admin/problem-create" method="POST">
                             <div class="form-row">
                                 <button type="submit" class="btn btn-outline-primary" onclick="setTimeout(() => this.disabled = true)">新建题目</button>
                             </div>
@@ -167,7 +167,7 @@
                             <strong>警告</strong>: 在评测记录多时，以下操作十分缓慢。严禁多次点击按钮，否则会导致严重性能问题。
                         </p>
                         <h3> 批量重测 </h3>
-                        <form id="formRejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+                        <form id="formRejudge" action="/OnlineJudge/compiler/admin/rejudge" method="POST">
                             <input type="hidden" name="type" value="by_judge_id">
                             <div class="form-row">
                                 <div class="form-group col-md-3">
@@ -183,7 +183,7 @@
                         <hr>
 
                         <h3> 批量题目重测 </h3>
-                        <form id="formRejudge2" action="/OnlineJudge/admin/rejudge" method="POST">
+                        <form id="formRejudge2" action="/OnlineJudge/compiler/admin/rejudge" method="POST">
                             <input type="hidden" name="type" value="by_problem_id">
                             <div class="form-row">
                                 <div class="form-group col-md-3">
@@ -203,7 +203,7 @@
                             评测机仍有可能返回评测结果，此时 Voided 状态将被真实的评测记录覆盖。若想中断评测，请使用终止评测 (abort) 功能。
                             因此，建议在如下情况使用此功能：需要作废一条已经出了结果的评测记录。
                         </p>
-                        <form id="formDisableJudge" action="/OnlineJudge/admin/disable_judge" method="POST">
+                        <form id="formDisableJudge" action="/OnlineJudge/compiler/admin/disable_judge" method="POST">
                             <div class="form-row">
                                 <input type="hidden" name="type" value="by_judge_id">
                                 <div class="form-group col-md-3 mb-3">
@@ -217,7 +217,7 @@
                         </form>
                         <hr>
                         <h3>批量题目取消成绩</h3>
-                        <form id="formDisableJudge2" action="/OnlineJudge/admin/disable_judge" method="POST">
+                        <form id="formDisableJudge2" action="/OnlineJudge/compiler/admin/disable_judge" method="POST">
                             <div class="form-row">
                                 <input type="hidden" name="type" value="by_problem_id">
                                 <div class="form-group col-md-3 mb-3">
@@ -233,7 +233,7 @@
                         <hr>
                         <h3>批量终止评测</h3>
                         <p>若指定的评测记录还在评测中，则将其状态设置为 Aborted (已测完的点不受影响)，使评测机终止评测任务，并判零分。</p>
-                        <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
+                        <form id="form-abort" action="/OnlineJudge/compiler/admin/abort_judge" method="POST">
                             <div class="form-row">
                                 <input type="hidden" name="type" value="by_judge_id">
                                 <div class="form-group col-md-3 mb-3">
@@ -247,7 +247,7 @@
                         </form>
                         <hr>
                         <h3>批量题目终止评测</h3>
-                        <form id="form-abort-2" action="/OnlineJudge/admin/abort_judge" method="POST">
+                        <form id="form-abort-2" action="/OnlineJudge/compiler/admin/abort_judge" method="POST">
                             <div class="form-row">
                                 <input type="hidden" name="type" value="by_problem_id">
                                 <div class="form-group col-md-3 mb-3">
@@ -264,7 +264,7 @@
                     <div class="tab-pane fade" id="realname_tab" role="tabpanel" aria-labelledby="realname_tab-tab">
                         <h3> 批量添加实名信息 </h3>
                         <p> 左右一一对应，文本框请均以回车分割，实名建议格式为年份-课程-名字，如 22-IEEE算法-张三。如果同一学号出现了多条实名信息，系统将以最后一条导入的为准。 </p>
-                        <form id="formRealname" action="/OnlineJudge/admin/add_realname" method="POST">
+                        <form id="formRealname" action="/OnlineJudge/compiler/admin/add_realname" method="POST">
                             <div class="form-row">
                                 <div class="form-group col-md-3">
                                     <label for="iptRealnameStudentID"> 学号 </label>
@@ -282,10 +282,10 @@
                     </div>
                     <div class="tab-pane fade" id="document_tab" role="tabpanel" aria-labelledby="document_tab-tab">
                         <h3> 管理员文档 </h3>
-                        <p><a href="/OnlineJudge/admin/admin-doc"> 管理界面使用指南 </a></p>
-                        <p><a href="/OnlineJudge/admin/problem-format-doc"> 题面格式规范 </a></p>
-                        <p><a href="/OnlineJudge/admin/data-doc"> 数据格式规范 </a></p>
-                        <p><a href="/OnlineJudge/admin/package-sample"> 数据包样例 </a></p>
+                        <p><a href="/OnlineJudge/compiler/admin/admin-doc"> 管理界面使用指南 </a></p>
+                        <p><a href="/OnlineJudge/compiler/admin/problem-format-doc"> 题面格式规范 </a></p>
+                        <p><a href="/OnlineJudge/compiler/admin/data-doc"> 数据格式规范 </a></p>
+                        <p><a href="/OnlineJudge/compiler/admin/package-sample"> 数据包样例 </a></p>
                     </div>
                 </div>
             </div>

@@ -21,7 +21,7 @@ $(function(){
 				if(result['next'])
 					window.location.replace(result['next']);
 				else
-					window.location.replace('/OnlineJudge/');
+					window.location.replace('/OnlineJudge/compiler/');
 			},500);
 		}
 	});

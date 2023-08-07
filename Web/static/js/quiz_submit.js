@@ -6,7 +6,7 @@ $(function(){
         type: "POST",
         dataType: "text",
         data: {problem_id: $("#problem_id").text()},
-        url: "/OnlineJudge/api/quiz",
+        url: "/OnlineJudge/compiler/api/quiz",
         success: function (response_text)
         {
             main_json = JSON.parse(response_text);
@@ -78,7 +78,7 @@ $(function() {
             {
                 swal("Success", "提交成功", "success");
                 setTimeout(function() {
-                    window.location.replace('/OnlineJudge/status');
+                    window.location.replace('/OnlineJudge/compiler/status');
                 }, 500);
             }
             else

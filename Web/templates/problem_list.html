@@ -39,7 +39,7 @@
                 {% for Problem in Problems -%}
                     <tr>
                         <th>{{ Problem[0] }}</th>
-                        <td><a href="/OnlineJudge/problem/{{ Problem[0] }}" target="_blank">{{ Problem[1] }}</a></td>
+                        <td><a href="/OnlineJudge/compiler/problem/{{ Problem[0] }}" target="_blank">{{ Problem[1] }}</a></td>
                     </tr>
                 {%- endfor %}
             </table>
@@ -49,7 +49,7 @@
                 {% for x in Pages -%}
                     {%- if x[2] == 1 -%}
                         <li class="page-item active">
-                            <a class="page-link btn-light" href="/OnlineJudge/problem?page={{ x[1] }}
+                            <a class="page-link btn-light" href="/OnlineJudge/compiler/problem?page={{ x[1] }}
                             {%- for arg in Args.items() -%}
                                 &{{ arg[0] }}={{ arg[1] }}
                             {%- endfor -%}
@@ -58,7 +58,7 @@
                         </li>
                     {%- elif x[2] != -1 -%}
                         <li class="page-item">
-                            <a class="page-link btn-light" href="/OnlineJudge/problem?page={{ x[1] }}
+                            <a class="page-link btn-light" href="/OnlineJudge/compiler/problem?page={{ x[1] }}
                             {%- for arg in Args.items() -%}
                                 &{{ arg[0] }}={{ arg[1] }}
                             {%- endfor -%}

@@ -16,7 +16,7 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 *如需了解更多细节，请参阅 [Flask](https://flask.palletsprojects.com/) 文档。*
 
-每个请求均会调用相应的函数（由函数前的修饰器指定，如 `@web.route('/index.html')` 表示对 `/OnlineJudge/index.html` 的请求）。
+每个请求均会调用相应的函数（由函数前的修饰器指定，如 `@web.route('/index.html')` 表示对 `/OnlineJudge/compiler/index.html` 的请求）。
 
 `Web.py` 负责处理所有除 `/admin` 及其子页面以外的请求；`admin.py` 负责处理所有 `/admin` 及其子页面以外的请求。
 

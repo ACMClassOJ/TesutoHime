@@ -5,31 +5,31 @@
     <div class="nav-wrapper">
         <ul class="nav nav-pills nav-fill flex-column flex-md-row">
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}">题面</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ Problem_ID }}">题面</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}/submit">提交</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ Problem_ID }}/submit">提交</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ Problem_ID }}">评测状态</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/status?problem_id={{ Problem_ID }}">评测状态</a>
             </li>
             {% if not In_Exam -%}
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}/discuss">讨论</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ Problem_ID }}/discuss">讨论</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ Problem_ID }}/rank">排行榜</a>
+                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/compiler/problem/{{ Problem_ID }}/rank">排行榜</a>
             </li>
             {% endif %}
             {% if is_Admin %}
             <li class="nav-item">
-                <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
+                <form id="formDataZipDownload" action="/OnlineJudge/compiler/admin/data_download" method="post">
                     <input type="hidden" name="id" id="datazip_download_problem_ID" value="{{ Problem_ID }}">    
                 </form>
                 <a class="nav-link mb-sm-2 mb-md-0" href="javascript:document.getElementById('formDataZipDownload').submit();"> 下载本题数据 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}/admin"> 管理 </a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/compiler/problem/{{ Problem_ID }}/admin"> 管理 </a>
             </li>
             {% endif %}
         </ul>
@@ -46,7 +46,7 @@
                     <th><span>实名</span></th>
                     {%- endif %}
                     <th>
-                        <a class="nav-link p-0" href="/OnlineJudge/problem/{{ Problem_ID }}/rank?sort=time">
+                        <a class="nav-link p-0" href="/OnlineJudge/compiler/problem/{{ Problem_ID }}/rank?sort=time">
                             <span>运行时间</span>
                             <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
                             <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>
@@ -55,7 +55,7 @@
                         </a>
                     </th>
                     <th>
-                        <a class="nav-link p-0" href="/OnlineJudge/problem/{{ Problem_ID }}/rank?sort=memory">
+                        <a class="nav-link p-0" href="/OnlineJudge/compiler/problem/{{ Problem_ID }}/rank?sort=memory">
                             <span>内存</span>
                             <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
                             <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>
@@ -65,7 +65,7 @@
                     </th>
                     <th><span>语言</span></th>
                     <th>
-                        <a class="nav-link p-0" href="/OnlineJudge/problem/{{ Problem_ID }}/rank?sort=submit_time">
+                        <a class="nav-link p-0" href="/OnlineJudge/compiler/problem/{{ Problem_ID }}/rank?sort=submit_time">
                             <span>提交时间</span>
                             <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
                             <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>
@@ -77,7 +77,7 @@
             </thead>
             {% for submission in submissions -%}
             <tr>
-                <td><a href="/OnlineJudge/code/{{ submission.id }}/">{{ loop.index }}</a></td>
+                <td><a href="/OnlineJudge/compiler/code/{{ submission.id }}/">{{ loop.index }}</a></td>
                 <td>
                 {% if is_Admin -%}
                     <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ submission.username }}">{{ submission.user.friendly_name }}</span>

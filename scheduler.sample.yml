@@ -6,7 +6,7 @@ log_dir: /var/log/oj/scheduler
 port: 5100
 
 web:
-  base_url: http://10.0.0.2:5000/OnlineJudge/
+  base_url: http://10.0.0.2:5000/OnlineJudge/compiler/
   auth: Bearer xxxxxxxxxxxxxxxx
 
 s3:

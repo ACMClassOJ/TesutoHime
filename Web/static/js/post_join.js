@@ -4,7 +4,7 @@ function post_join(x)  {
             type: "POST",
             dataType: "text",
             data: {contest_id: x},
-            url: "/OnlineJudge/api/join",
+            url: "/OnlineJudge/compiler/api/join",
             beforeSend: function () {
                 $("#join_button_" + x).attr("disabled", "disabled");
             },

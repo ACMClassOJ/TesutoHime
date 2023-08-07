@@ -226,7 +226,9 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
     if conf.FileNumberLimit is not None: run_limits.file_count = conf.FileNumberLimit
 
     type = 'verilog' if ctx.cfg.Verilog else \
-        'valgrind' if conf.ValgrindTestOn else 'elf'
+        'valgrind' if conf.ValgrindTestOn else \
+        'compiler' if ctx.cfg.CompilerStage != None else \
+        'elf'
     run = None if ctx.compile_type == 'none' else RunArgs(
         type=type,
         limits=run_limits,

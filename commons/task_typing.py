@@ -59,7 +59,7 @@ Input = Union[CompileTask, Artifact]
 
 @dataclass
 class RunArgs:
-    type: Literal['elf', 'valgrind', 'verilog']
+    type: Literal['elf', 'valgrind', 'verilog', 'compiler']
     limits: ResourceUsage
     infile: Optional[FileUrl]
     supplementary_files: List[FileUrl]

@@ -8,14 +8,15 @@ from typing import Any, Callable, Coroutine, Dict, List
 from uuid import uuid4
 
 from commons.task_typing import (CompileLocalResult, CompileResult,
-                                 CompileSource, CompileSourceCpp,
-                                 CompileSourceGit, CompileSourceVerilog,
-                                 CompileTask, Input, ResourceUsage)
-
+                                 CompileSource, CompileSourceCompiler,
+                                 CompileSourceCpp, CompileSourceGit,
+                                 CompileSourceVerilog, CompileTask, Input,
+                                 ResourceUsage)
 from judger2.cache import CachedFile, ensure_cached, upload
-from judger2.config import (cache_dir, cxx, cxx_exec_name, cxx_file_name,
-                            cxxflags, exec_file_name, git_exec_name, gitflags,
-                            verilog, verilog_exec_name, verilog_file_name)
+from judger2.config import (cache_dir, compiler_output_dir, cxx, cxx_exec_name,
+                            cxx_file_name, cxxflags, exec_file_name,
+                            git_exec_name, gitflags, resolv_conf_path, verilog,
+                            verilog_exec_name, verilog_file_name)
 from judger2.sandbox import chown_back, run_with_limits
 from judger2.util import TempDir, copy_supplementary_files
 
@@ -96,17 +97,6 @@ async def compile_cpp(
         return CompileLocalResult.from_run_failure(res)
     return CompileLocalResult.from_file(exec_file)
 
-
-def get_resolv_conf_path():
-    resolv_conf = PosixPath('/etc/resolv.conf')
-    if not resolv_conf.exists():
-        return None
-    if not resolv_conf.is_symlink():
-        return None
-    return str(resolv_conf.resolve())
-
-resolv_conf_path = get_resolv_conf_path()
-
 async def compile_git(
     cwd: PosixPath,
     source: CompileSourceGit,
@@ -181,6 +171,72 @@ async def compile_verilog(
         return CompileLocalResult.from_run_failure(res)
     return CompileLocalResult.from_file(exec_file)
 
+async def compile_compiler(
+    cwd: PosixPath,
+    source: CompileSourceCompiler,
+    limits: ResourceUsage,
+) -> CompileLocalResult:
+    logger.debug(f'about to compile compiler git repo {repr(source.url)}')
+
+    def run_build_step(argv: List[str], wd=cwd):
+        bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc']
+        if resolv_conf_path is not None:
+            bind.append(resolv_conf_path)
+        return run_with_limits(
+            argv, wd, limits,
+            supplementary_paths=bind,
+            network_access=True,
+            disable_proc=False,
+            tmpfsmount=True,
+        )
+
+    # clone
+    git_argv = [which('git'), 'clone', source.url, '.'] + gitflags
+    logger.debug(f'about to run {git_argv}')
+    clone_res = await run_build_step(git_argv)
+    if clone_res.error != None:
+        return CompileLocalResult.from_run_failure(clone_res)
+
+    # configure
+    configure_script_path = cwd / 'configure'
+    if configure_script_path.is_file():
+        logger.debug('configure script found, invoking ./configure')
+        res = await run_build_step([configure_script_path])
+        if res.error != None:
+            return CompileLocalResult.from_run_failure(res)
+
+    # compile
+    makefile_paths = [cwd / x for x in ['GNUmakefile', 'makefile', 'Makefile']]
+    if any(x.is_file() for x in makefile_paths):
+        logger.debug('makefile found, invoking make')
+        res = await run_build_step([which('make')])
+        if res.error != None:
+            return CompileLocalResult.from_run_failure(res)
+
+    # collect artifacts
+    output = cwd / compiler_output_dir
+    if not output.is_file():
+        msg = f'Output directory \'{compiler_output_dir}\' not found in built ' \
+            f'files; please ensure your compile output is named ' \
+            f'{compiler_output_dir} in the root directory of the repository.'
+        return CompileLocalResult(
+            CompileResult('runtime_error', msg),
+            None,
+        )
+    artifact = cwd / 'build.tar.zst'
+    tar_argv = [which('tar'), '--zstd', '-cf', str(artifact), '.']
+    tar_res = await run_build_step(tar_argv)
+    if tar_res.error != None:
+        return CompileLocalResult.from_run_failure(tar_res)
+    if not artifact.is_file():
+        return CompileLocalResult(
+            CompileResult('system_error', 'Cannot collect build artifacts'),
+            None,
+        )
+
+    # done
+    return CompileLocalResult.from_file(artifact)
+
 
 Compiler = Callable[
     [PosixPath, CompileSource, ResourceUsage],
@@ -190,4 +246,5 @@ compilers: Dict[Any, Compiler] = {
     CompileSourceCpp: compile_cpp,
     CompileSourceGit: compile_git,
     CompileSourceVerilog: compile_verilog,
+    CompileSourceCompiler: compile_compiler,
 }

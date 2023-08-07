@@ -13,19 +13,18 @@ from zipfile import ZipFile
 
 from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
                                  CompileResult, CompileSource,
-                                 CompileSourceCpp, CompileSourceGit,
-                                 CompileSourceVerilog, CompileTask,
-                                 CompileTaskPlan, DirectChecker, FileUrl,
-                                 GroupJudgeResult, JudgePlan, JudgeResult,
-                                 JudgeTask, JudgeTaskPlan, ProblemJudgeResult,
-                                 QuizOption, QuizProblem, ResourceUsage,
-                                 ResultType, RunArgs, SourceLocation,
-                                 SpjChecker, StatusUpdateProgress,
-                                 StatusUpdateStarted, Testpoint,
-                                 TestpointGroup, TestpointJudgeResult,
-                                 UserCode)
-from commons.util import format_exc, Literal
-
+                                 CompileSourceCompiler, CompileSourceCpp,
+                                 CompileSourceGit, CompileSourceVerilog,
+                                 CompileTask, CompileTaskPlan, DirectChecker,
+                                 FileUrl, GroupJudgeResult, JudgePlan,
+                                 JudgeResult, JudgeTask, JudgeTaskPlan,
+                                 ProblemJudgeResult, QuizOption, QuizProblem,
+                                 ResourceUsage, ResultType, RunArgs,
+                                 SourceLocation, SpjChecker,
+                                 StatusUpdateProgress, StatusUpdateStarted,
+                                 Testpoint, TestpointGroup,
+                                 TestpointJudgeResult, UserCode)
+from commons.util import Literal, format_exc
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
                                quiz_filename, s3_buckets, working_dir)
@@ -52,7 +51,7 @@ class ParseContext:
 
     quiz_problems: Optional[List[QuizProblem]] = None
     testpoint_count: Optional[int] = None
-    compile_type: Literal['classic', 'hpp', 'hpp-per-testpoint', 'none'] = None
+    compile_type: Literal['classic', 'hpp', 'hpp-per-testpoint', 'compiler', 'none'] = None
     check_type: Literal['compare', 'direct', 'spj'] = None
     compile_limits: Optional[ResourceUsage] = None
     compile_supp: Optional[List[str]] = None
@@ -178,6 +177,7 @@ async def parse_compile(ctx: ParseContext) -> Optional[CompileTaskPlan]:
         supplementary_files=supplementary_files,
         artifact=True,
         limits=limits,
+        compiler=ctx.cfg.CompilerStage != None,
     )
     if ctx.compile_type == 'classic':
         return task
@@ -232,6 +232,7 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
         limits=run_limits,
         infile=infile,
         supplementary_files=[],
+        compiler_stage=ctx.cfg.CompilerStage,
     )
 
     def ans() -> Optional[FileUrl]:
@@ -457,6 +458,11 @@ artifact_filename = 'main'
 
 async def get_compile_source(ctx: ExecutionContext, filename: str) \
     -> CompileSource:
+    if ctx.plan.compile.compiler:
+        url = (await read_file(ctx.code.bucket, ctx.code.key)).strip()
+        if url.startswith('/'):
+            raise InvalidCodeException('Local clone not allowed')
+        return CompileSourceCompiler(url)
     if ctx.lang == CodeLanguage.CPP:
         return CompileSourceCpp(ctx.file_url(UrlType.CODE, filename))
     if ctx.lang == CodeLanguage.GIT:

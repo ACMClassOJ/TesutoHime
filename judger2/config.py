@@ -1,3 +1,4 @@
+from pathlib import PosixPath
 from shutil import which
 
 from commons.task_typing import ResourceUsage
@@ -30,12 +31,22 @@ redis = Redis(
 
 # env vars for task runner
 task_envp = [
-    'PATH=/usr/bin:/bin',
+    'PATH=/usr/local/bin:/usr/bin:/bin',
     'CI=true',
     'CI_ENV=testing',
     'ONLINE_JUDGE=true',
     'ACMOJ=true',
 ]
+
+def get_resolv_conf_path():
+    resolv_conf = PosixPath('/etc/resolv.conf')
+    if not resolv_conf.exists():
+        return None
+    if not resolv_conf.is_symlink():
+        return None
+    return str(resolv_conf.resolve())
+
+resolv_conf_path = get_resolv_conf_path()
 
 exec_file_name = 'code'
 
@@ -45,6 +56,7 @@ cxx_file_name = 'main.cpp'
 cxx_exec_name = exec_file_name
 
 git_exec_name = exec_file_name
+compiler_output_dir = 'bin'
 gitflags = ['--depth', '1', '--recurse-submodules', '--no-local']
 
 verilog = which('iverilog')

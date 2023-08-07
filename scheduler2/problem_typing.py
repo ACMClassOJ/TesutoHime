@@ -45,3 +45,4 @@ class ProblemConfig:
     Verilog: bool = False
     Quiz: bool = False
     RunnerGroup: str = DEFAULT_GROUP
+    CompilerStage: Optional[str] = None

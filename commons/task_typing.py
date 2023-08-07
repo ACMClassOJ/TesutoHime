@@ -22,11 +22,16 @@ class CompileSourceGit:
 class CompileSourceVerilog:
     main: FileUrl
 
+@dataclass
+class CompileSourceCompiler:
+    url: Url
+
 
 CompileSource = Union[
     CompileSourceCpp,
     CompileSourceGit,
     CompileSourceVerilog,
+    CompileSourceCompiler,
 ]
 
 
@@ -59,6 +64,7 @@ class RunArgs:
     infile: Optional[FileUrl]
     supplementary_files: List[FileUrl]
     outfile: Optional[Artifact] = None
+    compiler_stage: Optional[str] = None
 
 
 @dataclass
@@ -165,9 +171,9 @@ class CompileLocalResult:
         )
 
     @staticmethod
-    def from_file(file: PosixPath):
+    def from_file(file: PosixPath, message='Compiled'):
         return CompileLocalResult(
-            CompileResult('compiled', 'Compiled'),
+            CompileResult('compiled', message),
             file,
         )
 
@@ -237,6 +243,7 @@ class CompileTaskPlan:
     supplementary_files: List[Union[FileUrl, UserCode]]
     artifact: bool
     limits: ResourceUsage
+    compiler: bool = False
 
 @dataclass
 class JudgeTaskPlan:

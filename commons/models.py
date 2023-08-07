@@ -64,6 +64,7 @@ ContestPlayer = Table(
     Column('Belong', INTEGER(11), ForeignKey(Contest.id)),
     Column('Username', String(20), ForeignKey(User.username)),
     Index('Belong_Username', 'Belong', 'Username'),
+    mysql_charset='utf8mb4',
 )
 
 Contest.players = relationship(

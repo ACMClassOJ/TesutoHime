@@ -215,7 +215,7 @@ async def compile_compiler(
 
     # collect artifacts
     output = cwd / compiler_output_dir
-    if not output.is_file():
+    if not output.is_dir():
         msg = f'Output directory \'{compiler_output_dir}\' not found in built ' \
             f'files; please ensure your compile output is named ' \
             f'{compiler_output_dir} in the root directory of the repository.'

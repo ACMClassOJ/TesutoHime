@@ -164,8 +164,6 @@ async def run_with_limits(
         code = waitstatus_to_exitcode(status)
         approx_time = time() - time_start
         approx_mem = rusage.ru_maxrss * 1024
-        logger.debug(f'nsjail run finished')
-        logger.debug(f'{code=} {approx_time=} {approx_mem=}')
 
         # parse result file
         try:
@@ -182,6 +180,9 @@ async def run_with_limits(
             realtime = int(approx_time * 1000)
             mem = int(approx_mem)
             usage_is_accurate = False
+
+        logger.debug(f'nsjail run finished')
+        logger.debug(f'{code=} {program_code=} {realtime=} {mem=} {approx_time=} {approx_mem=}')
 
         du_proc = await create_subprocess_exec(
             nsjail,

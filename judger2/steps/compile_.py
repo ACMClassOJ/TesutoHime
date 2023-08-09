@@ -185,7 +185,8 @@ async def compile_compiler(
         return run_with_limits(
             argv, wd, limits,
             supplementary_paths=bind,
-            supplementary_paths_rw=[str(cwd)] if cwd != wd else [],
+            supplementary_paths_rw=[cwd] if cwd != wd else [],
+            bindmount_cwd=cwd == wd,
             network_access=True,
             disable_proc=False,
             tmpfsmount=True,

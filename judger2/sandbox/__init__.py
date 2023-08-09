@@ -103,6 +103,7 @@ async def run_with_limits(
     outfile: Union[IO, int] = DEVNULL,
     supplementary_paths: List[PosixPath] = [],
     supplementary_paths_rw: List[PosixPath] = [],
+    bindmount_cwd: bool = True,
     network_access: bool = False,
     disable_proc: bool = True,
     tmpfsmount: bool = False,
@@ -115,7 +116,7 @@ async def run_with_limits(
     time_limit_nsjail = str(int(time_limit_scaled / 1000 * time_tolerance_ratio + 1))
     # memory_limit = str(limits.memory_bytes + 1048576)
     bindmount_ro = bindmount_ro_base + [str(x) for x in supplementary_paths]
-    bindmount_rw = bindmount_rw_base + [str(cwd)] \
+    bindmount_rw = bindmount_rw_base + ([str(cwd)] if bindmount_cwd else []) \
         + [str(x) for x in supplementary_paths_rw]
     # get the absolute path for ./runner and ./du
     runner_path = str(PosixPath(__file__).with_name('runner'))

@@ -225,7 +225,7 @@ async def compile_compiler(
         )
     artifact = cwd / 'build.tar.zst'
     tar_argv = [which('tar'), '--zstd', '-cf', str(artifact), '.']
-    tar_res = await run_build_step(tar_argv)
+    tar_res = await run_build_step(tar_argv, output)
     if tar_res.error != None:
         return CompileLocalResult.from_run_failure(tar_res)
     if not artifact.is_file():

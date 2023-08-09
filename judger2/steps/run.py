@@ -63,6 +63,7 @@ class CompilerRunner(BaseRunner):
         bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc']
         if resolv_conf_path is not None:
             bind.append(resolv_conf_path)
+        bin_dir = program.parent / 'bin'
         tar_argv = [which('tar'), '--zstd', '-xf', str(program)]
         limits = ResourceUsage(
             time_msecs=10 * 1000,
@@ -70,9 +71,18 @@ class CompilerRunner(BaseRunner):
             file_count=-1,
             file_size_bytes=-1,
         )
-        tar_res = await run_with_limits(
-            tar_argv, program.parent, limits,
+        mkdir_res = await run_with_limits(
+            [which('mkdir'), 'bin'], program.parent, limits,
             supplementary_paths=bind,
+        )
+        if mkdir_res.error != None:
+            logger.error(f'Unable to decompress build artifact: {mkdir_res.message}')
+            raise RuntimeError(mkdir_res.message)
+        tar_res = await run_with_limits(
+            tar_argv, bin_dir, limits,
+            supplementary_paths=bind,
+            supplementary_paths_rw=[program.parent],
+            bindmount_cwd=False,
             network_access=True,
             disable_proc=False,
             tmpfsmount=True,
@@ -80,7 +90,8 @@ class CompilerRunner(BaseRunner):
         if tar_res.error != None:
             logger.error(f'Unable to decompress build artifact: {tar_res.message}')
             raise RuntimeError(tar_res.message)
-        return RunParams([str(program.parent / 'mxc'), args.compiler_stage], bind, False, True)
+        bind.append(bin_dir)
+        return RunParams([str(bin_dir / 'mxc'), args.compiler_stage], bind, False, True)
 
     def interpret_result(self, result: RunResult, outfile):
         if result.error != 'runtime_error':

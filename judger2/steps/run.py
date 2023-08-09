@@ -11,10 +11,12 @@ from commons.task_typing import Input, ResourceUsage, RunArgs, RunResult
 from judger2.cache import ensure_cached, upload
 from judger2.config import (resolv_conf_path, valgrind, valgrind_args,
                             valgrind_errexit_code, verilog_interpreter)
+from judger2.logging_ import getLogger
 from judger2.sandbox import run_with_limits
 from judger2.steps.compile_ import NotCompiledException, ensure_input
 from judger2.util import copy_supplementary_files
 
+logger = getLogger(__name__)
 
 @dataclass
 class RunParams:
@@ -68,13 +70,16 @@ class CompilerRunner(BaseRunner):
             file_count=-1,
             file_size_bytes=-1,
         )
-        await run_with_limits(
+        tar_res = await run_with_limits(
             tar_argv, program.parent, limits,
             supplementary_paths=bind,
             network_access=True,
             disable_proc=False,
             tmpfsmount=True,
         )
+        if tar_res.error != None:
+            logger.error(f'Unable to decompress build artifact: {tar_res.message}')
+            raise RuntimeError(tar_res.message)
         return RunParams([str(program.parent / 'mxc'), args.compiler_stage], bind, False, True)
 
     def interpret_result(self, result: RunResult, outfile):

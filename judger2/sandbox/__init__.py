@@ -32,7 +32,7 @@ if not nsjail.exists():
     raise Exception('nsjail executable not found')
 nsjail = str(nsjail)
 
-bindmount_ro_base = ['/lib', '/lib64', '/usr/lib', '/usr/lib64', '/dev/urandom', '/usr/local']
+bindmount_ro_base = ['/lib', '/lib64', '/usr/lib', '/usr/lib64', '/dev/urandom', '/usr/local', '/run', '/var/run']
 bindmount_rw_base = ['/dev/null', '/dev/zero']
 worker_uid_inside = 65534
 worker_uid_maps = [

@@ -15,8 +15,9 @@ from commons.task_typing import (CompileLocalResult, CompileResult,
 from judger2.cache import CachedFile, ensure_cached, upload
 from judger2.config import (cache_dir, compiler_output_dir, cxx, cxx_exec_name,
                             cxx_file_name, cxxflags, exec_file_name,
-                            git_exec_name, gitflags, resolv_conf_path, verilog,
-                            verilog_exec_name, verilog_file_name)
+                            git_exec_name, gitflags, mxc_exec_file_name,
+                            resolv_conf_path, verilog, verilog_exec_name,
+                            verilog_file_name)
 from judger2.sandbox import chown_back, run_with_limits
 from judger2.util import TempDir, copy_supplementary_files
 
@@ -203,6 +204,9 @@ async def compile_compiler(
     configure_script_path = cwd / 'configure'
     if configure_script_path.is_file():
         logger.debug('configure script found, invoking ./configure')
+        res = await run_build_step([which('chmod'), '+x', configure_script_path])
+        if res.error != None:
+            return CompileLocalResult.from_run_failure(res)
         res = await run_build_step([configure_script_path])
         if res.error != None:
             return CompileLocalResult.from_run_failure(res)
@@ -217,14 +221,19 @@ async def compile_compiler(
 
     # collect artifacts
     output = cwd / compiler_output_dir
-    if not output.is_dir():
-        msg = f'Output directory \'{compiler_output_dir}\' not found in built ' \
-            f'files; please ensure your compile output is named ' \
-            f'{compiler_output_dir} in the root directory of the repository.'
+    exe = output / mxc_exec_file_name
+    if not output.is_dir() or not exe.is_file():
+        msg = f'Compiler entry \'{compiler_output_dir}/{mxc_exec_file_name}\' ' \
+            'not found in built files; please ensure your compile output is' \
+            f'named {compiler_output_dir}/{mxc_exec_file_name} in the root ' \
+            'directory of the repository.'
         return CompileLocalResult(
             CompileResult('runtime_error', msg),
             None,
         )
+    chmod_res = await run_build_step([which('chmod'), '+x', str(exe)])
+    if chmod_res.error != None:
+        return CompileLocalResult.from_run_failure(chmod_res)
     artifact = cwd / 'build.tar.zst'
     tar_argv = [which('tar'), '--zstd', '-cf', str(artifact), '.']
     tar_res = await run_build_step(tar_argv, output)

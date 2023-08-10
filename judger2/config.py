@@ -49,6 +49,7 @@ def get_resolv_conf_path():
 resolv_conf_path = get_resolv_conf_path()
 
 exec_file_name = 'code'
+mxc_exec_file_name = 'mxc'
 
 cxx = which('g++')
 cxxflags = ['-fmax-errors=10', '-O2', '-DONLINE_JUDGE', '-std=c++17']

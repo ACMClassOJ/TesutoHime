@@ -9,8 +9,9 @@ from typing import Dict, List
 
 from commons.task_typing import Input, ResourceUsage, RunArgs, RunResult
 from judger2.cache import ensure_cached, upload
-from judger2.config import (resolv_conf_path, valgrind, valgrind_args,
-                            valgrind_errexit_code, verilog_interpreter)
+from judger2.config import (mxc_exec_file_name, resolv_conf_path, valgrind,
+                            valgrind_args, valgrind_errexit_code,
+                            verilog_interpreter)
 from judger2.logging_ import getLogger
 from judger2.sandbox import run_with_limits
 from judger2.steps.compile_ import NotCompiledException, ensure_input
@@ -91,7 +92,8 @@ class CompilerRunner(BaseRunner):
             logger.error(f'Unable to decompress build artifact: {tar_res.message}')
             raise RuntimeError(tar_res.message)
         bind.append(bin_dir)
-        return RunParams([str(bin_dir / 'mxc'), args.compiler_stage], bind, False, True)
+        exe = bin_dir / mxc_exec_file_name
+        return RunParams([str(exe), args.compiler_stage], bind, False, True)
 
     def interpret_result(self, result: RunResult, outfile):
         if result.error != 'runtime_error':

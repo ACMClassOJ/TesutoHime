@@ -204,10 +204,10 @@ async def compile_compiler(
     configure_script_path = cwd / 'configure'
     if configure_script_path.is_file():
         logger.debug('configure script found, invoking ./configure')
-        res = await run_build_step([which('chmod'), '+x', configure_script_path])
+        res = await run_build_step([which('chmod'), '+x', str(configure_script_path)])
         if res.error != None:
             return CompileLocalResult.from_run_failure(res)
-        res = await run_build_step([configure_script_path])
+        res = await run_build_step([str(configure_script_path)])
         if res.error != None:
             return CompileLocalResult.from_run_failure(res)
 

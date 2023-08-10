@@ -10,7 +10,7 @@ class SessionManager:
         return
 
     def check_user_status(self) -> bool:  # to check whether current user has logged in properly
-        lid = request.cookies.get('Login_ID')
+        lid = request.cookies.get('compiler-oj-session')
         rst = self.redis.get(self.prefix + str(lid))
         return rst != None
 
@@ -19,17 +19,17 @@ class SessionManager:
         return
 
     def get_username(self) -> str:
-        lid = request.cookies.get('Login_ID')
+        lid = request.cookies.get('compiler-oj-session')
         rst = self.redis.get(self.prefix + str(lid))
         return rst if rst != None else ''
 
     def get_friendly_name(self) -> str:
-        lid = request.cookies.get('Login_ID')
+        lid = request.cookies.get('compiler-oj-session')
         rst = self.redis.get(self.prefix + str(lid))
         return UserManager().get_friendly_name(rst) if rst != None else ''
 
     def get_privilege(self) -> int:
-        lid = request.cookies.get('Login_ID')
+        lid = request.cookies.get('compiler-oj-session')
         rst = self.redis.get(self.prefix + str(lid))
         return UserManager().get_privilege(rst) if rst != None else -1
 

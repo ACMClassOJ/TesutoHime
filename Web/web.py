@@ -258,7 +258,7 @@ def login():
     username = User_Manager.get_username(username)
     Login_Manager.new_session(username, lid)
     ret = make_response(ReturnCode.SUC_LOGIN)
-    ret.set_cookie(key='Login_ID', value=lid, max_age=LoginConfig.Login_Life_Time)
+    ret.set_cookie(key='compiler-oj-session', value=lid, max_age=LoginConfig.Login_Life_Time)
     return ret
 
 
@@ -267,7 +267,7 @@ def logout():
     if not Login_Manager.check_user_status():
         return redirect('/OnlineJudge/compiler/')
     ret = make_response(redirect('/OnlineJudge/compiler/'))
-    ret.delete_cookie('Login_ID')
+    ret.delete_cookie('compiler-oj-session')
     return ret
 
 

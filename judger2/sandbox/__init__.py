@@ -85,8 +85,8 @@ class NsjailArgs:
     group: str = '0'
     # whether to disable procfs.
     disable_proc: bool = True
-    # where to mount /tmp.
-    tmpfsmount: Union[Literal[False], str] = False
+    # auxiliary mount points
+    mount: Union[Literal[False], str, List[str]] = False
     execute_fd: bool = True
     nice_level: str = '0'
     env: List[str] = field(default_factory=lambda: task_envp)
@@ -144,7 +144,7 @@ async def run_with_limits(
             bindmount=[str(result_dir)] + bindmount_rw,
             disable_clone_newnet=network_access,
             disable_proc=disable_proc,
-            tmpfsmount='/tmp' if tmpfsmount else False,
+            mount='tmpfs:/tmp:tmpfs:size=1073741824' if tmpfsmount else False,
         )
         checker_time_limit = str(int(time_limit_scaled * time_tolerance_ratio + 500))
         run_args = [runner_path, checker_time_limit, str(result_file)] \

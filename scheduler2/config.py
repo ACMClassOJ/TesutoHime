@@ -44,14 +44,14 @@ unlimited = -1
 
 default_compile_limits = ResourceUsage(
     time_msecs=30 * Secs,
-    memory_bytes=1 * GiB,
+    memory_bytes=2 * GiB,
     file_count=unlimited,
     file_size_bytes=unlimited,
 )
 
 default_run_limits = ResourceUsage(
     time_msecs=1 * Secs,
-    memory_bytes=512 * MiB,
+    memory_bytes=2 * GiB,
     file_count=unlimited,
     file_size_bytes=0,
 )

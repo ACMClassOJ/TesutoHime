@@ -36,6 +36,7 @@ task_envp = [
     'CI_ENV=testing',
     'ONLINE_JUDGE=true',
     'ACMOJ=true',
+    'HOME=/tmp',
 ]
 
 def get_resolv_conf_path():

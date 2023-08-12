@@ -214,7 +214,7 @@ $(function () {
     var ajaxButtons = [ '#btnRejudge', '#btnRejudge2', '#btnDisableJudge', '#btnDisableJudge2', '#btnAddRealname', '#btnAbortJudge', '#btnAbortJudge2' ]
     // disable when submit
     for (btn of ajaxButtons) {
-        $(btn).attr('onclick', 'this.disabled = true;');
+        $(btn).attr('onclick', 'setTimeout(() => this.disabled = true)');
     }
     for (form of ajaxForms) {
         $(form).ajaxForm(function (ret_json) {

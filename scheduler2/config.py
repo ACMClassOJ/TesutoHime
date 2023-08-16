@@ -37,6 +37,7 @@ redis = Redis(
 
 
 Secs = 1000
+Mins = 60 * Secs
 KiB = 1024
 MiB = 1024 ** 2
 GiB = 1024 ** 3
@@ -57,7 +58,7 @@ default_run_limits = ResourceUsage(
 )
 
 default_check_limits = ResourceUsage(
-    time_msecs=10 * Secs,
+    time_msecs=5 * Mins,
     memory_bytes=1 * GiB,
     file_count=unlimited,
     file_size_bytes=unlimited,

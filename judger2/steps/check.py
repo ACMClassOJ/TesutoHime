@@ -93,7 +93,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
 
         await copy_supplementary_files(checker.supplementary_files, cwd)
 
-        bindmount = ['/bin', '/usr/bin', str(outfile)]
+        bindmount = ['/bin', '/usr/bin']
         if infile is None:
             infile = PosixPath(devnull)
         else:

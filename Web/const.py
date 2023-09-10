@@ -185,8 +185,7 @@ def gh(x): return f'https://github.com/{x}'
 
 mntners = [
     Mntner('Alan Liang', gh('Alan-Liang'), 'liangyalun@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010333-292122.png'),
-    Mntner('Sakits', gh('Sakits'), 'sakits_tjm@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010147-269063.jpg'),
-    Mntner('SiriusNEO', gh('SiriusNEO'), 'siriusneo@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211116-011839-997531.jpg'),
+    Mntner('LauYeeYu', gh('LauYeeYu'), 'liu_yiyu@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/3d435e1d-274a-491b-9f36-f1433c3ccade'),
 ]
 
 contributors = [

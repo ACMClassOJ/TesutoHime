@@ -4,6 +4,7 @@ from logging import getLogger
 from os import utime
 from pathlib import PosixPath
 from shutil import copy2, which
+from subprocess import DEVNULL, PIPE
 from typing import Any, Callable, Coroutine, Dict, List
 from uuid import uuid4
 
@@ -94,7 +95,7 @@ async def compile_cpp(
     )
     if res.error != None:
         return CompileLocalResult.from_run_failure(res)
-    return CompileLocalResult.from_file(exec_file)
+    return CompileLocalResult.from_file(exec_file, res.message)
 
 
 def get_resolv_conf_path():
@@ -114,14 +115,20 @@ async def compile_git(
 ) -> CompileLocalResult:
     logger.debug(f'about to compile git repo {repr(source.url)}')
 
-    def run_build_step(argv: List[str], network = False):
+    def run_build_step(argv: List[str], network = False, output = DEVNULL):
         bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc']
         if resolv_conf_path is not None:
             bind.append(resolv_conf_path)
         return run_with_limits(
             argv, cwd, limits,
+            outfile=output,
             supplementary_paths=bind,
             network_access=network,
+            env=[
+                'GIT_CONFIG_COUNT=1',
+                'GIT_CONFIG_KEY_0=safe.directory',
+                'GIT_CONFIG_VALUE_0=*',
+            ],
         )
 
     # clone
@@ -131,6 +138,17 @@ async def compile_git(
     if clone_res.error != None:
         return CompileLocalResult.from_run_failure(clone_res)
 
+    # get commit hash
+    with TempDir() as d, open(d / 'commit-hash', 'w+b') as ouf:
+        commit_hash_argv = [which('git'), 'log', '-1', '--pretty=%H']
+        commit_hash_res = await run_build_step(commit_hash_argv, False, ouf)
+        if commit_hash_res.error != None:
+            return CompileLocalResult.from_run_failure(commit_hash_res)
+        ouf.seek(0)
+        commit_hash = ouf.read(128).decode()
+        logger.debug(f'git commit hash: {commit_hash}')
+        message = f'Using git commit {commit_hash}'
+
     # configure
     cmake_lists_path = cwd / 'CMakeLists.txt'
     if cmake_lists_path.is_file():
@@ -138,6 +156,8 @@ async def compile_git(
         res = await run_build_step([which('cmake'), '.'])
         if res.error != None:
             return CompileLocalResult.from_run_failure(res)
+    else:
+        message += '\nWarning: CMakeLists.txt not found, skipping cmake invocation'
 
     # compile
     makefile_paths = [cwd / x for x in ['GNUmakefile', 'makefile', 'Makefile']]
@@ -146,11 +166,14 @@ async def compile_git(
         res = await run_build_step([which('make')])
         if res.error != None:
             return CompileLocalResult.from_run_failure(res)
+    else:
+        message += '\nWarning: Makefile not found, skipping make invocation'
 
     # check
     exe = cwd / git_exec_name
     if not exe.is_file():
-        msg = f'Executable \'{git_exec_name}\' not found in built files; ' \
+        msg = message + '\n' + \
+            f'Executable \'{git_exec_name}\' not found in built files; ' \
             f'please ensure your compile output is named \'{git_exec_name}\' ' \
             'in the root directory of the repository.'
         return CompileLocalResult(
@@ -159,7 +182,7 @@ async def compile_git(
         )
 
     # done
-    return CompileLocalResult.from_file(exe)
+    return CompileLocalResult.from_file(exe, message)
 
 
 async def compile_verilog(

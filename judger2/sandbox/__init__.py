@@ -107,6 +107,7 @@ async def run_with_limits(
     disable_proc: bool = True,
     tmpfsmount: bool = False,
     disable_stderr: bool = False,
+    env: List[str] = [],
 ) -> RunResult:
     # these are nsjail args
     fsize = 'inf' if limits.file_size_bytes < 0 else \
@@ -144,6 +145,7 @@ async def run_with_limits(
             disable_clone_newnet=network_access,
             disable_proc=disable_proc,
             tmpfsmount='/tmp' if tmpfsmount else False,
+            env=task_envp + env,
         )
         checker_time_limit = str(int(time_limit_scaled * time_tolerance_ratio + 500))
         run_args = [runner_path, checker_time_limit, str(result_file)] \
@@ -251,7 +253,7 @@ async def run_with_limits(
             return RunResult('runtime_error', msg, usage, code=program_code)
 
         # done
-        return RunResult(None, 'OK', usage)
+        return RunResult(None, err, usage)
 
 
 def chown_back(path: PosixPath):

@@ -416,6 +416,7 @@ class ExecutionContext:
     code: SourceLocation
     rate_limit_group: str
     compile: Optional[CompileTask] = None
+    compile_message: Optional[str] = None
     judge: Optional[List[JudgeTaskRecord]] = None
     code_key: Optional[str] = None
     compile_artifact: Optional[Artifact] = None
@@ -735,13 +736,14 @@ def synthesize_scores(ctx: ExecutionContext, *, aborted: bool = False,
     groups = list(map(get_group_result, ctx.plan.score))
     score = sum(x.score for x in groups)
     result = synthesize_results(x.result for x in groups)
+    message = ctx.compile_message if ctx.compile_message != '' else None
     if aborted:
         result = 'aborted'
         score = 0.0
     if in_progress:
         result = 'judging'
         score = 0.0
-    return ProblemJudgeResult(result, None, score, rusage, groups)
+    return ProblemJudgeResult(result, message, score, rusage, groups)
 
 
 async def judge_quiz(quiz: List[QuizProblem], answer: Dict[str, str]):
@@ -798,6 +800,8 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
             if message.startswith(gcc_error):
                 message = message.replace(gcc_error, '', 1)
             return ProblemJudgeResult(status, message)
+        if compile_res is not None:
+            ctx.compile_message = compile_res.message
         compiled = True
         await run_judge_tasks(ctx)
         return synthesize_scores(ctx)

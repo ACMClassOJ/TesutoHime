@@ -165,9 +165,9 @@ class CompileLocalResult:
         )
 
     @staticmethod
-    def from_file(file: PosixPath):
+    def from_file(file: PosixPath, message: str = ''):
         return CompileLocalResult(
-            CompileResult('compiled', 'Compiled'),
+            CompileResult('compiled', message),
             file,
         )
 

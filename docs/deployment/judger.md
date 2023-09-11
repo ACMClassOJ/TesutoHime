@@ -41,6 +41,14 @@ cd /path/to/TesutoHime/judger2/sandbox
 make
 ```
 
+如果你的 git 版本严格低于 2.38.0, [则需要设置全局 git 配置][git]:
+
+[git]: https://git.kernel.org/pub/scm/git/git.git/commit/?id=6061601d9f1f1c95da5f9304c319218f7cc3ec75
+
+```sh
+sudo git config --system safe.directory '*'
+```
+
 最后，还需要配置一下 `/etc/subuid` 使得评测沙箱能够正常工作:
 
 ```sh
@@ -73,3 +81,5 @@ python3 -m judger2.main
 ```
 echo 1073741824 | sudo tee /proc/sys/user/max_*_namespaces
 ```
+
+[logrotate]: https://www.man7.org/linux/man-pages/man8/logrotate.8.html

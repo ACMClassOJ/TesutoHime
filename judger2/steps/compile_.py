@@ -145,7 +145,7 @@ async def compile_git(
         if commit_hash_res.error != None:
             return CompileLocalResult.from_run_failure(commit_hash_res)
         ouf.seek(0)
-        commit_hash = ouf.read(128).decode()
+        commit_hash = ouf.read(128).decode().strip()
         logger.debug(f'git commit hash: {commit_hash}')
         message = f'Using git commit {commit_hash}'
 

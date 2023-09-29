@@ -28,8 +28,8 @@ git clone git@github.com:ACMClassOJ/TesutoHime.git
 安装 python 运行库，命令行输入
 
 ```
-cd TesutoHime/Web
-pip3 install -r requirements.txt
+cd TesutoHime
+pip3 install -r web/requirements.txt
 ```
 
 ## 建立数据库环境
@@ -82,7 +82,7 @@ sudo chown ojweb /var/log/oj/web/ /var/cache/oj/web/
 编写 Web 配置文件，输入
 
 ```sh
-cd TesutoHime/Web
+cd TesutoHime/web
 cp config_template.py config.py
 ```
 
@@ -174,7 +174,8 @@ class LogConfig:
 测试 Web 服务是否可以运行，输入
 
 ```
-python3 TesutoHime/Web/run.py
+cd /path/to/TesutoHime
+python3 -m web.main
 ```
 
 在浏览器中访问 ``http://web_url:web_port/OnlineJudge/``查看是否可以访问 OJ 首页。

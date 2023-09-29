@@ -1,28 +1,30 @@
 import sys
+from datetime import datetime
+from http.client import BAD_REQUEST
 
 import pymysql
+from flask import abort
 
-from utils import *
+from commons.models import ContestProblem, JudgeRecord2, Problem
+from web.const import Privilege
+from web.session_manager import SessionManager
+from web.utils import SqlSession, db_connect, unix_nano
 
 
 class ProblemManager:
-    def add_problem(self, problem_id: str, title: str, description: str, problem_input: str, problem_output: str, example_input: str,
-                    example_output: str, data_range: str, release_time: int, problem_type: int):
-        db = db_connect()
-        cursor = db.cursor()
-        try:
-            cursor.execute(
-                "INSERT INTO Problem(ID, Title, Description, Input, Output, Example_Input, Example_Output, Data_Range, Release_Time, Problem_Type) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (problem_id, title, description, problem_input, problem_output, example_input, example_output, data_range,
-                 release_time, problem_type))
+    @staticmethod
+    def add_problem() -> int:
+        problem_id = ProblemManager.get_max_id() + 1
+        with SqlSession() as db:
+            problem = Problem()
+            problem.id = problem_id
+            problem.release_time = 253402216962
+            db.add(problem)
             db.commit()
-        except pymysql.Error:
-            db.rollback()
-            sys.stderr.write("SQL Error in ProblemManager: Add_Problem\n")
-        db.close()
-        return
+        return problem_id
 
-    def modify_problem_description(self, problem_id: int, description: str, problem_input: str, problem_output: str,
+    @staticmethod
+    def modify_problem_description(problem_id: int, description: str, problem_input: str, problem_output: str,
                        example_input: str, example_output: str, data_range: str):
         db = db_connect()
         cursor = db.cursor()
@@ -38,7 +40,8 @@ class ProblemManager:
             db.close()
         return
 
-    def modify_problem(self, problem_id: int, title: str, release_time: int, problem_type: int):
+    @staticmethod
+    def modify_problem(problem_id: int, title: str, release_time: int, problem_type: int):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -52,29 +55,29 @@ class ProblemManager:
             db.close()
         return
 
-    def get_problem(self, problem_id: int) -> dict:
-        db = db_connect()
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM Problem WHERE ID = %s", (str(problem_id)))
-        data = cursor.fetchone()
-        db.close()
-        if data is None:
-            return {}
-        ret = {'ID': int(data[0]),
-               'Title': str(data[1]),
-               'Description': str(data[2]),
-               'Input': str(data[3]),
-               'Output': str(data[4]),
-               'Example_Input': str(data[5]),
-               'Example_Output': str(data[6]),
-               'Data_Range': str(data[7]),
-               'Release_Time': int(data[8]),
-               'Flag_Count': int(data[9]),
-               'Problem_Type': int(data[10]),
-               'Limits': str(data[11])}
-        return ret
+    @staticmethod
+    def hide_problem(problem_id: int):
+        with SqlSession() as db:
+            db.query(Problem).where(Problem.id == problem_id).one().release_time = 253402216962
+            db.commit()
 
-    def modify_problem_limit(self, problem_id: int, limit: str):
+    @staticmethod
+    def show_problem(problem_id: int):
+        now = datetime.now().timestamp()
+        with SqlSession() as db:
+            db.query(Problem).where(Problem.id == problem_id).one().release_time = now - 1
+            db.commit()
+
+    @staticmethod
+    def get_problem(problem_id: int) -> dict:
+        with SqlSession() as db:
+            return db \
+                .query(Problem) \
+                .where(Problem.id == problem_id) \
+                .one_or_none()
+
+    @staticmethod
+    def modify_problem_limit(problem_id: int, limit: str):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -85,29 +88,8 @@ class ProblemManager:
             sys.stderr.write("SQL Error in ProblemManager: Modify_Problem_Limit\n")
         db.close()
 
-    def lock_problem(self, problem_id: int):
-        db = db_connect()
-        cursor = db.cursor()
-        try:
-            cursor.execute("UPDATE Problem SET Flag_Count = 1 WHERE ID = %s", (str(problem_id)))
-            db.commit()
-        except pymysql.Error:
-            db.rollback()
-            sys.stderr.write("SQL Error in ProblemManager: Lock_Problem\n")
-        db.close()
-
-    def unlock_problem(self, problem_id: int):
-        db = db_connect()
-        cursor = db.cursor()
-        try:
-            cursor.execute("UPDATE Problem SET Flag_Count = 0 WHERE ID = %s", (str(problem_id)))
-            db.commit()
-        except pymysql.Error:
-            db.rollback()
-            sys.stderr.write("SQL Error in ProblemManager: Unlock_Problem\n")
-        db.close()
-
-    def get_title(self, problem_id: int) -> str:
+    @staticmethod
+    def get_title(problem_id: int) -> str:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Title FROM Problem WHERE ID = %s", (str(problem_id)))
@@ -117,7 +99,8 @@ class ProblemManager:
             return ""
         return str(data[0])
 
-    def get_problem_type(self, problem_id: int) -> int:
+    @staticmethod
+    def get_problem_type(problem_id: int) -> int:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Problem_Type FROM Problem WHERE ID = %s", (str(problem_id)))
@@ -127,17 +110,8 @@ class ProblemManager:
             return ""
         return int(data[0])
 
-    def in_contest(self, problem_id: int) -> bool:  # return True when this Problem is in a Contest or Homework
-        db = db_connect()
-        cursor = db.cursor()
-        cursor.execute("SELECT Flag_Count FROM Problem WHERE ID = %s", (str(problem_id)))
-        data = cursor.fetchone()
-        db.close()
-        if data is None:
-            return False
-        return int(data[0]) != 0
-
-    def get_max_id(self) -> int:
+    @staticmethod
+    def get_max_id() -> int:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT MAX(ID) FROM Problem WHERE ID < 11000")
@@ -147,7 +121,8 @@ class ProblemManager:
             return 0
         return int(data[0])
         
-    def get_problem_count(self, now_time: int) -> int:
+    @staticmethod
+    def get_problem_count(now_time: int) -> int:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT COUNT(ID) FROM Problem WHERE Problem.Release_Time <= %s", (str(now_time)))
@@ -157,7 +132,8 @@ class ProblemManager:
             return 0
         return int(data[0])
 
-    def get_problem_count_under_11000(self, now_time: int) -> int:
+    @staticmethod
+    def get_problem_count_under_11000(now_time: int) -> int:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT COUNT(ID) FROM Problem WHERE Problem.Release_Time <= %s AND Problem.ID < 11000", (str(now_time)))
@@ -167,7 +143,8 @@ class ProblemManager:
             return 0
         return int(data[0])
 
-    def get_problem_count_admin(self) -> int:
+    @staticmethod
+    def get_problem_count_admin() -> int:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT COUNT(ID) FROM Problem")
@@ -177,7 +154,8 @@ class ProblemManager:
             return 0
         return int(data[0])
 
-    def get_problem_count_under_11000_admin(self) -> int:
+    @staticmethod
+    def get_problem_count_under_11000_admin() -> int:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT COUNT(ID) FROM Problem WHERE Problem.ID < 11000")
@@ -187,7 +165,8 @@ class ProblemManager:
             return 0
         return int(data[0])
 
-    def get_real_max_id(self) -> int:
+    @staticmethod
+    def get_real_max_id() -> int:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT MAX(ID) FROM Problem")
@@ -197,29 +176,14 @@ class ProblemManager:
             return 0
         return int(data[0])
 
-    def get_release_time(self, problem_id: int) -> int:
-        db = db_connect()
-        cursor = db.cursor()
-        cursor.execute("SELECT Release_Time FROM Problem WHERE ID = %s", (str(problem_id)))
-        ret = cursor.fetchone()
-        db.close()
-        if ret is None:
-            return 0
-        return int(ret[0])
 
-    def problem_in_range(self, start_id: int, end_id: int, time_now: int, is_admin: bool):
-        db = db_connect()
-        cursor = db.cursor()
-        if not is_admin:
-            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem WHERE ID >= %s and ID <= %s and Release_Time <= %s",
-                           (str(start_id), str(end_id), str(time_now)))
-        else:
-            cursor.execute("SELECT ID, Title, Problem_Type FROM Problem WHERE ID >= %s and ID <= %s", (str(start_id), str(end_id)))
-        ret = cursor.fetchall()
-        db.close()
-        return ret
+    @staticmethod
+    def should_show(problem: Problem) -> bool:
+        return problem is not None and \
+            (problem.release_time <= unix_nano() or SessionManager.get_privilege() >= Privilege.ADMIN)
 
-    def problem_in_page_autocalc(self, page: int, problem_num_per_page: int, time_now: int, is_admin: bool):
+    @staticmethod
+    def problem_in_page_autocalc(page: int, problem_num_per_page: int, time_now: int, is_admin: bool):
         db = db_connect()
         cursor = db.cursor()
         problem_num_start = (page - 1) * problem_num_per_page
@@ -231,7 +195,8 @@ class ProblemManager:
         db.close()
         return ret
 
-    def search_problem(self, time_now: int, is_admin: bool,
+    @staticmethod
+    def search_problem(time_now: int, is_admin: bool,
                        arg_problem_id, arg_problem_name_keyword, arg_problem_type, arg_contest_id):
         db = db_connect()
         cursor = db.cursor()
@@ -284,15 +249,13 @@ class ProblemManager:
         return ret        
 
 
-    def delete_problem(self, problem_id: int):
-        db = db_connect()
-        cursor = db.cursor()
-        try:
-            cursor.execute("DELETE FROM Problem WHERE ID = %s", (str(problem_id)))
-        except pymysql.Error:
-            db.rollback()
-            return
-        db.close()
-
-
-Problem_Manager = ProblemManager()
+    @staticmethod
+    def delete_problem(problem_id: int):
+        with SqlSession() as db:
+            submission_count = db.query(JudgeRecord2.id).where(JudgeRecord2.problem_id == problem_id).count()
+            contest_count = db.query(ContestProblem.id).where(ContestProblem.problem_id == problem_id).count()
+            if submission_count > 0 or contest_count > 0:
+                abort(BAD_REQUEST)
+            problem = db.query(Problem).where(Problem.id == problem_id).one_or_none()
+            db.delete(problem)
+            db.commit()

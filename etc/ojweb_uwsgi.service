@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=acmoj
 Group=www-data
-WorkingDirectory=/home/acmoj/TesutoHime/Web
+WorkingDirectory=/home/acmoj/TesutoHime/web
 ExecStart=/home/acmoj/.local/bin/uwsgi --ini uwsgi.ini
 
 [Install]

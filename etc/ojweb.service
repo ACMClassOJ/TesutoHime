@@ -5,7 +5,8 @@ After=network.target
 [Service]
 User=acmoj
 Type=idle
-ExecStart=python3 /home/acmoj/TesutoHime/Web/run.py
+WorkingDirectory=/home/acmoj/TesutoHime/
+ExecStart=python3 -m web.main
 Restart=always
 RestartSec=120
 

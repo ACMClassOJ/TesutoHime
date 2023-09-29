@@ -1,15 +1,15 @@
 import datetime
 import time
-from urllib.parse import urljoin, urlsplit, urlparse, urlunsplit
+from urllib.parse import urljoin, urlparse, urlsplit, urlunsplit
 
 import boto3
 import redis
-import requests
 from botocore.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from config import *
+from web.config import (RedisConfig, S3Config, mysql_connection_pool_recycle,
+                        mysql_connection_string)
 
 engine = create_engine(mysql_connection_string, pool_recycle=mysql_connection_pool_recycle)
 SqlSession = sessionmaker(bind=engine)

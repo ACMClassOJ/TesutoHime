@@ -1,8 +1,8 @@
 USER_DOCS = \
-	Web/templates/admin_doc.html \
-	Web/templates/problem_format_doc.html \
-	Web/templates/data_doc.html \
-	Web/templates/package_sample.html
+	web/templates/admin_doc.html \
+	web/templates/problem_format_doc.html \
+	web/templates/data_doc.html \
+	web/templates/package_sample.html
 
 .PHONY: all
 all: judger2-sandbox-targets user-docs
@@ -23,28 +23,28 @@ help:
 .PHONY: user-docs
 user-docs: $(USER_DOCS)
 
-Web/templates/admin_doc.html: docs/user/admin_doc.html
+web/templates/admin_doc.html: docs/user/admin_doc.html
 	@echo "{% extends 'base.html' %} {% set page='管理界面使用指南' %} {% block content %}" > '$@'
 	@echo "<div class=\"card card-body\">" >> '$@'
 	@cat $< >> '$@'
 	@echo "</div>" >> '$@'
 	@echo "{% endblock %}" >> '$@'
 
-Web/templates/problem_format_doc.html: docs/user/problem_format_doc.html
+web/templates/problem_format_doc.html: docs/user/problem_format_doc.html
 	@echo "{% extends 'base.html' %} {% set page='题面格式规范' %} {% block content %}" > '$@'
 	@echo "<div class=\"card card-body\">" >> '$@'
 	@cat $< >> '$@'
 	@echo "</div>" >> '$@'
 	@echo "{% endblock %}" >> '$@'
 
-Web/templates/data_doc.html: docs/user/data_doc.html
+web/templates/data_doc.html: docs/user/data_doc.html
 	@echo "{% extends 'base.html' %} {% set page='数据格式规范' %} {% block content %}" > '$@'
 	@echo "<div class=\"card card-body\">" >> '$@'
 	@cat $< >> '$@'
 	@echo "</div>" >> '$@'
 	@echo "{% endblock %}" >> '$@'
 
-Web/templates/package_sample.html: docs/user/package_sample.html
+web/templates/package_sample.html: docs/user/package_sample.html
 	@echo "{% extends 'base.html' %} {% set page='数据包样例' %} {% block content %}" > '$@'
 	@echo "<div class=\"card card-body\">" >> '$@'
 	@cat $< >> '$@'
@@ -67,7 +67,7 @@ clean: clean-docs
 
 .PHONY: clean-docs
 clean-docs:
-	@echo 'WARNING: This will remove the html file of user docs in Web/!'
+	@echo 'WARNING: This will remove the html file of user docs in web/!'
 	@echo 'If you want to keep the documents on the web page available,'
 	@echo 'you should execute `make user-docs` before using the web page.'
 	rm -f $(USER_DOCS)

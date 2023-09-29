@@ -1,11 +1,13 @@
+__all__ = ('OldJudgeManager',)
+
 import sys
 
 import pymysql
 
-from utils import *
+from web.utils import db_connect
 
 
-class JudgeManager:
+class OldJudgeManager:
     """
     * ID: INT, auto_increment, PRIMARY KEY
     * Code: TEXT
@@ -20,7 +22,8 @@ class JudgeManager:
     * Detail: MEDIUMTEXT // may exceed 64 KB
     """
 
-    def add_judge(self, code: str, user: str, problem_id: int, language: int, time: int, share: bool):
+    @staticmethod
+    def add_judge(code: str, user: str, problem_id: int, language: int, time: int, share: bool):
         db = db_connect()
         cursor = db.cursor()
         data = None
@@ -38,7 +41,7 @@ class JudgeManager:
         return data
 
 
-    # def add_quiz(self, user: str, problem_id: int, status: str, score: str, time: str, time_used: str, mem_used: str, detail: str):
+    # def add_quiz(user: str, problem_id: int, status: str, score: str, time: str, time_used: str, mem_used: str, detail: str):
     #     db = db_connect()
     #     cursor = db.cursor()
     #     try:
@@ -52,7 +55,8 @@ class JudgeManager:
     #     return
 
 
-    def update_status(self, judge_id: int, new_status: int):
+    @staticmethod
+    def update_status(judge_id: int, new_status: int):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -64,7 +68,8 @@ class JudgeManager:
         db.close()
         return
 
-    def update_after_judge(self, judge_id: int, new_status: int, score: int, detail: str, time_used: str,
+    @staticmethod
+    def update_after_judge(judge_id: int, new_status: int, score: int, detail: str, time_used: str,
                            mem_used: str):
         db = db_connect()
         cursor = db.cursor()
@@ -83,7 +88,8 @@ class JudgeManager:
         db.close()
         return
 
-    def query_judge(self, judge_id: int) -> dict:  # for details
+    @staticmethod
+    def query_judge(judge_id: int) -> dict:  # for details
         db = db_connect()
         cursor = db.cursor()
         cursor.execute(
@@ -106,7 +112,8 @@ class JudgeManager:
                'Code': str(data[10])}
         return ret
 
-    def max_id(self):
+    @staticmethod
+    def max_id():
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT MAX(ID) FROM Judge")
@@ -116,7 +123,8 @@ class JudgeManager:
             return 0
         return int(data[0])
 
-    def judge_in_range(self, start_id: int, end_id: int):  # [{}], for page display.
+    @staticmethod
+    def judge_in_range(start_id: int, end_id: int):  # [{}], for page display.
         db = db_connect()
         cursor = db.cursor()
         cursor.execute(
@@ -139,7 +147,8 @@ class JudgeManager:
         return ret
 
     """
-    def get_contest_judge(self, problem_id: int, username: str, start_time: int, end_time: int):
+    @staticmethod
+    def get_contest_judge(problem_id: int, username: str, start_time: int, end_time: int):
         db = db_connect()
         cursor = db.cursor()
         cursor.execute(
@@ -150,7 +159,8 @@ class JudgeManager:
         return ret
     """
 
-    def get_contest_judge(self, problems: list, start_time: int, end_time: int):
+    @staticmethod
+    def get_contest_judge(problems: list, start_time: int, end_time: int):
         if len(problems) == 0:
             return []
         db = db_connect()
@@ -170,7 +180,8 @@ class JudgeManager:
         db.close()
         return ret  
 
-    def search_judge(self, arg_submitter, arg_problem_id, arg_status, arg_lang, arg_param=None):
+    @staticmethod
+    def search_judge(arg_submitter, arg_problem_id, arg_status, arg_lang, arg_param=None):
         db = db_connect()
         cursor = db.cursor()
         com = 'SELECT ID, User, Problem_ID, Time, Time_Used, Mem_Used, Status, Language, Share FROM Judge WHERE '
@@ -215,7 +226,8 @@ class JudgeManager:
             ret.append(cur)
         return ret
 
-    def search_ac(self, problem_id):
+    @staticmethod
+    def search_ac(problem_id):
         db = db_connect()
         cursor = db.cursor()
         cursor.execute(
@@ -225,7 +237,8 @@ class JudgeManager:
         db.close()
         return ret
 
-    def delete_judge(self, judge_id: int):
+    @staticmethod
+    def delete_judge(judge_id: int):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -236,7 +249,8 @@ class JudgeManager:
             sys.stderr.write("SQL Error in JudgeManager: Erase_Judge\n")
         return
 
-    def get_pending_judge(self):
+    @staticmethod
+    def get_pending_judge():
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT ID, Problem_ID, Code, Language FROM Judge WHERE Status = 0")
@@ -244,6 +258,3 @@ class JudgeManager:
         if ls is None or len(ls) == 0:
             return None
         return ls[0]
-
-
-Judge_Manager = JudgeManager()

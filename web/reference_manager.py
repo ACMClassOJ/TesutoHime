@@ -1,5 +1,9 @@
+__all__ = ('ReferenceManager',)
+
 import sys
-from utils import *
+
+from web.utils import db_connect
+
 
 class ReferenceManager:
     """
@@ -8,7 +12,8 @@ class ReferenceManager:
     * Student_ID: TINYTEXT
     * Real_Name: TINYTEXT
     """
-    def Add_Student(self, Student_ID, Real_Name):
+    @staticmethod
+    def Add_Student(Student_ID, Real_Name):
         db = db_connect()
         cur = db.cursor()
         try:
@@ -19,7 +24,8 @@ class ReferenceManager:
             sys.stderr.write("SQL Error in ReferenceManager: Add_Student\n")
         db.close()
 
-    def Query_Realname(self, Student_ID):
+    @staticmethod
+    def Query_Realname(Student_ID):
         db = db_connect()
         cur = db.cursor()
         cur.execute("SELECT Real_Name FROM Realname_Reference WHERE Student_ID = %s ORDER BY ID DESC", (Student_ID, ))
@@ -27,5 +33,3 @@ class ReferenceManager:
         if ret == None or len(ret) == 0:
             return 'Unknown'
         return str(ret[0])
-
-Reference_Manager = ReferenceManager()

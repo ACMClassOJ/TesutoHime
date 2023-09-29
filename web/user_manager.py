@@ -1,3 +1,5 @@
+__all__ = ('UserManager',)
+
 import hashlib
 import random
 import sys
@@ -5,7 +7,7 @@ from typing import Optional
 
 import pymysql
 
-from utils import *
+from web.utils import db_connect
 
 
 def hash(password, salt):
@@ -17,7 +19,8 @@ def rand_int():
 
 
 class UserManager:
-    def add_user(self, username: str, student_id: int, friendly_name: str, password: str,
+    @staticmethod
+    def add_user(username: str, student_id: int, friendly_name: str, password: str,
                  privilege: int):  # will not check whether the argument is illegal
         salt = rand_int()
         password = hash(password, salt)
@@ -35,7 +38,8 @@ class UserManager:
         db.close()
         return
 
-    def modify_user(self, username: str, student_id: Optional['int'], friendly_name: Optional['str'],
+    @staticmethod
+    def modify_user(username: str, student_id: Optional['int'], friendly_name: Optional['str'],
                     password: Optional['str'], privilege: Optional['int']):
         db = db_connect()
         cursor = db.cursor()
@@ -68,7 +72,8 @@ class UserManager:
             sys.stderr.write("SQL Error in UserManager: ModifyUser\n")
         db.close()
 
-    def validate_username(self, username: str) -> bool:
+    @staticmethod
+    def validate_username(username: str) -> bool:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT * FROM User WHERE Username = %s", username)
@@ -76,7 +81,8 @@ class UserManager:
         db.close()
         return data is None
 
-    def check_login(self, username: str, password: str) -> bool:
+    @staticmethod
+    def check_login(username: str, password: str) -> bool:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Password, Salt FROM User WHERE Username = %s", username)
@@ -87,7 +93,8 @@ class UserManager:
         h = hash(password, int(data[1]))
         return h == data[0]
 
-    def get_friendly_name(self, username: str) -> str:  # Username must exist.
+    @staticmethod
+    def get_friendly_name(username: str) -> str:  # Username must exist.
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Friendly_Name FROM User WHERE Username = %s", username)
@@ -95,7 +102,8 @@ class UserManager:
         db.close()
         return data[0]
 
-    def get_username(self, username: str) -> Optional[str]:  # Username must exist.
+    @staticmethod
+    def get_username(username: str) -> Optional[str]:  # Username must exist.
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Username FROM User WHERE Username = %s", username)
@@ -105,7 +113,8 @@ class UserManager:
             return None
         return str(data[0])
 
-    def get_student_id(self, username: str) -> Optional[str]:  # Username must exist.
+    @staticmethod
+    def get_student_id(username: str) -> Optional[str]:  # Username must exist.
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Student_ID FROM User WHERE Username = %s", username)
@@ -115,7 +124,8 @@ class UserManager:
             return None
         return str(data[0])
 
-    def get_privilege(self, username: str) -> int:  # Username must exist.
+    @staticmethod
+    def get_privilege(username: str) -> int:  # Username must exist.
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Privilege FROM User WHERE Username = %s", username)
@@ -123,7 +133,8 @@ class UserManager:
         db.close()
         return int(data[0])
 
-    def delete_user(self, username: str):
+    @staticmethod
+    def delete_user(username: str):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -133,13 +144,11 @@ class UserManager:
             return
         db.close()
     
-    def has_user(self, username: str) -> bool:
+    @staticmethod
+    def has_user(username: str) -> bool:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT * FROM User WHERE Username = %s", username)
         data = cursor.fetchone()
         db.close()
         return data is not None
-
-
-User_Manager = UserManager()

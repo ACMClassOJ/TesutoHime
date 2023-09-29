@@ -1,19 +1,24 @@
+import json
+import logging
+import logging.handlers
+
 from flask import request
-import logging, json, logging.handlers
-from sessionManager import Login_Manager
-from referenceManager import Reference_Manager
-from userManager import User_Manager
-from config import LogConfig
-from utils import *
+
+from web.config import LogConfig
+from web.reference_manager import ReferenceManager
+from web.session_manager import SessionManager
+from web.user_manager import UserManager
+from web.utils import readable_time, unix_nano
+
 
 class Tracker:
     def log(self):
         everything = {}
         everything['IP'] = request.remote_addr
         everything['Time'] = readable_time(unix_nano())
-        everything['Username'] = Login_Manager.get_username()
-        everything['Realname'] = Reference_Manager.Query_Realname(
-            str(User_Manager.get_student_id(str(everything['Username']))))
+        everything['Username'] = SessionManager.get_username()
+        everything['Realname'] = ReferenceManager.Query_Realname(
+            str(UserManager.get_student_id(str(everything['Username']))))
         everything['url'] = request.url.split('/')[-1]
         everything['post_args'] = request.form.copy()
         if 'password' in everything['post_args']:

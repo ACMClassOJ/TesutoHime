@@ -41,7 +41,6 @@ class Problem(Base):
     example_output = Column('Example_Output', Text)
     data_range = Column('Data_Range', Text)
     release_time = Column('Release_Time', BIGINT(20), nullable=False)
-    flag_count = Column('Flag_Count', INTEGER(11), server_default=text("0"))
     problem_type = Column('Problem_Type', INTEGER(11), nullable=False, server_default=text("0"))
     limits = Column('Limits', Text)
 

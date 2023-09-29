@@ -1,13 +1,17 @@
+__all__ = ('ContestManager',)
+
 import sys
-from typing import Tuple
+from typing import Optional, Tuple
 
 import pymysql
 
-from utils import *
+from commons.models import Contest
+from web.utils import SqlSession, db_connect
 
 
 class ContestManager:
-    def create_contest(self, id: int, name: str, start_time: int, end_time: int, contest_type: int):
+    @staticmethod
+    def create_contest(id: int, name: str, start_time: int, end_time: int, contest_type: int):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -20,7 +24,8 @@ class ContestManager:
         db.close()
         return
 
-    def modify_contest(self, contest_id: int, new_name: str, new_start_time: int, new_end_time: int,
+    @staticmethod
+    def modify_contest(contest_id: int, new_name: str, new_start_time: int, new_end_time: int,
                        new_contest_type: int):
         db = db_connect()
         cursor = db.cursor()
@@ -34,7 +39,8 @@ class ContestManager:
         db.close()
         return
 
-    def delete_contest(self, contest_id: int):
+    @staticmethod
+    def delete_contest(contest_id: int):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -61,7 +67,8 @@ class ContestManager:
         db.close()
         return
 
-    def add_problem_to_contest(self, contest_id: int, problem_id: int):
+    @staticmethod
+    def add_problem_to_contest(contest_id: int, problem_id: int):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -74,7 +81,8 @@ class ContestManager:
         db.close()
         return
 
-    def delete_problem_from_contest(self, contest_id: int, problem_id: int):
+    @staticmethod
+    def delete_problem_from_contest(contest_id: int, problem_id: int):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -87,7 +95,8 @@ class ContestManager:
         db.close()
         return
 
-    def add_player_to_contest(self, contest_id: int, username: str):
+    @staticmethod
+    def add_player_to_contest(contest_id: int, username: str):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -100,7 +109,8 @@ class ContestManager:
         db.close()
         return
 
-    def check_problem_in_contest(self, contest_id: int, problem_id: int):
+    @staticmethod
+    def check_problem_in_contest(contest_id: int, problem_id: int):
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Problem_ID FROM Contest_Problem WHERE Belong = %s AND Problem_ID = %s", (contest_id, problem_id))
@@ -108,7 +118,8 @@ class ContestManager:
         db.close()
         return len(ret) != 0
 
-    def check_player_in_contest(self, contest_id: int, username: str):
+    @staticmethod
+    def check_player_in_contest(contest_id: int, username: str):
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT tempID FROM Contest_Player WHERE Belong = %s AND Username = %s", (contest_id, username))
@@ -116,7 +127,8 @@ class ContestManager:
         db.close()
         return len(ret) != 0
     
-    def get_unfinished_exam_info_for_player(self, username: str, cur_time: int) -> Tuple[int, bool]:
+    @staticmethod
+    def get_unfinished_exam_info_for_player(username: str, cur_time: int) -> Tuple[int, bool]:
         """
             return exam_id, is_exam_started 
         """
@@ -128,12 +140,13 @@ class ContestManager:
         db.close()
         
         for exam in unfinished_exam:
-            if self.check_player_in_contest(exam[0], username):
+            if ContestManager.check_player_in_contest(exam[0], username):
                 return exam[0], (cur_time >= int(exam[1]))
 
         return -1, False
 
-    def delete_player_from_contest(self, contest_id: int, username: str):
+    @staticmethod
+    def delete_player_from_contest(contest_id: int, username: str):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -146,7 +159,8 @@ class ContestManager:
         db.close()
         return
 
-    def list_contest(self, contest_type: int):
+    @staticmethod
+    def list_contest(contest_type: int):
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT ID, Name, Start_Time, End_Time, Type FROM Contest WHERE Type = %s ORDER BY ID DESC",
@@ -155,7 +169,8 @@ class ContestManager:
         db.close()
         return ret
 
-    def list_contest_and_exam(self):
+    @staticmethod
+    def list_contest_and_exam():
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT ID, Name, Start_Time, End_Time, Type FROM Contest WHERE Type = 0 OR Type = 2 ORDER BY ID DESC")
@@ -163,7 +178,8 @@ class ContestManager:
         db.close()
         return ret
 
-    def get_time(self, contest_id: int):
+    @staticmethod
+    def get_time(contest_id: int):
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Start_Time, End_Time FROM Contest WHERE ID = %s", (str(contest_id)))
@@ -171,7 +187,8 @@ class ContestManager:
         db.close()
         return int(ret[0]), int(ret[1])
 
-    def list_problem_for_contest(self, contest_id: int):
+    @staticmethod
+    def list_problem_for_contest(contest_id: int):
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Problem_ID FROM Contest_Problem WHERE Belong = %s", (str(contest_id)))
@@ -179,7 +196,8 @@ class ContestManager:
         db.close()
         return ret
 
-    def list_player_for_contest(self, contest_id: int):
+    @staticmethod
+    def list_player_for_contest(contest_id: int):
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Username FROM Contest_Player WHERE Belong = %s", (str(contest_id)))
@@ -187,7 +205,8 @@ class ContestManager:
         db.close()
         return list(map(lambda x: x[0], ret))
 
-    def get_title(self, contest_id: int):
+    @staticmethod
+    def get_title(contest_id: int):
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Name FROM Contest WHERE ID = %s", (str(contest_id)))
@@ -195,7 +214,16 @@ class ContestManager:
         db.close()
         return ret
 
-    def get_contest(self, contest_id: int) -> dict:
+    @staticmethod
+    def get_contest(contest_id: int) -> Optional[Contest]:
+        with SqlSession() as db:
+            return db \
+                .query(Contest.id) \
+                .where(Contest.id == contest_id) \
+                .one_or_none()
+
+    @staticmethod
+    def get_contest_detail(contest_id: int) -> dict:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT * FROM Contest WHERE ID = %s", (str(contest_id)))
@@ -210,7 +238,8 @@ class ContestManager:
                'Type': int(data[4])}
         return ret
 
-    def get_max_id(self) -> int:
+    @staticmethod
+    def get_max_id() -> int:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT MAX(ID) FROM Contest")
@@ -220,7 +249,8 @@ class ContestManager:
             return 0
         return int(data[0])
 
-    def get_contest_type(self, contest_id: int) -> int:
+    @staticmethod
+    def get_contest_type(contest_id: int) -> int:
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Type FROM Contest WHERE ID = %s",
@@ -230,6 +260,3 @@ class ContestManager:
         if type[0] is None:
             return 0
         return int(type[0])
-
-
-Contest_Manager = ContestManager()

@@ -1,12 +1,15 @@
+__all__ = ('DiscussManager',)
+
 import sys
 
 import pymysql
 
-from utils import *
+from web.utils import db_connect, unix_nano
 
 
 class DiscussManager:
-    def add_discuss(self, problem_id: int, username: str, data: str):
+    @staticmethod
+    def add_discuss(problem_id: int, username: str, data: str):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -19,7 +22,8 @@ class DiscussManager:
         db.close()
         return
 
-    def modify_discuss(self, discuss_id: int, new_data: str):
+    @staticmethod
+    def modify_discuss(discuss_id: int, new_data: str):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -31,14 +35,16 @@ class DiscussManager:
         db.close()
         return
 
-    def get_author(self, discuss_id: int):
+    @staticmethod
+    def get_author(discuss_id: int):
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT Username FROM Discuss WHERE ID = %s", discuss_id)
         ret = cursor.fetchone()
         return ret[0]
 
-    def get_discuss_for_problem(self, problem_id: int):
+    @staticmethod
+    def get_discuss_for_problem(problem_id: int):
         db = db_connect()
         cursor = db.cursor()
         cursor.execute("SELECT ID, Username, DATA, Time FROM Discuss WHERE Problem_ID = %s", problem_id)
@@ -46,7 +52,8 @@ class DiscussManager:
         db.close()
         return ret
 
-    def delete_discuss(self, discuss_id: int):
+    @staticmethod
+    def delete_discuss(discuss_id: int):
         db = db_connect()
         cursor = db.cursor()
         try:
@@ -57,6 +64,3 @@ class DiscussManager:
             sys.stderr.write("SQL Error in DiscussManager: Erase_Discuss\n")
         db.close()
         return
-
-
-Discuss_Manager = DiscussManager()

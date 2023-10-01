@@ -143,7 +143,7 @@ class UserManager:
             db.rollback()
             return
         db.close()
-    
+
     @staticmethod
     def has_user(username: str) -> bool:
         db = db_connect()

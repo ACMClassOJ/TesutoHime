@@ -3,12 +3,10 @@ from math import ceil
 from typing import List
 
 from commons.models import *
-from scripts.db.env import DATABASE_VERSION, Session
+from scripts.db.env import Session
 
 
 db = Session()
-if db.query(DatabaseVersion).one().version != DATABASE_VERSION:
-    raise Exception('Database version mismatch')
 
 q = db.query(JudgeRecord)
 count = q.count()

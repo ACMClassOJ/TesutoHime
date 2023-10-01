@@ -30,7 +30,7 @@ async def compile(task: CompileTask) -> CompileLocalResult:
 
         # compile
         type = task.source.__class__
-        
+
         # The compiled program returned by these functions
         # reside inside cwd. As cwd is deleted once this
         # function returns, the file need to be uploaded or

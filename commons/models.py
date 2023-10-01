@@ -54,6 +54,9 @@ class Contest(Base):
     start_time = Column('Start_Time', BIGINT(20))
     end_time = Column('End_Time', BIGINT(20))
     type = Column('Type', INTEGER(11), index=True)
+    ranked = Column('Ranked', Boolean, nullable=False)
+    rank_penalty = Column('Rank_Penalty', Boolean, nullable=False)
+    rank_partial_score = Column('Rank_Partial_Score', Boolean, nullable=False)
 
 
 ContestPlayer = Table(
@@ -147,14 +150,6 @@ class RealnameReference(Base):
 
 
 # New models for judger2 and scheduler2
-
-
-class DatabaseVersion(Base):
-    __tablename__ = 'version'
-    __table_args__ = {'mysql_charset': 'utf8mb4'}
-
-    # database version, used for upgrades.
-    version = Column(Integer, primary_key=True)
 
 
 class JudgeRunner2(Base):

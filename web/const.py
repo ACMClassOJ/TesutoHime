@@ -22,6 +22,9 @@ class String:
     RELEASE_TIME = 'time'
     CONTEST_ID = 'contest_id'
     CONTEST_NAME = 'name'
+    CONTEST_RANKED = 'ranked'
+    CONTEST_RANK_PENALTY = 'rank_penalty'
+    CONTEST_RANK_PARTIAL_SCORE = 'rank_partial_score'
     START_TIME = 'start_time'
     END_TIME = 'end_time'
     CONTEST_TYPE = 'contest_type'
@@ -103,7 +106,7 @@ class ReturnCode:
     ERR_PIC_SERIVCE_TOO_BIG = {'e': -500, 'msg': 'size of the picture should be no more than 10MB!'}
     ERR_PIC_SERIVCE_WRONG_EXT = {'e': -501, 'msg': 'acceptable file extension for picture service: gif, jpg, jpeg, png'}
     ERR_PIC_SERIVCE_SYSTEM_ERROR = {'e': -502, 'msg': 'picture service system error'}
-    
+
 
 class Privilege:
     GUEST = 0

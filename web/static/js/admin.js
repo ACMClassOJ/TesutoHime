@@ -97,7 +97,7 @@ $(function () {
 
     $("#btnGoToContestPage").click(function(){
         if($("#iptContestID").val() != "")
-            window.location.replace('/OnlineJudge/problem-set/' + $("#iptContestID").val());
+            window.location.replace('/OnlineJudge/problemset/' + $("#iptContestID").val());
     });
 
     $("#btnGetContestAutoIncreseID").click(function(){
@@ -149,11 +149,25 @@ $(function () {
                     $("#iptStartTime").val(formatDate(main_json['Start_Time'] * 1000));
                     $("#iptEndTime").val(formatDate(main_json['End_Time'] * 1000));
                     $("#iptContestType").selectpicker("val", main_json['Type']);
+                    $('#iptRanked').prop('checked', main_json.Ranked)
+                    $('#iptRankPenalty').prop('checked', main_json.Rank_Penalty)
+                    $('#iptRankPartialScore').prop('checked', main_json.Rank_Partial_Score)
                 }
             }
         });
         $("#divContestHidden").slideDown(500);
     });
+
+    $('#iptContestType').change(() => {
+        const switches = [
+            [true, false, true],
+            [false, false, false],
+            [true, false, true],
+        ][$('#iptContestType').val()]
+        ; ['#iptRanked', '#iptRankPenalty', '#iptRankPartialScore'].forEach((x, i) => {
+            $(x).prop('checked', switches[i])
+        })
+    })
 
     $("#btnShowUserList").click(function () {
         $("#divContestUserListHidden").slideDown(500);
@@ -186,6 +200,9 @@ $(function () {
         e.preventDefault();
         e.stopPropagation();
         let data = $(this).serializeObject();
+        for (const key of [ 'ranked', 'rank_penalty', 'rank_partial_score' ]) {
+            data[key] = data[key] === 'on'
+        }
         if (data.hasOwnProperty("id"))
             data.id = data.id.split(/\s+/);
         if (data.hasOwnProperty("username"))

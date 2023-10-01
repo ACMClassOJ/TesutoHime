@@ -229,12 +229,14 @@ def contest_manager():
         op = int(form[String.TYPE])
         if op == 0:
             ContestManager.create_contest(int(form[String.CONTEST_ID]), form[String.CONTEST_NAME], int(form[String.START_TIME]),
-                                           int(form[String.END_TIME]), int(form[String.CONTEST_TYPE]))
+                                           int(form[String.END_TIME]), int(form[String.CONTEST_TYPE]),
+                                           form[String.CONTEST_RANKED], form[String.CONTEST_RANK_PENALTY], form[String.CONTEST_RANK_PARTIAL_SCORE])
             return ReturnCode.SUC_ADD_CONTEST
         elif op == 1:
             ContestManager.modify_contest(int(form[String.CONTEST_ID]), form.get(String.CONTEST_NAME, None),
                                            int(form.get(String.START_TIME, None)), int(form.get(String.END_TIME, None)),
-                                           int(form.get(String.CONTEST_TYPE, None)))
+                                           int(form.get(String.CONTEST_TYPE, None)),
+                                           form[String.CONTEST_RANKED], form[String.CONTEST_RANK_PENALTY], form[String.CONTEST_RANK_PARTIAL_SCORE])
             return ReturnCode.SUC_MOD_CONTEST
         elif op == 2:
             ContestManager.delete_contest(int(form[String.CONTEST_ID]))

@@ -262,8 +262,8 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
     testpoint = Testpoint(
         id=id,
         dependent_on=None if conf.Dependency == 0 else str(conf.Dependency),
-        input=UserCode(), 
-        run=run, 
+        input=UserCode(),
+        run=run,
         check=check,
     )
     if ctx.compile_type == 'hpp-per-testpoint':
@@ -474,7 +474,7 @@ async def prepare_compile_task(ctx: ExecutionContext, plan: CompileTaskPlan) \
     if not plan:
         return None
 
-    user_codes = list(filter(lambda x: isinstance(x, UserCode), 
+    user_codes = list(filter(lambda x: isinstance(x, UserCode),
         [plan.source] + plan.supplementary_files))
     if len(user_codes) == 0:
         raise InvalidProblemException('Compile task with no user input')

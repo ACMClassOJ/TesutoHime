@@ -171,14 +171,14 @@ class OldJudgeManager:
             if i > 0:
                 com += ' OR '
             com += 'Problem_ID = %s'
-            args.append(problems[i])                
+            args.append(problems[i])
 
         com = com + ')'
         cursor.execute(com, tuple(args))
 
         ret = cursor.fetchall()
         db.close()
-        return ret  
+        return ret
 
     @staticmethod
     def search_judge(arg_submitter, arg_problem_id, arg_status, arg_lang, arg_param=None):

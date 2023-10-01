@@ -70,7 +70,7 @@ class ProblemManager:
 
     @staticmethod
     def get_problem(problem_id: int) -> dict:
-        with SqlSession() as db:
+        with SqlSession(expire_on_commit=False) as db:
             return db \
                 .query(Problem) \
                 .where(Problem.id == problem_id) \
@@ -120,7 +120,7 @@ class ProblemManager:
         if data[0] is None:
             return 0
         return int(data[0])
-        
+
     @staticmethod
     def get_problem_count(now_time: int) -> int:
         db = db_connect()
@@ -219,17 +219,17 @@ class ProblemManager:
         if arg_problem_name_keyword is not None:
             if len(pre):
                 com = com + ' AND '
-            com = com + 'INSTR(TITLE, %s) > 0' 
+            com = com + 'INSTR(TITLE, %s) > 0'
             pre.append(str(arg_problem_name_keyword))
         if is_admin and len(pre) == 0:
-            com = 'SELECT ID, Title, Problem_Type FROM Problem'    
+            com = 'SELECT ID, Title, Problem_Type FROM Problem'
         com = com + ' ORDER BY ID'
-        
+
         cursor.execute(com, tuple(pre))
         problem_list = cursor.fetchall()
         ret = []
-        db.close()        
-        
+        db.close()
+
         contest_problem_table = dict()
 
         if arg_contest_id is not None:
@@ -246,7 +246,7 @@ class ProblemManager:
             if arg_contest_id is None or problem[0] in contest_problem_table:
                 ret.append(problem)
 
-        return ret        
+        return ret
 
 
     @staticmethod

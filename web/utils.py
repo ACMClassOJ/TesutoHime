@@ -56,7 +56,7 @@ def readable_time(nano) -> str:
 
 
 def regularize_string(raw_str: str) -> str:
-    raw_str = raw_str.lower() # lower_case 
+    raw_str = raw_str.lower() # lower_case
     raw_str = raw_str.replace(' ', '') # eliminate the blank
     return raw_str
 

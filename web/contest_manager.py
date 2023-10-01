@@ -1,22 +1,28 @@
 __all__ = ('ContestManager',)
 
 import sys
-from typing import Optional, Tuple
+from datetime import datetime
+from functools import cmp_to_key
+from typing import List, Optional, Tuple
 
 import pymysql
+from sqlalchemy.orm import defer, selectinload
 
-from commons.models import Contest
-from web.utils import SqlSession, db_connect
+from commons.models import Contest, JudgeRecord2, JudgeStatus, User
+from web.contest_cache import ContestCache
+from web.reference_manager import ReferenceManager
+from web.utils import SqlSession, db_connect, regularize_string
 
 
 class ContestManager:
     @staticmethod
-    def create_contest(id: int, name: str, start_time: int, end_time: int, contest_type: int):
+    def create_contest(id: int, name: str, start_time: int, end_time: int, contest_type: int,
+                       ranked: bool, rank_penalty: bool, rank_partial_score: bool):
         db = db_connect()
         cursor = db.cursor()
         try:
-            cursor.execute("INSERT INTO Contest (ID, Name, Start_Time, End_Time, Type) VALUES (%s, %s, %s, %s, %s)",
-                           (id, name, start_time, end_time, contest_type))
+            cursor.execute("INSERT INTO Contest (ID, Name, Start_Time, End_Time, Type, Ranked, Rank_Penalty, Rank_Partial_Score) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                           (id, name, start_time, end_time, contest_type, ranked, rank_penalty, rank_partial_score))
             db.commit()
         except pymysql.Error:
             db.rollback()
@@ -26,12 +32,13 @@ class ContestManager:
 
     @staticmethod
     def modify_contest(contest_id: int, new_name: str, new_start_time: int, new_end_time: int,
-                       new_contest_type: int):
+                       new_contest_type: int,
+                       ranked: bool, rank_penalty: bool, rank_partial_score: bool):
         db = db_connect()
         cursor = db.cursor()
         try:
-            cursor.execute("UPDATE Contest SET Name = %s, Start_Time = %s, End_Time = %s, Type = %s WHERE ID = %s",
-                           (new_name, new_start_time, new_end_time, new_contest_type, contest_id))
+            cursor.execute("UPDATE Contest SET Name = %s, Start_Time = %s, End_Time = %s, Type = %s, Ranked = %s, Rank_Penalty = %s, Rank_Partial_Score = %s WHERE ID = %s",
+                           (new_name, new_start_time, new_end_time, new_contest_type, ranked, rank_penalty, rank_partial_score, contest_id))
             db.commit()
         except pymysql.Error:
             db.rollback()
@@ -126,11 +133,11 @@ class ContestManager:
         ret = cursor.fetchall()
         db.close()
         return len(ret) != 0
-    
+
     @staticmethod
     def get_unfinished_exam_info_for_player(username: str, cur_time: int) -> Tuple[int, bool]:
         """
-            return exam_id, is_exam_started 
+            return exam_id, is_exam_started
         """
 
         db = db_connect()
@@ -138,7 +145,7 @@ class ContestManager:
         cursor.execute("SELECT ID, Start_Time FROM Contest WHERE Type = 2 AND %s <= End_Time ORDER BY ID DESC", (str(cur_time)))
         unfinished_exam = cursor.fetchall()
         db.close()
-        
+
         for exam in unfinished_exam:
             if ContestManager.check_player_in_contest(exam[0], username):
                 return exam[0], (cur_time >= int(exam[1]))
@@ -215,28 +222,21 @@ class ContestManager:
         return ret
 
     @staticmethod
-    def get_contest(contest_id: int) -> Optional[Contest]:
-        with SqlSession() as db:
+    def get_contest_for_board(contest_id: int) -> Optional[Contest]:
+        with SqlSession(expire_on_commit=False) as db:
             return db \
-                .query(Contest.id) \
+                .query(Contest) \
                 .where(Contest.id == contest_id) \
+                .options(selectinload(Contest.players)) \
                 .one_or_none()
 
     @staticmethod
-    def get_contest_detail(contest_id: int) -> dict:
-        db = db_connect()
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM Contest WHERE ID = %s", (str(contest_id)))
-        data = cursor.fetchone()
-        db.close()
-        if data is None:
-            return {}
-        ret = {'ID': int(data[0]),
-               'Name': str(data[1]),
-               'Start_Time': int(data[2]),
-               'End_Time': int(data[3]),
-               'Type': int(data[4])}
-        return ret
+    def get_contest(contest_id: int) -> Optional[Contest]:
+        with SqlSession(expire_on_commit=False) as db:
+            return db \
+                .query(Contest) \
+                .where(Contest.id == contest_id) \
+                .one_or_none()
 
     @staticmethod
     def get_max_id() -> int:
@@ -260,3 +260,101 @@ class ContestManager:
         if type[0] is None:
             return 0
         return int(type[0])
+
+    @staticmethod
+    def get_scores(contest: Contest) -> List[dict]:
+        start_time = contest.start_time
+        end_time = contest.end_time
+        problems = ContestManager.list_problem_for_contest(contest.id)
+        players: List[User] = contest.players
+
+        data = ContestCache.get(contest.id)
+        if data is not None:
+            return data
+
+        data = [
+            {
+                'score': 0,
+                'penalty': 0,
+                'ac_count': 0,
+                'friendly_name': user.friendly_name,
+                'problems': [
+                    {
+                        'score': 0,
+                        'count': 0,
+                        'accepted': False,
+                    } for _ in problems
+                ],
+                'realname': ReferenceManager.Query_Realname(user.student_id),
+                'student_id': user.student_id,
+                'username': user.username,
+            } for user in players
+        ]
+        username_to_num = dict(map(lambda entry: [regularize_string(entry[1].username), entry[0]], enumerate(players)))
+        problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
+
+        with SqlSession() as db:
+            submits = db \
+                .query(JudgeRecord2) \
+                .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
+                .where(JudgeRecord2.problem_id.in_(problems)) \
+                .where(JudgeRecord2.username.in_([ x.username for x in players ])) \
+                .where(JudgeRecord2.created >= datetime.fromtimestamp(start_time)) \
+                .where(JudgeRecord2.created < datetime.fromtimestamp(end_time)) \
+                .all()
+        for submit in submits:
+            username = submit.username
+            problem_id = submit.problem_id
+            status = submit.status
+            score = submit.score
+            submit_time = submit.created.timestamp()
+
+            if regularize_string(username) not in username_to_num:
+                continue
+
+            rank = username_to_num[regularize_string(username)]
+            problem_index = problem_to_num[problem_id]
+            user_data = data[rank]
+            problem = user_data['problems'][problem_index]
+
+            if problem['accepted'] == True:
+                continue
+            max_score = problem['score']
+            is_ac = status == JudgeStatus.accepted
+            submit_count = problem['count']
+
+            if int(score) > max_score:
+                user_data['score'] -= max_score
+                max_score = int(score)
+                user_data['score'] += max_score
+
+            if is_ac:
+                problem['accepted'] = True
+                user_data['ac_count'] += 1
+                user_data['penalty'] += (int(submit_time) - start_time + submit_count * 1200) // 60
+
+            submit_count += 1
+
+            problem['score'] = max_score
+            problem['count'] = submit_count
+            problem['accepted'] = is_ac
+
+        ContestCache.put(contest.id, data)
+        return data
+
+    @staticmethod
+    def get_board_view(contest: Contest) -> List[dict]:
+        scores = ContestManager.get_scores(contest)
+        if not contest.ranked:
+            return sorted(scores, key=lambda x: x['friendly_name'])
+
+        key = 'score' if contest.rank_partial_score else 'ac_count'
+        scores.sort(key=cmp_to_key(lambda x, y: y[key] - x[key] if x[key] != y[key] else x['penalty'] - y['penalty']))
+        for i, player in enumerate(scores):
+            player['rank'] = i + 1
+            if contest.rank_penalty:
+                continue
+            if i > 0 and player[key] == scores[i - 1][key]:
+                player['rank'] = scores[i - 1][key]
+
+        return scores

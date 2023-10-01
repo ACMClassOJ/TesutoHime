@@ -5,3 +5,4 @@ python-redis-lock==3.7.0
 redis==4.3.4
 requests==2.25.0
 SQLAlchemy==1.4.40
+alembic==1.12.0

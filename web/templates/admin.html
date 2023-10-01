@@ -87,34 +87,61 @@
                                     <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetContestDetails"> 查看比赛情况 </button>
                                 </div>
                             </div>
-                            <div class="form-row" id="divContestHidden">
-                                <div class="form-group col-md-3">
-                                    <label for="iptContestName"> 比赛名称 </label>
-                                    <input class="form-control" type="text" name="name" id="iptContestName">
+                            <div id="divContestHidden">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label for="iptContestName"> 比赛名称 </label>
+                                        <input class="form-control" type="text" name="name" id="iptContestName">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="iptStartTime"> 起始时间 (YYYY-MM-DDThh:mm:ss) </label>
+                                        <input class="form-control" type="datetime-local" name="start_time" id="iptStartTime">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="iptEndTime"> 结束时间 (YYYY-MM-DDThh:mm:ss) </label>
+                                        <input class="form-control" type="datetime-local" name="end_time" id="iptEndTime">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="iptContestType"> 比赛类型 </label>
+                                        <select class="form-control selectpicker" name="contest_type" id="iptContestType"
+                                                data-style="form-control font-weight-normal border-grey shadow-none">
+                                            <option value="0">比赛</option>
+                                            <option value="1">作业</option>
+                                            <option value="2">考试，适合用于机考的比赛，同时只能参加一场</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="form-group col-md-3">
-                                    <label for="iptStartTime"> 起始时间 (YYYY-MM-DDThh:mm:ss) </label>
-                                    <input class="form-control" type="datetime-local" name="start_time" id="iptStartTime">
+                                <div class="form-row">
+                                    <label class="col-md-2">排名设置</label>
                                 </div>
-                                <div class="form-group col-md-3">
-                                    <label for="iptEndTime"> 结束时间 (YYYY-MM-DDThh:mm:ss) </label>
-                                    <input class="form-control" type="datetime-local" name="end_time" id="iptEndTime">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <div class="custom-control custom-checkbox mb-3">
+                                            <input class="custom-control-input" name="ranked" id="iptRanked" type="checkbox" checked>
+                                            <label class="custom-control-label" for="iptRanked">显示排名</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="custom-control custom-checkbox mb-3">
+                                            <input class="custom-control-input" name="rank_penalty" id="iptRankPenalty" type="checkbox">
+                                            <label class="custom-control-label" for="iptRankPenalty">计算罚时</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="custom-control custom-checkbox mb-3">
+                                            <input class="custom-control-input" name="rank_partial_score" id="iptRankPartialScore" type="checkbox" checked>
+                                            <label class="custom-control-label" for="iptRankPartialScore">计算部分分</label>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-group col-md-3">
-                                    <label for="iptContestType"> 比赛类型 </label>
-                                    <select class="form-control selectpicker" name="contest_type" id="iptContestType"
-                                            data-style="form-control font-weight-normal border-grey shadow-none">
-                                        <option value="0">比赛，记分，排名</option>
-                                        <option value="1">作业，记通过，不排名</option>
-                                        <option value="2">考试，适合用于机考的比赛, 同时只能参加一场</option>
-                                    </select>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnCreateContest"> 创建比赛 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyContest"> 修改比赛 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveContest" onclick="return confirm('确认要删除吗？');"> 删除比赛 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowProblemList"> 修改比赛题号列表 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowUserList"> 修改参赛学生列表 </button>
+                                <div class="form-row">
+                                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnCreateContest"> 创建比赛 </button>
+                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyContest"> 修改比赛 </button>
+                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveContest" onclick="return confirm('确认要删除吗？');"> 删除比赛 </button>
+                                        <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowProblemList"> 修改比赛题号列表 </button>
+                                        <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowUserList"> 修改参赛学生列表 </button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row" id="divContestProblemListHidden">
@@ -302,5 +329,5 @@
     <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=20230812"></script>
+    <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=20231001"></script>
 {% endblock %}

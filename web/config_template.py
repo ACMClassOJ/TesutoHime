@@ -35,7 +35,7 @@ class S3Config:
 
 
 class LoginConfig:                        #登陆过期时间，单位s
-    Login_Life_Time = 24 * 60 * 60 * 60 
+    Login_Life_Time = 24 * 60 * 60 * 60
 
 class WebConfig:
     Problems_Each_Page = 20               #题库界面每页显示多少题目

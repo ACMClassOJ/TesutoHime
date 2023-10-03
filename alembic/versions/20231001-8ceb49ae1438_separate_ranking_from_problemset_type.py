@@ -28,6 +28,8 @@ def upgrade() -> None:
     op.execute('UPDATE Contest SET Ranked = true WHERE Type IN (0, 2);')
     op.execute('UPDATE Contest SET Rank_Partial_Score = true WHERE Type IN (0, 2);')
     op.execute('UPDATE Contest SET Type = 1 WHERE Type = 0 AND INSTR(Name, \'作业\') > 0;')
+    op.execute('UPDATE Contest SET Type = 1 WHERE Type = 0 AND INSTR(Name, \'测试\') > 0;')
+    op.execute('UPDATE Contest SET Type = 1 WHERE Type = 0 AND INSTR(Name, \'练习\') > 0;')
     op.execute('UPDATE Contest SET Type = 1 WHERE Type = 0 AND INSTR(Name, \'Homework\') > 0;')
     op.execute('UPDATE Contest SET Type = 1 WHERE Type = 0 AND INSTR(Name, \'AI2615\') > 0;')
 

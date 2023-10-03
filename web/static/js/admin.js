@@ -136,6 +136,9 @@ $(function () {
                     $("#iptContestStatusBadge").removeClass();
                     $("#iptContestStatusBadge").addClass("badge badge-secondary");
                     $("#iptContestStatusBadge").text("空");
+                    $('#iptRanked').prop('checked', true)
+                    $('#iptRankPenalty').prop('checked', false)
+                    $('#iptRankPartialScore').prop('checked', true)
                 }
                 else
                 {

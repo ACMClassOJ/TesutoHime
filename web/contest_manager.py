@@ -355,6 +355,6 @@ class ContestManager:
             if contest.rank_penalty:
                 continue
             if i > 0 and player[key] == scores[i - 1][key]:
-                player['rank'] = scores[i - 1][key]
+                player['rank'] = scores[i - 1]['rank']
 
         return scores

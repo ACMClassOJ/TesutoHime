@@ -104,7 +104,7 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 alembic revision --autogenerate -m message
 ```
 
-alembic 会记录此次改动。
+alembic 会自动对比数据库内容和当前 model 的差异，生成 migration script。
 
 关于将修改应用到数据库，请参阅迁移文档的 [Web#迁移数据库](../migration/web.md#数据库迁移)部分。
 

@@ -28,6 +28,10 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 另请注意，`web/templates/` 目录下的模板文件与网页的 URL 无关，而是由 `render_template` 函数的第一个参数决定。
 
+## 用户文档生成
+
+更改 `docs/user` 下的文档后，需要手动运行 `make user-docs` 生成 HTML 格式的用户文档。这一过程需要安装 Pandoc 工具。
+
 ## 前端日志记录
 
 除了静态内容（如图片、CSS、JS 等）和发送的心跳包以外，所有前端请求均会被记录，`config.py` 文件下 `LogConfig` 类中的配置决定日志记录的方式、位置。
@@ -98,10 +102,10 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 ### 修改数据库
 
-如需修改数据库，请先修改 `model.py`，然后执行（请将 message 替换为此次更新的描述）
+如需修改数据库，请先修改 `models.py`，然后执行（请将 message 替换为此次更新的描述）
 
 ```sh
-alembic revision --autogenerate -m message
+alembic revision --autogenerate -m "message"
 ```
 
 alembic 会自动对比数据库内容和当前 model 的差异，生成 migration script。

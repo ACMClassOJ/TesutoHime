@@ -352,9 +352,10 @@ class ContestManager:
         scores.sort(key=cmp_to_key(lambda x, y: y[key] - x[key] if x[key] != y[key] else x['penalty'] - y['penalty']))
         for i, player in enumerate(scores):
             player['rank'] = i + 1
-            if contest.rank_penalty:
-                continue
             if i > 0 and player[key] == scores[i - 1][key]:
+                if contest.rank_penalty:
+                    if player['penalty'] != scores[i - 1]['penalty']:
+                        continue
                 player['rank'] = scores[i - 1]['rank']
 
         return scores

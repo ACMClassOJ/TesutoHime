@@ -5,13 +5,13 @@ from commons.task_typing import ResourceUsage
 from commons.util import RedisQueues, load_config
 from redis.asyncio import Redis
 
-config = load_config('scheduler', 'v1')
+config = load_config('scheduler', 'v2')
 
 working_dir = PosixPath(config['working_dir'])
 cache_dir = PosixPath(config['cache_dir'])
 log_dir = PosixPath(config['log_dir'])
 
-host = '0.0.0.0'
+host = config['host']
 port = int(config['port'])
 web_base_url = config['web']['base_url']
 web_auth = config['web']['auth']

@@ -1,8 +1,9 @@
-scheduler_config: v1
+scheduler_config: v2
 
 working_dir: /var/oj/scheduler
 cache_dir: /var/cache/oj/scheduler
 log_dir: /var/log/oj/scheduler
+host: 0.0.0.0
 port: 5100
 
 web:

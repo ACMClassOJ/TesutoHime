@@ -20,7 +20,7 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 每个请求均会调用相应的函数（由函数前的修饰器指定，如 `@web.route('/index.html')` 表示对 `/OnlineJudge/index.html` 的请求）。
 
-`web.py` 负责处理所有除 `/admin` 及其子页面以外的请求；`admin.py` 负责处理所有 `/admin` 及其子页面以外的请求。
+`web.py` 负责处理所有除 `/admin` 及其子页面以外的请求；`admin.py` 负责处理所有 `/admin` 及其子页面的请求。
 
 ## 页面渲染及模板
 

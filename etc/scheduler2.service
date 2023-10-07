@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=idle
-User=acmoj
-WorkingDirectory=/home/acmoj/TesutoHime/
-ExecStart=python3 -m scheduler2.main
+User=ojsched
+WorkingDirectory=/opt/TesutoHime/
+ExecStart=/opt/TesutoHime/venv/python3 -m scheduler2.main
 Restart=always
 RestartSec=120
 

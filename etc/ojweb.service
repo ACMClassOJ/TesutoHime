@@ -3,10 +3,10 @@ Description=TesutoHime Web Server
 After=network.target
 
 [Service]
-User=acmoj
+User=ojweb
 Type=idle
-WorkingDirectory=/home/acmoj/TesutoHime/
-ExecStart=python3 -m web.main
+WorkingDirectory=/opt/TesutoHime/
+ExecStart=/opt/TesutoHime/venv/bin/python3 -m web.main
 Restart=always
 RestartSec=120
 

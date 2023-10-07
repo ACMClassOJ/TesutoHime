@@ -44,7 +44,7 @@ sudo mysql
 
 ```sql
 -- 此处用户名需与上面创建的 Linux 用户名一致
-CREATE USER 'ojweb'@'localhost';
+CREATE USER 'ojweb'@'localhost' IDENTIFIED BY unix_socket;
 -- 若要用密码登录:
 -- CREATE USER 'ojweb' IDENTIFIED BY 'xxxxxxxx';
 

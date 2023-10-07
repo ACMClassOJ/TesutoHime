@@ -1,6 +1,6 @@
 import datetime
 import time
-from urllib.parse import urljoin, urlparse, urlsplit, urlunsplit
+from urllib.parse import parse_qs, urljoin, urlparse, urlsplit, urlunsplit
 
 import boto3
 import redis
@@ -15,10 +15,13 @@ engine = create_engine(mysql_connection_string, pool_recycle=mysql_connection_po
 SqlSession = sessionmaker(bind=engine)
 
 mysql_url = urlparse(mysql_connection_string)
+mysql_qs = parse_qs(mysql_url.query)
 mysql_database = mysql_url.path[1:]
 mysql_password = mysql_url.netloc.split('@')[0].split(':')[1:]
 if len(mysql_password) > 0:
     mysql_password = { 'password': mysql_password[0] }
+elif 'unix_socket' in mysql_qs:
+    mysql_password = { 'unix_socket': mysql_qs['unix_socket'][0] }
 else:
     mysql_password = {}
 

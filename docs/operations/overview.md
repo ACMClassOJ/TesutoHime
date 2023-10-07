@@ -37,7 +37,7 @@ MariaDB 运行在 3306 端口上 (只监听本机地址)，同时监听 /run/mys
 
 Redis 运行在 6379 端口上 (**对内网开放**，因为评测机需要访问)，有密码保护。
 
-调度机由 ojsched 用户运行在 5100 端口上 (只监听本机地址)，使用 systemd 启动，配置文件位于 /usr/lib/systemd/system/scheduler2.service (本 repo 中的 etc/scheduler2.service)。更新代码后应使用 `reload-sched` 重启。日志位于 /var/log/oj/scheduler。
+调度机由 ojsched 用户运行在 5100 端口上 (只监听本机地址)，使用 systemd 启动，配置文件位于 /usr/lib/systemd/system/scheduler2.service (本 repo 中的 etc/scheduler2.service)。更新代码后应使用 `reload-sched` 重启。日志位于 /var/log/oj/scheduler。调度机的日志由 logrotate 负责维护，配置文件位于 /etc/logrotate.d/ojsched。
 
 ## acmoj-2023
 
@@ -45,4 +45,4 @@ acmoj-2023 是一台物理机 (6 大 8 小共 14 核 20 线程，16G 内存)，�
 
 评测机代码位于 /home/ojrunner/TesutoHime，使用 ojrunner 用户运行，使用 systemd 启动，配置文件位于 /usr/lib/systemd/system/judger2@.service (与 repo 中的 judger2.service 有所不同)。更新代码后应使用 `sudo systemctl restart judger2@{12..19}` 重启。
 
-评测机的工作目录位于 /var/oj/runner/{12..19} 中 (每个目录对应一台虚拟评测机，编号 5–12)，/var/oj/runner/gen 这一脚本用于生成配置文件。conf/ 为配置文件 (也是评测机的 cwd)，wd/ 为工作目录 (临时文件)，cache/ 为缓存，log/ 为日志。
+评测机的工作目录位于 /var/oj/runner/{12..19} 中 (每个目录对应一台虚拟评测机，编号 5–12)，/var/oj/runner/gen 这一脚本用于生成配置文件。conf/ 为配置文件 (也是评测机的 cwd)，wd/ 为工作目录 (临时文件)，cache/ 为缓存，log/ 为日志。评测机的日志由 logrotate 负责维护，配置文件位于 /etc/logrotate.d/ojrunner。

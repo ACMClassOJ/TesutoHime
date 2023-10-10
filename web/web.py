@@ -966,6 +966,8 @@ def profile():
                 UserManager.modify_user(SessionManager.get_username(), None, form.get('friendly_name'), form.get(
                     'password'), None)
                 return ReturnCode.SUC_MOD_USER
+            else:
+                return ret
 
         except KeyError:
             return ReturnCode.ERR_BAD_DATA

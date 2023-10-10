@@ -26,7 +26,7 @@ class Tracker:
         if 'code' in everything['post_args']:
             del everything['post_args']['code']
         everything['args'] = request.args
-        self.tracker.info(json.dumps(everything))
+        self.tracker.info(json.dumps(everything, ensure_ascii=False))
 
     def __init__(self):                                  #经测试，先运行init，再运行下面的setup_log
         self.tracker = logging.getLogger(LogConfig.name)

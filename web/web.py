@@ -24,10 +24,8 @@ from web.admin import admin
 from web.config import (JudgeConfig, LoginConfig, ProblemConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
-from web.const import (ContestType, Privilege, ReturnCode, contributors,
-                       judge_status_info, language_info, mntners,
-                       runner_status_info)
-from web.contest_cache import ContestCache
+from web.const import (Privilege, ReturnCode, contributors, judge_status_info,
+                       language_info, mntners, runner_status_info)
 from web.contest_manager import ContestManager
 from web.discuss_manager import DiscussManager
 from web.judge_manager import JudgeManager, NotFoundException
@@ -39,8 +37,7 @@ from web.session_manager import SessionManager
 from web.tracker import tracker
 from web.user_manager import UserManager
 from web.utils import (SqlSession, gen_page, gen_page_for_problem_list,
-                       generate_s3_public_url, readable_time,
-                       regularize_string, unix_nano)
+                       generate_s3_public_url, readable_time, unix_nano)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -71,7 +68,7 @@ def validate(username: Optional['str'] = None,
         The definition of ReturnCode is at Web/const.py.
     """
     username_reg = '([a-zA-Z][a-zA-Z0-9_]{0,19})$'
-    password_reg = '([a-zA-Z0-9_\!\@\#\$\%\^&\*\(\)]{6,30})$'
+    password_reg = '([\x20-\x7e]{6,128})$'
     friendly_name_reg = '([a-zA-Z0-9_]{1,60})$'
     student_id_reg = '([0-9]{12})$'
     if username is not None and re.match(username_reg, username) is None:

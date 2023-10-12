@@ -8,15 +8,15 @@
         <form method="post" id="register">
             <div class="form-group">
                 <label for="username">用户名</label>
-                <input class="form-control" type="text" name="username" id="username" required="required" pattern="[a-zA-Z][a-zA-Z0-9_]{0,19}" title="用户名要求：20 位以内的大小写字母或数字（第一位必须是字母）">
+                <input class="form-control" type="text" name="username" id="username" required="required" pattern="[a-zA-Z][a-zA-Z0-9_]{0,19}" title="用户名要求：20 位以内的大小写字母或数字（第一位必须是字母）" autocomplete="username">
             </div>
             <div class="form-group">
                 <label for="password">密码</label>
-                <input class="form-control" type="password" name="password" id="password" required="required" pattern="[a-zA-Z0-9_!@#$%*]{6,30}" title="密码要求：6-30 位的大小写字母、数字、下划线">
+                <input class="form-control" type="password" name="password" id="password" required="required" minlength="6" maxlength="128" title="密码要求：6-128 位" autocomplete="new-password">
             </div>
             <div class="form-group">
                 <label for="friendly_name">昵称</label>
-                <input class="form-control" type="text" name="friendly_name" id="friendly_name" required="required" pattern="[a-zA-Z0-9_]{1,32}" title="昵称要求：32 位以内的大小写字母、数字、下划线">
+                <input class="form-control" type="text" name="friendly_name" id="friendly_name" required="required" pattern="[a-zA-Z0-9_]{1,32}" title="昵称要求：32 位以内的大小写字母、数字、下划线" autocomplete="nickname">
             </div>
             <div class="form-group">
                 <label for="student_id">学号</label>

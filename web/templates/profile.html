@@ -5,21 +5,21 @@
 {% block content %}
     <div class="card card-body col-lg-5 m-auto">
         <h1 class="text-center">修改信息</h1>
-        <form>
+        <form id="profile-form">
             <div class="form-group">
                 <label for="iptFriendlyName">新昵称</label>
                 <input class="form-control" type="text" name="friendly_name" id="iptFriendlyName" maxlength="32">
             </div>
             <div class="form-group">
                 <label for="iptPassword">新密码</label>
-                <input class="form-control" type="password" name="password" id="iptPassword">
+                <input class="form-control" type="password" name="password" minlength="6" maxlength="128" id="iptPassword" autocomplete="new-password">
             </div>
             <div class="form-group">
                 <label for="iptRepeatPassword">重复密码</label>
-                <input class="form-control" type="password" id="iptRepeatPassword" name="repeatPassword">
+                <input class="form-control" type="password" id="iptRepeatPassword" name="repeatPassword" autocomplete="new-password">
             </div>
             <br>
-            <button class="btn btn-block btn-primary" type="button" id="btnModify">修改</button>
+            <button class="btn btn-block btn-primary" type="submit" id="btnModify">修改</button>
         </form>
     </div>
 {% endblock %}
@@ -27,7 +27,8 @@
 {% block script %}
     <script>
         $(function () {
-            $("#btnModify").click(function () {
+            $("#profile-form").submit(function (e) {
+                e.preventDefault()
                 let p = $("#iptPassword").val(), pp = $("#iptRepeatPassword").val(), n = $("#iptFriendlyName").val();
                 if (p != null && p !== "" && p !== pp) {
                     swal("Oops", "两次输入的密码不一致！", "error");

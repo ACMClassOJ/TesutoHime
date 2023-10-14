@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% set page = "偏好设置" %}
+
+{% block content %}
+<div class="card card-body col-lg-5 m-auto">
+    <h1 class="text-center">偏好设置</h1>
+    <form id="profile-form">
+        <div class="form-group">
+            <label for="iptTabSize">缩进显示长度(Tab符宽度)</label>
+            <input class="form-control" type="number" name="tab_size" id="iptTabSize" max="8" min="0" step="1">
+        </div>
+        <br>
+        <button class="btn btn-block btn-primary" type="submit" id="btnModify">修改</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(function () {
+        $("#profile-form").submit(function (e) {
+            e.preventDefault()
+            let tabSize = $("#iptTabSize").val();
+            let data = {};
+            if (tabSize !== "")
+                data["tab_size"] = parseInt(tabSize);
+            console.log(data);
+            data_json = JSON.stringify(data);
+            if (data_json === "{}")
+                return;
+            console.log(data_json);
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "/OnlineJudge/profile/preference",
+                dataType: "json",
+                data: data_json,
+                success: function (ret) {
+                    console.log(ret);
+                    if (ret["e"] === 0) {
+                        swal("Success", "信息修改成功！", "success");
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 800);
+                    } else {
+                        swal("Oops", "信息修改失败，检查您的输入信息！", "error");
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -10,6 +10,15 @@
     <link href="{{ url_for('.static', filename = 'lib/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('.static', filename = 'style.css') }}?v=20230417" rel="stylesheet"> 
     <link href="{{ url_for('.static', filename = 'dark.css') }}?v=20230417" rel="stylesheet"> {% block head %}{% endblock %}
+    {% if user_preference != undefined -%}
+    <style>
+        :root {
+            --user-prefer-tab-size: {{ user_preference.tabsize if 
+                user_preference.tabsize != undefined
+                else 4}};
+        }
+    </style>
+    {%- endif %}
 </head>
 
 <body class="bg-secondary">
@@ -54,6 +63,8 @@
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ friendlyName }}</a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <a class="dropdown-item" href="/OnlineJudge/profile">个人信息</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="/OnlineJudge/profile/preference">偏好设置</a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="/OnlineJudge/logout">注销</a>
                         </div>

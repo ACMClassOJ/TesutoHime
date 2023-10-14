@@ -152,3 +152,27 @@ class UserManager:
         data = cursor.fetchone()
         db.close()
         return data is not None
+
+    @staticmethod
+    def get_preference(username: str) -> Optional[str]:
+        db = db_connect()
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT Preference FROM User WHERE Username = %s", username)
+        data = cursor.fetchone()
+        db.close()
+        if data is None or data[0] is None:
+            return None
+        return str(data[0])
+
+    @staticmethod
+    def modify_preference(username: str, prefer: str):
+        db = db_connect()
+        cursor = db.cursor()
+        try:
+            cursor.execute("UPDATE User SET Preference = %s WHERE Username = %s", (prefer, username))
+            db.commit()
+        except pymysql.Error:
+            db.rollback()
+            sys.stderr.write("SQL Error in UserManager: modify_preference\n")
+        db.close()

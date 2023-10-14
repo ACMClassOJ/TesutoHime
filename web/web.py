@@ -779,14 +779,19 @@ def code(submission_id):
         (is_admin or submission.username == SessionManager.get_username())
     show_score = not abortable and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
-
+    prefer_str = UserManager.get_preference(SessionManager.get_username())
+    preference = {}
+    if prefer_str != None:
+        preference = json.loads(prefer_str)
     return render_template('judge_detail.html', submission=submission,
                            enumerate=enumerate, code_url=code_url,
                            details=details, judge_status_info=judge_status_info,
                            language=language, abortable=abortable,
                            show_score=show_score,
                            friendlyName=SessionManager.get_friendly_name(),
-                           is_Admin=is_admin)
+                           is_Admin=is_admin,
+                           user_preference=preference)
+
 
 @web.route('/code/<int:submit_id>/void', methods=['POST'])
 def mark_void(submit_id):
@@ -966,6 +971,34 @@ def profile():
             else:
                 return ret
 
+        except KeyError:
+            return ReturnCode.ERR_BAD_DATA
+        except TypeError:
+            return ReturnCode.ERR_BAD_DATA
+
+
+@web.route('/profile/preference', methods=['GET', 'POST'])
+def profile_preference():
+    if request.method == 'GET':
+        if not SessionManager.check_user_status():
+            return redirect('/OnlineJudge/login?next=' + request.full_path)
+        return render_template('preference.html', friendlyName=SessionManager.get_friendly_name(),
+                               is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
+    else:
+        if not SessionManager.check_user_status():
+            return ReturnCode.ERR_USER_NOT_LOGGED_IN
+        form = request.json
+        try:
+            cur_json = UserManager.get_preference(SessionManager.get_username())
+            cur = json.loads(cur_json) if cur_json else {}
+
+            tabSize = form.get('tab_size')
+            if tabSize != None:
+                if not (type(tabSize) == int and tabSize >= 0 and tabSize <= 8):
+                    return ReturnCode.ERR_BAD_DATA
+                cur["tabsize"] = tabSize
+            UserManager.modify_preference(SessionManager.get_username(), json.dumps(cur))
+            return ReturnCode.SUC_MOD_USER
         except KeyError:
             return ReturnCode.ERR_BAD_DATA
         except TypeError:

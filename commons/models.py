@@ -23,6 +23,7 @@ class User(Base):
     password = Column('Password', TINYTEXT)
     salt = Column('Salt', INTEGER(11))
     privilege = Column('Privilege', INTEGER(11))
+    preference = Column('Preference', Text, default='{}')
 
 
 class Problem(Base):

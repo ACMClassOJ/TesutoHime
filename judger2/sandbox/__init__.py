@@ -3,6 +3,7 @@ __all__ = 'run_with_limits', 'chown_back'
 from asyncio import create_subprocess_exec, wait_for
 from dataclasses import asdict, dataclass, field
 from logging import getLogger
+from math import ceil
 from os import WEXITSTATUS, WIFEXITED, WIFSIGNALED, WTERMSIG, getuid, wait4
 from pathlib import PosixPath
 from shlex import quote
@@ -14,8 +15,7 @@ from time import time
 from typing import IO, List, Union
 
 from commons.task_typing import ResourceUsage, RunResult
-from commons.util import asyncrun, Literal
-
+from commons.util import Literal, asyncrun
 from judger2.config import relative_slowness, task_envp, worker_uid
 from judger2.util import TempDir, format_args
 
@@ -111,9 +111,9 @@ async def run_with_limits(
 ) -> RunResult:
     # these are nsjail args
     fsize = 'inf' if limits.file_size_bytes < 0 else \
-        str(int(limits.file_size_bytes / 1048576 + 256))
+        str(ceil(limits.file_size_bytes / 1048576 + 256))
     time_limit_scaled = limits.time_msecs * relative_slowness
-    time_limit_nsjail = str(int(time_limit_scaled / 1000 * time_tolerance_ratio + 1))
+    time_limit_nsjail = str(ceil(time_limit_scaled / 1000 * time_tolerance_ratio + 1))
     # memory_limit = str(limits.memory_bytes + 1048576)
     bindmount_ro = bindmount_ro_base + [str(x) for x in supplementary_paths]
     bindmount_rw = bindmount_rw_base + [str(cwd)] \
@@ -137,7 +137,7 @@ async def run_with_limits(
             cwd=str(cwd),
             rlimit_fsize=fsize,
             time_limit=time_limit_nsjail,
-            rlimit_cpu=str(int(float(time_limit_nsjail) + 1)),
+            rlimit_cpu=str(ceil(float(time_limit_nsjail) + 1)),
             # cgroups-based memory limit is not working
             # cgroup_mem_max=memory_limit,
             bindmount_ro=bindmount_ro,
@@ -147,7 +147,7 @@ async def run_with_limits(
             tmpfsmount='/tmp' if tmpfsmount else False,
             env=task_envp + env,
         )
-        checker_time_limit = str(int(time_limit_scaled * time_tolerance_ratio + 500))
+        checker_time_limit = str(ceil(time_limit_scaled * time_tolerance_ratio + 500))
         run_args = [runner_path, checker_time_limit, str(result_file)] \
             + argv
         nsjail_argv = format_args(asdict(args)) + ['--'] + run_args

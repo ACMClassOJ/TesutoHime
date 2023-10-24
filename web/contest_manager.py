@@ -167,20 +167,22 @@ class ContestManager:
         return
 
     @staticmethod
-    def list_contest(contest_type: int):
+    def count_contest(contest_type: list[int]):
+        subject = ' OR '.join(list(map(lambda x : 'Type = %s' % x, contest_type)))
         db = db_connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, Name, Start_Time, End_Time, Type FROM Contest WHERE Type = %s ORDER BY ID DESC",
-                       (contest_type))
+        cursor.execute("SELECT COUNT(*) FROM Contest WHERE %s" % subject)
         ret = cursor.fetchall()
         db.close()
-        return ret
+        return ret[0][0]
 
     @staticmethod
-    def list_contest_and_exam():
+    def list_contest(contest_type: list[int], page: int, num_per_page: int):
+        subject = ' OR '.join(list(map(lambda x : 'Type = %s' % x, contest_type)))
         db = db_connect()
         cursor = db.cursor()
-        cursor.execute("SELECT ID, Name, Start_Time, End_Time, Type FROM Contest WHERE Type = 0 OR Type = 2 ORDER BY ID DESC")
+        cursor.execute("SELECT ID, Name, Start_Time, End_Time, Type FROM Contest WHERE %s ORDER BY ID DESC LIMIT %s, %s"
+                       % (subject, (page - 1) * num_per_page, num_per_page))
         ret = cursor.fetchall()
         db.close()
         return ret

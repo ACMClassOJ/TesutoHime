@@ -839,8 +839,13 @@ def contest_list():
     contest_id = request.args.get('contest_id')
     if contest_id is not None:
         return redirect(f'/OnlineJudge/problemset/{contest_id}')
+    page = request.args.get('page')
+    page = int(page) if page else 1
+    total = ContestManager.count_contest([0, 2])
+    maxPageNumber = (total + WebConfig.Constest_Each_Page - 1) // WebConfig.Constest_Each_Page
+    page = min(page, maxPageNumber)
     username = SessionManager.get_username()
-    contest_list = ContestManager.list_contest_and_exam()
+    contest_list = ContestManager.list_contest(contest_type=[0, 2], page=page, num_per_page=WebConfig.Constest_Each_Page)
     data = []
     cur_time = unix_nano()
     is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
@@ -867,7 +872,9 @@ def contest_list():
         data.append(cur)
 
     return render_template('contest_list.html', Data=data, friendlyName=SessionManager.get_friendly_name(),
-                           is_Admin=is_admin)
+                           is_Admin=is_admin,
+                           Pages=gen_page(page, maxPageNumber),
+                           Args=dict(filter(lambda e: e[0] != 'page' and e[0] != 'all', request.args.items())))
 
 @web.route('/contest/<int:contest_id>')
 def contest(contest_id):
@@ -924,8 +931,13 @@ def homework_list():
     contest_id = request.args.get('homework_id')
     if contest_id is not None:  # display contest list
         return redirect(f'/OnlineJudge/problemset/{contest_id}')
+    page = request.args.get('page')
+    page = int(page) if page else 1
+    total = ContestManager.count_contest([1])
+    maxPageNumber = (total + WebConfig.Constest_Each_Page - 1) // WebConfig.Constest_Each_Page
+    page = min(page, maxPageNumber)
     username = SessionManager.get_username()
-    contest_list = ContestManager.list_contest(1)
+    contest_list = ContestManager.list_contest(contest_type=[1], page=page, num_per_page=WebConfig.Constest_Each_Page)
     data = []
     cur_time = unix_nano()
     for ele in contest_list:
@@ -943,7 +955,9 @@ def homework_list():
             cur['Status'] = 'Going On'
         data.append(cur)
     return render_template('homework_list.html', Data=data, friendlyName=SessionManager.get_friendly_name(),
-                           is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
+                           is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN,
+                           Pages=gen_page(page, maxPageNumber),
+                           Args=dict(filter(lambda e: e[0] != 'page' and e[0] != 'all', request.args.items())))
 
 
 @web.route('/profile', methods=['GET', 'POST'])

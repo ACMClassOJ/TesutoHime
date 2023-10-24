@@ -1,0 +1,19 @@
+<nav>
+	<ul class="pagination justify-content-center">
+		{% for x in Pages -%}
+			{%- if x[2] == 1 -%}
+				<li class="page-item active">
+					<a class="page-link btn-light" href="javascript:void(0)"> {{ x[0] }} </a>
+				</li>
+			{%- elif x[2] != -1 -%}
+				<li class="page-item">
+					<a class="page-link btn-light" href="?page={{ x[1] }}
+					{%- for arg in Args.items() -%}
+						&{{ arg[0] }}={{ arg[1] }}
+					{%- endfor -%}
+					"> {{ x[0] }} </a>
+				</li>
+			{%- endif -%}
+		{%- endfor %}
+	</ul>
+</nav>

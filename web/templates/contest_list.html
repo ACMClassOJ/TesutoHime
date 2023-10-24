@@ -54,6 +54,7 @@
                     </tr>
                 {%- endfor %}
             </table>
+            {% include 'component/page_switcher.html' with context -%}  
         </div>
     </div>
 {% endblock %}
@@ -61,4 +62,3 @@
 {% block script %}
     <script src="{{ url_for('.static', filename = 'js/post_join.js') }}"></script>
 {% endblock %}
-

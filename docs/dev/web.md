@@ -121,7 +121,8 @@ alembic 会自动对比数据库内容和当前 model 的差异，生成 migrati
 - `Friendly_Name`: 昵称；
 - `Password`: 密码；
 - `Salt`: 密码 salt；
-- `Privilege`: 用户权限。
+- `Privilege`: 用户权限；
+- `Preference`: 用户偏好。
 
 ### Realname_Reference 表
 

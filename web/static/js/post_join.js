@@ -1,16 +1,17 @@
-function post_join(x)  {
-    $(function(){
+for (const el of document.querySelectorAll('[data-contest-id]')) {
+    el.addEventListener('click', e => {
+        e.preventDefault()
         $.ajax({
             type: "POST",
             dataType: "text",
-            data: {contest_id: x},
+            data: {contest_id: Number(el.getAttribute('data-contest-id'))},
             url: "/OnlineJudge/api/join",
             beforeSend: function () {
-                $("#join_button_" + x).attr("disabled", "disabled");
+                el.disabled = true
             },
-            success: function (response_text)  {
-                    location.reload();
+            success: function () {
+                location.reload()
             },
-        });
-    });
+        })
+    })
 }

@@ -40,7 +40,7 @@ class LoginConfig:                        #登陆过期时间，单位s
 class WebConfig:
     Problems_Each_Page = 20               #题库界面每页显示多少题目
     Block_Register = False                #暂停OJ注册
-    Constest_Each_Page = 20               #比赛页面每页显示多少比赛
+    Contests_Each_Page = 20               #比赛页面每页显示多少比赛
 
 class SchedulerConfig:
     base_url = 'http://localhost:5100'

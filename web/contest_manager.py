@@ -11,7 +11,7 @@ from sqlalchemy.orm import defer, selectinload
 from commons.models import Contest, JudgeRecord2, JudgeStatus, User
 from web.contest_cache import ContestCache
 from web.reference_manager import ReferenceManager
-from web.utils import SqlSession, db_connect, regularize_string
+from web.utils import SqlSession, db_connect, regularize_string, unix_nano
 
 
 class ContestManager:
@@ -167,25 +167,31 @@ class ContestManager:
         return
 
     @staticmethod
-    def count_contest(contest_type: list[int]):
-        subject = ' OR '.join(list(map(lambda x : 'Type = %s' % x, contest_type)))
-        db = db_connect()
-        cursor = db.cursor()
-        cursor.execute("SELECT COUNT(*) FROM Contest WHERE %s" % subject)
-        ret = cursor.fetchall()
-        db.close()
-        return ret[0][0]
+    def get_status(contest: Contest, time: Optional[int] = None) -> str:
+        # Please ensure stability of these strings; they are more like enum values than UI strings.
+        # They are compared with in jinja templates.
+        if time is None: time = unix_nano()
+        if time < contest.start_time:
+            return 'Pending'
+        elif time > contest.end_time:
+            return 'Finished'
+        else:
+            return 'Going On'
 
     @staticmethod
-    def list_contest(contest_type: list[int], page: int, num_per_page: int):
-        subject = ' OR '.join(list(map(lambda x : 'Type = %s' % x, contest_type)))
-        db = db_connect()
-        cursor = db.cursor()
-        cursor.execute("SELECT ID, Name, Start_Time, End_Time, Type FROM Contest WHERE %s ORDER BY ID DESC LIMIT %s, %s"
-                       % (subject, (page - 1) * num_per_page, num_per_page))
-        ret = cursor.fetchall()
-        db.close()
-        return ret
+    def list_contest(types: list[int], page: int, num_per_page: int) -> Tuple[int, List[Contest]]:
+        with SqlSession(expire_on_commit=False) as db:
+            limit = num_per_page
+            offset = (page - 1) * num_per_page
+            query = db \
+                .query(Contest) \
+                .where(Contest.type.in_(types))
+            count = query.count()
+            this_page = query \
+                .order_by(Contest.id.desc()) \
+                .limit(limit).offset(offset) \
+                .all()
+            return count, this_page
 
     @staticmethod
     def get_time(contest_id: int):
@@ -203,7 +209,7 @@ class ContestManager:
         cursor.execute("SELECT Problem_ID FROM Contest_Problem WHERE Belong = %s", (str(contest_id)))
         ret = cursor.fetchall()
         db.close()
-        return ret
+        return [x[0] for x in ret]
 
     @staticmethod
     def list_player_for_contest(contest_id: int):
@@ -212,7 +218,7 @@ class ContestManager:
         cursor.execute("SELECT Username FROM Contest_Player WHERE Belong = %s", (str(contest_id)))
         ret = cursor.fetchall()
         db.close()
-        return list(map(lambda x: x[0], ret))
+        return [x[0] for x in ret]
 
     @staticmethod
     def get_title(contest_id: int):
@@ -293,7 +299,7 @@ class ContestManager:
             } for user in players
         ]
         username_to_num = dict(map(lambda entry: [regularize_string(entry[1].username), entry[0]], enumerate(players)))
-        problem_to_num = dict(map(lambda entry: [entry[1][0], entry[0]], enumerate(problems)))
+        problem_to_num = dict(map(lambda entry: [entry[1], entry[0]], enumerate(problems)))
 
         with SqlSession() as db:
             submits = db \

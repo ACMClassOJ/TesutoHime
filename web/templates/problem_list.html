@@ -36,38 +36,15 @@
                     <th>题目名称</th>
                 </tr>
                 </thead>
-                {% for Problem in Problems -%}
+                {% for problem in problems -%}
                     <tr>
-                        <th>{{ Problem[0] }}</th>
-                        <td><a href="/OnlineJudge/problem/{{ Problem[0] }}" target="_blank">{{ Problem[1] }}</a></td>
+                        <th>{{ problem.id }}</th>
+                        <td><a href="/OnlineJudge/problem/{{ problem.id }}" target="_blank">{{ problem.title }}</a></td>
                     </tr>
                 {%- endfor %}
             </table>
         </div>
-        <nav>
-            <ul class="pagination justify-content-center">
-                {% for x in Pages -%}
-                    {%- if x[2] == 1 -%}
-                        <li class="page-item active">
-                            <a class="page-link btn-light" href="/OnlineJudge/problem?page={{ x[1] }}
-                            {%- for arg in Args.items() -%}
-                                &{{ arg[0] }}={{ arg[1] }}
-                            {%- endfor -%}
-                            "> {{ x[0] }} 
-                            </a>
-                        </li>
-                    {%- elif x[2] != -1 -%}
-                        <li class="page-item">
-                            <a class="page-link btn-light" href="/OnlineJudge/problem?page={{ x[1] }}
-                            {%- for arg in Args.items() -%}
-                                &{{ arg[0] }}={{ arg[1] }}
-                            {%- endfor -%}
-                            "> {{ x[0] }} </a>
-                        </li>
-                    {%- endif -%}
-                {%- endfor %}
-            </ul>
-        </nav>
+        {% include 'component/page_switcher.html' with context -%}  
     </div>
 {% endblock %}
 

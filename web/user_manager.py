@@ -6,8 +6,9 @@ import sys
 from typing import Optional
 
 import pymysql
+from commons.models import ContestPlayer
 
-from web.utils import db_connect
+from web.utils import SqlSession, db_connect
 
 
 def hash(password, salt):
@@ -152,3 +153,12 @@ class UserManager:
         data = cursor.fetchone()
         db.close()
         return data is not None
+
+    @staticmethod
+    def list_contests(username: str) -> bool:
+        with SqlSession() as db:
+            res = db \
+                .query(ContestPlayer.c.Belong) \
+                .where(ContestPlayer.c.Username == username) \
+                .all()
+            return [x[0] for x in res]

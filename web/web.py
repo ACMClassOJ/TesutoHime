@@ -12,6 +12,7 @@ from urllib.parse import quote, urlencode, urljoin
 from uuid import uuid4
 
 import requests
+import sqlalchemy as sa
 from flask import (Blueprint, Flask, abort, make_response, redirect,
                    render_template, request, send_from_directory)
 from sqlalchemy.orm import defer, selectinload
@@ -225,6 +226,9 @@ def join_contest():
     if unix_nano() > ed:
         return '-1'
     username = SessionManager.get_username()
+    exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username, unix_nano())
+    if exam_id != -1:
+        return '-1'
     if not ContestManager.check_player_in_contest(arg, username):
         ContestManager.add_player_to_contest(arg, username)
     return '0'
@@ -326,7 +330,7 @@ def problem_list():
         return redirect('/OnlineJudge/login?next=' + request.full_path)
     is_admin = bool(SessionManager.get_privilege() >= Privilege.ADMIN)
     page = request.args.get('page')
-    page = int(page) if page is not None else 1
+    page = int(page) if page else 1
 
     problem_id = request.args.get('problem_id')
     if problem_id == '':
@@ -343,38 +347,30 @@ def problem_list():
     if contest_id == '':
         contest_id = None
 
-    if problem_id is None and problem_name_keyword is None and problem_type is None and contest_id is None:
-        problem_count_all = 0
-        problem_count_under_11000 = 0
-        if is_admin:
-            problem_count_all = int(ProblemManager.get_problem_count_admin())
-            problem_count_under_11000 = (ProblemManager.get_problem_count_under_11000_admin())
-        else:
-            problem_count_all = int(ProblemManager.get_problem_count(unix_nano()))
-            problem_count_under_11000 = (ProblemManager.get_problem_count_under_11000(unix_nano()))
-        max_page = int(problem_count_all / WebConfig.Problems_Each_Page)
-        if problem_count_all % WebConfig.Problems_Each_Page != 0:
-            max_page += 1
-        latest_page_under_11000 = int(int(problem_count_under_11000 / WebConfig.Problems_Each_Page))
-        if problem_count_under_11000 % WebConfig.Problems_Each_Page != 0:
-            latest_page_under_11000 += 1
-        page = max(min(max_page, page), 1)
-        problems = ProblemManager.problem_in_page_autocalc(page, WebConfig.Problems_Each_Page, unix_nano(),
-                                                    SessionManager.get_privilege() >= Privilege.ADMIN)
+    with SqlSession(expire_on_commit=False) as db:
+        limit = WebConfig.Problems_Each_Page
+        offset = (page - 1) * WebConfig.Problems_Each_Page
+        query = db.query(Problem.id, Problem.title, Problem.problem_type)
+        if not is_admin:
+            query = query.where(Problem.release_time <= unix_nano())
+        if problem_name_keyword is not None:
+            query = query.where(sa.func.instr(Problem.title, problem_name_keyword) > 0)
+        if problem_type is not None:
+            query = query.where(Problem.problem_type == problem_type)
+        if contest_id is not None:
+            problem_ids = ContestManager.list_problem_for_contest(contest_id)
+            query = query.where(Problem.id.in_(problem_ids))
+        count_under_11000 = query.where(Problem.id <= 11000).count()
+        max_page_under_11000 = ceil(count_under_11000 / WebConfig.Problems_Each_Page)
+        count = query.count()
+        max_page = ceil(count / WebConfig.Problems_Each_Page)
+        problems: List[Problem] = query \
+            .order_by(Problem.id.asc()) \
+            .limit(limit).offset(offset) \
+            .all()
 
-        return render_template('problem_list.html', Problems=problems,
-                            Pages=gen_page_for_problem_list(page, max_page, latest_page_under_11000),
-                            Args=dict(),
-                            friendlyName=SessionManager.get_friendly_name(),
-                            is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
-
-    problems = ProblemManager.search_problem(unix_nano(), is_admin, problem_id, problem_name_keyword, problem_type, contest_id)
-    max_page = int (len(problems) / WebConfig.Problems_Each_Page)
-    page = max(min(max_page, page), 1)
-    start_index = (page - 1) * WebConfig.Problems_Each_Page
-    end_index = min(len(problems), page * WebConfig.Problems_Each_Page)
-    return render_template('problem_list.html', Problems=problems[start_index:end_index],
-                            Pages=gen_page_for_problem_list(page, max_page, 1),
+    return render_template('problem_list.html', problems=problems,
+                            Pages=gen_page_for_problem_list(page, max_page, max_page_under_11000),
                             Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
                             friendlyName=SessionManager.get_friendly_name(),
                             is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
@@ -675,10 +671,7 @@ def status():
 
     # only change the visibility when the exam started
     if exam_id != -1 and is_exam_started:
-        exam_visible_problems = list()
-        exam_problems_raw = ContestManager.list_problem_for_contest(exam_id)
-        for raw_tuple in exam_problems_raw:
-            exam_visible_problems.append(raw_tuple[0])
+        exam_visible_problems = ContestManager.list_problem_for_contest(exam_id)
 
     real_names = {}
     visible = {}
@@ -832,49 +825,40 @@ def abort_judge(submit_id):
     return redirect('.', SEE_OTHER)
 
 
-@web.route('/contest')
-def contest_list():
+def contest_list_generic(type, type_zh):
     if not SessionManager.check_user_status():
         return redirect('/OnlineJudge/login?next=' + request.full_path)
-    contest_id = request.args.get('contest_id')
+    contest_id = request.args.get(f'{type}_id')
     if contest_id is not None:
         return redirect(f'/OnlineJudge/problemset/{contest_id}')
+    username = SessionManager.get_username()
+    is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
+    user_contests = UserManager.list_contests(username)
+
     page = request.args.get('page')
     page = int(page) if page else 1
-    total = ContestManager.count_contest([0, 2])
-    maxPageNumber = (total + WebConfig.Constest_Each_Page - 1) // WebConfig.Constest_Each_Page
-    page = min(page, maxPageNumber)
-    username = SessionManager.get_username()
-    contest_list = ContestManager.list_contest(contest_type=[0, 2], page=page, num_per_page=WebConfig.Constest_Each_Page)
-    data = []
-    cur_time = unix_nano()
-    is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
-    exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username, cur_time)
+    type_ids = [0, 2] if type == 'contest' else [1]
+    count, contests = ContestManager.list_contest(type_ids, page, WebConfig.Contests_Each_Page)
+    current_time = unix_nano()
+
+    max_page = ceil(count / WebConfig.Contests_Each_Page)
     # here exam_id is an *arbitary* unfinished exam in which the player is in
+    exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username, current_time)
 
-    # Blocked: indicate whether the join button should be disabled because time is over
-    # Joined: indicate whether the user has joined the contest, join button should also be disabled
-    # Exam_Blocked: indicate that the user is in an *arbitary* exam, so even if there are available contests, join button should be disabled
-    for ele in contest_list:
-        cur = {'ID': int(ele[0]),
-               'Title': str(ele[1]),
-               'Start_Time': readable_time(int(ele[2])),
-               'End_Time': readable_time(int(ele[3])),
-               'Joined': ContestManager.check_player_in_contest(ele[0], username),
-               'Blocked': unix_nano() > int(ele[3]),
-               'Exam_Blocked': (exam_id != -1 and ele[4] == 2 and exam_id != int(ele[0]))}
-        if cur_time < int(ele[2]):
-            cur['Status'] = 'Pending'
-        elif cur_time > int(ele[3]):
-            cur['Status'] = 'Finished'
-        else:
-            cur['Status'] = 'Going On'
-        data.append(cur)
-
-    return render_template('contest_list.html', Data=data, friendlyName=SessionManager.get_friendly_name(),
-                           is_Admin=is_admin,
-                           Pages=gen_page(page, maxPageNumber),
+    return render_template('contest_list.html', contests=contests, friendlyName=SessionManager.get_friendly_name(),
+                           current_time=current_time, readable_time=readable_time, get_status=ContestManager.get_status,
+                           user_contests=user_contests, exam_id=exam_id,
+                           is_Admin=is_admin, type=type, type_zh=type_zh,
+                           Pages=gen_page(page, max_page),
                            Args=dict(filter(lambda e: e[0] != 'page' and e[0] != 'all', request.args.items())))
+
+@web.route('/contest')
+def contest_list():
+    return contest_list_generic('contest', '比赛')
+
+@web.route('/homework')
+def homework_list():
+    return contest_list_generic('homework', '作业')
 
 @web.route('/contest/<int:contest_id>')
 def contest(contest_id):
@@ -895,14 +879,7 @@ def problemset(contest_id):
     problems = ContestManager.list_problem_for_contest(contest_id)
     problems_visible = is_admin or unix_nano() >= contest.start_time
     data = ContestManager.get_board_view(contest)
-
-    cur_time = unix_nano()
-    if cur_time < contest.start_time:
-        contest_status = 'Pending'
-    elif cur_time > contest.end_time:
-        contest_status = 'Finished'
-    else:
-        contest_status = 'Going On'
+    contest_status = ContestManager.get_status(contest)
 
     time_elapsed = float(unix_nano() - contest.start_time)
     time_overall = float(contest.end_time - contest.start_time)
@@ -922,42 +899,6 @@ def problemset(contest_id):
         friendlyName=SessionManager.get_friendly_name(),
         enumerate=enumerate,
     )
-
-
-@web.route('/homework')
-def homework_list():
-    if not SessionManager.check_user_status():
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
-    contest_id = request.args.get('homework_id')
-    if contest_id is not None:  # display contest list
-        return redirect(f'/OnlineJudge/problemset/{contest_id}')
-    page = request.args.get('page')
-    page = int(page) if page else 1
-    total = ContestManager.count_contest([1])
-    maxPageNumber = (total + WebConfig.Constest_Each_Page - 1) // WebConfig.Constest_Each_Page
-    page = min(page, maxPageNumber)
-    username = SessionManager.get_username()
-    contest_list = ContestManager.list_contest(contest_type=[1], page=page, num_per_page=WebConfig.Constest_Each_Page)
-    data = []
-    cur_time = unix_nano()
-    for ele in contest_list:
-        cur = {'ID': int(ele[0]),
-               'Title': str(ele[1]),
-               'Start_Time': readable_time(int(ele[2])),
-               'End_Time': readable_time(int(ele[3])),
-               'Joined': ContestManager.check_player_in_contest(ele[0], username),
-               'Blocked': unix_nano() > int(ele[3])}
-        if cur_time < int(ele[2]):
-            cur['Status'] = 'Pending'
-        elif cur_time > int(ele[3]):
-            cur['Status'] = 'Finished'
-        else:
-            cur['Status'] = 'Going On'
-        data.append(cur)
-    return render_template('homework_list.html', Data=data, friendlyName=SessionManager.get_friendly_name(),
-                           is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN,
-                           Pages=gen_page(page, maxPageNumber),
-                           Args=dict(filter(lambda e: e[0] != 'page' and e[0] != 'all', request.args.items())))
 
 
 @web.route('/profile', methods=['GET', 'POST'])

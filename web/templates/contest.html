@@ -44,7 +44,7 @@
                     {% if is_Admin -%}<th>实名</th>{%- endif %}
                     {% if problems_visible -%}
                     {% for problem in problems -%}
-                        <th><a href="/OnlineJudge/problem/{{ problem[0] }}" target="_blank">{{ problem[0] }}</a></th>
+                        <th><a href="/OnlineJudge/problem/{{ problem }}" target="_blank">{{ problem }}</a></th>
                     {%- endfor %}
                     {%- endif %}
                     {% if contest.rank_partial_score -%}
@@ -75,13 +75,13 @@
                                     {{ problem['score'] if contest.rank_partial_score else '' -}}
                                     {%- if not problem['accepted'] -%}
                                         {% if is_Admin -%}
-                                        <a class="text-red" href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j][0] }}"> (-{{ problem['count'] }})</a>
+                                        <a class="text-red" href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j] }}"> (-{{ problem['count'] }})</a>
                                         {% else -%}
                                         <span class="text-red"> (-{{ problem['count'] }})</span>
                                         {%- endif %}
                                     {%- else -%}
                                         {% if is_Admin -%}
-                                        <a class="text-green" href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j][0] }}"> ({{ problem['count'] }}Y)</a>
+                                        <a class="text-green" href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j] }}"> ({{ problem['count'] }}Y)</a>
                                         {% else -%}
                                         <span class="text-green"> ({{ problem['count'] }}Y)</span>
                                         {%- endif %}

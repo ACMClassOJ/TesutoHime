@@ -370,8 +370,8 @@ def problem_list():
             .all()
 
     return render_template('problem_list.html', problems=problems,
-                            Pages=gen_page_for_problem_list(page, max_page, max_page_under_11000),
-                            Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
+                            pages=gen_page_for_problem_list(page, max_page, max_page_under_11000),
+                            args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
                             friendlyName=SessionManager.get_friendly_name(),
                             is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
 
@@ -690,11 +690,11 @@ def status():
         )
         languages[submission] = 'Unknown' if submission.language not in language_info \
             else language_info[submission.language]
-    return render_template('status.html', Pages=gen_page(page, max_page),
+    return render_template('status.html', pages=gen_page(page, max_page),
                            judge_status_info=judge_status_info, language_info=language_info,
                            submissions=submissions, real_names=real_names, visible=visible,
                            languages=languages,
-                           Args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
+                           args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
                            is_Admin=is_admin, friendlyName=SessionManager.get_friendly_name())
 
 
@@ -849,8 +849,8 @@ def contest_list_generic(type, type_zh):
                            current_time=current_time, readable_time=readable_time, get_status=ContestManager.get_status,
                            user_contests=user_contests, exam_id=exam_id,
                            is_Admin=is_admin, type=type, type_zh=type_zh,
-                           Pages=gen_page(page, max_page),
-                           Args=dict(filter(lambda e: e[0] != 'page' and e[0] != 'all', request.args.items())))
+                           pages=gen_page(page, max_page),
+                           args=dict(filter(lambda e: e[0] != 'page' and e[0] != 'all', request.args.items())))
 
 @web.route('/contest')
 def contest_list():

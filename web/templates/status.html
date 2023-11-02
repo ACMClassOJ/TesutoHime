@@ -12,23 +12,23 @@
         <div>
             <form class="form-group input-group" method="get" id="status_serach">
                 <input class="form-control input-group" type="text" name="submitter" id="submitter" placeholder="用户名"
-                       value="{{ Args["submitter"] if "submitter" in Args }}">
+                       value="{{ args["submitter"] if "submitter" in args }}">
                 <input class="form-control input-group" type="number" name="problem_id" id="problem_id"
-                       placeholder="题目编号" value="{{ Args["problem_id"] if "problem_id" in Args }}">
+                       placeholder="题目编号" value="{{ args["problem_id"] if "problem_id" in args }}">
                 <select class="form-control selectpicker" name="status" id="status"
                         data-style="form-control font-weight-normal border-grey shadow-none">
-                    <option value="" {{ 'selected' if not 'status' in Args or Args['status'] == '' }}>评测状态</option>
+                    <option value="" {{ 'selected' if not 'status' in args or args['status'] == '' }}>评测状态</option>
                     {% for key in judge_status_info -%}
-                    <option value="{{ key }}" {{ 'selected' if 'status' in Args and Args['status'] == key }}>
+                    <option value="{{ key }}" {{ 'selected' if 'status' in args and args['status'] == key }}>
                         {{ judge_status_info[key].name }}
                     </option>
                     {%- endfor %}
                 </select>
                 <select class="form-control selectpicker" name="lang" id="lang"
                         data-style="form-control font-weight-normal border-grey shadow-none">
-                    <option value="" {{ 'selected' if not 'lang' in Args or Args['lang'] == '' }}>语言</option>
+                    <option value="" {{ 'selected' if not 'lang' in args or args['lang'] == '' }}>语言</option>
                     {% for key in language_info -%}
-                    <option value="{{ key }}" {{ 'selected' if 'lang' in Args and Args['lang'] == key }}>
+                    <option value="{{ key }}" {{ 'selected' if 'lang' in args and args['lang'] == key }}>
                         {{ language_info[key] }}
                     </option>
                     {%- endfor %}

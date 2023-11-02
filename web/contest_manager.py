@@ -179,7 +179,7 @@ class ContestManager:
             return 'Going On'
 
     @staticmethod
-    def list_contest(types: list[int], page: int, num_per_page: int) -> Tuple[int, List[Contest]]:
+    def list_contest(types: List[int], page: int, num_per_page: int) -> Tuple[int, List[Contest]]:
         with SqlSession(expire_on_commit=False) as db:
             limit = num_per_page
             offset = (page - 1) * num_per_page

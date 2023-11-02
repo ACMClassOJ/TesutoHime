@@ -1,8 +1,7 @@
-boto3==1.24.59
+boto3==1.28.76
 Flask>=2
-pymysql==0.10.1
-python-redis-lock==3.7.0
-redis==4.3.4
-requests==2.25.0
-SQLAlchemy==1.4.40
+pymysql==1.1.0
+redis==4.6.0
+requests==2.31.0
+SQLAlchemy==1.4.50
 alembic==1.12.0

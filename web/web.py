@@ -18,7 +18,7 @@ from flask import (Blueprint, Flask, abort, make_response, redirect,
 from sqlalchemy.orm import defer, selectinload
 
 import commons.task_typing
-from commons.models import ContestProblem, JudgeRecord2, JudgeStatus, Problem
+from commons.models import ContestProblem, JudgeRecord2, JudgeStatus, Problem, User
 from commons.task_typing import ProblemJudgeResult
 from commons.util import load_dataclass, serialize
 from web.admin import admin
@@ -649,8 +649,8 @@ def status():
         offset = (page - 1) * JudgeConfig.Judge_Each_Page
         query = db.query(JudgeRecord2) \
             .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
-            .options(selectinload(JudgeRecord2.user)) \
-            .options(selectinload(JudgeRecord2.problem))
+            .options(selectinload(JudgeRecord2.user).load_only(User.student_id, User.friendly_name)) \
+            .options(selectinload(JudgeRecord2.problem).load_only(Problem.title))
         if arg_submitter is not None:
             query = query.where(JudgeRecord2.username == arg_submitter)
         if arg_problem_id is not None:

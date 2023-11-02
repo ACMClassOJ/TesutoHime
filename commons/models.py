@@ -193,7 +193,7 @@ class JudgeRecord2(Base):
 
     id = Column(Integer, primary_key=True)
     public = Column(Boolean)
-    language = Column(Text)
+    language = Column(String(20), index=True)
     created = Column(DateTime, server_default=text('NOW()'))
     username = Column(String(20), ForeignKey(User.username), index=True)
     user = relationship(User)

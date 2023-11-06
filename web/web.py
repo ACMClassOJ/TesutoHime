@@ -39,6 +39,7 @@ from web.tracker import tracker
 from web.user_manager import UserManager
 from web.utils import (SqlSession, gen_page, gen_page_for_problem_list,
                        generate_s3_public_url, readable_time, unix_nano)
+from web.template_interface import RowJudgeStatus
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -663,7 +664,7 @@ def status():
         count = query.count()
         max_page = ceil(count / JudgeConfig.Judge_Each_Page)
         query = query.limit(limit).offset(offset)
-        submissions: List[JudgeRecord2] = query.all()
+        submissions: List[RowJudgeStatus] = query.all()
 
     exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(username, unix_nano())
     # if not None, only problems in here are visible to user
@@ -673,13 +674,10 @@ def status():
     if exam_id != -1 and is_exam_started:
         exam_visible_problems = ContestManager.list_problem_for_contest(exam_id)
 
-    real_names = {}
-    visible = {}
-    languages = {}
     for submission in submissions:
         if is_admin:
-            real_names[submission] = ReferenceManager.Query_Realname(submission.user.student_id)
-        visible[submission] = (
+            submission.real_name = ReferenceManager.Query_Realname(submission.user.student_id)
+        submission.visible = (
             is_admin or (
                 # user's own problem: username == ele['Username']
                 # shared problems are always banned if exam_visible_problems is None (this means user in exam)
@@ -688,12 +686,11 @@ def status():
                 and (exam_visible_problems is None or submission.problem_id in exam_visible_problems)
             )
         )
-        languages[submission] = 'Unknown' if submission.language not in language_info \
+        submission.language = 'Unknown' if submission.language not in language_info \
             else language_info[submission.language]
     return render_template('status.html', pages=gen_page(page, max_page),
                            judge_status_info=judge_status_info, language_info=language_info,
-                           submissions=submissions, real_names=real_names, visible=visible,
-                           languages=languages,
+                           submissions=submissions,
                            args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
                            is_Admin=is_admin, friendlyName=SessionManager.get_friendly_name())
 
@@ -735,7 +732,7 @@ def code(submission_id):
         return redirect('/OnlineJudge/login?next=' + request.full_path)
     if submission_id <= OldJudgeManager.max_id():
         return code_old(submission_id)
-    submission = JudgeManager.get_submission(submission_id)
+    submission: RowJudgeStatus = JudgeManager.get_submission(submission_id)
     if submission is None:
         abort(NOT_FOUND)
     if not is_code_visible(submission.username, submission.problem_id, submission.public):
@@ -764,19 +761,23 @@ def code(submission_id):
         'Bucket': S3Config.Buckets.submissions,
         'Key': JudgeManager.key_from_submission_id(submission.id),
     }, ExpiresIn=60)
-    language = language_info[submission.language] \
-        if submission.language in language_info else 'Unknown'
     is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
     abortable = submission.status in \
         (JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging) and \
         (is_admin or submission.username == SessionManager.get_username())
     show_score = not abortable and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
-
-    return render_template('judge_detail.html', submission=submission,
+    if is_admin:
+        submission.real_name = ReferenceManager.Query_Realname(submission.user.student_id)
+    submission.language = language_info[submission.language] \
+        if submission.language in language_info else 'Unknown'
+    if details != None and details.resource_usage.time_msecs != None:
+        submission.time_msecs = details.resource_usage.time_msecs
+        submission.memory_bytes = details.resource_usage.memory_bytes
+    return render_template('judge_detail.html', submissions=[submission],
                            enumerate=enumerate, code_url=code_url,
                            details=details, judge_status_info=judge_status_info,
-                           language=language, abortable=abortable,
+                           abortable=abortable,
                            show_score=show_score,
                            friendlyName=SessionManager.get_friendly_name(),
                            is_Admin=is_admin)

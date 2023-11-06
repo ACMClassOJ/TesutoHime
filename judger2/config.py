@@ -45,7 +45,12 @@ cxx_file_name = 'main.cpp'
 cxx_exec_name = exec_file_name
 
 git_exec_name = exec_file_name
-gitflags = ['--depth', '1', '--recurse-submodules', '--no-local']
+gitflags = [
+    '--depth', '1',
+    '--recurse-submodules',
+    '--shallow-submodules',
+    '--no-local',
+]
 
 verilog = which('iverilog')
 verilog_file_name = 'main.v'

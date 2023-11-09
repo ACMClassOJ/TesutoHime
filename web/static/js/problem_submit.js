@@ -24,6 +24,7 @@ $(function() {
             $("input").attr("disabled", "disabled");
         },
         success: function(response_text) {
+            $("input").removeAttr("disabled");
             location = `/OnlineJudge/code/${response_text}`
         },
     };

@@ -7,6 +7,10 @@
  * Note: This program runs only on Linux.
  */
 
+#define _GNU_SOURCE
+
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/resource.h>
@@ -22,9 +26,10 @@
    See also: https://lwn.net/Articles/532593/
  */
 #define WORKER_UID 65534
+#define CHILD_DIE_STATUS 249
 typedef long long time_ms_t;
 
-void check (int cond, const char *msg) {
+inline static void check (int cond, const char *msg) {
   if (cond) {
     perror(msg);
     exit(EXIT_FAILURE);
@@ -56,6 +61,16 @@ void set_timer (time_ms_t time) {
   check(setitimer(ITIMER_REAL, &val, NULL), "setitimer");
 }
 
+/* send error information to parent */
+inline static void die_child (int fd, const char *msg) {
+  perror(msg);
+  int errnum = errno;
+  if (write(fd, &errnum, sizeof(errnum)) <= 0) {
+    perror("write");
+  }
+  exit(CHILD_DIE_STATUS);
+}
+
 int main (int argc, char **argv) {
   if (argc < 4) {
     fprintf(stderr, "Usage: runner <time limit msecs> <result file> <executable> [args...]\n");
@@ -75,15 +90,23 @@ int main (int argc, char **argv) {
   check(!results, "fopen");
   check(chmod(results_file, 0600), "chmod");
 
+  int pipefd[2];
+  check(pipe2(pipefd, O_NONBLOCK | O_CLOEXEC), "pipe");
+
   pid_t child_pid = fork();
   check(child_pid < 0, "fork");
   if (child_pid == 0) { /* is child */
-    check(fclose(results), "fclose");
-    check(setuid(WORKER_UID), "setuid");
+    if (fclose(results)) {
+      die_child(pipefd[1], "fclose");
+    }
+    if (setuid(WORKER_UID)) {
+      die_child(pipefd[1], "setuid");
+    }
     set_timer(time_limit);
 
-    check(execv(argv[3], &argv[3]), "execv");
+    execv(argv[3], &argv[3]);
     /* execv return only on errors. */
+    die_child(pipefd[1], "execv");
   }
 
   time_ms_t start_time = gettime();
@@ -104,6 +127,13 @@ int main (int argc, char **argv) {
     code = 256 + WTERMSIG(status);
   } else {
     code = -1;
+  }
+
+  if (code == CHILD_DIE_STATUS) {
+    int errnum;
+    if (read(pipefd[0], &errnum, sizeof(errnum)) > 0) {
+      code = 512 + errnum;
+    }
   }
 
   fprintf(results, "run %d %lld %ld\n", code, real_time, mem);

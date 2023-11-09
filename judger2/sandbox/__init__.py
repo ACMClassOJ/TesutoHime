@@ -4,7 +4,7 @@ from asyncio import create_subprocess_exec, wait_for
 from dataclasses import asdict, dataclass, field
 from logging import getLogger
 from math import ceil
-from os import WEXITSTATUS, WIFEXITED, WIFSIGNALED, WTERMSIG, getuid, wait4
+from os import WEXITSTATUS, WIFEXITED, WIFSIGNALED, WTERMSIG, getuid, strerror, wait4
 from pathlib import PosixPath
 from shlex import quote
 from shutil import which
@@ -213,7 +213,8 @@ async def run_with_limits(
         err = '' if disable_stderr else \
             (await asyncrun(lambda: errfile.read(4096))) \
             .decode(errors='replace') \
-            .replace(str(cwd), '')
+            .replace(str(cwd), '') \
+            .strip()
         errmsg = '' if err == '' else f': {err}'
 
         # check for errors
@@ -239,7 +240,11 @@ async def run_with_limits(
             return RunResult('disk_limit_exceeded', msg, usage)
         if program_code != 0:
             # runner exited properly, but the program did not
-            if program_code >= 256:
+            if program_code >= 512:
+                # there is something wrong with the child process
+                errnum = program_code - 512
+                msg = f'Program did not start ({strerror(errnum)}){errmsg}'
+            elif program_code >= 256:
                 signal = program_code - 256
                 try:
                     name = f' ({strsignal(signal)})'

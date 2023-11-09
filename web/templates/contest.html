@@ -12,6 +12,7 @@
 
 {% block content %}
     <div class="card card-body">
+        <button id="open-all" class="btn btn-block btn-light" title="Open all problems in new tabs">Open All</button>
         {% if problems_visible and problems | length > 4 -%}
         <a id="width-toggle" role="button">
             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" id="width-toggle__icon"><path d="M0 0h24v24H0z" fill="none"/><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 20h16v2H4zM4 2h16v2H4zm9 7h3l-4-4-4 4h3v6H8l4 4 4-4h-3z"/></svg>
@@ -34,7 +35,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="table-responsive">
             <table class="table table-striped table-bordered table-hover" id="contest">
                 <thead>
@@ -44,7 +45,7 @@
                     {% if is_Admin -%}<th>实名</th>{%- endif %}
                     {% if problems_visible -%}
                     {% for problem in problems -%}
-                        <th><a href="/OnlineJudge/problem/{{ problem }}" target="_blank">{{ problem }}</a></th>
+                        <th><a id="problem_link" href="/OnlineJudge/problem/{{ problem }}" target="_blank">{{ problem }}</a></th>
                     {%- endfor %}
                     {%- endif %}
                     {% if contest.rank_partial_score -%}
@@ -126,6 +127,13 @@
     $('#width-toggle').click(() => {
         $('.container').toggleClass('fullwidth')
     })
+
+    $('#open-all').click(function() {
+        var links = $('#problem_link');
+        links.each(function() {
+            window.open($(this).attr('href'), '_blank');
+        });
+    });
 
 {% if is_Admin %}
     $(function(){

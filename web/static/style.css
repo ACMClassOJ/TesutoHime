@@ -24024,6 +24024,16 @@ pre > code.highlight {
 .card-body {
     position: relative;
 }
+#open-all {
+    position: absolute;
+    display: block;
+    width: 88px;
+    height: 32px;
+    top: 22px;
+    left: 12px;
+    padding: 3px;
+    box-sizing: border-box;
+}
 #width-toggle {
     position: absolute;
     display: block;

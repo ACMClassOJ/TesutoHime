@@ -31,7 +31,7 @@
                 {% if is_Admin %}
                 <li class="nav-item">
                     <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
-                        <input type="hidden" name="id" id="datazip_download_problem_ID" value="{{ Problem_ID }}">    
+                        <input type="hidden" name="id" id="datazip_download_problem_ID" value="{{ Problem_ID }}">
                     </form>
                     <a class="nav-link mb-sm-2 mb-md-0" href="javascript:document.getElementById('formDataZipDownload').submit();"> 下载本题数据 </a>
                 </li>
@@ -72,6 +72,7 @@
                 <input type="submit" class="btn btn-block btn-primary" value="提交评测">
             </noscript>
             <input type="submit" disabled id="submit-button" class="btn btn-block btn-primary" value="提交评测">
+            <input type="submit" disabled id="clipboard-submit-button" class="btn btn-block btn-light" value="从剪贴板直接提交">
         </form>
     </div>
 {% endblock %}
@@ -79,4 +80,29 @@
 {% block script %}
     <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}?v=20230402"></script>
+
+
+    <script>
+        $('#clipboard-submit-button').click(function() {
+            navigator.clipboard.readText()
+                .then(function(text) {
+                    $('#code').val(text);
+                    $('#problem_submit_form').submit();
+                })
+                .catch(function() {
+                    alert('Failed to read clipboard');
+                });
+        });
+
+        $('#clipboard-submit-button').hover(function() {
+            navigator.clipboard.readText()
+                .then(function(text) {
+                    $('#submit-button').attr('title', text);
+                })
+                .catch(function() {
+                    $('#submit-button').attr('title', 'Failed to read clipboard');
+                });
+        }
+        );
+    </script>
 {% endblock %}

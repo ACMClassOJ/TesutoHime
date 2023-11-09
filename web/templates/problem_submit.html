@@ -97,10 +97,10 @@
         $('#clipboard-submit-button').hover(function() {
             navigator.clipboard.readText()
                 .then(function(text) {
-                    $('#submit-button').attr('title', text);
+                    $('#clipboard-submit-button').attr('title', text);
                 })
                 .catch(function() {
-                    $('#submit-button').attr('title', 'Failed to read clipboard');
+                    $('#clipboard-submit-button').attr('title', 'Failed to read clipboard');
                 });
         }
         );

@@ -51,6 +51,9 @@ web/templates/package_sample.html: docs/user/package_sample.html
 	@echo "</div>" >> '$@'
 	@echo "{% endblock %}" >> '$@'
 
+web/static/argon.min.css: web/static/argon.css
+	postcss --use cssnano -o web/static/argon.min.css --no-map web/static/argon.css
+
 docs/user/%.html.raw: docs/user/%.md
 	pandoc '$<' -t html -o '$@'
 

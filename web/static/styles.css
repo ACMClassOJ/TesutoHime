@@ -1,0 +1,116 @@
+#homework, #contest, #status_list {
+    white-space: nowrap;
+}
+
+.contest--participant {
+    background-color: #fdf5e6;
+}
+.contest--running {
+    background-color: rgba(171, 205, 239, 0.2);
+}
+.contest--pending {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+.table-striped tbody tr.contest--participant:nth-of-type(2n+1) {
+    background-color: #f7eede;
+}
+.table-striped tbody tr.contest--running:nth-of-type(2n+1) {
+    background-color: rgba(139, 167, 196, 0.2);
+}
+.table-striped tbody tr.contest--pending:nth-of-type(2n+1) {
+    background-color: rgba(0, 0, 0, 0.075);
+}
+.table-hover tbody tr.contest--participant:hover {
+    background-color: #e8dece;
+}
+.table-hover tbody tr.contest--running:hover {
+    background-color: rgba(134, 161, 189, 0.3);
+}
+.table-hover tbody tr.contest--pending:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+    position: relative;
+}
+#width-toggle {
+    position: absolute;
+    display: block;
+    width: 48px;
+    height: 48px;
+    top: 12px;
+    right: 12px;
+    padding: 12px;
+    box-sizing: border-box;
+}
+#width-toggle:before {
+    content: ' ';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #cbcbda;
+    opacity: 0;
+    border-radius: 50%;
+    transition: opacity .2s ease;
+}
+#width-toggle:focus:before,
+#width-toggle:hover:before {
+    opacity: .2;
+}
+#width-toggle:active:before {
+    opacity: .4;
+}
+@media (max-width: 600px) {
+    #width-toggle {
+        display: none;
+    }
+}
+#width-toggle__icon {
+    fill: #32325d;
+    transform: rotate(90deg);
+}
+.container.fullwidth {
+    max-width: 100%;
+}
+
+.contest-title {
+    padding: 20px;
+}
+@media (max-width: 600px) {
+    .contest-title {
+        padding: 0;
+    }
+}
+
+@media (min-width: 992px) {
+    .status__row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -15px;
+        margin-left: -15px;
+    }
+    .status__col {
+        position: relative;
+        width: 100px;
+        padding-right: 15px;
+        padding-left: 15px;
+        flex: 0 0 22%;
+        max-width: 22%;
+    }
+}
+
+.contributor-card {
+    display: flex;
+    min-width: 0;
+    word-wrap: break-word;
+    background-clip: border-box;
+    border: 0.0625rem solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.25rem;
+}
+.contributor-card img {
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+}
+

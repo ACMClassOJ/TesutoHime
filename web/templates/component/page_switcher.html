@@ -1,3 +1,4 @@
+{% macro page_switcher(pages, args) -%}
 <nav>
 	<ul class="pagination justify-content-center">
 		{% for text, index, display in pages -%}
@@ -17,3 +18,4 @@
 		{%- endfor %}
 	</ul>
 </nav>
+{%- endmacro %}

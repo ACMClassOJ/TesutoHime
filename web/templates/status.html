@@ -97,7 +97,8 @@
                 {%- endfor %}
             </table>
         </div>
-        {% include 'component/page_switcher.html' with context -%}
+        {% from 'component/page_switcher.html' import page_switcher -%}
+        {{ page_switcher(pages, args) }}
     </div>
 {% endblock %}
 

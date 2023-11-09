@@ -64,11 +64,7 @@ bool CheckFile(std::ifstream& file1, std::ifstream& file2) {
         result1 = NextNonBlankLine(file1, line1);
         result2 = NextNonBlankLine(file2, line2);
     }
-    if (result1 != result2) {
-        return false;
-    } else {
-        return true;
-    }
+    return result1 != result2;
 }
 
 bool BlankFrom(const std::string& line, size_t pos) {

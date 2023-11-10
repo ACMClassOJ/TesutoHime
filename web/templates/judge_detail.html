@@ -15,7 +15,7 @@
         <h1 class="text-center">评测详情 {{ submissions[0].id }}</h1>
         
         {% from 'component/status_table.html' import status_table -%}
-        {{ status_table(submissions, judge_status_info, is_Admin, show_score) }}
+        {{ status_table(submissions, judge_status_info, is_Admin, show_time=show_time, show_memory=show_memory, show_score=show_score) }}
 
         {% if details != None -%}
         <div class="row">

@@ -767,18 +767,24 @@ def code(submission_id):
         (is_admin or submission.username == SessionManager.get_username())
     show_score = not abortable and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
-    if is_admin:
-        submission.real_name = ReferenceManager.Query_Realname(submission.user.student_id)
+    submission.real_name = ReferenceManager.Query_Realname(submission.user.student_id) if is_admin else ''
     submission.language = language_info[submission.language] \
         if submission.language in language_info else 'Unknown'
-    if details != None and details.resource_usage.time_msecs != None:
+    if details is not None and details.resource_usage is not None:
         submission.time_msecs = details.resource_usage.time_msecs
         submission.memory_bytes = details.resource_usage.memory_bytes
+        show_time = True
+        show_memory = True
+    else:
+        show_time = False
+        show_memory = False
     return render_template('judge_detail.html', submissions=[submission],
                            enumerate=enumerate, code_url=code_url,
                            details=details, judge_status_info=judge_status_info,
                            abortable=abortable,
                            show_score=show_score,
+                           show_time=show_time,
+                           show_memory=show_memory,
                            friendlyName=SessionManager.get_friendly_name(),
                            is_Admin=is_admin)
 

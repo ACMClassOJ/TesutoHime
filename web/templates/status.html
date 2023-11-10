@@ -39,7 +39,7 @@
             </form>
         </div>
         {% from 'component/status_table.html' import status_table -%}
-        {{ status_table(submissions, judge_status_info, is_Admin, show_score) }}
+        {{ status_table(submissions, judge_status_info, is_Admin, show_score=False) }}
         {% from 'component/page_switcher.html' import page_switcher -%}
         {{ page_switcher(pages, args) }}
     </div>

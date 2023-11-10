@@ -1,5 +1,5 @@
-{% macro status_table(submissions, judge_status_info, is_Admin, show_score) -%}
-
+{% macro status_table(submissions, judge_status_info, is_Admin,
+	show_time=true, show_memory=true, show_score=true) -%}
 <div class="table-responsive">
 	<table class="table table-striped table-bordered table-hover" id="status_list">
 		<thead>
@@ -8,8 +8,12 @@
 				<th>用户昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
 				<th>题目</th>
 				<th><span class="mr-2">评测状态</span><a href="/OnlineJudge/about">?</a></th>
+				{%- if show_time %}
 				<th>运行时间</th>
+				{%- endif %}
+				{%- if show_memory %}
 				<th>内存</th>
+				{%- endif %}
 				{%- if show_score %}
 				<th>分数</th>
 				{%- endif %}
@@ -38,17 +42,21 @@
 					<span class="text-{{ judge_status_info[submission.status.name].color }}">{{ judge_status_info[submission.status.name].name }}</span>
 				</b>
 			</td>
-			{%- if submission.time_msecs != None -%}
+			{%- if show_time -%}
+			{%- if submission.time_msecs is not none -%}
 			<td>{{ submission.time_msecs }} ms</td>
 			{% else -%}
 			<td>N/A</td>
 			{%- endif %}
+			{%- endif -%}
 
-			{%- if submission.memory_bytes != None -%}
+			{%- if show_memory -%}
+			{%- if submission.memory_bytes is not none -%}
 			<td>{{ "%.0f" % (submission.memory_bytes / 1024) }} KiB</td>
 			{% else -%}
 			<td>N/A</td>
-			{%- endif %}
+			{%- endif -%}
+			{%- endif -%}
 
 			{%- if show_score %}
 			<td>{{ submission.score }}</td>

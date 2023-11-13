@@ -45,7 +45,7 @@
                     {% if is_Admin -%}<th>实名</th>{%- endif %}
                     {% if problems_visible -%}
                     {% for problem in problems -%}
-                        <th><a id="problem_link" href="/OnlineJudge/problem/{{ problem }}" target="_blank">{{ problem }}</a></th>
+                        <th><a class="problem-link" href="/OnlineJudge/problem/{{ problem }}" target="_blank">{{ problem }}</a></th>
                     {%- endfor %}
                     {%- endif %}
                     {% if contest.rank_partial_score -%}
@@ -129,7 +129,7 @@
     })
 
     $('#open-all').click(function() {
-        var links = $('#problem_link');
+        var links = $('.problem-link');
         links.each(function() {
             window.open($(this).attr('href'), '_blank');
         });

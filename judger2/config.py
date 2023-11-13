@@ -40,7 +40,7 @@ task_envp = [
 exec_file_name = 'code'
 
 cxx = which('g++')
-cxxflags = ['-fmax-errors=10', '-O2', '-DONLINE_JUDGE', '-std=c++17']
+cxxflags = ['-fmax-errors=10', '-O2', '-DONLINE_JUDGE', '-std=c++20']
 cxx_file_name = 'main.cpp'
 cxx_exec_name = exec_file_name
 

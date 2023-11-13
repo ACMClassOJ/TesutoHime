@@ -86,7 +86,6 @@ bool SameLine(const std::string& line1, const std::string& line2) {
     while (pos < line1.size() && pos < line2.size() &&
            line1[pos] == line2[pos]) {
         pos++;
-        pos++;
     }
     if (pos == line1.size() && pos == line2.size()) {
         return true;

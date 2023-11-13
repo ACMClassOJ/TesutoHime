@@ -87,18 +87,7 @@ bool SameLine(const std::string& line1, const std::string& line2) {
            line1[pos] == line2[pos]) {
         pos++;
     }
-    if (pos == line1.size() && pos == line2.size()) {
-        return true;
-    } else if (pos == line1.size()) {
-        // line2 doesn't reach the end.
-        return BlankFrom(line2, pos);
-    } else if (pos == line2.size()) {
-        // line1 doesn't reach the end.
-        return BlankFrom(line1, pos);
-    } else {
-        // Both line1 and line2 don't reach the end.
-        return BlankFrom(line1, pos) && BlankFrom(line2, pos);
-    }
+    return BlankFrom(line1, pos) && BlankFrom(line2, pos);
 }
 
 /**

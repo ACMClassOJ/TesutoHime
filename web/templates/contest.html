@@ -71,19 +71,34 @@
                         {% if problems_visible -%}
                         {% for j, problem in enumerate(player.problems) -%}
                             <td>
-                                {% if problem['count'] -%}
-                                    {{ problem['score'] if contest.rank_partial_score else '' -}}
+                                {% if problem['count'] > 0 or problem['pending_count'] > 0 -%}
+                                    {{ problem['score'] if contest.rank_partial_score and problem['count'] > 0 else '' -}}
+                                    {%- macro plural_submit(x) -%}
+                                    {%- if x == 1 -%} 1 submission {%- else -%} {{x}} submissions {%- endif -%}
+                                    {%- endmacro -%}
+                                    {%- macro status() -%}
+                                        {%- if problem['accepted'] %}
+                                            <span class="text-green" title="Accepted in {{ plural_submit(problem['count']) }}">({{ problem['count'] }}Y)</span>
+                                        {%- else -%}
+                                            {%- if problem['count'] > 0 %}
+                                            <span class="text-red" title="{{ plural_submit(problem['count']) }}, not accepted">(-{{ problem['count'] }})</span>
+                                            {%- endif -%}
+                                            {%- if problem['pending_count'] > 0 %}
+                                            <span class="text-blue" title="{{ plural_submit(problem['pending_count']) }} pending">({{ problem['pending_count'] }}?)</span>
+                                            {%- endif -%}
+                                        {%- endif -%}
+                                    {%- endmacro -%}
                                     {%- if not problem['accepted'] -%}
                                         {% if is_Admin -%}
-                                        <a class="text-red" href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j] }}"> (-{{ problem['count'] }})</a>
+                                        <a class="text-red" href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j] }}">{{ status() }}</a>
                                         {% else -%}
-                                        <span class="text-red"> (-{{ problem['count'] }})</span>
+                                        {{ status() }}
                                         {%- endif %}
                                     {%- else -%}
                                         {% if is_Admin -%}
-                                        <a class="text-green" href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j] }}"> ({{ problem['count'] }}Y)</a>
+                                        <a href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j] }}">{{ status() }}</a>
                                         {% else -%}
-                                        <span class="text-green"> ({{ problem['count'] }}Y)</span>
+                                        {{ status() }}
                                         {%- endif %}
                                     {%- endif -%}
                                 {%- endif %}

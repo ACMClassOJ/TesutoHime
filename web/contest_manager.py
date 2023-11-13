@@ -290,6 +290,7 @@ class ContestManager:
                     {
                         'score': 0,
                         'count': 0,
+                        'pending_count': 0,
                         'accepted': False,
                     } for _ in problems
                 ],
@@ -341,7 +342,10 @@ class ContestManager:
                 user_data['ac_count'] += 1
                 user_data['penalty'] += (int(submit_time) - start_time + submit_count * 1200) // 60
 
-            submit_count += 1
+            if status in [JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging]:
+                problem['pending_count'] += 1
+            else:
+                submit_count += 1
 
             problem['score'] = max_score
             problem['count'] = submit_count

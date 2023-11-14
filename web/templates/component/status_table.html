@@ -39,9 +39,15 @@
 				<a href="/OnlineJudge/problem/{{ submission.problem_id }}">{{ submission.problem_id }}. {{ submission.problem.title }}</a>
 			</td>
 			<td>
-				<b>
-					<span class="text-{{ judge_status_info[submission.status.name].color }}">{{ judge_status_info[submission.status.name].name }}</span>
-				</b>
+				<strong>
+					{% if submission.visible -%}
+					<a href="/OnlineJudge/code/{{ submission.id }}/">
+					{% endif -%}
+						<span class="text-{{ judge_status_info[submission.status.name].color }}">{{ judge_status_info[submission.status.name].name }}</span>
+					{% if submission.visible -%}
+					</a>
+					{% endif -%}
+				</strong>
 			</td>
 			{%- if show_time -%}
 			{%- if submission.time_msecs is not none -%}

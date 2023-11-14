@@ -8,9 +8,9 @@
 
 {% block content %}
     <div class="card card-body">
-        <h1 class="text-center"> {{ Problem_ID }}. {{ Title }}</h1>
-        <div class="nav-wrapper">
-            <ul class="nav nav-pills nav-fill flex-column flex-md-row">
+        <h1 class="title-nav">
+            <span class="title-nav__title">{{ Problem_ID }}. {{ Title }}</span>
+            <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}">题面</a>
                 </li>
@@ -40,9 +40,8 @@
                 </li>
                 {% endif %}
             </ul>
-        </div>
-    </div>
-    <div class="card card-body">
+        </h1>
+        <hr>
         <form method="post" id="problem_submit_form">
             <div class="form-group">
                 <label for="lang">语言</label>

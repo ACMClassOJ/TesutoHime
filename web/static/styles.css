@@ -1,5 +1,70 @@
+h1 {
+    margin: 1rem 0;
+}
+
 #homework, #contest, #status_list {
     white-space: nowrap;
+}
+
+.title-nav {
+    display: flow-root;
+    margin-bottom: 0;
+    text-align: justify;
+}
+.title-nav__nav {
+    display: inline-flex;
+    float: right;
+    min-height: 1.5em;
+    align-items: center;
+    justify-content: end;
+}
+@media (max-width: 767.98px) {
+    .title-nav {
+        display: block;
+        text-align: center;
+    }
+    .title-nav__title {
+        display: block;
+        margin-bottom: 1rem;
+    }
+    .title-nav__nav {
+        float: none;
+        display: flex;
+        align-items: initial;
+    }
+    .title-nav__nav.nav .nav-item {
+        flex: 1 1 auto;
+    }
+}
+
+.problemset-title {
+    margin: 0 0 1rem 0;
+}
+.problemset-title .title-nav__title {
+    margin-bottom: 0;
+}
+.problemset-progress {
+    padding-top: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #fff;
+}
+.problemset-progress__text {
+    color: #8898aa;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0.5rem 1.5rem;
+}
+.problemset-progress ~ .card-body {
+    padding-top: 0.5rem;
+}
+#problemset {
+    overflow: clip;
+}
+#problemset .progress {
+    margin-bottom: 0;
+    border-radius: 0;
 }
 
 .contest--participant {
@@ -30,58 +95,68 @@
     background-color: rgba(0, 0, 0, 0.1);
 }
 
+@media (max-width: 767.98px) {
+    .btn-group--title-nav {
+        display: block;
+        line-height: 1.2em;
+    }
+}
+@media (min-width: 767.98px) {
+    .btn-group--title-nav {
+        position: relative;
+        display: inline-flex;
+        vertical-align: middle;
+    }
+
+    .btn-group--title-nav .btn {
+        margin-right: 0;
+        transform: translateY(0);
+    }
+    .btn-group--title-nav > .btn {
+        position: relative;
+        flex: 1 1 auto;
+    }
+
+    .btn-group--title-nav > .btn:hover {
+        z-index: 1;
+    }
+
+    .btn-group--title-nav > .btn:focus,
+    .btn-group--title-nav > .btn:active,
+    .btn-group--title-nav > .btn.active {
+        z-index: 1;
+    }
+
+
+    .btn-group--title-nav > .btn:not(:first-child),
+    .btn-group--title-nav > .btn-group--title-nav:not(:first-child) {
+        margin-left: -1px;
+    }
+
+    .btn-group--title-nav > .btn:not(:last-child):not(.dropdown-toggle),
+    .btn-group--title-nav > .btn-group--title-nav:not(:last-child) > .btn {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .btn-group--title-nav > .btn:not(:first-child),
+    .btn-group--title-nav > .btn-group--title-nav:not(:first-child) > .btn {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+}
+
+
 .card-body {
     position: relative;
-}
-#width-toggle {
-    position: absolute;
-    display: block;
-    width: 48px;
-    height: 48px;
-    top: 12px;
-    right: 12px;
-    padding: 12px;
-    box-sizing: border-box;
-}
-#width-toggle:before {
-    content: ' ';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #cbcbda;
-    opacity: 0;
-    border-radius: 50%;
-    transition: opacity .2s ease;
-}
-#width-toggle:focus:before,
-#width-toggle:hover:before {
-    opacity: .2;
-}
-#width-toggle:active:before {
-    opacity: .4;
 }
 @media (max-width: 600px) {
     #width-toggle {
         display: none;
     }
 }
-#width-toggle__icon {
-    fill: #32325d;
-    transform: rotate(90deg);
-}
 .container.fullwidth {
     max-width: 100%;
-}
-
-.contest-title {
-    padding: 20px;
-}
-@media (max-width: 600px) {
-    .contest-title {
-        padding: 0;
-    }
 }
 
 @media (min-width: 992px) {

@@ -12,9 +12,9 @@
 
 {% block content %}
     <div class="card card-body">
-        <h1 class="text-center"> 管理 </h1>
-        <div class="nav-wrapper">
-            <ul class="nav nav-pills nav-fill flex-column flex-md-row" id="main_tab" role="tablist">
+        <h1 class="title-nav">
+            <span class="title-nav__title">管理</span>
+            <ul class="title-nav__nav nav nav-pills flex-column flex-md-row" id="main_tab" role="tablist">
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0 active" id="problem_tab_btn" data-toggle="tab" href="#problem_tab" role="tab" aria-controls="problem_tab" aria-selected="true">题目</a>
                 </li>
@@ -36,285 +36,283 @@
                     <a class="nav-link mb-sm-2 mb-md-0" id="document_tab_btn" data-toggle="tab" href="#document_tab" role="tab" aria-controls="document_tab" aria-selected="false">文档</a>
                 </li>
             </ul>
-        </div>
-    </div>
-        <div class="card">
-            <div class="card-body">
-                <div class="tab-content" id="main_tab_content">
-                    {% if privilege>=Privilege.SUPER %}
-                    <div class="tab-pane fade" id="user_tab" role="tabpanel" aria-labelledby="user_tab-tab">
-                        <form id="formUser">
-                            <div class="form-row">
-                                <div class="form-group col-md-3">
-                                    <label for="iptUsername"> Username </label>
-                                    <input class="form-control" type="text" name="username" id="iptUsername">
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label for="iptStudentId"> Student ID </label>
-                                    <input class="form-control" type="number" name="id" id="iptStudentId">
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label for="iptFriendlyName"> Friendly Name </label>
-                                    <input class="form-control" type="text" name="name" id="iptFriendlyName">
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label for="iptPassword"> Password </label>
-                                    <input class="form-control" type="password" name="password" id="iptPassword">
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label for="iptPrivilege"> Privilege </label>
-                                    <input class="form-control" type="number" name="privilege" id="iptPrivilege">
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUser"> Add User </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyUser"> Modify User </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUser"> Remove User </button>
-                                </div>
-                            </div>
-                        </form>
+        </h1>
+        <hr>
+        <div class="tab-content" id="main_tab_content">
+            {% if privilege>=Privilege.SUPER %}
+            <div class="tab-pane fade" id="user_tab" role="tabpanel" aria-labelledby="user_tab-tab">
+                <form id="formUser">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="iptUsername"> Username </label>
+                            <input class="form-control" type="text" name="username" id="iptUsername">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptStudentId"> Student ID </label>
+                            <input class="form-control" type="number" name="id" id="iptStudentId">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptFriendlyName"> Friendly Name </label>
+                            <input class="form-control" type="text" name="name" id="iptFriendlyName">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptPassword"> Password </label>
+                            <input class="form-control" type="password" name="password" id="iptPassword">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptPrivilege"> Privilege </label>
+                            <input class="form-control" type="number" name="privilege" id="iptPrivilege">
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUser"> Add User </button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyUser"> Modify User </button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUser"> Remove User </button>
+                        </div>
                     </div>
-                    {% endif %}
-                    <div class="tab-pane fade" id="contest_tab" role="tabpanel" aria-labelledby="contest_tab-tab">
-                        <form id="formContest">
-                            <div class="form-row">
-                                <div class="form-group col-md-3">
-                                    <label for="iptContestID"> 比赛ID <span class="badge" id="iptContestStatusBadge"></span></label>
-                                    <input class="form-control" type="number" name="contest_id" id="iptContestID">
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnGoToContestPage"> 跳转到比赛详情页面 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetContestAutoIncreseID"> 获取最新空比赛ID </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetContestDetails"> 查看比赛情况 </button>
-                                </div>
-                            </div>
-                            <div id="divContestHidden">
-                                <div class="form-row">
-                                    <div class="form-group col-md-3">
-                                        <label for="iptContestName"> 比赛名称 </label>
-                                        <input class="form-control" type="text" name="name" id="iptContestName">
-                                    </div>
-                                    <div class="form-group col-md-3">
-                                        <label for="iptStartTime"> 起始时间 (YYYY-MM-DDThh:mm:ss) </label>
-                                        <input class="form-control" type="datetime-local" name="start_time" id="iptStartTime">
-                                    </div>
-                                    <div class="form-group col-md-3">
-                                        <label for="iptEndTime"> 结束时间 (YYYY-MM-DDThh:mm:ss) </label>
-                                        <input class="form-control" type="datetime-local" name="end_time" id="iptEndTime">
-                                    </div>
-                                    <div class="form-group col-md-3">
-                                        <label for="iptContestType"> 比赛类型 </label>
-                                        <select class="form-control selectpicker" name="contest_type" id="iptContestType"
-                                                data-style="form-control font-weight-normal border-grey shadow-none">
-                                            <option value="0">比赛</option>
-                                            <option value="1">作业</option>
-                                            <option value="2">考试，适合用于机考的比赛，同时只能参加一场</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <label class="col-md-2">排名设置</label>
-                                </div>
-                                <div class="form-row">
-                                    <div class="col-md-2">
-                                        <div class="custom-control custom-checkbox mb-3">
-                                            <input class="custom-control-input" name="ranked" id="iptRanked" type="checkbox" checked>
-                                            <label class="custom-control-label" for="iptRanked">显示排名</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <div class="custom-control custom-checkbox mb-3">
-                                            <input class="custom-control-input" name="rank_penalty" id="iptRankPenalty" type="checkbox">
-                                            <label class="custom-control-label" for="iptRankPenalty">计算罚时</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <div class="custom-control custom-checkbox mb-3">
-                                            <input class="custom-control-input" name="rank_partial_score" id="iptRankPartialScore" type="checkbox" checked>
-                                            <label class="custom-control-label" for="iptRankPartialScore">计算部分分</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnCreateContest"> 创建比赛 </button>
-                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyContest"> 修改比赛 </button>
-                                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveContest" onclick="return confirm('确认要删除吗？');"> 删除比赛 </button>
-                                        <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowProblemList"> 修改比赛题号列表 </button>
-                                        <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowUserList"> 修改参赛学生列表 </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-row" id="divContestProblemListHidden">
-                                <div class="form-group col-md-3">
-                                    <label for="iptContestProblemId"> 题号（回车分隔） </label>
-                                    <textarea class="form-control" name="id" id="iptContestProblemId"></textarea>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemToContest"> 添加题号 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblemFromContest" onclick="return confirm('确认要删除吗？');"> 删除题号 </button>
-                                </div>
-                            </div>
-                            <div class="form-row" id="divContestUserListHidden">
-                                <div class="form-group col-md-3">
-                                    <label for="iptContestStudentUsername"> 参赛学生用户名（回车分隔）（注意这是用户名，不是学号或用户昵称，用户名可通过点击各列表中的昵称显示） </label>
-                                    <textarea class="form-control" name="username" id="iptContestStudentUsername"></textarea>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUserToContest"> 添加用户 </button>
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUserFromContest" onclick="return confirm('确认要删除吗？');"> 删除用户 </button>
-                                </div>
-                            </div>
-                        </form>
+                </form>
+            </div>
+            {% endif %}
+            <div class="tab-pane fade" id="contest_tab" role="tabpanel" aria-labelledby="contest_tab-tab">
+                <form id="formContest">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="iptContestID"> 比赛ID <span class="badge" id="iptContestStatusBadge"></span></label>
+                            <input class="form-control" type="number" name="contest_id" id="iptContestID">
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="button" id="btnGoToContestPage"> 跳转到比赛详情页面 </button>
+                            <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetContestAutoIncreseID"> 获取最新空比赛ID </button>
+                            <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetContestDetails"> 查看比赛情况 </button>
+                        </div>
                     </div>
-                    <div class="tab-pane fade show active" id="problem_tab" role="tabpanel" aria-labelledby="problem_tab-tab">
-                        <h3>管理已有题目</h3>
-                        <p>题面、数据、图床等功能移动到了单独的管理页面，数据包格式不变。2023.2.11</p>
-                        <form id="form-jump-problem">
-                            <div class="form-row">
-                                <div class="form-group col-md-3">
-                                    <label for="problem-id">题目 ID</label>
-                                    <input class="form-control" type="number" id="problem-id" required>
-                                </div>
-                                <div class="d-flex mb-3 pr-1">
-                                    <button type="submit" class="btn btn-outline-primary mt-auto">跳转</button>
+                    <div id="divContestHidden">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="iptContestName"> 比赛名称 </label>
+                                <input class="form-control" type="text" name="name" id="iptContestName">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="iptStartTime"> 起始时间 (YYYY-MM-DDThh:mm:ss) </label>
+                                <input class="form-control" type="datetime-local" name="start_time" id="iptStartTime">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="iptEndTime"> 结束时间 (YYYY-MM-DDThh:mm:ss) </label>
+                                <input class="form-control" type="datetime-local" name="end_time" id="iptEndTime">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="iptContestType"> 比赛类型 </label>
+                                <select class="form-control selectpicker" name="contest_type" id="iptContestType"
+                                        data-style="form-control font-weight-normal border-grey shadow-none">
+                                    <option value="0">比赛</option>
+                                    <option value="1">作业</option>
+                                    <option value="2">考试，适合用于机考的比赛，同时只能参加一场</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label class="col-md-2">排名设置</label>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-2">
+                                <div class="custom-control custom-checkbox mb-3">
+                                    <input class="custom-control-input" name="ranked" id="iptRanked" type="checkbox" checked>
+                                    <label class="custom-control-label" for="iptRanked">显示排名</label>
                                 </div>
                             </div>
-                        </form>
-                        <hr>
-                        <h3>新建题目</h3>
-                        <p>请勿连续多次点击此按钮。</p>
-                        <form action="/OnlineJudge/admin/problem-create" method="POST">
-                            <div class="form-row">
-                                <button type="submit" class="btn btn-outline-primary" onclick="setTimeout(() => this.disabled = true)">新建题目</button>
+                            <div class="col-md-2">
+                                <div class="custom-control custom-checkbox mb-3">
+                                    <input class="custom-control-input" name="rank_penalty" id="iptRankPenalty" type="checkbox">
+                                    <label class="custom-control-label" for="iptRankPenalty">计算罚时</label>
+                                </div>
                             </div>
-                        </form>
+                            <div class="col-md-2">
+                                <div class="custom-control custom-checkbox mb-3">
+                                    <input class="custom-control-input" name="rank_partial_score" id="iptRankPartialScore" type="checkbox" checked>
+                                    <label class="custom-control-label" for="iptRankPartialScore">计算部分分</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="float-right d-flex mb-3 ml-auto pr-1">
+                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnCreateContest"> 创建比赛 </button>
+                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyContest"> 修改比赛 </button>
+                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveContest" onclick="return confirm('确认要删除吗？');"> 删除比赛 </button>
+                                <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowProblemList"> 修改比赛题号列表 </button>
+                                <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowUserList"> 修改参赛学生列表 </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="tab-pane fade" id="judge_tab" role="tabpanel" aria-labelledby="judge_tab-tab">
-                        <p> 
-                            <strong>警告</strong>: 在评测记录多时，以下操作十分缓慢。严禁多次点击按钮，否则会导致严重性能问题。
-                        </p>
-                        <h3> 批量重测 </h3>
-                        <form id="formRejudge" action="/OnlineJudge/admin/rejudge" method="POST">
-                            <input type="hidden" name="type" value="by_judge_id">
-                            <div class="form-row">
-                                <div class="form-group col-md-3">
-                                    <label for="iptRejudgeJudgeID"> 评测编号（回车分隔） </label>
-                                    <textarea class="form-control" name="judge_id" id="iptRejudgeJudgeID"></textarea>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRejudge"> 批量重测 </button>
-                                </div>
-                            </div>
-                        </form>
+                    <div class="form-row" id="divContestProblemListHidden">
+                        <div class="form-group col-md-3">
+                            <label for="iptContestProblemId"> 题号（回车分隔） </label>
+                            <textarea class="form-control" name="id" id="iptContestProblemId"></textarea>
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemToContest"> 添加题号 </button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblemFromContest" onclick="return confirm('确认要删除吗？');"> 删除题号 </button>
+                        </div>
+                    </div>
+                    <div class="form-row" id="divContestUserListHidden">
+                        <div class="form-group col-md-3">
+                            <label for="iptContestStudentUsername"> 参赛学生用户名（回车分隔）（注意这是用户名，不是学号或用户昵称，用户名可通过点击各列表中的昵称显示） </label>
+                            <textarea class="form-control" name="username" id="iptContestStudentUsername"></textarea>
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUserToContest"> 添加用户 </button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUserFromContest" onclick="return confirm('确认要删除吗？');"> 删除用户 </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="tab-pane fade show active" id="problem_tab" role="tabpanel" aria-labelledby="problem_tab-tab">
+                <h3>管理已有题目</h3>
+                <p>题面、数据、图床等功能移动到了单独的管理页面，数据包格式不变。2023.2.11</p>
+                <form id="form-jump-problem">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="problem-id">题目 ID</label>
+                            <input class="form-control" type="number" id="problem-id" required>
+                        </div>
+                        <div class="d-flex mb-3 pr-1">
+                            <button type="submit" class="btn btn-outline-primary mt-auto">跳转</button>
+                        </div>
+                    </div>
+                </form>
+                <hr>
+                <h3>新建题目</h3>
+                <p>请勿连续多次点击此按钮。</p>
+                <form action="/OnlineJudge/admin/problem-create" method="POST">
+                    <div class="form-row">
+                        <button type="submit" class="btn btn-outline-primary" onclick="setTimeout(() => this.disabled = true)">新建题目</button>
+                    </div>
+                </form>
+            </div>
+            <div class="tab-pane fade" id="judge_tab" role="tabpanel" aria-labelledby="judge_tab-tab">
+                <p> 
+                    <strong>警告</strong>: 在评测记录多时，以下操作十分缓慢。严禁多次点击按钮，否则会导致严重性能问题。
+                </p>
+                <h3> 批量重测 </h3>
+                <form id="formRejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+                    <input type="hidden" name="type" value="by_judge_id">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="iptRejudgeJudgeID"> 评测编号（回车分隔） </label>
+                            <textarea class="form-control" name="judge_id" id="iptRejudgeJudgeID"></textarea>
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRejudge"> 批量重测 </button>
+                        </div>
+                    </div>
+                </form>
 
-                        <hr>
+                <hr>
 
-                        <h3> 批量题目重测 </h3>
-                        <form id="formRejudge2" action="/OnlineJudge/admin/rejudge" method="POST">
-                            <input type="hidden" name="type" value="by_problem_id">
-                            <div class="form-row">
-                                <div class="form-group col-md-3">
-                                    <label for="iptRejudgeJudgeID2"> 题目编号（回车分隔） </label>
-                                    <textarea class="form-control" name="problem_id" id="iptRejudgeJudgeID2"></textarea>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRejudge2"> 批量题目重测 </button>
-                                </div>
-                            </div>
-                        </form>
+                <h3> 批量题目重测 </h3>
+                <form id="formRejudge2" action="/OnlineJudge/admin/rejudge" method="POST">
+                    <input type="hidden" name="type" value="by_problem_id">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="iptRejudgeJudgeID2"> 题目编号（回车分隔） </label>
+                            <textarea class="form-control" name="problem_id" id="iptRejudgeJudgeID2"></textarea>
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRejudge2"> 批量题目重测 </button>
+                        </div>
+                    </div>
+                </form>
 
-                        <hr>
-                        <h3>批量取消成绩</h3>
-                        <p> 
-                            将指定的评测记录内容设置为 Voided 并判零分。请注意，对于一条已在 Running and Judging 状态的评测任务，设置为 Voided 状态后，
-                            评测机仍有可能返回评测结果，此时 Voided 状态将被真实的评测记录覆盖。若想中断评测，请使用终止评测 (abort) 功能。
-                            因此，建议在如下情况使用此功能：需要作废一条已经出了结果的评测记录。
-                        </p>
-                        <form id="formDisableJudge" action="/OnlineJudge/admin/disable_judge" method="POST">
-                            <div class="form-row">
-                                <input type="hidden" name="type" value="by_judge_id">
-                                <div class="form-group col-md-3 mb-3">
-                                    <label for="iptDisableJudgeJudgeID"> 评测编号（回车分隔） </label>
-                                    <textarea class="form-control" name="judge_id" id="iptDisableJudgeJudgeID"></textarea>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge">批量取消成绩</button>
-                                </div>
-                            </div>
-                        </form>
-                        <hr>
-                        <h3>批量题目取消成绩</h3>
-                        <form id="formDisableJudge2" action="/OnlineJudge/admin/disable_judge" method="POST">
-                            <div class="form-row">
-                                <input type="hidden" name="type" value="by_problem_id">
-                                <div class="form-group col-md-3 mb-3">
-                                    <label for="iptDisableJudgeJudgeID2"> 题目编号（回车分隔） </label>
-                                    <textarea class="form-control" name="problem_id" id="iptDisableJudgeJudgeID2"></textarea>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge2">批量题目取消成绩</button>
-                                </div>
-                            </div>
-                        </form>
+                <hr>
+                <h3>批量取消成绩</h3>
+                <p> 
+                    将指定的评测记录内容设置为 Voided 并判零分。请注意，对于一条已在 Running and Judging 状态的评测任务，设置为 Voided 状态后，
+                    评测机仍有可能返回评测结果，此时 Voided 状态将被真实的评测记录覆盖。若想中断评测，请使用终止评测 (abort) 功能。
+                    因此，建议在如下情况使用此功能：需要作废一条已经出了结果的评测记录。
+                </p>
+                <form id="formDisableJudge" action="/OnlineJudge/admin/disable_judge" method="POST">
+                    <div class="form-row">
+                        <input type="hidden" name="type" value="by_judge_id">
+                        <div class="form-group col-md-3 mb-3">
+                            <label for="iptDisableJudgeJudgeID"> 评测编号（回车分隔） </label>
+                            <textarea class="form-control" name="judge_id" id="iptDisableJudgeJudgeID"></textarea>
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge">批量取消成绩</button>
+                        </div>
+                    </div>
+                </form>
+                <hr>
+                <h3>批量题目取消成绩</h3>
+                <form id="formDisableJudge2" action="/OnlineJudge/admin/disable_judge" method="POST">
+                    <div class="form-row">
+                        <input type="hidden" name="type" value="by_problem_id">
+                        <div class="form-group col-md-3 mb-3">
+                            <label for="iptDisableJudgeJudgeID2"> 题目编号（回车分隔） </label>
+                            <textarea class="form-control" name="problem_id" id="iptDisableJudgeJudgeID2"></textarea>
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDisableJudge2">批量题目取消成绩</button>
+                        </div>
+                    </div>
+                </form>
 
-                        <hr>
-                        <h3>批量终止评测</h3>
-                        <p>若指定的评测记录还在评测中，则将其状态设置为 Aborted (已测完的点不受影响)，使评测机终止评测任务，并判零分。</p>
-                        <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
-                            <div class="form-row">
-                                <input type="hidden" name="type" value="by_judge_id">
-                                <div class="form-group col-md-3 mb-3">
-                                    <label for="iptAbortJudgeJudgeID">评测编号（回车分隔）</label>
-                                    <textarea class="form-control" name="judge_id" id="iptAbortJudgeJudgeID"></textarea>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAbortJudge">批量终止评测</button>
-                                </div>
-                            </div>
-                        </form>
-                        <hr>
-                        <h3>批量题目终止评测</h3>
-                        <form id="form-abort-2" action="/OnlineJudge/admin/abort_judge" method="POST">
-                            <div class="form-row">
-                                <input type="hidden" name="type" value="by_problem_id">
-                                <div class="form-group col-md-3 mb-3">
-                                    <label for="iptAbortJudgeJudgeID2">题目编号（回车分隔）</label>
-                                    <textarea class="form-control" name="problem_id" id="iptAbortJudgeJudgeID2"></textarea>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAbortJudge2">批量题目终止评测</button>
-                                </div>
-                            </div>
-                        </form>
-                        <hr>
+                <hr>
+                <h3>批量终止评测</h3>
+                <p>若指定的评测记录还在评测中，则将其状态设置为 Aborted (已测完的点不受影响)，使评测机终止评测任务，并判零分。</p>
+                <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
+                    <div class="form-row">
+                        <input type="hidden" name="type" value="by_judge_id">
+                        <div class="form-group col-md-3 mb-3">
+                            <label for="iptAbortJudgeJudgeID">评测编号（回车分隔）</label>
+                            <textarea class="form-control" name="judge_id" id="iptAbortJudgeJudgeID"></textarea>
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAbortJudge">批量终止评测</button>
+                        </div>
                     </div>
-                    <div class="tab-pane fade" id="realname_tab" role="tabpanel" aria-labelledby="realname_tab-tab">
-                        <h3> 批量添加实名信息 </h3>
-                        <p> 左右一一对应，文本框请均以回车分割，实名建议格式为年份-课程-名字，如 22-IEEE算法-张三。如果同一学号出现了多条实名信息，系统将以最后一条导入的为准。 </p>
-                        <form id="formRealname" action="/OnlineJudge/admin/add_realname" method="POST">
-                            <div class="form-row">
-                                <div class="form-group col-md-3">
-                                    <label for="iptRealnameStudentID"> 学号 </label>
-                                    <textarea class="form-control" name="student_id" id="iptRealnameStudentID"></textarea>
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label for="iptRealnameYearCourseName"> 实名 </label>
-                                    <textarea class="form-control" name="year_course_name" id="iptRealnameYearCourseName"></textarea>
-                                </div>
-                                <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddRealname"> 添加实名信息 </button>
-                                </div>
-                            </div>
-                        </form>
+                </form>
+                <hr>
+                <h3>批量题目终止评测</h3>
+                <form id="form-abort-2" action="/OnlineJudge/admin/abort_judge" method="POST">
+                    <div class="form-row">
+                        <input type="hidden" name="type" value="by_problem_id">
+                        <div class="form-group col-md-3 mb-3">
+                            <label for="iptAbortJudgeJudgeID2">题目编号（回车分隔）</label>
+                            <textarea class="form-control" name="problem_id" id="iptAbortJudgeJudgeID2"></textarea>
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAbortJudge2">批量题目终止评测</button>
+                        </div>
                     </div>
-                    <div class="tab-pane fade" id="document_tab" role="tabpanel" aria-labelledby="document_tab-tab">
-                        <h3> 管理员文档 </h3>
-                        <p><a href="/OnlineJudge/admin/admin-doc"> 管理界面使用指南 </a></p>
-                        <p><a href="/OnlineJudge/admin/problem-format-doc"> 题面格式规范 </a></p>
-                        <p><a href="/OnlineJudge/admin/data-doc"> 数据格式规范 </a></p>
-                        <p><a href="/OnlineJudge/admin/package-sample"> 数据包样例 </a></p>
+                </form>
+                <hr>
+            </div>
+            <div class="tab-pane fade" id="realname_tab" role="tabpanel" aria-labelledby="realname_tab-tab">
+                <h3> 批量添加实名信息 </h3>
+                <p> 左右一一对应，文本框请均以回车分割，实名建议格式为年份-课程-名字，如 22-IEEE算法-张三。如果同一学号出现了多条实名信息，系统将以最后一条导入的为准。 </p>
+                <form id="formRealname" action="/OnlineJudge/admin/add_realname" method="POST">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="iptRealnameStudentID"> 学号 </label>
+                            <textarea class="form-control" name="student_id" id="iptRealnameStudentID"></textarea>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptRealnameYearCourseName"> 实名 </label>
+                            <textarea class="form-control" name="year_course_name" id="iptRealnameYearCourseName"></textarea>
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddRealname"> 添加实名信息 </button>
+                        </div>
                     </div>
-                </div>
+                </form>
+            </div>
+            <div class="tab-pane fade" id="document_tab" role="tabpanel" aria-labelledby="document_tab-tab">
+                <h3>管理员文档</h3>
+                <ul>
+                    <li><a href="/OnlineJudge/admin/admin-doc">管理界面使用指南</a></li>
+                    <li><a href="/OnlineJudge/admin/problem-format-doc">题面格式规范</a></li>
+                    <li><a href="/OnlineJudge/admin/data-doc">数据格式规范</a></li>
+                    <li><a href="/OnlineJudge/admin/package-sample">数据包样例</a></li>
+                </ul>
             </div>
         </div>
     </div>

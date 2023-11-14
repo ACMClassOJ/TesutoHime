@@ -6,9 +6,9 @@
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
 {% endblock %} {% block content %}
 <div class="card card-body">
-    <h1 class="text-center"><span id="problem_id">{{ ID }}</span>. <span id="problem-title">{{ Title }}</span></h1>
-    <div class="nav-wrapper">
-        <ul class="nav nav-pills nav-fill flex-column flex-md-row">
+    <h1 class="title-nav">
+        <span class="title-nav__title"><span id="problem_id">{{ ID }}</span>. <span id="problem-title">{{ Title }}</span></span>
+        <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
             <li class="nav-item">
                 <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}">题面</a>
             </li>
@@ -32,7 +32,7 @@
             </li>
             {% endif %}
         </ul>
-    </div>
+    </h1>
     <div class="nav-wrapper">
         <ul class="nav nav-pills nav-fill flex-column flex-md-row" id="main_tab" role="tablist">
             <li class="nav-item">
@@ -55,365 +55,360 @@
             </li>
         </ul>
     </div>
-</div>
-    <div class="card">
-        <div class="card-body">
-            <div class="tab-content" id="main_tab_content">
-                <div class="tab-pane fade show active" id="overview_tab" role="tabpanel" aria-labelledby="overview_tab-tab">
-                    <h3>基本信息</h3>
-                    <form action="/OnlineJudge/admin/problem" method="POST" id="form-overview">
-                        <input type="hidden" name="id" value="{{ ID }}">
-                        <div class="form-row">
-                            <div class="form-group col-md-3">
-                                <label for="iptTitle">题目标题</label>
-                                <input class="form-control" type="text" name="title" id="iptTitle">
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="iptReleaseTime">发布时间 (YYYY-MM-DDThh:mm:ss)</label>
-                                <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime">
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="iptProblemType">题目类型</label>
-                                <select class="form-control selectpicker" name="problem_type" id="iptProblemType"
-                                        data-style="form-control font-weight-normal border-grey shadow-none">
-                                    <option value="0">代码题</option>
-                                    <option value="1">填选题</option>
-                                </select>
-                            </div>
-                            <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
-                            </div>
-                        </div>
-                    </form>
-                    <h3>题目状态</h3>
-                    <div class="mb-2">
-                        <span>发布状态：</span>
-                        {% if problem.release_time < now -%}
-                            <span class="text-green mr-3">已发布</span>
-                            <form method="POST" class="d-inline">
-                                <input type="hidden" name="action" value="hide">
-                                <button class="btn btn-outline-primary" type="submit">取消发布</button>
-                            </form>
-                            <span>（点击会将发布时间设为遥远的未来）</span>
-                        {%- else -%}
-                            <span class="text-red mr-3">未发布</span>
-                            <form method="POST" class="d-inline">
-                                <input type="hidden" name="action" value="show">
-                                <button class="btn btn-outline-primary" type="submit">立即发布</button>
-                            </form>
-                            <span>（点击会将发布时间设为现在）</span>
-                        {%- endif %}
+    <hr>
+    <div class="tab-content" id="main_tab_content">
+        <div class="tab-pane fade show active" id="overview_tab" role="tabpanel" aria-labelledby="overview_tab-tab">
+            <h3>基本信息</h3>
+            <form action="/OnlineJudge/admin/problem" method="POST" id="form-overview">
+                <input type="hidden" name="id" value="{{ ID }}">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="iptTitle">题目标题</label>
+                        <input class="form-control" type="text" name="title" id="iptTitle">
                     </div>
-                    <p>
-                        提交状态：
-                        {% if submission_count > 0 %}
-                        共 {{ submission_count }} 次提交，其中 {{ ac_count }} 次通过，正确率 {{ "%.1f" % (ac_count / submission_count * 100) }}%
-                        {% else %}
-                        暂无提交
-                        {% endif %}
-                    </p>
-                    <p>
-                        {% if contests | length == 0 %}
-                        题目当前未在考试/作业中
-                        {% else %}
-                        题目在以下考试/作业中：
-                        {% for contest in contests %}
-                        <a href="/OnlineJudge/problemset/{{ contest }}">{{ contest }}</a>
-                        {% endfor %}
-                        {% endif %}
-                    </p>
-                    <h3>删除题目</h3>
-                    {% if submission_count > 0 or contests | length > 0 %}
-                    {% if submission_count > 0 and contests | length > 0 %}
-                    当前题目已有提交记录，且已存在于作业/考试中，
-                    {% elif submission_count > 0 %}
-                    当前题目已有提交记录，
-                    {% elif contests | length > 0 %}
-                    当前题目已存在于作业/考试中，
-                    {% endif %}
-                    删除题目可能会导致不可预料的后果，请联系 OJ 运维组删除题目。
-                    {% else %}
-                    <p>删除题目将会不可逆地从数据库中删除题目的基本信息及题面信息。如您确认要删除题目，请在下方文本框中输入本题编号以确认：</p>
-                    <form method="POST">
-                        <div class="form-row d-flex">
-                            <input type="hidden" name="action" value="delete">
-                            <div class="col-md-3">
-                                <input class="form-control" type="text" name="confirm" pattern="{{ ID }}" required>
-                            </div>
-                            <button class="btn btn-outline-primary ml-3" type="submit">删除题目</button>
-                        </div>
-                    </form>
-                    {% endif %}
+                    <div class="form-group col-md-3">
+                        <label for="iptReleaseTime">发布时间 (YYYY-MM-DDThh:mm:ss)</label>
+                        <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="iptProblemType">题目类型</label>
+                        <select class="form-control selectpicker" name="problem_type" id="iptProblemType"
+                                data-style="form-control font-weight-normal border-grey shadow-none">
+                            <option value="0">代码题</option>
+                            <option value="1">填选题</option>
+                        </select>
+                    </div>
+                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                        <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
+                    </div>
                 </div>
-
-                <div class="tab-pane fade" id="description_tab" role="tabpanel" aria-labelledby="description_tab-tab">
-                    <form id="form-description">
-                        <input type="hidden" name="id" value="{{ ID }}">
-                        <div>
-                            <label for="iptDescription">题目描述</label>
-                            <div class="init_editormd" id="iptDescription">
-                                <textarea name="description" style="display: none" autocomplete="off"></textarea>
-                            </div>
-                            <label for="iptInput">输入格式</label>
-                            <div class="init_editormd" id="iptInput">
-                                <textarea name="input" style="display: none"></textarea>
-                            </div>
-                            <label for="iptOutput">输出格式</label>
-                            <div class="init_editormd" id="iptOutput">
-                                <textarea name="output" style="display: none"></textarea>
-                            </div>
-                            <label for="iptExampleInput">样例输入</label>
-                            <div class="init_editormd" id="iptExampleInput">
-                                <textarea name="example_input" style="display: none"></textarea>
-                            </div>
-                            <label for="iptExampleOutput">样例输出</label>
-                            <div class="init_editormd" id="iptExampleOutput">
-                                <textarea name="example_output" style="display: none"></textarea>
-                            </div>
-                            <label for="iptDataRange">数据范围</label>
-                            <div class="init_editormd" id="iptDataRange">
-                                <textarea name="range" style="display: none"></textarea>
-                            </div>
-                        </div>
-                        <div class="float-right d-flex mb-3 ml-auto pr-1">
-                            <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
-                        </div>
+            </form>
+            <h3>题目状态</h3>
+            <div class="mb-2">
+                <span>发布状态：</span>
+                {% if problem.release_time < now -%}
+                    <span class="text-green mr-3">已发布</span>
+                    <form method="POST" class="d-inline">
+                        <input type="hidden" name="action" value="hide">
+                        <button class="btn btn-outline-primary" type="submit">取消发布</button>
                     </form>
-                </div>
-
-                <div class="tab-pane fade" id="data_zip_tab" role="tabpanel" aria-labelledby="data_zip_tab-tab">
-                    <h3>上传数据压缩包</h3>
-                    <form id="formDataZipUpload">
-                        <input type="hidden" name="id" value="{{ ID }}">
-                        <div class="form-row">
-                            <div class="form-group custom-file col-md-3 mb-3">
-                                <div style="position: relative">
-                                    <label class="custom-file-label ml-1 mr-1" for="iptDataZipUpload">请选择数据压缩包</label>
-                                    <input class="custom-file-input" type="file" name="file" id="iptDataZipUpload" accept=".zip" required="required">
-                                </div>
-                            </div>
-                            <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipUpload">点击上传</button>
-                            </div>
-                        </div>
-                        <progress id="data-upload-progress" class="w-100" max="1" value="0"></progress>
+                    <span>（点击会将发布时间设为遥远的未来）</span>
+                {%- else -%}
+                    <span class="text-red mr-3">未发布</span>
+                    <form method="POST" class="d-inline">
+                        <input type="hidden" name="action" value="show">
+                        <button class="btn btn-outline-primary" type="submit">立即发布</button>
                     </form>
-                    <hr>
-                    <h3>
-                        下载数据压缩包
-                        <form class="float-right ml-auto" id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
-                            <div class="form-row">
-                                <input type="hidden" name="id" value="{{ ID }}">
-                                <div class="d-flex mb-3 pr-1">
-                                    <button class="btn btn-outline-primary mt-auto" type="submit">点击下载</button>
-                                </div>
-                            </div>
-                        </form>
-                    </h3>
-                </div>
-
-                <div class="tab-pane fade" id="judge_tab" role="tabpanel" aria-labelledby="judge_tab-tab">
-                    <h3>重测全部提交</h3>
-                    <p>如果想重测单份代码，请进入代码页面，点击代码上方的「重测」按钮。</p>
-                    {% if submission_count < 30 %}
-                    <p>当前有 {{ submission_count }} 次提交。</p>
-                    {% else %}
-                    <p>当前有 {{ submission_count }} 次提交，您确定要重测所有这些代码吗？请在下方文本框中输入题目编号以确认：</p>
-                    {% endif %}
-                    <form id="form-rejudge" action="/OnlineJudge/admin/rejudge" method="POST">
-                        <input type="hidden" name="type" value="by_problem_id">
-                        <div class="form-row">
-                            {% if submission_count < 30 %}
-                            <input type="hidden" name="problem_id" value="{{ ID }}">
-                            {% else %}
-                            <div class="col-md-3">
-                                <input class="form-control" type="text" name="problem_id" pattern="{{ ID }}" required>
-                            </div>
-                            {% endif %}
-                            <div class="d-flex mb-3 pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要重测所有 {{ ID }}. {{ problem.title }} 的评测吗？')">全部重测</button>
-                            </div>
-                        </div>
-                    </form>
-
-                    <hr>
-                    <h3>取消全部提交成绩</h3>
-                    <p>如果想取消单份代码的成绩，请进入代码页面，点击代码上方的「VOID」按钮。</p>
-                    {% if submission_count < 30 %}
-                    <p>当前有 {{ submission_count }} 次提交。</p>
-                    {% else %}
-                    <p>当前有 {{ submission_count }} 次提交，您确定要取消所有这些提交的成绩吗？请在下方文本框中输入题目编号以确认：</p>
-                    {% endif %}
-                    <form id="form-void" action="/OnlineJudge/admin/disable_judge" method="POST">
-                        <div class="form-row">
-                            <input type="hidden" name="type" value="by_problem_id">
-                            {% if submission_count < 30 %}
-                            <input type="hidden" name="problem_id" value="{{ ID }}">
-                            {% else %}
-                            <div class="col-md-3">
-                                <input class="form-control" type="text" name="problem_id" pattern="{{ ID }}" required>
-                            </div>
-                            {% endif %}
-                            <div class="d-flex mb-3 pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要取消所有 {{ ID }}. {{ problem.title }} 评测的成绩吗？')">全部取消成绩</button>
-                            </div>
-                        </div>
-                    </form>
-
-                    <hr>
-                    <h3>终止评测全部提交</h3>
-                    <p>如果想终止评测单份提交，请进入代码页面，点击代码上方的「终止评测」按钮。</p>
-                    <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
-                        <div class="form-row">
-                            <input type="hidden" name="type" value="by_problem_id">
-                            <input type="hidden" name="problem_id" value="{{ ID }}">
-                            <div class="d-flex mb-3 pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要终止所有 {{ ID }}. {{ problem.title }} 的评测？')">全部终止评测</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="tab-pane fade" id="pic_tab" role="tabpanel" aria-labelledby="pic_tab-tab">
-                    <h3>上传图片到 ACM OJ 图床</h3>
-                    <form id="formPicUpload" enctype="multipart/form-data">
-                        <div class="form-row">
-                            <div class="form-group custom-file col-md-3 mb-3">
-                                <label class="custom-file-label ml-1 mr-1" for="iptPicUpload">gif, jpg/jpeg, png, svg</label>
-                                <input class="custom-file-input" type="file" name="file" id="iptPicUpload" accept="image/gif,image/jpeg,image/jpg,image/png,image/svg+xml" required="required">
-                            </div>
-                            <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnPicUpload">点击上传</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="tab-pane fade" id="data_tab" role="tabpanel" aria-labelledby="data_tab-tab">
-                    <form id="formData">
-                        <div class="form-row">
-                            <input type="hidden" name="id" value="{{ ID }}">
-                            <div class="form-group col-md-3 mb-3">
-                                <label for="iptCompileTime"> 编译时长限制 (ms) </label>
-                                <input class="form-control" type="number" name="time" id="iptCompileTime" value="30000">
-                            </div>
-                            <div class="form-group col-md-3 mb-3">
-                                <label for="iptSpjType"> SPJ 类型 </label>
-                                <select class="form-control selectpicker" name="type" id="iptSpjType"
-                                        data-style="form-control font-weight-normal border-grey shadow-none">
-                                    <option value="0">Classic</option>
-                                    <option value="1">Special Judge</option>
-                                    <option value="2">Interaction</option>
-                                    <option value="3">Scorer</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group custom-file col-md-3 mb-3">
-                                <label class="custom-file-label ml-1 mr-1" for="iptDescriptionMd"> 题面 (md doc(x) txt) </label>
-                                <input class="custom-file-input" type="file" name="description_md" id="iptDescriptionMd" 
-                                       accept=".md,.doc,.docx,.txt">
-                            </div>
-                            <div class="form-group custom-file col-md-3 mb-3">
-                                <label class="custom-file-label ml-1 mr-1" for="iptData"> 测试数据 (in out ans 多选) </label>
-                                <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans,.out"
-                                       multiple>
-                            </div>
-                            <div class="form-group custom-file col-md-3 mb-3">
-                                <label class="custom-file-label ml-1 mr-1" for="iptSolution"> 标答 std (cpp hpp v 多选) </label>
-                                <input class="custom-file-input" type="file" name="solution" id="iptSolution" accept=".cpp, .hpp, .v"
-                                       multiple>
-                            </div>
-                            <div class="form-group custom-file col-md-3 mb-3">
-                                <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge (cpp) </label>
-                                <input class="custom-file-input" type="file" name="data" id="iptSpj">
-                            </div>
-                            <!-- <div class="form-group custom-file col-md-3 mb-3">
-                                <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
-                                <input class="custom-file-input" type="file" name="data" id="iptScorer" accept=".py">
-                            </div> -->
-                            <!--
-                            <div class="form-group custom-file col-md-3 mb-3">
-                                <label class="custom-file-label ml-1 mr-1" for="iptConfig"> Config (json) </label>
-                                <input class="custom-file-input" type="file" name="config" id="iptConfig" accept=".json">
-                            </div>
-                            -->
-                        </div>
-                        <p>*此处的题面上传仅会留在数据包中，暂不会修改数据库中题面，请切换至题面选项卡手动修改。</p>
-                        <div class="card card-body">
-                            <h5 class="mt-2"> 评测组配置（新增行会自动复制上一行内容） </h5>
-                            <div class="table-responsive mb-3">
-                                <table class="table table-bordered">
-                                    <thead>
-                                    <tr>
-                                        <th scope="col">Group ID</th>
-                                        <th scope="col">Group Name</th>
-                                        <th scope="col">Group Score</th>
-                                        <th scope="col">Test Points (separated by ",")</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody contenteditable="true" id="tableGroups">
-                                    <tr>
-                                        <td>1</td>
-                                        <td>1</td>
-                                        <td>10</td>
-                                        <td>1</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                                <div class="float-right">
-                                    <button class="btn btn-outline-primary" type="button" id="btnAddGroupsRow">Add Row</button>
-                                    <button class="btn btn-outline-primary" type="button" id="btnRemoveGroupsRow">Remove Row
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card card-body">
-                            <h5 class="mt-2"> 数据点配置（新增行会自动复制上一行内容） </h5>
-                            <div class="table-responsive mb-3">
-                                <table class="table table-bordered">
-                                    <thead>
-                                    <tr>
-                                        <th scope="col">ID</th>
-                                        <th scope="col">Dependency</th>
-                                        <th scope="col">Time Limit (ms)</th>
-                                        <th scope="col">Memory Limit (Byte)</th>
-                                        <th scope="col">Disk Limit (Byte)</th>
-                                        <th scope="col">Valgrind</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody contenteditable="true" id="tableDetails">
-                                    <tr>
-                                        <td>1</td>
-                                        <td>0</td>
-                                        <td>1000</td>
-                                        <td>256000000</td>
-                                        <td>0</td>
-                                        <td contenteditable="false">
-                                            <div class="custom-checkbox ml-3">
-                                                <input class="form-check-input" type="checkbox" id="iptValgrind1">
-                                                <label class="form-check-label" for="iptValgrind1"></label>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                                <div class="float-right">
-                                    <button class="btn btn-outline-primary" type="button" id="btnAddDetailsRow">Add Row</button>
-                                    <button class="btn btn-outline-primary" type="button" id="btnRemoveDetailsRow">Remove Row
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <progress id="data-gui-progress" class="w-100" max="1" value="0"></progress>
-                        <div class="float-right d-flex ml-auto pr-1 mb-3">
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btn-download-config">下载 config.json</button>
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemData"> 打包上传所有数据 </button>
-                        </div>
-                    </form>
-                </div>
-
+                    <span>（点击会将发布时间设为现在）</span>
+                {%- endif %}
             </div>
+            <p>
+                提交状态：
+                {% if submission_count > 0 %}
+                共 {{ submission_count }} 次提交，其中 {{ ac_count }} 次通过，正确率 {{ "%.1f" % (ac_count / submission_count * 100) }}%
+                {% else %}
+                暂无提交
+                {% endif %}
+            </p>
+            <p>
+                {% if contests | length == 0 %}
+                题目当前未在考试/作业中
+                {% else %}
+                题目在以下考试/作业中：
+                {% for contest in contests %}
+                <a href="/OnlineJudge/problemset/{{ contest }}">{{ contest }}</a>
+                {% endfor %}
+                {% endif %}
+            </p>
+            <h3>删除题目</h3>
+            {% if submission_count > 0 or contests | length > 0 %}
+            {% if submission_count > 0 and contests | length > 0 %}
+            当前题目已有提交记录，且已存在于作业/考试中，
+            {% elif submission_count > 0 %}
+            当前题目已有提交记录，
+            {% elif contests | length > 0 %}
+            当前题目已存在于作业/考试中，
+            {% endif %}
+            删除题目可能会导致不可预料的后果，请联系 OJ 运维组删除题目。
+            {% else %}
+            <p>删除题目将会不可逆地从数据库中删除题目的基本信息及题面信息。如您确认要删除题目，请在下方文本框中输入本题编号以确认：</p>
+            <form method="POST">
+                <div class="form-row d-flex">
+                    <input type="hidden" name="action" value="delete">
+                    <div class="col-md-3">
+                        <input class="form-control" type="text" name="confirm" pattern="{{ ID }}" required>
+                    </div>
+                    <button class="btn btn-outline-primary ml-3" type="submit">删除题目</button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="tab-pane fade" id="description_tab" role="tabpanel" aria-labelledby="description_tab-tab">
+            <form id="form-description">
+                <input type="hidden" name="id" value="{{ ID }}">
+                <div>
+                    <label for="iptDescription">题目描述</label>
+                    <div class="init_editormd" id="iptDescription">
+                        <textarea name="description" style="display: none" autocomplete="off"></textarea>
+                    </div>
+                    <label for="iptInput">输入格式</label>
+                    <div class="init_editormd" id="iptInput">
+                        <textarea name="input" style="display: none"></textarea>
+                    </div>
+                    <label for="iptOutput">输出格式</label>
+                    <div class="init_editormd" id="iptOutput">
+                        <textarea name="output" style="display: none"></textarea>
+                    </div>
+                    <label for="iptExampleInput">样例输入</label>
+                    <div class="init_editormd" id="iptExampleInput">
+                        <textarea name="example_input" style="display: none"></textarea>
+                    </div>
+                    <label for="iptExampleOutput">样例输出</label>
+                    <div class="init_editormd" id="iptExampleOutput">
+                        <textarea name="example_output" style="display: none"></textarea>
+                    </div>
+                    <label for="iptDataRange">数据范围</label>
+                    <div class="init_editormd" id="iptDataRange">
+                        <textarea name="range" style="display: none"></textarea>
+                    </div>
+                </div>
+                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                    <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="tab-pane fade" id="data_zip_tab" role="tabpanel" aria-labelledby="data_zip_tab-tab">
+            <h3>上传数据压缩包</h3>
+            <form id="formDataZipUpload">
+                <input type="hidden" name="id" value="{{ ID }}">
+                <div class="form-row">
+                    <div class="form-group custom-file col-md-3 mb-3">
+                        <div style="position: relative">
+                            <label class="custom-file-label ml-1 mr-1" for="iptDataZipUpload">请选择数据压缩包</label>
+                            <input class="custom-file-input" type="file" name="file" id="iptDataZipUpload" accept=".zip" required="required">
+                        </div>
+                    </div>
+                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnDataZipUpload">点击上传</button>
+                    </div>
+                </div>
+                <progress id="data-upload-progress" class="w-100" max="1" value="0"></progress>
+            </form>
+            <hr>
+            <h3>
+                下载数据压缩包
+                <form class="float-right ml-auto" id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
+                    <div class="form-row">
+                        <input type="hidden" name="id" value="{{ ID }}">
+                        <div class="d-flex mb-3 pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit">点击下载</button>
+                        </div>
+                    </div>
+                </form>
+            </h3>
+        </div>
+
+        <div class="tab-pane fade" id="judge_tab" role="tabpanel" aria-labelledby="judge_tab-tab">
+            <h3>重测全部提交</h3>
+            <p>如果想重测单份代码，请进入代码页面，点击代码上方的「重测」按钮。</p>
+            {% if submission_count < 30 %}
+            <p>当前有 {{ submission_count }} 次提交。</p>
+            {% else %}
+            <p>当前有 {{ submission_count }} 次提交，您确定要重测所有这些代码吗？请在下方文本框中输入题目编号以确认：</p>
+            {% endif %}
+            <form id="form-rejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+                <input type="hidden" name="type" value="by_problem_id">
+                <div class="form-row">
+                    {% if submission_count < 30 %}
+                    <input type="hidden" name="problem_id" value="{{ ID }}">
+                    {% else %}
+                    <div class="col-md-3">
+                        <input class="form-control" type="text" name="problem_id" pattern="{{ ID }}" required>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex mb-3 pr-1">
+                        <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要重测所有 {{ ID }}. {{ problem.title }} 的评测吗？')">全部重测</button>
+                    </div>
+                </div>
+            </form>
+
+            <hr>
+            <h3>取消全部提交成绩</h3>
+            <p>如果想取消单份代码的成绩，请进入代码页面，点击代码上方的「VOID」按钮。</p>
+            {% if submission_count < 30 %}
+            <p>当前有 {{ submission_count }} 次提交。</p>
+            {% else %}
+            <p>当前有 {{ submission_count }} 次提交，您确定要取消所有这些提交的成绩吗？请在下方文本框中输入题目编号以确认：</p>
+            {% endif %}
+            <form id="form-void" action="/OnlineJudge/admin/disable_judge" method="POST">
+                <div class="form-row">
+                    <input type="hidden" name="type" value="by_problem_id">
+                    {% if submission_count < 30 %}
+                    <input type="hidden" name="problem_id" value="{{ ID }}">
+                    {% else %}
+                    <div class="col-md-3">
+                        <input class="form-control" type="text" name="problem_id" pattern="{{ ID }}" required>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex mb-3 pr-1">
+                        <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要取消所有 {{ ID }}. {{ problem.title }} 评测的成绩吗？')">全部取消成绩</button>
+                    </div>
+                </div>
+            </form>
+
+            <hr>
+            <h3>终止评测全部提交</h3>
+            <p>如果想终止评测单份提交，请进入代码页面，点击代码上方的「终止评测」按钮。</p>
+            <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
+                <div class="form-row">
+                    <input type="hidden" name="type" value="by_problem_id">
+                    <input type="hidden" name="problem_id" value="{{ ID }}">
+                    <div class="d-flex mb-3 pr-1">
+                        <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要终止所有 {{ ID }}. {{ problem.title }} 的评测？')">全部终止评测</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="tab-pane fade" id="pic_tab" role="tabpanel" aria-labelledby="pic_tab-tab">
+            <h3>上传图片到 ACM OJ 图床</h3>
+            <form id="formPicUpload" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group custom-file col-md-3 mb-3">
+                        <label class="custom-file-label ml-1 mr-1" for="iptPicUpload">gif, jpg/jpeg, png, svg</label>
+                        <input class="custom-file-input" type="file" name="file" id="iptPicUpload" accept="image/gif,image/jpeg,image/jpg,image/png,image/svg+xml" required="required">
+                    </div>
+                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnPicUpload">点击上传</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="tab-pane fade" id="data_tab" role="tabpanel" aria-labelledby="data_tab-tab">
+            <form id="formData">
+                <div class="form-row">
+                    <input type="hidden" name="id" value="{{ ID }}">
+                    <div class="form-group col-md-3 mb-3">
+                        <label for="iptCompileTime"> 编译时长限制 (ms) </label>
+                        <input class="form-control" type="number" name="time" id="iptCompileTime" value="30000">
+                    </div>
+                    <div class="form-group col-md-3 mb-3">
+                        <label for="iptSpjType"> SPJ 类型 </label>
+                        <select class="form-control selectpicker" name="type" id="iptSpjType"
+                                data-style="form-control font-weight-normal border-grey shadow-none">
+                            <option value="0">Classic</option>
+                            <option value="1">Special Judge</option>
+                            <option value="2">Interaction</option>
+                            <option value="3">Scorer</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group custom-file col-md-3 mb-3">
+                        <label class="custom-file-label ml-1 mr-1" for="iptDescriptionMd"> 题面 (md doc(x) txt) </label>
+                        <input class="custom-file-input" type="file" name="description_md" id="iptDescriptionMd" 
+                               accept=".md,.doc,.docx,.txt">
+                    </div>
+                    <div class="form-group custom-file col-md-3 mb-3">
+                        <label class="custom-file-label ml-1 mr-1" for="iptData"> 测试数据 (in out ans 多选) </label>
+                        <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans,.out"
+                               multiple>
+                    </div>
+                    <div class="form-group custom-file col-md-3 mb-3">
+                        <label class="custom-file-label ml-1 mr-1" for="iptSolution"> 标答 std (cpp hpp v 多选) </label>
+                        <input class="custom-file-input" type="file" name="solution" id="iptSolution" accept=".cpp, .hpp, .v"
+                               multiple>
+                    </div>
+                    <div class="form-group custom-file col-md-3 mb-3">
+                        <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge (cpp) </label>
+                        <input class="custom-file-input" type="file" name="data" id="iptSpj">
+                    </div>
+                    <!-- <div class="form-group custom-file col-md-3 mb-3">
+                        <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
+                        <input class="custom-file-input" type="file" name="data" id="iptScorer" accept=".py">
+                    </div> -->
+                    <!--
+                    <div class="form-group custom-file col-md-3 mb-3">
+                        <label class="custom-file-label ml-1 mr-1" for="iptConfig"> Config (json) </label>
+                        <input class="custom-file-input" type="file" name="config" id="iptConfig" accept=".json">
+                    </div>
+                    -->
+                </div>
+                <p>*此处的题面上传仅会留在数据包中，暂不会修改数据库中题面，请切换至题面选项卡手动修改。</p>
+                <div class="card card-body">
+                    <h5 class="mt-2"> 评测组配置（新增行会自动复制上一行内容） </h5>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th scope="col">Group ID</th>
+                                <th scope="col">Group Name</th>
+                                <th scope="col">Group Score</th>
+                                <th scope="col">Test Points (separated by ",")</th>
+                            </tr>
+                            </thead>
+                            <tbody contenteditable="true" id="tableGroups">
+                            <tr>
+                                <td>1</td>
+                                <td>1</td>
+                                <td>10</td>
+                                <td>1</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <div class="float-right">
+                            <button class="btn btn-outline-primary" type="button" id="btnAddGroupsRow">Add Row</button>
+                            <button class="btn btn-outline-primary" type="button" id="btnRemoveGroupsRow">Remove Row
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-body">
+                    <h5 class="mt-2"> 数据点配置（新增行会自动复制上一行内容） </h5>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Dependency</th>
+                                <th scope="col">Time Limit (ms)</th>
+                                <th scope="col">Memory Limit (Byte)</th>
+                                <th scope="col">Disk Limit (Byte)</th>
+                                <th scope="col">Valgrind</th>
+                            </tr>
+                            </thead>
+                            <tbody contenteditable="true" id="tableDetails">
+                            <tr>
+                                <td>1</td>
+                                <td>0</td>
+                                <td>1000</td>
+                                <td>256000000</td>
+                                <td>0</td>
+                                <td contenteditable="false">
+                                    <div class="custom-checkbox ml-3">
+                                        <input class="form-check-input" type="checkbox" id="iptValgrind1">
+                                        <label class="form-check-label" for="iptValgrind1"></label>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <div class="float-right">
+                            <button class="btn btn-outline-primary" type="button" id="btnAddDetailsRow">Add Row</button>
+                            <button class="btn btn-outline-primary" type="button" id="btnRemoveDetailsRow">Remove Row
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <progress id="data-gui-progress" class="w-100" max="1" value="0"></progress>
+                <div class="float-right d-flex ml-auto pr-1 mb-3">
+                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btn-download-config">下载 config.json</button>
+                    <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemData"> 打包上传所有数据 </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

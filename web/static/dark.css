@@ -7,8 +7,12 @@ html .bg-secondary {
 }
 
 html .bg-white,
-html .card {
+html .card,
+html .problemset-progress {
   background-color: #1e1e1e !important;
+}
+html .card {
+  border: none;
 }
 
 html .footer {
@@ -78,7 +82,7 @@ html .dropdown-menu {
 }
 
 .navbar-nav .dropdown-menu::before {
-    background: #3e3e3e;
+  background: #3e3e3e;
 }
 
 html .dropdown-divider {
@@ -428,7 +432,7 @@ html .text-black-50 {
 }
 
 html .text-brown {
-    color: #ac8f8f;
+  color: #ac8f8f;
 }
 
 code[style="color: black;"] {
@@ -496,31 +500,38 @@ html img {
 
 
 html .contest--participant {
-    background-color: rgba(249, 230, 195, 0.1);
+  background-color: rgba(249, 230, 195, 0.1);
 }
 html .contest--running {
-    background-color: rgba(171, 205, 239, 0.1);
+  background-color: rgba(171, 205, 239, 0.1);
 }
 html .contest--pending {
-    background-color: rgba(255, 255, 255, 0.035);
+  background-color: rgba(255, 255, 255, 0.035);
 }
 html .table-striped tbody tr.contest--participant:nth-of-type(2n+1) {
-    background-color: rgba(249, 230, 195, 0.15);
+  background-color: rgba(249, 230, 195, 0.15);
 }
 html .table-striped tbody tr.contest--running:nth-of-type(2n+1) {
-    background-color: rgba(171, 205, 239, 0.15);
+  background-color: rgba(171, 205, 239, 0.15);
 }
 html .table-striped tbody tr.contest--pending:nth-of-type(2n+1) {
-    background-color: rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 255, 255, 0.06);
 }
 html .table-hover tbody tr.contest--participant:hover {
-    background-color: rgba(249, 230, 195, 0.25);
+  background-color: rgba(249, 230, 195, 0.25);
 }
 html .table-hover tbody tr.contest--running:hover {
-    background-color: rgba(147, 177, 208, 0.25);
+  background-color: rgba(147, 177, 208, 0.25);
 }
 html .table-hover tbody tr.contest--pending:hover {
-    background-color: rgba(255, 255, 255, 0.075);
+  background-color: rgba(255, 255, 255, 0.075);
+}
+
+html .progress {
+  background-color: #4f4f4f;
+}
+html .progress-bar {
+  background-color: #aa5d6c;
 }
 
 
@@ -610,7 +621,7 @@ pre {
 }
 
 html .contributor-card {
-    border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 }

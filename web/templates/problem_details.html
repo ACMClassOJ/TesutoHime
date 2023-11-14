@@ -4,9 +4,9 @@
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
 {% endblock %} {% block content %}
 <div class="card card-body">
-    <h1 class="text-center"><span id="problem_id">{{ ID }}</span><span>. {{ Title }}</span></h1>
-    <div class="nav-wrapper">
-        <ul class="nav nav-pills nav-fill flex-column flex-md-row">
+    <h1 class="title-nav">
+        <span class="title-nav__title"><span id="problem_id">{{ ID }}</span><span>. {{ Title }}</span></span>
+        <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
             <li class="nav-item">
                 <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ ID }}">题面</a>
             </li>
@@ -36,9 +36,8 @@
             </li>
             {% endif %}
         </ul>
-    </div>
-</div>
-<div class="card card-body">
+    </h1>
+    <hr>
     <div id="content">
         <div id="problem_details_description_header">
             <h3>题目描述</h3>

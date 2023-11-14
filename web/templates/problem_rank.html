@@ -1,9 +1,9 @@
 {% extends 'base.html' %} {% set page='排行榜' %} {% block head %}
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}"> {% endblock %} {% block content %}
 <div class="card card-body">
-    <h1 class="text-center">{{ Problem_ID }}. {{ Title }}</h1>
-    <div class="nav-wrapper">
-        <ul class="nav nav-pills nav-fill flex-column flex-md-row">
+    <h1 class="title-nav">
+        <span class="title-nav__title">{{ Problem_ID }}. {{ Title }}</span>
+        <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
             <li class="nav-item">
                 <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}">题面</a>
             </li>
@@ -33,9 +33,8 @@
             </li>
             {% endif %}
         </ul>
-    </div>
-</div>
-<div class="card card-body">
+    </h1>
+    <hr>
     <div class="table-responsive">
         <table class="table table-striped table-bordered table-hover" id="status_list">
             <thead>

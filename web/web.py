@@ -945,29 +945,32 @@ def about():
         url = urljoin(SchedulerConfig.base_url, f'status?{query}')
         try:
             runner_res = requests.get(url)
+            runner_success = True
         except Exception as e:
             print(e)
-            abort(INTERNAL_SERVER_ERROR, '无法获取评测机状态')
-        if runner_res.status_code != OK:
-            abort(INTERNAL_SERVER_ERROR)
-        runner_dict = runner_res.json()
-        runner_list = []
-        for runner in runners:
-            r = runner_dict[str(runner.id)]
-            r['id'] = str(runner.id)
-            r['name'] = runner.name
-            r['hardware'] = runner.hardware
-            r['provider'] = runner.provider
-            if r['last_seen'] is not None:
-                r['last_seen'] = readable_time(r['last_seen'])
-            else:
-                r['last_seen'] = 'N/A'
-            status_info = runner_status_info[r['status']]
-            r['status'] = status_info.name
-            r['status_color'] = status_info.color
-            runner_list.append(r)
+            runner_res = None
+        if runner_res is None or runner_res.status_code != OK:
+            runner_success = False
+            runner_list = []
+        else:
+            runner_dict = runner_res.json()
+            runner_list = []
+            for runner in runners:
+                r = runner_dict[str(runner.id)]
+                r['id'] = str(runner.id)
+                r['name'] = runner.name
+                r['hardware'] = runner.hardware
+                r['provider'] = runner.provider
+                if r['last_seen'] is not None:
+                    r['last_seen'] = readable_time(r['last_seen'])
+                else:
+                    r['last_seen'] = 'N/A'
+                status_info = runner_status_info[r['status']]
+                r['status'] = status_info.name
+                r['status_color'] = status_info.color
+                runner_list.append(r)
     return render_template('about.html',
-                           runner2=runner_list,
+                           runners=runner_list, runner_success=runner_success,
                            mntners=mntners, contributors=contributors,
                            friendlyName=SessionManager.get_friendly_name(),
                            is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)

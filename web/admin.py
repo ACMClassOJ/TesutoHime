@@ -12,7 +12,7 @@ from web.const import Privilege, ReturnCode, String
 from web.contest_manager import ContestManager
 from web.judge_manager import JudgeManager, NotFoundException
 from web.problem_manager import ProblemManager
-from web.reference_manager import ReferenceManager
+from web.realname_manager import RealnameManager
 from web.session_manager import SessionManager
 from web.user_manager import UserManager
 from web.utils import generate_s3_public_url
@@ -375,7 +375,7 @@ def add_realname():
     year_course_name_list = year_course_name.strip().splitlines()
     try:
         for i in range(0, len(student_id_list)):
-            ReferenceManager.Add_Student(student_id_list[i], year_course_name_list[i])
+            RealnameManager.Add_Student(student_id_list[i], year_course_name_list[i])
         return ReturnCode.SUC_ADD_REALNAME
     except RequestException:
         return ReturnCode.ERR_BAD_DATA

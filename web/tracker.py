@@ -5,7 +5,7 @@ import logging.handlers
 from flask import request
 
 from web.config import LogConfig
-from web.reference_manager import ReferenceManager
+from web.realname_manager import RealnameManager
 from web.session_manager import SessionManager
 from web.user_manager import UserManager
 from web.utils import readable_time, unix_nano
@@ -17,7 +17,7 @@ class Tracker:
         everything['IP'] = request.remote_addr
         everything['Time'] = readable_time(unix_nano())
         everything['Username'] = SessionManager.get_username()
-        everything['Realname'] = ReferenceManager.Query_Realname(
+        everything['Realname'] = RealnameManager.Query_Realname(
             str(UserManager.get_student_id(str(everything['Username']))))
         everything['url'] = request.url.split('/')[-1]
         everything['post_args'] = request.form.copy()

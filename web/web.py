@@ -33,7 +33,7 @@ from web.judge_manager import JudgeManager, NotFoundException
 from web.old_judge_manager import OldJudgeManager
 from web.problem_manager import ProblemManager
 from web.quiz_manager import QuizManager
-from web.reference_manager import ReferenceManager
+from web.realname_manager import RealnameManager
 from web.session_manager import SessionManager
 from web.tracker import tracker
 from web.user_manager import UserManager
@@ -81,7 +81,7 @@ def validate(username: Optional['str'] = None,
         return ReturnCode.ERR_VALIDATE_INVALID_FRIENDLY_NAME
     if student_id is not None and re.match(student_id_reg, student_id) is None:
         return ReturnCode.ERR_VALIDATE_INVALID_STUDENT_ID
-    if username is not None and not UserManager.validate_username(username):
+    if username is not None and UserManager.has_user(username):
         return ReturnCode.ERR_VALIDATE_USERNAME_EXISTS
     return ReturnCode.SUC_VALIDATE
 
@@ -178,9 +178,10 @@ def get_detail():
     if not SessionManager.check_user_status():
         return '-1'
     problem_id = request.form.get('problem_id')
-    problem = ProblemManager.get_problem(problem_id)
-    if not ProblemManager.should_show(problem):
+    data = ProblemManager.check_and_get(problem_id, [Problem])
+    if data is None:
         return '-1'
+    problem = data[0]
     data = {
         'ID': problem.id,
         'Title': problem.title,
@@ -263,10 +264,11 @@ def get_quiz():
     if not str(problem_id).isdigit():  # bad argument
         return ReturnCode.ERR_BAD_DATA
     problem_id = int(problem_id)
-    problem = ProblemManager.get_problem(problem_id)
-    if not ProblemManager.should_show(problem):
+    meta = ProblemManager.check_and_get(problem_id, [Problem.problem_type])
+    if meta is None:
         return ReturnCode.ERR_BAD_DATA
-    if problem.problem_type != 1:
+    (problem_type,) = meta
+    if problem_type != 1:
         return ReturnCode.ERR_PROBLEM_NOT_QUIZ
     quiz_json = QuizManager.get_json_from_data_service_by_id(QuizTempDataConfig, problem_id)
     if quiz_json['e'] == 0:
@@ -380,13 +382,13 @@ def problem_list():
 def problem_detail(problem_id):
     if not SessionManager.check_user_status():
         return redirect('/OnlineJudge/login?next=' + request.full_path)
-    problem = ProblemManager.get_problem(problem_id)
-    if not ProblemManager.should_show(problem):
+    meta = ProblemManager.check_and_get(problem_id, [Problem.title])
+    if meta is None:
         abort(NOT_FOUND)
-
+    title = meta[0]
     in_exam = problem_in_exam(problem_id)
 
-    return render_template('problem_details.html', ID=problem_id, Title=ProblemManager.get_title(problem_id),
+    return render_template('problem_details.html', ID=problem_id, Title=title,
                            In_Exam=in_exam, friendlyName=SessionManager.get_friendly_name(),
                            is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
 
@@ -436,13 +438,11 @@ def problem_admin(problem_id):
 def submit_problem(problem_id):
     if not SessionManager.check_user_status():
         return redirect('/OnlineJudge/login?next=' + request.full_path)
-    problem = ProblemManager.get_problem(problem_id)
-    if not ProblemManager.should_show(problem):
+    meta = ProblemManager.check_and_get(problem_id, [Problem.title, Problem.problem_type])
+    if meta is None:
         abort(NOT_FOUND)
-
     if request.method == 'GET':
-        title = problem.title
-        problem_type = problem.problem_type
+        (title, problem_type) = meta
         in_exam = problem_in_exam(problem_id)
         if problem_type == 0:
             return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam,
@@ -524,7 +524,7 @@ def problem_rank(problem_id):
     languages = {}
     for submission in submissions:
         if is_admin:
-            real_names[submission] = ReferenceManager.Query_Realname(submission.user.student_id)
+            real_names[submission] = RealnameManager.Query_Realname(submission.user.student_id)
         languages[submission] = 'Unknown' if submission.language not in language_info \
             else language_info[submission.language]
 
@@ -564,11 +564,9 @@ def discuss(problem_id):
         data = DiscussManager.get_discuss_for_problem(problem_id)
         discussion = []
         for ele in data:
-            tmp = [ele[0], UserManager.get_friendly_name(ele[1]), ele[2], readable_time(int(ele[3]))]
-            if ele[1] == username or privilege >= Privilege.SUPER:  # ele[4]: editable?
-                tmp.append(True)
-            else:
-                tmp.append(False)
+            tmp = [ele.id, UserManager.get_friendly_name(ele.username), ele.data, readable_time(int(ele.time))]
+            # tmp[4]: editable
+            tmp.append(ele.username == username or privilege >= Privilege.SUPER)
             discussion.append(tmp)
         return render_template('problem_discussion.html', Problem_ID=problem_id,
                                Title=ProblemManager.get_title(problem_id), Discuss=discussion,
@@ -676,7 +674,7 @@ def status():
 
     for submission in submissions:
         if is_admin:
-            submission.real_name = ReferenceManager.Query_Realname(submission.user.student_id)
+            submission.real_name = RealnameManager.Query_Realname(submission.user.student_id)
         submission.visible = (
             is_admin or (
                 # user's own problem: username == ele['Username']
@@ -767,7 +765,7 @@ def code(submission_id):
         (is_admin or submission.username == SessionManager.get_username())
     show_score = not abortable and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
-    submission.real_name = ReferenceManager.Query_Realname(submission.user.student_id) if is_admin else ''
+    submission.real_name = RealnameManager.Query_Realname(submission.user.student_id) if is_admin else ''
     submission.language = language_info[submission.language] \
         if submission.language in language_info else 'Unknown'
     if details is not None and details.resource_usage is not None:

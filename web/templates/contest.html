@@ -18,16 +18,24 @@
                      style="width: {{ percentage }}%;">
                 </div>
             </div>
-            <div class="problemset-progress__text">{{ start_time }} ~ {{ end_time }} <span class="float-right">{{ percentage }}% {{ status }}</span></div>
+            <div class="problemset-progress__text">
+                <span class="problemset-progress__times">{{ start_time }} ~ {{ end_time }}</span>
+                <span class="problemset-progress__percentage">{{ percentage }}% {{ status }}</span>
+            </div>
         </div>
         <div class="card-body">
             <h1 class="problemset-title title-nav">
                 <span class="title-nav__title">{{ contest.id }}. {{ contest.name }}</span>
                 <span class="title-nav__nav btn-group--title-nav">
+                    {%- if problems_visible and problems | length > 2 -%}
                     <button class="btn btn-outline-primary" id="open-all">打开所有题目</button>
-                    {% if problems_visible and problems | length > 4 -%}
+                    {%- endif -%}
+                    {% if is_Admin -%}
+                    <a href="/OnlineJudge/admin/?contest_id={{ contest.id }}" class="btn btn-outline-primary">管理</a>
+                    {%- endif -%}
+                    {%- if problems_visible and problems | length > 4 -%}
                     <button class="btn btn-outline-primary" id="width-toggle">切换宽度</button>
-                    {%- endif %}
+                    {%- endif -%}
                 </span>
             </h1>
             <div class="table-responsive">
@@ -150,30 +158,29 @@
     $(function(){
         const table = $("#contest").DataTable({
             dom: 'Bft',
-            buttons: [
-                {
-                    extend: 'copy',
-                    text: '复制到剪贴板'
-                },
-                {
-                    extend: 'csv',
-                    text: '导出 csv',
-                    charset: 'utf-8',
-                    extension: '.csv',
-                    filename: '{{ contest.name }}',
-                    bom: true
-                },
-                {
-                    extend: 'excel',
-                    text: '导出 excel',
-                    charset: 'utf-8',
-                    filename: '{{ contest.name }}'
-                },
-                {
-                    text: '管理',
-                    action: () => location = '/OnlineJudge/admin/?contest_id={{ contest.id }}'
-                },
-            ],
+            buttons: {
+                dom: { button: { className: 'btn btn-outline-primary' } },
+                buttons: [
+                    {
+                        extend: 'copy',
+                        text: '复制到剪贴板'
+                    },
+                    {
+                        extend: 'csv',
+                        text: '导出 csv',
+                        charset: 'utf-8',
+                        extension: '.csv',
+                        filename: '{{ contest.name }}',
+                        bom: true
+                    },
+                    {
+                        extend: 'excel',
+                        text: '导出 excel',
+                        charset: 'utf-8',
+                        filename: '{{ contest.name }}'
+                    },
+                ],
+            }
         })
         // buttons.container().children().prependTo('.title-nav__nav')
     });

@@ -18,6 +18,16 @@ h1 {
     align-items: center;
     justify-content: end;
 }
+.problemset-progress__percentage {
+    float: right;
+}
+#problemset div.dataTables_wrapper div.dataTables_filter {
+    text-align: left;
+}
+#problemset div.dt-buttons {
+    float: right;
+    padding: 0 0.05rem 0.5rem;
+}
 @media (max-width: 767.98px) {
     .title-nav {
         display: block;
@@ -30,10 +40,15 @@ h1 {
     .title-nav__nav {
         float: none;
         display: flex;
+        min-height: 0;
         align-items: initial;
     }
     .title-nav__nav.nav .nav-item {
         flex: 1 1 auto;
+    }
+    .problemset-progress__percentage {
+        display: inline-block;
+        float: none;
     }
 }
 

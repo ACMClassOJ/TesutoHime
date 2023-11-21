@@ -843,7 +843,9 @@ def contest_list_generic(type, type_zh):
     page = request.args.get('page')
     page = int(page) if page else 1
     type_ids = [0, 2] if type == 'contest' else [1]
-    count, contests = ContestManager.list_contest(type_ids, page, WebConfig.Contests_Each_Page)
+    keyword = request.args.get('keyword')
+    status = request.args.get('status')
+    count, contests = ContestManager.list_contest(type_ids, page, WebConfig.Contests_Each_Page, keyword=keyword, status=status)
     current_time = unix_nano()
 
     max_page = ceil(count / WebConfig.Contests_Each_Page)

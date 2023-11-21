@@ -153,18 +153,28 @@ class ContestManager:
             return 'Going On'
 
     @staticmethod
-    def list_contest(types: List[int], page: int, num_per_page: int) -> Tuple[int, List[Contest]]:
+    def list_contest(types: List[int], page: int, num_per_page: int,
+                     keyword: Optional[str] = None, status: Optional[str] = None) -> Tuple[int, List[Contest]]:
+        limit = num_per_page
+        offset = (page - 1) * num_per_page
+        stmt = select(Contest).where(Contest.type.in_(types))
+        if keyword: # keyword is not None and len(keyword) > 0
+            stmt = stmt.where(func.instr(Contest.name, keyword) > 0)
+        if status:
+            current_time = unix_nano()
+            if status == 'Pending':
+                stmt = stmt.where(Contest.start_time > current_time)
+            elif status == 'Going On':
+                stmt = stmt.where(Contest.start_time <= current_time) \
+                    .where(Contest.end_time >= current_time)
+            elif status == 'Finished':
+                stmt = stmt.where(Contest.end_time < current_time)
+        stmt_count = stmt.with_only_columns(func.count())
+        stmt_data = stmt.order_by(Contest.id.desc()) \
+            .limit(limit).offset(offset)
         with SqlSession(expire_on_commit=False) as db:
-            limit = num_per_page
-            offset = (page - 1) * num_per_page
-            query = db \
-                .query(Contest) \
-                .where(Contest.type.in_(types))
-            count = query.count()
-            this_page = query \
-                .order_by(Contest.id.desc()) \
-                .limit(limit).offset(offset) \
-                .all()
+            count = db.scalar(stmt_count)
+            this_page = db.scalars(stmt_data).all()
             return count, this_page
 
     @staticmethod

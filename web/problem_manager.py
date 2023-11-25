@@ -8,8 +8,7 @@ from commons.models import ContestProblem, JudgeRecord2, Problem
 from web.const import Privilege
 from web.session_manager import SessionManager
 from web.utils import SqlSession, unix_nano
-from sqlalchemy import update, select, delete, func, Column
-from typing import List, Optional
+from sqlalchemy import update, select, delete, func
 
 FAR_FUTURE_UNIX_NANO = 253402216962
 
@@ -70,23 +69,10 @@ class ProblemManager:
             db.execute(stmt)
 
     @staticmethod
-    def __should_show(release_time: int):
-        return release_time <= unix_nano() or SessionManager.get_privilege() >= Privilege.ADMIN
-
-    @staticmethod
-    def should_show_without_query(problem: Problem) -> bool:
-        return problem is not None and ProblemManager.__should_show(problem.release_time)
-
-    @staticmethod
-    def check_and_get(problem_id: int, columns: List[Column | Problem] = []) -> Optional[tuple]:
-        columns.append(Problem.release_time)
-        k = len(columns)
+    def get_problem(problem_id: int) -> dict:
+        stmt = select(Problem).where(Problem.id == problem_id)
         with SqlSession() as db:
-            stmt = select(columns).where(Problem.id == problem_id)
-            data = db.execute(stmt).first()
-        if data is None or not ProblemManager.__should_show(data[k - 1]):
-            return None
-        return data[:k - 1]
+            return db.scalar(stmt)
 
     @staticmethod
     def modify_problem_limit(problem_id: int, limit: str):
@@ -107,11 +93,24 @@ class ProblemManager:
             return data if data is not None else ""
 
     @staticmethod
+    def get_problem_type(problem_id: int) -> int:
+        stmt = select(Problem.problem_type).where(Problem.id == problem_id)
+        with SqlSession() as db:
+            data = db.scalar(stmt)
+            return data if data is not None else 0
+
+    @staticmethod
     def get_max_id() -> int:
         stmt = select(func.max(Problem.id)).where(Problem.id < 11000)
         with SqlSession() as db:
             data = db.scalar(stmt)
             return data if data is not None else 0
+
+    @staticmethod
+    def should_show(problem: Problem) -> bool:
+        return problem is not None and \
+            (problem.release_time <= unix_nano()
+             or SessionManager.get_privilege() >= Privilege.ADMIN)
 
     @staticmethod
     def delete_problem(problem_id: int):

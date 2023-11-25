@@ -178,10 +178,9 @@ def get_detail():
     if not SessionManager.check_user_status():
         return '-1'
     problem_id = request.form.get('problem_id')
-    data = ProblemManager.check_and_get(problem_id, [Problem])
-    if data is None:
+    problem = ProblemManager.get_problem(problem_id)
+    if not ProblemManager.should_show(problem):
         return '-1'
-    problem = data[0]
     data = {
         'ID': problem.id,
         'Title': problem.title,
@@ -264,11 +263,10 @@ def get_quiz():
     if not str(problem_id).isdigit():  # bad argument
         return ReturnCode.ERR_BAD_DATA
     problem_id = int(problem_id)
-    meta = ProblemManager.check_and_get(problem_id, [Problem.problem_type])
-    if meta is None:
+    problem = ProblemManager.get_problem(problem_id)
+    if not ProblemManager.should_show(problem):
         return ReturnCode.ERR_BAD_DATA
-    (problem_type,) = meta
-    if problem_type != 1:
+    if problem.problem_type != 1:
         return ReturnCode.ERR_PROBLEM_NOT_QUIZ
     quiz_json = QuizManager.get_json_from_data_service_by_id(QuizTempDataConfig, problem_id)
     if quiz_json['e'] == 0:
@@ -382,13 +380,13 @@ def problem_list():
 def problem_detail(problem_id):
     if not SessionManager.check_user_status():
         return redirect('/OnlineJudge/login?next=' + request.full_path)
-    meta = ProblemManager.check_and_get(problem_id, [Problem.title])
-    if meta is None:
+    problem = ProblemManager.get_problem(problem_id)
+    if not ProblemManager.should_show(problem):
         abort(NOT_FOUND)
-    title = meta[0]
+
     in_exam = problem_in_exam(problem_id)
 
-    return render_template('problem_details.html', ID=problem_id, Title=title,
+    return render_template('problem_details.html', ID=problem_id, Title=ProblemManager.get_title(problem_id),
                            In_Exam=in_exam, friendlyName=SessionManager.get_friendly_name(),
                            is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
 
@@ -438,11 +436,13 @@ def problem_admin(problem_id):
 def submit_problem(problem_id):
     if not SessionManager.check_user_status():
         return redirect('/OnlineJudge/login?next=' + request.full_path)
-    meta = ProblemManager.check_and_get(problem_id, [Problem.title, Problem.problem_type])
-    if meta is None:
+    problem = ProblemManager.get_problem(problem_id)
+    if not ProblemManager.should_show(problem):
         abort(NOT_FOUND)
+
     if request.method == 'GET':
-        (title, problem_type) = meta
+        title = problem.title
+        problem_type = problem.problem_type
         in_exam = problem_in_exam(problem_id)
         if problem_type == 0:
             return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam,

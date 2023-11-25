@@ -14,11 +14,12 @@ from web.utils import readable_time, unix_nano
 class Tracker:
     def log(self):
         everything = {}
+        username = SessionManager.get_username()
         everything['IP'] = request.remote_addr
         everything['Time'] = readable_time(unix_nano())
-        everything['Username'] = SessionManager.get_username()
-        everything['Realname'] = RealnameManager.Query_Realname(
-            str(UserManager.get_student_id(str(everything['Username']))))
+        everything['Username'] = username
+        if username is not None and username != '':
+            everything['Realname'] = RealnameManager.query_realname(str(UserManager.get_student_id(username)))
         everything['url'] = request.url.split('/')[-1]
         everything['post_args'] = request.form.copy()
         if 'password' in everything['post_args']:

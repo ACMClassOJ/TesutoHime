@@ -2,7 +2,6 @@ import json
 import os
 import re
 from datetime import datetime
-from functools import cmp_to_key
 from http.client import (BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR,
                          NOT_FOUND, OK, REQUEST_ENTITY_TOO_LARGE, SEE_OTHER,
                          UNAUTHORIZED)
@@ -289,7 +288,7 @@ def login():
     if not UserManager.check_login(username, password):  # no need to avoid sql injection
         return ReturnCode.ERR_LOGIN
     lid = str(uuid4())
-    username = UserManager.get_username(username)
+    username = UserManager.get_canonical_username(username)
     SessionManager.new_session(username, lid)
     ret = make_response(ReturnCode.SUC_LOGIN)
     ret.set_cookie(key='Login_ID', value=lid, max_age=LoginConfig.Login_Life_Time)
@@ -386,7 +385,7 @@ def problem_detail(problem_id):
 
     in_exam = problem_in_exam(problem_id)
 
-    return render_template('problem_details.html', ID=problem_id, Title=ProblemManager.get_title(problem_id),
+    return render_template('problem_details.html', ID=problem_id, Title=problem.title,
                            In_Exam=in_exam, friendlyName=SessionManager.get_friendly_name(),
                            is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
 
@@ -524,7 +523,7 @@ def problem_rank(problem_id):
     languages = {}
     for submission in submissions:
         if is_admin:
-            real_names[submission] = RealnameManager.Query_Realname(submission.user.student_id)
+            real_names[submission] = RealnameManager.query_realname(submission.user.student_id)
         languages[submission] = 'Unknown' if submission.language not in language_info \
             else language_info[submission.language]
 
@@ -674,7 +673,7 @@ def status():
 
     for submission in submissions:
         if is_admin:
-            submission.real_name = RealnameManager.Query_Realname(submission.user.student_id)
+            submission.real_name = RealnameManager.query_realname(submission.user.student_id)
         submission.visible = (
             is_admin or (
                 # user's own problem: username == ele['Username']
@@ -765,7 +764,7 @@ def code(submission_id):
         (is_admin or submission.username == SessionManager.get_username())
     show_score = not abortable and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
-    submission.real_name = RealnameManager.Query_Realname(submission.user.student_id) if is_admin else ''
+    submission.real_name = RealnameManager.query_realname(submission.user.student_id) if is_admin else ''
     submission.language = language_info[submission.language] \
         if submission.language in language_info else 'Unknown'
     if details is not None and details.resource_usage is not None:

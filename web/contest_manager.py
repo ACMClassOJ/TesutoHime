@@ -247,7 +247,7 @@ class ContestManager:
                         'accepted': False,
                     } for _ in problems
                 ],
-                'realname': RealnameManager.Query_Realname(user.student_id),
+                'realname': RealnameManager.query_realname(user.student_id),
                 'student_id': user.student_id,
                 'username': user.username,
             } for user in players

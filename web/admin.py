@@ -375,7 +375,7 @@ def add_realname():
     year_course_name_list = year_course_name.strip().splitlines()
     try:
         for i in range(0, len(student_id_list)):
-            RealnameManager.Add_Student(student_id_list[i], year_course_name_list[i])
+            RealnameManager.add_student(student_id_list[i], year_course_name_list[i])
         return ReturnCode.SUC_ADD_REALNAME
     except RequestException:
         return ReturnCode.ERR_BAD_DATA

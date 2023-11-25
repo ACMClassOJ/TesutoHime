@@ -72,12 +72,11 @@ class UserManager:
             return db.scalar(stmt)
 
     @staticmethod
-    def get_username(username: str) -> str:  # Username must exist.
+    def get_canonical_username(username: str) -> str:  # Username must exist.
         """
-        This function seems to be useless but in fact not.
-        Login is NOT Case Sensitive,
-        while many other functions IS Case Sensitive.
-        so we need the correct name.
+        This function seems to be useless but in fact not. The login is NOT
+        case sensitive (in mysql), while many other functions IS case
+        sensitive, so we need the correct name.
         """
         with SqlSession() as db:
             stmt = select(User.username).where(User.username == username)

@@ -806,6 +806,8 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
         await run_judge_tasks(ctx)
         return synthesize_scores(ctx)
     except CancelledError:
+        # sleep for a while to allow abort signals to be delivered
+        await sleep(1)
         if compiled:
             return synthesize_scores(ctx, aborted=True)
         return ProblemJudgeResult('aborted', message=None)
@@ -814,8 +816,6 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
         del ctx_from_submission[id]
         for bucket, key in ctx.files_to_clean:
             try:
-                # sleep for a while to allow abort signals to be delivered
-                await sleep(1)
                 await remove_file(bucket, key)
             except BaseException as e:
                 logger.warn(f'Error clearing object: {format_exc(e)}')

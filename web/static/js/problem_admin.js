@@ -44,6 +44,7 @@ const uploadData = async (problemId, file, progressBar) => {
                 swal('Error', `未知错误: ${xhr.status}`, 'error')
                 return
             }
+            progressBar.removeAttribute('value')
             try {
                 const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/update`, { method: 'POST' })
                 if (res.status !== 200) {

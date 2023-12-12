@@ -113,6 +113,7 @@ async def compile_git(
             argv, cwd, limits,
             supplementary_paths=bind,
             network_access=network,
+            tmpfsmount=True,
         )
 
     # clone

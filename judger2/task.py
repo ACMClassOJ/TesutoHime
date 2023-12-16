@@ -34,7 +34,7 @@ async def compile_task(task: CompileTask) -> CompileResult:
         return (await compile(task)).result
     except CancelledError:
         return CompileResult(result='aborted', message='')
-    except BaseException as e:
+    except Exception as e:
         return CompileResult(result='system_error', message=format_exc(e))
 
 
@@ -113,7 +113,7 @@ async def judge_task(task: JudgeTask, task_id: str) -> JudgeResult:
 
             except CancelledError:
                 return result
-            except BaseException as e:
+            except Exception as e:
                 logger.error(f'Error judging testpoint: {format_exc(e)}')
                 result.testpoints[i] = TestpointJudgeResult(
                     id=testpoint.id,

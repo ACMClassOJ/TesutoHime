@@ -30,7 +30,7 @@ class ContestManager:
                               rank_partial_score=rank_partial_score)
             with SqlSession.begin() as db:
                 db.add(contest)
-        except:
+        except Exception:
             sys.stderr.write("Error in ContestManager: Create_Contest\n")
 
     @staticmethod
@@ -49,7 +49,7 @@ class ContestManager:
             )
             with SqlSession.begin() as db:
                 db.execute(stmt)
-        except:
+        except Exception:
             sys.stderr.write("Error in ContestManager: Modify_Contest\n")
 
     @staticmethod
@@ -61,7 +61,7 @@ class ContestManager:
                 db.execute(delete(ContestProblem).where(
                     ContestProblem.contest_id == contest_id))
                 db.execute(delete(Contest).where(Contest.id == contest_id))
-        except:
+        except Exception:
             sys.stderr.write("Error in ContestManager: Delete_Contest\n")
 
     @staticmethod
@@ -69,7 +69,7 @@ class ContestManager:
         try:
             with SqlSession.begin() as db:
                 db.add(ContestProblem(contest_id=contest_id, problem_id=problem_id))
-        except:
+        except Exception:
             sys.stderr.write("Error in ContestManager: Add_Problem_To_Contest\n")
 
     @staticmethod
@@ -80,7 +80,7 @@ class ContestManager:
                 .where(ContestProblem.problem_id == problem_id)
             with SqlSession.begin() as db:
                 db.execute(stmt)
-        except:
+        except Exception:
             sys.stderr.write("Error in ContestManager: Delete_Problem_From_Contest\n")
 
     @staticmethod
@@ -90,7 +90,7 @@ class ContestManager:
                 Belong=contest_id, Username=username)
             with SqlSession.begin() as db:
                 db.execute(stmt)
-        except:
+        except Exception:
             sys.stderr.write("Error in ContestManager: Add_Player_To_Contest\n")
 
     @staticmethod
@@ -136,7 +136,7 @@ class ContestManager:
                 .where(ContestPlayer.c.Username == username)
             with SqlSession.begin() as db:
                 db.execute(stmt)
-        except:
+        except Exception:
             sys.stderr.write("SQL Error in ContestManager: Delete_Player_From_Contest\n")
 
     @staticmethod

@@ -95,7 +95,7 @@ async def load_config(ctx: ParseContext):
     try:
         with ctx.open(problem_config_filename, 'r') as f:
             cfg = json.load(f)
-    except BaseException as e:
+    except Exception as e:
         msg = f'cannot read {problem_config_filename}: {e}'
         raise InvalidProblemException(msg)
     try:
@@ -105,7 +105,7 @@ async def load_config(ctx: ParseContext):
             try:
                 with ctx.open(quiz_filename, 'r') as f:
                     quiz = json.load(f)
-            except BaseException as e:
+            except Exception as e:
                 msg = f'cannot read {problem_config_filename}: {e}'
                 raise InvalidProblemException(msg)
             for problem in quiz['problems']:
@@ -113,7 +113,7 @@ async def load_config(ctx: ParseContext):
             ctx.plan.quiz = [QuizProblem(**x) for x in quiz['problems']]
         ctx.cfg = ProblemConfig(**cfg)
         ctx.testpoint_count = len(ctx.cfg.Details)
-    except BaseException as e:
+    except Exception as e:
         raise InvalidProblemException(str(e))
 
 
@@ -388,7 +388,7 @@ async def generate_plan(problem_id: str) -> JudgePlan:
     finally:
         try:
             remove(zip_path)
-        except BaseException as e:
+        except Exception as e:
             logger.error(f'cannot remove problem zip: {format_exc(e)}')
 
 
@@ -641,7 +641,7 @@ async def run_judge_tasks(ctx: ExecutionContext):
                     ctx.rate_limit_group))
             except CancelledError:
                 raise
-            except BaseException as e:
+            except Exception as e:
                 return (task, False, e)
         return create_task(run_with_rec())
     while len(ready) > 0 or len(tasks_running) > 0:
@@ -774,7 +774,7 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
         answer = await read_file(code.bucket, code.key)
         try:
             answer = json.loads(answer)
-        except BaseException as e:
+        except Exception as e:
             raise InvalidCodeException(f'Answer is invalid JSON: {e}')
         return await judge_quiz(plan.quiz, answer)
     if plan.quiz is not None:
@@ -817,7 +817,7 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
         for bucket, key in ctx.files_to_clean:
             try:
                 await remove_file(bucket, key)
-            except BaseException as e:
+            except Exception as e:
                 logger.warn(f'Error clearing object: {format_exc(e)}')
 
 async def get_partial_result(submission_id):

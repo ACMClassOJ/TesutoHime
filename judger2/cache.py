@@ -70,7 +70,7 @@ async def ensure_cached(url: str) -> CachedFile:
         except CancelledError:
             try:
                 remove(part_path)
-            except:
+            except Exception:
                 pass
             raise
         return cache
@@ -106,6 +106,6 @@ async def clean_cache_worker():
             clear_cache()
         except CancelledError:
             return
-        except BaseException as e:
+        except Exception as e:
             logger.error(f'error while clearing cache: {format_exc(e)}')
         await sleep(cache_clear_interval_secs)

@@ -38,7 +38,7 @@ class ProblemManager:
         try:
             with SqlSession.begin() as db:
                 db.execute(stmt)
-        except:
+        except Exception:
             sys.stderr.write("SQL Error in ProblemManager: Modify_Problem\n")
 
     @staticmethod
@@ -50,7 +50,7 @@ class ProblemManager:
         try:
             with SqlSession.begin() as db:
                 db.execute(stmt)
-        except:
+        except Exception:
             sys.stderr.write("SQL Error in ProblemManager: Modify_Problem\n")
 
     @staticmethod
@@ -81,7 +81,7 @@ class ProblemManager:
         try:
             with SqlSession.begin() as db:
                 db.execute(stmt)
-        except:
+        except Exception:
             sys.stderr.write(
                 "SQL Error in ProblemManager: Modify_Problem_Limit\n")
 

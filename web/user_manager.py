@@ -30,7 +30,7 @@ class UserManager:
         try:
             with SqlSession.begin() as db:
                 db.add(user)
-        except:
+        except Exception:
             sys.stderr.write("SQL Error in UserManager: addUser\n")
         return
 
@@ -51,7 +51,7 @@ class UserManager:
         try:
             with SqlSession.begin() as db:
                 db.execute(stmt)
-        except:
+        except Exception:
             sys.stderr.write("SQL Error in UserManager: ModifyUser\n")
 
     @staticmethod

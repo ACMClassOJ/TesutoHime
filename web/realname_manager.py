@@ -20,7 +20,7 @@ class RealnameManager:
             rr = RealnameReference(student_id=Student_ID, real_name=Real_Name)
             with SqlSession.begin() as db:
                 db.add(rr)
-        except:
+        except Exception:
             sys.stderr.write("SQL Error in ReferenceManager: Add_Student\n")
 
     @staticmethod

@@ -24,7 +24,7 @@ async def send_heartbeats():
             await redis.set(queues.heartbeat, time())
         except CancelledError:
             return
-        except BaseException as e:
+        except Exception as e:
             logger.error(f'error sending heartbeat: {format_exc(e)}')
         await sleep(heartbeat_interval_secs)
 
@@ -45,7 +45,10 @@ async def poll_for_tasks():
                 await redis.lpush(task_queues.progress, serialize(status))
                 await redis.expire(task_queues.progress, task_timeout_secs)
 
-            task = deserialize(await redis.rpop(task_queues.task))
+            task_serialized = await redis.rpop(task_queues.task)
+            if task_serialized is None:
+                continue
+            task = deserialize(task_serialized)
             aio_task = create_task(run_task(task, task_id))
             await report_progress(StatusUpdateStarted(runner_id))
 
@@ -59,7 +62,7 @@ async def poll_for_tasks():
                         return
                     except CancelledError:
                         return
-                    except BaseException as e:
+                    except Exception as e:
                         logger.error(f'Error processing signal: {format_exc(e)}')
                         await sleep(2)
             abort_task = create_task(poll_for_abort_signal())
@@ -77,20 +80,21 @@ async def poll_for_tasks():
             normal_completion = False
             error = 'Aborted'
             return
-        except BaseException as e:
+        except Exception as e:
             normal_completion = False
+            error = str(e)
             task_logger.error(f'error processing task: {format_exc(e)}')
             await sleep(2)
         finally:
             if task_id is not None:
                 try:
                     await redis.lrem(queues.in_progress, 0, task_id)
-                except BaseException as e:
+                except Exception as e:
                     task_logger.error(f'error removing task from queue: {format_exc(e)}')
                 if not normal_completion:
                     try:
                         await report_progress(StatusUpdateError(error))
-                    except BaseException as e:
+                    except Exception as e:
                         task_logger.error(f'error sending nack: {format_exc(e)}')
 
 

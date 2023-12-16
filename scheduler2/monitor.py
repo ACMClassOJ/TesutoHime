@@ -46,7 +46,7 @@ async def get_runner_status(runner_id: str):
             status = 'invalid'
             msg = 'Multiple tasks are running on this runner'
         return RunnerStatus(status, msg, heartbeat)
-    except BaseException as e:
+    except Exception as e:
         if not isinstance(heartbeat, float):
             heartbeat = None
         msg = f'Cannot get runner status: {format_exc(e)}'
@@ -74,7 +74,7 @@ def wait_until_offline(runner_id: str):
     def cleanup(_):
         try:
             t.exception()
-        except BaseException:
+        except Exception:
             pass
         del watch_tasks[runner_id]
     t.add_done_callback(cleanup)

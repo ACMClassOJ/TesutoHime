@@ -106,7 +106,7 @@ class TempDir:
             if before_exit is not None:
                 before_exit(self.path)
             rmtree(self.path, ignore_errors=True)
-        except BaseException as e:
+        except Exception as e:
             logger.error(f'error removing temp dir {self.path}: {format_exc(e)}')
 
     @staticmethod

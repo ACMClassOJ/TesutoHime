@@ -37,7 +37,7 @@ class JudgeManager:
             res = requests.post(url, json=task).json()
             if res['result'] != 'ok':
                 raise Exception(f'Scheduler error: {res["error"]}')
-        except BaseException as e:
+        except Exception as e:
             with SqlSession() as db:
                 rec: JudgeRecord2 = db \
                     .query(JudgeRecord2) \

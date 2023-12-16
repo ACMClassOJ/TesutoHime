@@ -747,7 +747,7 @@ def code(submission_id):
                 pass
             else:
                 raise Exception(f'Unknown status code {res.status_code}')
-        except BaseException as e:
+        except Exception as e:
             # TODO: error handling
             print(e)
             pass
@@ -824,7 +824,7 @@ def abort_judge(submit_id):
         abort(FORBIDDEN)
     try:
         JudgeManager.abort_judge(submit_id)
-    except BaseException as e:
+    except Exception as e:
         abort(INTERNAL_SERVER_ERROR, str(e))
     return redirect('.', SEE_OTHER)
 

@@ -17,7 +17,7 @@ class DiscussManager:
         try:
             with SqlSession.begin() as db:
                 db.add(discuss)
-        except:
+        except Exception:
             sys.stderr.write("SQL Error in DiscussManager: Add_Discuss\n")
 
     @staticmethod
@@ -27,7 +27,7 @@ class DiscussManager:
         try:
             with SqlSession.begin() as db:
                 db.execute(stmt)
-        except:
+        except Exception:
             sys.stderr.write("SQL Error in DiscussManager: Modify_Discuss\n")
 
     @staticmethod
@@ -49,5 +49,5 @@ class DiscussManager:
             with SqlSession.begin() as db:
                 stmt = delete(Discuss).where(Discuss.id == discuss_id)
                 db.execute(stmt)
-        except:
+        except Exception:
             sys.stderr.write("SQL Error in DiscussManager: Delete_Discuss\n")

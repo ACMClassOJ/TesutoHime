@@ -17,5 +17,5 @@ try:
         one = db.query(1).one()
         if one[0] != 1:
             raise Exception('Invalid database return value')
-except BaseException as e:
+except Exception as e:
     raise Exception(f'Invalid database connection {db_url}') from e

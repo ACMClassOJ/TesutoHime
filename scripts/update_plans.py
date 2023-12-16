@@ -13,7 +13,7 @@ async def gen(problem_id):
         plan = await generate_plan(problem_id)
         plan = serialize(plan)
         await upload_str(s3_buckets.problems, plan_key(problem_id), plan)
-    except BaseException as e:
+    except Exception as e:
         print(f'Error in {problem_id}: {e}')
 
 async def main():

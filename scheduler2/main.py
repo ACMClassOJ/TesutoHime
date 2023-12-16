@@ -76,7 +76,7 @@ async def update_problem(request: Request):
         await upload_str(s3_buckets.problems, plan_key(problem_id), plan)
     except InvalidProblemException as e:
         return json_response({'result': 'invalid problem', 'error': str(e)})
-    except BaseException as e:
+    except Exception as e:
         err = format_exc(e)
         logger.error(f'error updating problem: {err}')
         return json_response({'result': 'system error', 'error': err})
@@ -117,7 +117,7 @@ async def run_judge(problem_id: str, submission_id: str,
         if res is None:
             msg = f'Invalid code: {e}'
             res = ProblemJudgeResult(result='compile_error', message=msg)
-    except BaseException as e:
+    except Exception as e:
         msg = f'Internal error: {format_exc(e)}'
         logger.error(f'error judging problem: {msg}')
         if res is None:
@@ -141,7 +141,7 @@ async def judge(request: Request):
 
         register_judge_task(problem_id, submission_id, language, source,
             rate_limit_group)
-    except BaseException as e:
+    except Exception as e:
         return json_response({'result': 'system error', 'error': format_exc(e)})
     return json_response({'result': 'ok', 'error': None})
 
@@ -196,7 +196,7 @@ async def runner_status(request: Request):
                 cached_runner_status = dict([await x for x in tasks])
                 cached_runner_status_time = time()
                 runner_status_future.set_result(cached_runner_status)
-            except BaseException as e:
+            except Exception as e:
                 runner_status_future.set_exception(e)
             finally:
                 runner_status_future = None

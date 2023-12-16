@@ -178,7 +178,7 @@ async def run_with_limits(
                 raise Exception('Invalid runner output')
             program_code, realtime, mem = [int(x) for x in params[1:4]]
             usage_is_accurate = True
-        except BaseException:
+        except Exception:
             program_code = -1
             realtime = int(approx_time * 1000)
             mem = int(approx_mem)

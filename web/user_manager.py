@@ -5,28 +5,46 @@ import random
 import sys
 from typing import Optional
 
-from commons.models import ContestPlayer
+from argon2 import PasswordHasher
+from argon2.exceptions import VerificationError
+from sqlalchemy import delete, func, select, update
 
+from commons.models import ContestPlayer, User
 from web.utils import SqlSession
-from sqlalchemy import select, func, delete, update
-from commons.models import User
 
-def hash(password, salt):
+
+password_hasher = PasswordHasher()
+
+def hash(password: str):
+    return password_hasher.hash(password)
+
+def hash_sha512(password, salt):
     return str(hashlib.sha512((password + str(salt)).encode('utf-8')).hexdigest())
 
+def verify_argon2(hashed, password):
+    try:
+        return password_hasher.verify(hashed, password)
+    except VerificationError:
+        return False
 
-def rand_int():
-    return random.randint(3456, 89786576)
+sha512_transition_prefix = '$argon2+sha512$'
+
+def verify_sha512(hashed, password):
+    if not hashed.startswith(sha512_transition_prefix):
+        return False
+    hashed = hashed[len(sha512_transition_prefix):].split('$')
+    salt = hashed[0]
+    hashed = '$'.join(hashed[1:])
+    return verify_argon2(hashed, hash_sha512(password, salt))
 
 
 class UserManager:
     @staticmethod
     def add_user(username: str, student_id: int, friendly_name: str, password: str,
                  privilege: int):  # will not check whether the argument is illegal
-        salt = rand_int()
-        password = hash(password, salt)
+        password = hash(password)
         user = User(username=username, student_id=student_id, friendly_name=friendly_name,
-                    password=password, salt=salt, privilege=privilege)
+                    password=password, privilege=privilege)
         try:
             with SqlSession.begin() as db:
                 db.add(user)
@@ -43,9 +61,8 @@ class UserManager:
         if friendly_name is not None:
             stmt = stmt.values(friendly_name=friendly_name)
         if password is not None:
-            salt = rand_int()
-            password = hash(password, salt)
-            stmt = stmt.values(password=password, salt=salt)
+            password = hash(password)
+            stmt = stmt.values(password=password)
         if privilege is not None:
             stmt = stmt.values(privilege=privilege)
         try:
@@ -57,13 +74,22 @@ class UserManager:
     @staticmethod
     def check_login(username: str, password: str) -> bool:
         with SqlSession() as db:
-            stmt = select(User.password, User.salt).where(
-                User.username == username)
-            data = db.execute(stmt).first()
-            if data is None:  # user do not exist
+            stmt = select(User.password).where(User.username == username)
+            hashed = db.scalar(stmt)
+            if hashed is None:  # user do not exist
                 return False
-            h = hash(password, int(data[1]))
-            return h == data[0]
+            if hashed.startswith('$SHA512$'):
+                raise Exception('Incomplete database migration!')
+            if hashed.startswith(sha512_transition_prefix):
+                result = verify_sha512(hashed, password)
+                if not result:
+                    return False
+                stmt = update(User).where(User.username == username) \
+                    .values(password=hash(password))
+                db.execute(stmt)
+                db.commit()
+                return True
+            return verify_argon2(hashed, password)
 
     @staticmethod
     def get_friendly_name(username: str) -> str:  # Username must exist.

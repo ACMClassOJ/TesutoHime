@@ -33,8 +33,8 @@ redis = Redis(
     **config['redis']['connection'],
     decode_responses=True,
     health_check_interval=30,
-    socket_timeout=5,
     socket_connect_timeout=5,
+    socket_keepalive=True,
 )
 
 

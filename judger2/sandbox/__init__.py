@@ -76,7 +76,7 @@ class NsjailArgs:
     disable_clone_newnet: bool = False
 
     mode: str = 'o'
-    quiet: bool = True
+    really_quiet: bool = True
     max_cpus: str = '1'
     rlimit_stack: str = 'inf'
     # capabilities(7) to grant to the program.

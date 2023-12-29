@@ -57,7 +57,7 @@ async def checker_cmp_b(_infile, outfile: PosixPath, _cwd, checker: CompareCheck
     ans = (await ensure_cached(checker.answer)).path
     if not checker.ignore_whitespace:
         return CheckResult('system_error', 'cannot check without ignore_whitespace')
-    argv = [checker_exe, str(outfile), str(ans)]
+    argv = [checker_exe, '-ZB', '--', str(outfile), str(ans)]
     supplementary_paths = \
         ['/bin', '/usr/bin', checker_exe, str(outfile), str(ans)]
     logger.debug(f'about to run {argv}')

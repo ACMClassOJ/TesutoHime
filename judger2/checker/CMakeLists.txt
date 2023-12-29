@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-O2")
 
 add_executable(checker
-    checker.cpp
+    main.cpp check.cpp
 )
 
 if (supported)

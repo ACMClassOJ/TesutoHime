@@ -5,12 +5,16 @@ include(CheckIPOSupported)
 
 check_ipo_supported(RESULT supported OUTPUT error)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_CXX_FLAGS "-O2")
 
 add_executable(checker
-    main.cpp check.cpp
+        main.cpp
+        check.h
+        check.cpp
+        arguments.h
+        arguments.cpp
 )
 
 if (supported)

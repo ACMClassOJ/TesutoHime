@@ -1,23 +1,26 @@
+#include <cctype>
 #include <iostream>
 #include <string>
 
-bool NextNonBlankLine(std::istream& file, std::string& line);
-bool SameLine(const std::string& line1, const std::string& line2);
+bool SameLine(const std::string& line1, const std::string& line2,
+              bool ignoreTailingSpace);
+bool ReadNextLine(std::istream& file, std::string& line, bool ignoreBlankLine);
 
 /**
  * Check whether two files are the same.
  * The two file must be valid.
  */
-bool CheckFile(std::istream& file1, std::istream& file2) {
+bool CheckFile(std::istream& file1, std::istream& file2,
+               bool ignoreTailingSpace, bool ignoreBlankLine) {
     std::string line1, line2;
-    bool result1 = NextNonBlankLine(file1, line1);
-    bool result2 = NextNonBlankLine(file2, line2);
+    bool result1 = ReadNextLine(file1, line1, ignoreBlankLine);
+    bool result2 = ReadNextLine(file2, line2, ignoreBlankLine);
     while (result1 && result2) {
-        if (!SameLine(line1, line2)) {
+        if (!SameLine(line1, line2, ignoreTailingSpace)) {
             return false;
         }
-        result1 = NextNonBlankLine(file1, line1);
-        result2 = NextNonBlankLine(file2, line2);
+        result1 = ReadNextLine(file1, line1, ignoreBlankLine);
+        result2 = ReadNextLine(file2, line2, ignoreBlankLine);
     }
     return result1 == result2;
 }
@@ -35,23 +38,28 @@ bool BlankLine(const std::string& line) {
     return BlankFrom(line, 0);
 }
 
-bool SameLine(const std::string& line1, const std::string& line2) {
-    // Note: the line cannot be blank, so the prefix must be the same.
+bool SameLine(const std::string& line1, const std::string& line2,
+              bool ignoreTailingSpace) {
+    if (!ignoreTailingSpace && line1.size() != line2.size()) {
+        return false;
+    }
     size_t pos = 0;
     while (pos < line1.size() && pos < line2.size() &&
            line1[pos] == line2[pos]) {
         pos++;
     }
-    return BlankFrom(line1, pos) && BlankFrom(line2, pos);
+    if (ignoreTailingSpace) {
+        return BlankFrom(line1, pos) && BlankFrom(line2, pos);
+    } else {
+        // no need to check line2 since they must be of the same size
+        return pos == line1.size();
+    }
 }
 
-/**
- * Read the next non-blank line from the file.
- * @param fin The file stream
- * @param line The string to store the line
- * @return Whether the line is read successfully
- */
-bool NextNonBlankLine(std::istream& file, std::string& line) {
+bool ReadNextLine(std::istream& file, std::string& line, bool ignoreBlankLine) {
+    if (!ignoreBlankLine) {
+        return static_cast<bool>(std::getline(file, line));
+    }
     while (std::getline(file, line)) {
         if (!BlankLine(line)) return true;
     }

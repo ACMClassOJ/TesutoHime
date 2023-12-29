@@ -1,11 +1,5 @@
 /**
  * @file main.cpp
- * @brief Implement an efficient checker with the same behaviour as the `diff -qZB`.
- *
- * The checker process line by line.
- * When the checker reads a line, it will
- * 1. check whether the line is blank. If it is, then skip it.
- * 2. check the line until the last non-blank character.
  *
  * Exit code:
  * 0: No difference;
@@ -18,33 +12,39 @@
 #include <iostream>
 #include <string>
 
-bool SameLine(const std::string& line1, const std::string& line2);
-bool BlankLine(const std::string& line);
-bool NextNonBlankLine(std::istream& file, std::string& line);
-bool CheckFile(std::istream& file1, std::istream& file2);
+#include "arguments.h"
+#include "check.h"
+
+void PrintHelpMenu();
 
 int main(int argc, char** argv) {
-    if (argc != 3) {
-        std::cerr << "Missing arguments." << std::endl;
-        std::cerr << "Usage: " << argv[0] << " <file1> <file2>" << std::endl;
+    Argument args = ParseArgument(argc, argv);
+    if (!args.valid) {
+        PrintHelpMenu();
         return 2;
     }
+    if (args.isHelp) {
+        PrintHelpMenu();
+        return 0;
+    }
+    return CheckFile(*args.file1, *args.file2,
+                     args.ignoreTailingSpace, args.ignoreBlankLine) ? 0 : 1;
+}
 
-    std::ifstream file1(argv[1]);
-    std::ifstream file2(argv[2]);
-    if (!file1.is_open() && !file2.is_open()) {
-        std::cerr << "Failed to open file: " << argv[1] << std::endl;
-        std::cerr << "Failed to open file: " << argv[2] << std::endl;
-        return 2;
-    }
-    if (!file1.is_open()) {
-        std::cerr << "Failed to open file: " << argv[1] << std::endl;
-        return 2;
-    }
-    if (!file2.is_open()) {
-        std::cerr << "Failed to open file: " << argv[2] << std::endl;
-        return 2;
-    }
+void PrintHelpMenu() {
+    std::cout << R"(Usage: checker [OPTION]... FILE1 FILE2
+Compare two files line by line.
 
-    return CheckFile(file1, file2) ? 0 : 1;
+Options:
+  -Z, --ignore-tailing-space  ignore the white space at the end of the line
+  -B, --ignore-blank-lines    ignore the blank lines
+  -h, --help                  display this help and exit
+  -                           read from stdin
+  --                          end of options
+
+Exit status:
+    0  if no difference
+    1  if difference
+    2  if missing arguments
+)" << std::endl;
 }

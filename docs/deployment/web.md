@@ -145,6 +145,9 @@ class WebConfig:
     Block_Register = False                #暂停OJ注册
     Contests_Each_Page = 20                #比赛页面每页显示多少比赛
 
+class NewsConfig:
+    feed = 'https://acm.sjtu.edu.cn/OnlineJudge/blog/index.json'
+
 class SchedulerConfig:
     base_url = 'http://localhost:5100'    # 调度器 URL，内网可访问即可
     auth = 'Bearer xxxxxxxxxxxxxxxx'      # 调度器密钥，需与调度器侧配置一致 (请将 x 替换为随机数)

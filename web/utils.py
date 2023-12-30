@@ -54,6 +54,9 @@ def unix_nano_float() -> float:  # float point time in Second
     return time.time()
 
 
+def readable_date(nano) -> str:
+    return str(time.strftime("%b-%d-%Y", datetime.datetime.fromtimestamp(nano).timetuple()))
+
 def readable_time(nano) -> str:
     return str(time.strftime("%b-%d-%Y %H:%M:%S", datetime.datetime.fromtimestamp(nano).timetuple()))
 

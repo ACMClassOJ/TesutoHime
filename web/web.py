@@ -17,7 +17,8 @@ from flask import (Blueprint, Flask, abort, make_response, redirect,
 from sqlalchemy.orm import defer, selectinload
 
 import commons.task_typing
-from commons.models import ContestProblem, JudgeRecord2, JudgeStatus, Problem, User
+from commons.models import (ContestProblem, JudgeRecord2, JudgeStatus, Problem,
+                            User)
 from commons.task_typing import ProblemJudgeResult
 from commons.util import load_dataclass, serialize
 from web.admin import admin
@@ -29,16 +30,18 @@ from web.const import (Privilege, ReturnCode, contributors, judge_status_info,
 from web.contest_manager import ContestManager
 from web.discuss_manager import DiscussManager
 from web.judge_manager import JudgeManager, NotFoundException
+from web.news_manager import NewsManager
 from web.old_judge_manager import OldJudgeManager
 from web.problem_manager import ProblemManager
 from web.quiz_manager import QuizManager
 from web.realname_manager import RealnameManager
 from web.session_manager import SessionManager
+from web.template_interface import RowJudgeStatus
 from web.tracker import tracker
 from web.user_manager import UserManager
 from web.utils import (SqlSession, gen_page, gen_page_for_problem_list,
-                       generate_s3_public_url, readable_time, unix_nano)
-from web.template_interface import RowJudgeStatus
+                       generate_s3_public_url, readable_date, readable_time,
+                       unix_nano)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -147,8 +150,11 @@ def log():
 
 @web.route('/')
 def index():
+    news = NewsManager.get_news()
     return render_template(
         'index.html',
+        news=news,
+        readable_date=readable_date,
         friendlyName = SessionManager.get_friendly_name(),
         is_Admin = SessionManager.get_privilege() >= Privilege.ADMIN
     )

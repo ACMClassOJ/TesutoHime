@@ -1,24 +1,30 @@
 {% extends 'base.html' %} {% set page='主页' %} {% block content %}
 <div class="card card-body">
     <h1>Welcome to ACM Class OnlineJudge</h1>
-    <h4>Compiler Options:</h4>
-    <p>C++: <code>g++ code.cpp -o code -fmax-errors=10 -O2 -DONLINE_JUDGE -lm -std=c++20</code></p>
-    <p>Git: <code>cmake . && make</code></p>
-    <p>Verilog: <code>iverlog answer.v -o code</code></p>
-    <p>gcc version: <code>gcc (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0</code></p>
-    <p>cmake version: <code>cmake version 3.22.1</code></p>
-    <p>submit code length limit: <code>1048576 bytes</code></p>
+    {% if news | length > 0 -%}
+    <h4>News</h4>
+    {% for item in news -%}
+    <p>
+        <a class="blog-post" href="{{ item['link'] }}">
+            {%- if item['weight'] > 0 %}<strong>{% endif -%}
+            <span class="blog-post__title">{{ item['title'] }}</span>
+            <span class="blog-post__date">{{ readable_date(item['date']) }}</span>
+            {%- if item['weight'] > 0 %}</strong>{% endif -%}
+        </a>
+    </p>
+    {%- endfor %}
+    <p>
+        <a href="/OnlineJudge/blog/">查看全部 →</a>
+    </p>
+
     <hr class="my-4">
+
+    {%- endif %}
     {% if is_Admin -%}
     <p><strong>邀请您加入 ACMOJ 助教 QQ 群: 942621107</strong>（此消息仅对助教显示，请勿拉学生入群。）</p>
     {%- endif %}
-    <p>OJ 系统近日进行了升级，使用过程中如遇异常，请及时与 OJ 开发组联系。2023.10.3</p>
-    <p><a href="https://acm.sjtu.edu.cn/OnlineJudge-old/">Legacy OnlineJudge</a> 所有题库与测试数据已完成迁移，即日起可在本 OJ 评测老 OJ 题目。2021.8.18</p>
-    <p>老 OJ 题号加 10000 即为新 OJ 题号，如，老 OJ 1000 -> 新 OJ 11000。</p>
-    <p>已知迁移后题面与数据的兼容性问题详情见<a href="/OnlineJudge/about#migration">此链接</a>。</p>
     <p>如需要管理员账户，以及对 OJ 有任何改进建议，欢迎邮件 ACM OJ 管理组。</p>
     <p>请所有助教在上题前阅读“管理”界面，“文档”选项卡的相关文档，注意题面与数据格式的规范！</p>
-    <hr class="my-4">
     <p>联系管理组：<a href="mailto:acmclassoj@googlegroups.com">acmclassoj@googlegroups.com</a></p>
     <p>
         友情链接：<!--

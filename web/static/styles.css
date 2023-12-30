@@ -6,6 +6,13 @@ h1 {
     white-space: nowrap;
 }
 
+.blog-post__date::before {
+    content: '(';
+}
+.blog-post__date::after {
+    content: ')';
+}
+
 .title-nav {
     display: flow-root;
     margin-bottom: 0;

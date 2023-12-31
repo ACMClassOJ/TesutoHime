@@ -70,4 +70,7 @@ task_retries = 3
 task_retry_interval_secs = 10
 task_concurrency_per_account = 4
 
+request_retries = 10
+request_retry_interval_secs = 2
+
 runner_heartbeat_interval_secs = 2.0

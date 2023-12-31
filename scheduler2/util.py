@@ -1,4 +1,4 @@
-from asyncio import Semaphore
+from asyncio import Semaphore, sleep
 from dataclasses import dataclass
 from http.client import OK
 from logging import getLogger
@@ -6,10 +6,11 @@ from typing import Dict, Optional
 from urllib.parse import quote, urljoin
 
 from aiohttp import request
+
 from commons.task_typing import Task
 from commons.util import dump_dataclass
-
-from scheduler2.config import web_auth, web_base_url
+from scheduler2.config import (request_retries, request_retry_interval_secs,
+                               web_auth, web_base_url)
 
 logger = getLogger(__name__)
 
@@ -21,9 +22,24 @@ async def make_request(path, body):
         args = {'json': dump_dataclass(body)}
     url = urljoin(web_base_url, path)
     headers = {'Authorization': web_auth}
-    async with request('PUT', url, headers=headers, **args) as res:
-        if res.status != OK:
-            logger.error(f'Error sending request to {path}: {res.status}')
+    async def do_request():
+        async with request('PUT', url, headers=headers, **args) as res:
+            if res.status != OK:
+                raise Exception(f'{res.status}')
+    interval = request_retry_interval_secs
+    for i in range(request_retries):
+        will_retry = i < request_retries - 1
+        try:
+            await do_request()
+            return
+        except Exception as e:
+            msg = f'Error sending request to {path}: {e}'
+            if will_retry:
+                msg += f', will retry in {interval} seconds'
+            logger.error(msg)
+            if not will_retry: raise
+            await sleep(interval)
+            interval *= 2
 
 async def update_status(submission_id, status):
     return await make_request(f'api/submission/{quote(submission_id)}/status',

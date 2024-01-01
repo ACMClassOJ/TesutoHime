@@ -180,5 +180,6 @@ class JudgeManager:
         with SqlSession(expire_on_commit=False) as db:
             return db \
                 .query(JudgeRunner2) \
+                .where(JudgeRunner2.visible) \
                 .order_by(JudgeRunner2.id) \
                 .all()

@@ -160,6 +160,7 @@ class JudgeRunner2(Base):
     name = Column(Text)
     hardware = Column(Text)
     provider = Column(Text)
+    visible = Column(Boolean, server_default=text("true"))
 
 
 class JudgeStatus(Enum):

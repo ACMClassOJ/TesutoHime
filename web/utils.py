@@ -55,10 +55,10 @@ def unix_nano_float() -> float:  # float point time in Second
 
 
 def readable_date(nano) -> str:
-    return str(time.strftime("%b-%d-%Y", datetime.datetime.fromtimestamp(nano).timetuple()))
+    return str(time.strftime("%Y-%m-%d", datetime.datetime.fromtimestamp(nano).timetuple()))
 
 def readable_time(nano) -> str:
-    return str(time.strftime("%b-%d-%Y %H:%M:%S", datetime.datetime.fromtimestamp(nano).timetuple()))
+    return str(time.strftime("%Y-%m-%d %H:%M:%S", datetime.datetime.fromtimestamp(nano).timetuple()))
 
 
 def regularize_string(raw_str: str) -> str:

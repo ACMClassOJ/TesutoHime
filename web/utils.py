@@ -14,17 +14,6 @@ from web.config import (RedisConfig, S3Config, mysql_connection_pool_recycle,
 engine = create_engine(mysql_connection_string, pool_recycle=mysql_connection_pool_recycle)
 SqlSession = sessionmaker(bind=engine)
 
-mysql_url = urlparse(mysql_connection_string)
-mysql_qs = parse_qs(mysql_url.query)
-mysql_database = mysql_url.path[1:]
-mysql_password = mysql_url.netloc.split('@')[0].split(':')[1:]
-if len(mysql_password) > 0:
-    mysql_password = { 'password': mysql_password[0] }
-elif 'unix_socket' in mysql_qs:
-    mysql_password = { 'unix_socket': mysql_qs['unix_socket'][0] }
-else:
-    mysql_password = {}
-
 cfg = Config(signature_version='s3v4')
 s3_public = boto3.client('s3', **S3Config.Connections.public, config=cfg)
 s3_internal = boto3.client('s3', **S3Config.Connections.internal, config=cfg)
@@ -36,10 +25,6 @@ def generate_s3_public_url(*args, **kwargs):
     if url[0] == '/':
         url = url[1:]
     return urljoin(S3Config.public_url, url)
-
-
-def db_connect():
-    return engine.dialect.connect(database=mysql_database, autocommit=True, **mysql_password)
 
 
 def redis_connect():

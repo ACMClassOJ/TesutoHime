@@ -253,9 +253,11 @@ def get_code():
     if run_id < 0 or run_id > OldJudgeManager.max_id():
         return '-1'
     detail = OldJudgeManager.query_judge(run_id)
-    if not is_code_visible(detail['User'], detail['Problem_ID'], detail['Share']):
+    if detail is None:
         return '-1'
-    return detail['Code']
+    if not is_code_visible(detail.username, detail.problem_id, detail.public):
+        return '-1'
+    return detail.code
 
 
 @web.route('/api/quiz', methods=['POST'])
@@ -704,21 +706,28 @@ def code_old(run_id):
     if run_id < 0 or run_id > OldJudgeManager.max_id():
         abort(NOT_FOUND)
     detail = OldJudgeManager.query_judge(run_id)
-    if not is_code_visible(detail['User'], detail['Problem_ID'], detail['Share']):
+    if detail is None:
+        abort(NOT_FOUND)
+    if not is_code_visible(detail.username, detail.problem_id, detail.public):
         abort(FORBIDDEN)
     else:
-        detail['Friendly_Name'] = UserManager.get_friendly_name(detail['User'])
-        detail['Problem_Title'] = ProblemManager.get_title(detail['Problem_ID'])
-        detail['Lang'] = readable_lang(detail['Lang'])
-        detail['Time'] = readable_time(int(detail['Time']))
+        friendly_name = UserManager.get_friendly_name(detail.username)
+        problem_title = ProblemManager.get_title(detail.problem_id)
+        language = readable_lang(detail.language)
+        time = readable_time(int(detail.time))
         data = None
-        if detail['Detail'] != 'None':
-            temp = json.loads(detail['Detail'])
-            detail['Score'] = int(temp[1])
+        if detail.detail != 'None':
+            temp = json.loads(detail.detail)
+            score = int(temp[1])
             data = temp[4:]
         else:
-            detail['Score'] = 0
+            score = 0
         return render_template('judge_detail_old.html', Detail=detail, Data=data,
+                               friendly_name=friendly_name,
+                               problem_title=problem_title,
+                               language=language,
+                               time=time,
+                               score=score,
                                friendlyName=SessionManager.get_friendly_name(),
                                is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
 

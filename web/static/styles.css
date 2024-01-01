@@ -2,8 +2,38 @@ h1 {
     margin: 1rem 0;
 }
 
-#homework, #contest, #status_list {
+#homework, #contest, .status-list {
     white-space: nowrap;
+}
+
+#status .status-list__user, #status .status-list__problem a {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+#status .status-list__user {
+    max-width: 13em;
+}
+#status .status-list__problem a {
+    display: block;
+    max-width: 20em;
+}
+.container:not(.fullwidth) #status :is(.status-list__time, .status-list__memory) {
+    display: none;
+}
+.container.fullwidth #status .status-list__user {
+    max-width: calc(30vw - 128px);
+}
+.container.fullwidth #status .status-list__problem a {
+    max-width: calc(60vw - 512px);
+}
+@media (max-width: 1200px) {
+    #status .status-list__user {
+        max-width: 10em;
+    }
+    #status .status-list__problem a {
+        max-width: 13em;
+    }
 }
 
 .blog-post__date::before {
@@ -172,7 +202,7 @@ h1 {
 .card-body {
     position: relative;
 }
-@media (max-width: 600px) {
+@media (max-width: 992px) {
     #width-toggle {
         display: none;
     }

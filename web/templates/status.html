@@ -7,8 +7,13 @@
 {% endblock %}
 
 {% block content %}
-    <div class="card card-body">
-        <h1> 评测状态 </h1>
+    <div class="card card-body" id="status">
+        <h1 class="title-nav mb-3">
+            <span class="title-nav__title">评测状态</span>
+            <span class="title-nav__nav">
+                <button class="btn btn-outline-primary" id="width-toggle">切换宽度</button>
+            </span>
+        </h1>
         <div>
             <form class="form-group input-group" method="get" id="status_serach">
                 <input class="form-control input-group" type="text" name="submitter" id="submitter" placeholder="用户名"
@@ -34,7 +39,7 @@
                     {%- endfor %}
                 </select>
                 <div class="input-group-append">
-                    <button class="btn btn-primary">搜索</button>
+                    <button class="btn btn-outline-primary">搜索</button>
                 </div>
             </form>
         </div>
@@ -56,5 +61,9 @@
             $("[data-toggle='popover']").popover('hide')
         }, 2000);
     });
+
+    $('#width-toggle').click(() => {
+        $('.container').toggleClass('fullwidth')
+    })
     </script>
 {% endblock %}

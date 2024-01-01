@@ -24,7 +24,7 @@
                 <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/rank">排行榜</a>
             </li>
             {% endif %}
-            {% if is_Admin %}
+            {% if g.is_admin %}
             <li class="nav-item">
                 <form id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
                     <input type="hidden" name="id" id="datazip_download_problem_ID" value="{{ ID }}">    
@@ -76,7 +76,7 @@
         <a href="/OnlineJudge/status?problem_id={{ ID }}" class="btn btn-info"> 评测状态 </a> {% if not In_Exam -%}
         <a href="/OnlineJudge/problem/{{ ID }}/discuss" class="btn btn-success"> 讨论 </a>
         <a href="/OnlineJudge/problem/{{ ID }}/rank" class="btn btn-light"> 排行榜 </a> {%- endif %}
-        {% if is_Admin %}
+        {% if g.is_admin %}
         <a href="javascript:document.getElementById('formDataZipDownload').submit();" class="btn btn-warning"> 下载本题数据 </a>
         {%- endif %}
     </div>

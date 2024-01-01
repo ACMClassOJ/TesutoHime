@@ -15,7 +15,7 @@
         <h1>评测详情 {{ submissions[0].id }}</h1>
         
         {% from 'component/status_table.html' import status_table -%}
-        {{ status_table(submissions, judge_status_info, is_Admin, show_time=show_time, show_memory=show_memory, show_score=show_score) }}
+        {{ status_table(submissions, show_time=show_time, show_memory=show_memory, show_score=show_score) }}
 
         {% if details != None -%}
         <div class="row">
@@ -24,9 +24,9 @@
                     {% for j in range(group.testpoints|length) -%}
                         <a
                             href="#{{ group.id }}_{{ j }}"
-                            class="badge badge-pill badge-{{judge_status_info[group.testpoints[j].result].badge_type}}"
+                            class="badge badge-pill badge-{{ g.consts.judge_status_info[group.testpoints[j].result].badge_type }}"
                         >
-                            {{ judge_status_info[group.testpoints[j].result].abbrev }}
+                            {{ g.consts.judge_status_info[group.testpoints[j].result].abbrev }}
                         </a>
                     {%- endfor %}
                 {%- endfor %}
@@ -62,7 +62,7 @@
             <span class="badge badge-secondary"> 私有代码 </span>
             {%- endif %}    
             </span>
-            {% if is_Admin and not abortable and submission.status.name != 'void' -%}
+            {% if g.is_admin and not abortable and submission.status.name != 'void' -%}
                 <form action="void" method="POST" style="display: inline" onsubmit="return confirm('确认将此份代码标记为无效？')">
                     <button class="btn btn-secondary btn-sm">Void</button>
                 </form>
@@ -96,14 +96,15 @@
                                 </th>
                             <tr>
                             </thead>
-                            {% for j, testpoint in enumerate(group.testpoints) -%}
+                            {% for testpoint in group.testpoints -%}
+                            {% set j = loop.index0 %}
                                 <tr>
                                     <td>
                                         <div class="row">
                                             <div class="col-4">
                                                 Testpoint {{ testpoint.id }}: 
-                                                <b><span class="text-{{judge_status_info[testpoint.result].color}}" id="{{ group.id }}_{{ j }}">
-                                                    {{ judge_status_info[testpoint.result].name }}
+                                                <b><span class="text-{{ g.consts.judge_status_info[testpoint.result].color }}" id="{{ group.id }}_{{ j }}">
+                                                    {{ g.consts.judge_status_info[testpoint.result].name }}
                                                 </span></b>
                                             </div>
                                             {% if testpoint.resource_usage != None -%}

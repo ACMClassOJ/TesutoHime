@@ -26,7 +26,7 @@
                 <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/rank">排行榜</a>
             </li>
             {% endif %}
-            {% if is_Admin %}
+            {% if g.is_admin %}
             <li class="nav-item">
                 <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ ID }}/admin"> 管理 </a>
             </li>

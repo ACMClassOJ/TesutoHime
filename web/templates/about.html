@@ -168,7 +168,7 @@
     <h4>运维组：</h4>
     <p>有任何问题请直接发邮件联系任意一个运维组成员。</p>
     <div class="row ml--2 mr--2">
-        {% for mntner in mntners %}
+        {% for mntner in g.consts.mntners %}
         <div class="p-2 col-lg-4">
             <div class="contributor-card">
                 <a href="{{ mntner.link }}" target="_blank">
@@ -187,7 +187,7 @@
 
     <h4>Contributors (排名不分先后):</h4>
     <div class="row ml--2 mr--2">
-        {% for contributor in contributors %}
+        {% for contributor in g.consts.contributors %}
         <div class="p-2 col-lg-4">
             <div class="contributor-card">
                 <a href="{{ contributor.link }}" target="_blank">

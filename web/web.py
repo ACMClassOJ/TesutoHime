@@ -12,11 +12,13 @@ from uuid import uuid4
 
 import requests
 import sqlalchemy as sa
-from flask import (Blueprint, Flask, abort, make_response, redirect,
+from flask import (Blueprint, Flask, abort, g, make_response, redirect,
                    render_template, request, send_from_directory)
 from sqlalchemy.orm import defer, selectinload
 
 import commons.task_typing
+import web.const as consts
+import web.utils as utils
 from commons.models import (ContestProblem, JudgeRecord2, JudgeStatus, Problem,
                             User)
 from commons.task_typing import ProblemJudgeResult
@@ -25,8 +27,7 @@ from web.admin import admin
 from web.config import (JudgeConfig, LoginConfig, ProblemConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
-from web.const import (Privilege, ReturnCode, contributors, judge_status_info,
-                       language_info, mntners, runner_status_info)
+from web.const import Privilege, ReturnCode, language_info, runner_status_info
 from web.contest_manager import ContestManager
 from web.discuss_manager import DiscussManager
 from web.judge_manager import JudgeManager, NotFoundException
@@ -40,7 +41,7 @@ from web.template_interface import RowJudgeStatus
 from web.tracker import tracker
 from web.user_manager import UserManager
 from web.utils import (SqlSession, gen_page, gen_page_for_problem_list,
-                       generate_s3_public_url, readable_date, readable_time,
+                       generate_s3_public_url, readable_lang, readable_time,
                        unix_nano)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
@@ -88,20 +89,6 @@ def validate(username: Optional['str'] = None,
     return ReturnCode.SUC_VALIDATE
 
 
-def readable_lang(lang: int) -> str:
-    # Get the readable language name.
-    lang_str = {
-        0: 'C++',
-        1: 'Git',
-        2: 'Verilog',
-        3: 'Quiz',
-    }
-    try:
-        return lang_str[lang]
-    except KeyError:
-        return 'UNKNOWN'
-
-
 """
 The exam visibility part.
 """
@@ -140,24 +127,24 @@ def is_code_visible(code_owner, problem_id, shared):
 
 
 @web.before_request
-def log():
+def before_request():
     if (request.full_path.startswith(('/OnlineJudge/static',
                                       '/OnlineJudge/api/heartBeat')) or
         request.full_path.endswith(('.js', '.css', '.ico'))):
         return
     tracker.log()
 
+    g.time = datetime.now()
+    g.friendly_name = SessionManager.get_friendly_name()
+    g.privilege = SessionManager.get_privilege()
+    g.is_admin = g.privilege >= Privilege.ADMIN
+    g.utils = utils
+    g.consts = consts
+
 
 @web.route('/')
 def index():
-    news = NewsManager.get_news()
-    return render_template(
-        'index.html',
-        news=news,
-        readable_date=readable_date,
-        friendlyName = SessionManager.get_friendly_name(),
-        is_Admin = SessionManager.get_privilege() >= Privilege.ADMIN
-    )
+    return render_template('index.html', news=NewsManager.get_news())
 
 
 @web.route('/index.html')
@@ -287,8 +274,7 @@ def login():
     if request.method == 'GET':
         nxt = request.args.get('next')
         nxt = '/' if nxt is None else nxt
-        return render_template('login.html', Next=nxt, friendlyName=SessionManager.get_friendly_name(),
-                               is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
+        return render_template('login.html', Next=nxt)
     username = request.form.get('username')
     password = request.form.get('password')
     if username.endswith("mirror"):
@@ -318,8 +304,7 @@ def register():
         abort(NOT_FOUND)
     if request.method == 'GET':
         nxt = request.args.get('next')
-        return render_template('register.html', Next=nxt, friendlyName=SessionManager.get_friendly_name(),
-                               is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
+        return render_template('register.html', Next=nxt)
     username = request.form.get('username')
     password = request.form.get('password')
     friendly_name = request.form.get('friendly_name')
@@ -379,9 +364,7 @@ def problem_list():
 
     return render_template('problem_list.html', problems=problems,
                             pages=gen_page_for_problem_list(page, max_page, max_page_under_11000),
-                            args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
-                            friendlyName=SessionManager.get_friendly_name(),
-                            is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
+                            args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
 
 @web.route('/problem/<int:problem_id>')
 def problem_detail(problem_id):
@@ -394,8 +377,7 @@ def problem_detail(problem_id):
     in_exam = problem_in_exam(problem_id)
 
     return render_template('problem_details.html', ID=problem_id, Title=problem.title,
-                           In_Exam=in_exam, friendlyName=SessionManager.get_friendly_name(),
-                           is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
+                           In_Exam=in_exam)
 
 
 @web.route('/problem/<int:problem_id>/admin', methods=['GET', 'POST'])
@@ -433,10 +415,9 @@ def problem_admin(problem_id):
     in_exam = problem_in_exam(problem_id)
 
     return render_template('problem_admin.html', ID=problem_id, Title=problem.title,
-                           In_Exam=in_exam, friendlyName=SessionManager.get_friendly_name(),
+                           In_Exam=in_exam,
                            problem=problem, now=now, contests=contests,
-                           submission_count=submission_count, ac_count=ac_count,
-                           is_Admin=is_admin)
+                           submission_count=submission_count, ac_count=ac_count)
 
 
 @web.route('/problem/<int:problem_id>/submit', methods=['GET', 'POST'])
@@ -452,13 +433,9 @@ def submit_problem(problem_id):
         problem_type = problem.problem_type
         in_exam = problem_in_exam(problem_id)
         if problem_type == 0:
-            return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam,
-                               friendlyName=SessionManager.get_friendly_name(),
-                               is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
+            return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam)
         elif problem_type == 1:
-            return render_template('quiz_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam,
-                               friendlyName=SessionManager.get_friendly_name(),
-                               is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
+            return render_template('quiz_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam)
     else:
         public = bool(request.form.get('shared', 0))  # 0 or 1
         username = SessionManager.get_username()
@@ -546,9 +523,8 @@ def problem_rank(problem_id):
     in_exam = problem_in_exam(problem_id)
 
     return render_template('problem_rank.html', Problem_ID=problem_id, Title=ProblemManager.get_title(problem_id),
-                           submissions=submissions, Sorting=sort_parameter, friendlyName=SessionManager.get_friendly_name(),
-                           readable_lang=readable_lang, readable_time=readable_time,
-                           is_Admin=is_admin, real_names=real_names, languages=languages,
+                           submissions=submissions, Sorting=sort_parameter,
+                           real_names=real_names, languages=languages,
                            In_Exam=in_exam)
 
 
@@ -563,8 +539,6 @@ def discuss(problem_id):
         if in_exam:  # Problem in Contest or Homework and Current User is NOT administrator
             return render_template('problem_discussion.html', Problem_ID=problem_id,
                                    Title=ProblemManager.get_title(problem_id), Blocked=True,
-                                   friendlyName=SessionManager.get_friendly_name(),
-                                   is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN,
                                    In_Exam=True)  # Discussion Closed
         username = SessionManager.get_username()  # for whether to display edit or delete
         privilege = SessionManager.get_privilege()
@@ -577,8 +551,6 @@ def discuss(problem_id):
             discussion.append(tmp)
         return render_template('problem_discussion.html', Problem_ID=problem_id,
                                Title=ProblemManager.get_title(problem_id), Discuss=discussion,
-                               friendlyName=SessionManager.get_friendly_name(),
-                               is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN,
                                In_Exam=False)
     else:
         if not SessionManager.check_user_status():
@@ -694,10 +666,8 @@ def status():
         submission.language = 'Unknown' if submission.language not in language_info \
             else language_info[submission.language]
     return render_template('status.html', pages=gen_page(page, max_page),
-                           judge_status_info=judge_status_info, language_info=language_info,
                            submissions=submissions,
-                           args=dict(filter(lambda e: e[0] != 'page', request.args.items())),
-                           is_Admin=is_admin, friendlyName=SessionManager.get_friendly_name())
+                           args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
 
 
 def code_old(run_id):
@@ -727,9 +697,7 @@ def code_old(run_id):
                                problem_title=problem_title,
                                language=language,
                                time=time,
-                               score=score,
-                               friendlyName=SessionManager.get_friendly_name(),
-                               is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
+                               score=score)
 
 @web.route('/code')
 def code_compat():
@@ -791,14 +759,12 @@ def code(submission_id):
         show_time = False
         show_memory = False
     return render_template('judge_detail.html', submissions=[submission],
-                           enumerate=enumerate, code_url=code_url,
-                           details=details, judge_status_info=judge_status_info,
+                           code_url=code_url,
+                           details=details,
                            abortable=abortable,
                            show_score=show_score,
                            show_time=show_time,
-                           show_memory=show_memory,
-                           friendlyName=SessionManager.get_friendly_name(),
-                           is_Admin=is_admin)
+                           show_memory=show_memory)
 
 @web.route('/code/<int:submit_id>/void', methods=['POST'])
 def mark_void(submit_id):
@@ -866,10 +832,10 @@ def contest_list_generic(type, type_zh):
     # here exam_id is an *arbitary* unfinished exam in which the player is in
     exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username, current_time)
 
-    return render_template('contest_list.html', contests=contests, friendlyName=SessionManager.get_friendly_name(),
-                           current_time=current_time, readable_time=readable_time, get_status=ContestManager.get_status,
+    return render_template('contest_list.html', contests=contests,
+                           current_time=current_time, get_status=ContestManager.get_status,
                            user_contests=user_contests, exam_id=exam_id,
-                           is_Admin=is_admin, type=type, type_zh=type_zh,
+                           type=type, type_zh=type_zh,
                            pages=gen_page(page, max_page),
                            args=dict(filter(lambda e: e[0] != 'page' and e[0] != 'all', request.args.items())))
 
@@ -909,16 +875,11 @@ def problemset(contest_id):
     return render_template(
         'contest.html',
         contest=contest,
-        start_time=readable_time(contest.start_time),
-        end_time=readable_time(contest.end_time),
         problems=problems,
         status=contest_status,
         percentage=percentage,
         problems_visible=problems_visible,
         data=data,
-        is_Admin=is_admin,
-        friendlyName=SessionManager.get_friendly_name(),
-        enumerate=enumerate,
     )
 
 
@@ -927,8 +888,7 @@ def profile():
     if request.method == 'GET':
         if not SessionManager.check_user_status():
             return redirect('/OnlineJudge/login?next=' + request.full_path)
-        return render_template('profile.html', friendlyName=SessionManager.get_friendly_name(),
-                               is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
+        return render_template('profile.html')
     else:
         if not SessionManager.check_user_status():
             return ReturnCode.ERR_USER_NOT_LOGGED_IN
@@ -983,11 +943,7 @@ def about():
                 r['status'] = status_info.name
                 r['status_color'] = status_info.color
                 runner_list.append(r)
-    return render_template('about.html',
-                           runners=runner_list, runner_success=runner_success,
-                           mntners=mntners, contributors=contributors,
-                           friendlyName=SessionManager.get_friendly_name(),
-                           is_Admin=SessionManager.get_privilege() >= Privilege.ADMIN)
+    return render_template('about.html', runners=runner_list, runner_success=runner_success)
 
 
 @web.route('/favicon.ico')

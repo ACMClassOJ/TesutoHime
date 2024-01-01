@@ -1,6 +1,6 @@
-import datetime
 import time
-from urllib.parse import parse_qs, urljoin, urlparse, urlsplit, urlunsplit
+from datetime import datetime
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import boto3
 import redis
@@ -39,11 +39,27 @@ def unix_nano_float() -> float:  # float point time in Second
     return time.time()
 
 
-def readable_date(nano) -> str:
-    return str(time.strftime("%Y-%m-%d", datetime.datetime.fromtimestamp(nano).timetuple()))
+def readable_date(time) -> str:
+    if type(time) == int or type(time) == float:
+        time = datetime.fromtimestamp(time)
+    return time.strftime('%Y-%m-%d')
 
-def readable_time(nano) -> str:
-    return str(time.strftime("%Y-%m-%d %H:%M:%S", datetime.datetime.fromtimestamp(nano).timetuple()))
+def readable_time(time) -> str:
+    if type(time) == int or type(time) == float:
+        time = datetime.fromtimestamp(time)
+    return time.strftime('%Y-%m-%d %H:%M:%S')
+
+def readable_lang(lang: int) -> str:
+    # Get the readable language name.
+    lang_str = {
+        0: 'C++',
+        1: 'Git',
+        2: 'Verilog',
+        3: 'Quiz',
+    }
+    if lang in lang_str:
+        return lang_str[lang]
+    return 'UNKNOWN'
 
 
 def regularize_string(raw_str: str) -> str:

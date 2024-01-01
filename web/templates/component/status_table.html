@@ -1,11 +1,10 @@
-{% macro status_table(submissions, judge_status_info, is_Admin,
-	show_time=true, show_memory=true, show_score=true) -%}
+{% macro status_table(submissions, show_time=true, show_memory=true, show_score=true) -%}
 <div class="table-responsive">
 	<table class="table table-striped table-bordered table-hover status-list">
 		<thead>
 			<tr>
 				<th>编号</th>
-				<th class="status-list__user">用户昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
+				<th class="status-list__user">用户昵称{% if g.is_admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
 				<th class="status-list__problem">题目</th>
 				<th><span class="mr-2">评测状态</span><a href="/OnlineJudge/about">?</a></th>
 				{%- if show_time %}
@@ -25,13 +24,13 @@
 		<tr>
 			<td>{{ submission.id }}</td>
 			<td class="status-list__user">
-				{% if is_Admin -%}
+				{% if g.is_admin -%}
 				<span data-container="body" data-toggle="popover" data-placement="left"
 					data-content="用户名：{{ submission.username }}">{{ submission.user.friendly_name }}</span>
 				{% else -%}
 				<span>{{ submission.user.friendly_name }}</span>
 				{%- endif %}
-				{% if is_Admin -%}
+				{% if g.is_admin -%}
 				<span class="text-black-50 float-right"><small>{{ submission.real_name }}</small></span>
 				{%- endif %}
 			</td>
@@ -43,7 +42,7 @@
 					{% if submission.visible -%}
 					<a href="/OnlineJudge/code/{{ submission.id }}/">
 					{% endif -%}
-						<span class="text-{{ judge_status_info[submission.status.name].color }}">{{ judge_status_info[submission.status.name].name }}</span>
+						<span class="text-{{ g.consts.judge_status_info[submission.status.name].color }}">{{ g.consts.judge_status_info[submission.status.name].name }}</span>
 					{% if submission.visible -%}
 					</a>
 					{% endif -%}
@@ -75,7 +74,7 @@
 			<td>{{ submission.language }}</td>
 			{%- endif %}
 
-			<td>{{ submission.created.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+			<td>{{ g.utils.readable_time(submission.created) }}</td>
 		</tr>
 		{%- endfor %}
 	</table>

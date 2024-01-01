@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="han-init">
+<html class="han-init" lang="zh-CN">
 
 <head>
     <meta charset="utf-8">
@@ -40,20 +40,20 @@
                     <li class="nav-item"><a href="/OnlineJudge/contest" class="nav-link">比赛</a></li>
                     <li class="nav-item"><a href="/OnlineJudge/homework" class="nav-link">作业</a></li>
                     <li class="nav-item"><a href="/OnlineJudge/status" class="nav-link">评测状态</a></li>
-                    {% if is_Admin %}
+                    {% if g.is_admin %}
                     <li class="nav-item"><a href="/OnlineJudge/admin" class="nav-link">管理</a></li>
                     {% endif %}
                     <li class="nav-item"><a href="/OnlineJudge/about" class="nav-link">关于</a></li>
-                    {% if friendlyName=='' -%}
+                    {% if g.friendly_name == '' -%}
                     <li class="dropdown-divider"></li>
                     <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/login">登录</a></li>
                     <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/register">注册</a></li>
                     {%- endif %}
                 </ul>
                 <ul class="navbar-nav ml-lg-auto" style="line-height: 1;">
-                    {% if friendlyName!='' -%}
+                    {% if g.friendly_name != '' -%}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ friendlyName }}</a>
+                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ g.friendly_name }}</a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <a class="dropdown-item" href="/OnlineJudge/profile">个人信息</a>
                             <div class="dropdown-divider"></div>
@@ -76,7 +76,7 @@
     <footer class="footer">
         <div class="container text-center">
             <p class="mb-0">
-                ACM Class OnlineJudge © 2023
+                ACM Class OnlineJudge © 2020–{{ g.time.year }}
             </p>
         </div>
     </footer>

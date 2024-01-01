@@ -19,7 +19,7 @@
                 </div>
             </div>
             <div class="problemset-progress__text">
-                <span class="problemset-progress__times">{{ start_time }} ~ {{ end_time }}</span>
+                <span class="problemset-progress__times">{{ g.utils.readable_time(contest.start_time) }} ~ {{ g.utils.readable_time(contest.end_time) }}</span>
                 <span class="problemset-progress__percentage">{{ percentage }}% {{ status }}</span>
             </div>
         </div>
@@ -30,7 +30,7 @@
                     {%- if problems_visible and problems | length > 2 -%}
                     <button class="btn btn-outline-primary" id="open-all">打开所有题目</button>
                     {%- endif -%}
-                    {% if is_Admin -%}
+                    {% if g.is_admin -%}
                     <a href="/OnlineJudge/admin/?contest_id={{ contest.id }}" class="btn btn-outline-primary">管理</a>
                     {%- endif -%}
                     {%- if problems_visible and problems | length > 4 -%}
@@ -43,8 +43,8 @@
                     <thead>
                     <tr>
                         {% if contest.ranked %}<th>排名</th>{% endif %}
-                        <th>昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
-                        {% if is_Admin -%}<th>实名</th>{%- endif %}
+                        <th>昵称{% if g.is_admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
+                        {% if g.is_admin -%}<th>实名</th>{%- endif %}
                         {% if problems_visible -%}
                         {% for problem in problems -%}
                             <th><a href="/OnlineJudge/problem/{{ problem }}" class="problem-link" target="_blank">{{ problem }}</a></th>
@@ -58,21 +58,22 @@
                         {% if contest.rank_penalty %}<th>罚时</th>{% endif %}
                     </tr>
                     </thead>
-                    {% for i, player in enumerate(data) -%}
+                    {% for player in data -%}
                         <tr>
                             {% if contest.ranked %}<td>{{ player['rank'] }}</td>{% endif %}
                             <td>
-                                {% if is_Admin -%}
+                                {% if g.is_admin -%}
                                 <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ player['username'] }}">{{ player['friendly_name'] }}</span>
                                 {% else -%}
                                 <span>{{ player['friendly_name'] }}</span>
                                 {%- endif %}
                             </td>
-                            {% if is_Admin -%}
+                            {% if g.is_admin -%}
                                 <td>{{ player['realname'] }}</td>
                             {%- endif %}
                             {% if problems_visible -%}
-                            {% for j, problem in enumerate(player.problems) -%}
+                            {% for problem in player.problems -%}
+                            {%- set j = loop.index0 -%}
                                 <td>
                                     {% if problem['count'] > 0 or problem['pending_count'] > 0 -%}
                                         {{ problem['score'] if contest.rank_partial_score and problem['count'] > 0 else '' -}}
@@ -92,13 +93,13 @@
                                             {%- endif -%}
                                         {%- endmacro -%}
                                         {%- if not problem['accepted'] -%}
-                                            {% if is_Admin -%}
+                                            {% if g.is_admin -%}
                                             <a class="text-red" href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j] }}">{{ status() }}</a>
                                             {% else -%}
                                             {{ status() }}
                                             {%- endif %}
                                         {%- else -%}
-                                            {% if is_Admin -%}
+                                            {% if g.is_admin -%}
                                             <a href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j] }}">{{ status() }}</a>
                                             {% else -%}
                                             {{ status() }}
@@ -123,7 +124,7 @@
 {% endblock %}
 {% block script %}
 
-{% if is_Admin %}
+{% if g.is_admin %}
 <script src="{{ url_for('.static', filename = 'lib/jquery.dataTables.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/dataTables.bootstrap4.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/dataTables.buttons.min.js') }}"></script>
@@ -154,7 +155,7 @@
         }
     })
 
-{% if is_Admin %}
+{% if g.is_admin %}
     $(function(){
         const table = $("#contest").DataTable({
             dom: 'Bft',

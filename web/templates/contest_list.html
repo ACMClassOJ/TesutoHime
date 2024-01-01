@@ -40,8 +40,8 @@
             <tr {% if contest.id in user_contests %} class="contest--participant" {% elif status=='Going On' %} class="contest--running" {% elif status=='Pending' %} class="contest--pending" {% endif %}>
                 <td>{{ contest.id }}</td>
                 <td><a href="/OnlineJudge/problemset/{{ contest.id }}">{{ contest.name }}</a></td>
-                <td>{{ readable_time(contest.start_time) }}</td>
-                <td>{{ readable_time(contest.end_time) }}</td>
+                <td>{{ g.utils.readable_time(contest.start_time) }}</td>
+                <td>{{ g.utils.readable_time(contest.end_time) }}</td>
                 <td>{{ status }}</td>
                 <td>
                     {% if exam_id != -1 and contest.type == 2 and exam_id != contest.id -%}

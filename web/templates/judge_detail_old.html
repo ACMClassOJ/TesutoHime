@@ -17,7 +17,7 @@
                 <thead>
                 <tr>
                     <th>评测编号</th>
-                    <th>用户昵称{% if is_Admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
+                    <th>用户昵称{% if g.is_admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
                     <th>题目名称</th>
                     <th>评测状态</th>
                     <th>运行时间</th>
@@ -30,7 +30,7 @@
                 <tr>
                     <td>{{ Detail.id }}</td>
                     <td>
-                        {% if is_Admin -%}
+                        {% if g.is_admin -%}
                         <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ Detail.username }}">{{ friendly_name }}</span>
                         {% else -%}
                         <span>{{ friendly_name }}</span>

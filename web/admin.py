@@ -1,10 +1,11 @@
-from http.client import (BAD_REQUEST, NOT_FOUND, REQUEST_ENTITY_TOO_LARGE,
+from functools import wraps
+from http.client import (BAD_REQUEST, FORBIDDEN, REQUEST_ENTITY_TOO_LARGE,
                          SEE_OTHER)
 from urllib.parse import urljoin
 from uuid import uuid4
 
 import requests
-from flask import Blueprint, abort, redirect, render_template, request
+from flask import Blueprint, abort, g, redirect, render_template, request
 from requests.exceptions import RequestException
 
 from web.config import S3Config, SchedulerConfig
@@ -67,75 +68,39 @@ def _validate_contest_data(form):
     return None
 
 
+def require_admin(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if not g.is_admin:
+            abort(FORBIDDEN)
+        return func(*args, **kwargs)
+    return wrapped
+
 @admin.route('/')
+@require_admin
 def index():
-    privilege = SessionManager.get_privilege()
-    if privilege < Privilege.ADMIN:
-        abort(NOT_FOUND)
-    return render_template(
-        'admin.html',
-        privilege=privilege,
-        Privilege=Privilege,
-        is_Admin=True,
-        friendlyName=SessionManager.get_friendly_name()
-    )
+    return render_template('admin.html')
 
 @admin.route('/admin-doc')
 def admin_doc():
-    privilege = SessionManager.get_privilege()
-    if privilege < Privilege.ADMIN:
-        abort(NOT_FOUND)
-    return render_template(
-        'admin_doc.html',
-        privilege=privilege,
-        Privilege=Privilege,
-        is_Admin=True,
-        friendlyName=SessionManager.get_friendly_name(),
-    )
+    return render_template('admin_doc.html')
 
 @admin.route('/problem-format-doc')
 def problem_format_doc():
-    privilege = SessionManager.get_privilege()
-    if privilege < Privilege.ADMIN:
-        abort(NOT_FOUND)
-    return render_template(
-        'problem_format_doc.html',
-        privilege=privilege,
-        Privilege=Privilege,
-        is_Admin=True,
-        friendlyName=SessionManager.get_friendly_name(),
-    )
+    return render_template('problem_format_doc.html')
 
 @admin.route('/data-doc')
 def data_doc():
-    privilege = SessionManager.get_privilege()
-    if privilege < Privilege.ADMIN:
-        abort(NOT_FOUND)
-    return render_template(
-        'data_doc.html',
-        privilege=privilege,
-        Privilege=Privilege,
-        is_Admin=True,
-        friendlyName=SessionManager.get_friendly_name(),
-    )
+    return render_template('data_doc.html')
 
 @admin.route('/package-sample')
 def package_sample():
-    privilege = SessionManager.get_privilege()
-    if privilege < Privilege.ADMIN:
-        abort(NOT_FOUND)
-    return render_template(
-        'package_sample.html',
-        privilege=privilege,
-        Privilege=Privilege,
-        is_Admin=True,
-        friendlyName=SessionManager.get_friendly_name(),
-    )
+    return render_template('package_sample.html')
 
 @admin.route('/user', methods=['post'])
 def user_manager():
-    if SessionManager.get_privilege() < Privilege.SUPER:
-        abort(NOT_FOUND)
+    if g.privilege < Privilege.SUPER:
+        abort(FORBIDDEN)
     form = request.json
     # err = _validate_user_data(form)
     # if err is not None:
@@ -163,9 +128,8 @@ def user_manager():
 
 
 @admin.route('/problem-description', methods=['post'])
+@require_admin
 def problem_description():
-    if SessionManager.get_privilege() < Privilege.ADMIN:
-        abort(NOT_FOUND)
     form = request.json
     try:
         ProblemManager.modify_problem_description(int(form[String.PROBLEM_ID]),
@@ -179,16 +143,14 @@ def problem_description():
         return ReturnCode.ERR_BAD_DATA
 
 @admin.route('/problem-create', methods=['post'])
+@require_admin
 def problem_create():
-    if SessionManager.get_privilege() < Privilege.ADMIN:
-        abort(NOT_FOUND)
     problem_id = ProblemManager.add_problem()
     return redirect(f'/OnlineJudge/problem/{problem_id}/admin', SEE_OTHER)
 
 @admin.route('/problem', methods=['post'])
+@require_admin
 def problem_info():
-    if SessionManager.get_privilege() < Privilege.ADMIN:
-        abort(NOT_FOUND)
     form = request.json
     try:
         ProblemManager.modify_problem(int(form[String.PROBLEM_ID]),
@@ -201,13 +163,9 @@ def problem_info():
         return ReturnCode.ERR_BAD_DATA
 
 @admin.route('/problem_limit', methods=['post'])
+@require_admin
 def problem_limit():
-    if SessionManager.get_privilege() < Privilege.ADMIN:
-        abort(NOT_FOUND)
     form = request.form
-    # err = _validate_problem_data(form)
-    # if err is not None:
-    #     return err
     try:
         ProblemManager.modify_problem_limit(form["id"], form["data"])
         return ReturnCode.SUC_ADD_PROBLEM
@@ -218,9 +176,8 @@ def problem_limit():
 
 
 @admin.route('/contest', methods=['post'])
+@require_admin
 def contest_manager():
-    if SessionManager.get_privilege() < Privilege.ADMIN:
-        abort(NOT_FOUND)
     form = request.json
     err = _validate_contest_data(form)
     if err is not None:
@@ -269,9 +226,8 @@ def contest_manager():
 
 
 @admin.route('/problem/<int:problem_id>/upload-url')
+@require_admin
 def data_upload(problem_id):
-    if SessionManager.get_privilege() < Privilege.ADMIN:
-        abort(NOT_FOUND)
     return generate_s3_public_url('put_object', {
         'Bucket': S3Config.Buckets.problems,
         'Key': f'{problem_id}.zip',
@@ -279,9 +235,8 @@ def data_upload(problem_id):
 
 
 @admin.route('/problem/<int:problem_id>/update', methods=['POST'])
+@require_admin
 def data_update(problem_id):
-    if SessionManager.get_privilege() < Privilege.ADMIN:
-        abort(NOT_FOUND)
     url = urljoin(SchedulerConfig.base_url, f'problem/{problem_id}/update')
     res = requests.post(url).json()
     if res['result'] == 'ok':
@@ -294,9 +249,8 @@ def data_update(problem_id):
 
 
 @admin.route('/data_download', methods=['POST'])
+@require_admin
 def data_download():
-    if SessionManager.get_privilege() < Privilege.ADMIN:
-        abort(NOT_FOUND)
     id = request.form['id']
     key = f'{id}.zip'
     url = generate_s3_public_url('get_object', {
@@ -309,9 +263,8 @@ def data_download():
 max_pic_size = 10485760
 
 @admin.route('/pic-url', methods=['POST'])
+@require_admin
 def pic_upload():
-    if SessionManager.get_privilege() < Privilege.ADMIN:
-        abort(NOT_FOUND)
     length = int(request.form['length'])
     if length > max_pic_size:
         abort(REQUEST_ENTITY_TOO_LARGE)
@@ -328,10 +281,8 @@ def pic_upload():
     }, ExpiresIn=3600)
 
 
+@require_admin
 def problem_admin_api(callback, success_retcode):
-    if SessionManager.get_privilege() < Privilege.ADMIN:
-        abort(NOT_FOUND)
-
     type = request.form['type']
 
     if type == "by_judge_id":
@@ -366,9 +317,8 @@ def abort_judge():
 
 
 @admin.route('/add_realname', methods=['POST'])
+@require_admin
 def add_realname():
-    if SessionManager.get_privilege() < Privilege.ADMIN:
-        abort(NOT_FOUND)
     student_id = request.form['student_id']
     student_id_list = student_id.strip().splitlines()
     year_course_name = request.form['year_course_name']

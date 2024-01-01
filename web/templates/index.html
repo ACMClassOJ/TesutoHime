@@ -8,7 +8,7 @@
         <a class="blog-post" href="{{ item['link'] }}">
             {%- if item['weight'] > 0 %}<strong>{% endif -%}
             <span class="blog-post__title">{{ item['title'] }}</span>
-            <span class="blog-post__date">{{ readable_date(item['date']) }}</span>
+            <span class="blog-post__date">{{ g.utils.readable_date(item['date']) }}</span>
             {%- if item['weight'] > 0 %}</strong>{% endif -%}
         </a>
     </p>
@@ -20,7 +20,7 @@
     <hr class="my-4">
 
     {%- endif %}
-    {% if is_Admin -%}
+    {% if g.is_admin -%}
     <p><strong>邀请您加入 ACMOJ 助教 QQ 群: 942621107</strong>（此消息仅对助教显示，请勿拉学生入群。）</p>
     {%- endif %}
     <p>如需要管理员账户，以及对 OJ 有任何改进建议，欢迎邮件 ACM OJ 管理组。</p>

@@ -150,6 +150,9 @@ $(function(){
                 copy_button.appendTo($(this));
                 new ClipboardJS(document.getElementById('copy_button_' + index));
             });
+            if (window.Han) {
+                Han(document.getElementById('#content')).render()
+            }
         },
     });
 });

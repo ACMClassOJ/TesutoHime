@@ -241,3 +241,6 @@ h1 {
     border-bottom-left-radius: 0.25rem;
 }
 
+h-hws[hidden] {
+    display: inline !important;
+}

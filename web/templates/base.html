@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="han-init">
 
 <head>
     <meta charset="utf-8">
@@ -9,7 +9,8 @@
     <link rel="shortcut icon" href="/OnlineJudge/favicon.ico">
     <link href="{{ url_for('.static', filename = 'lib/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('.static', filename = 'argon.min.css') }}?v=20231109" rel="stylesheet"> 
-    <link href="{{ url_for('.static', filename = 'styles.css') }}?v=20240101" rel="stylesheet"> 
+    <link href="{{ url_for('.static', filename = 'lib/han.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('.static', filename = 'styles.css') }}?v=20240101-1" rel="stylesheet"> 
     <link href="{{ url_for('.static', filename = 'dark.css') }}?v=20231114" rel="stylesheet"> {% block head %}{% endblock %}
 </head>
 
@@ -86,6 +87,7 @@
 <script src="{{ url_for('.static', filename = 'lib/bootstrap.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/jquery.form.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/sweetalert.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/han.min.js') }}"></script>
 {% block script %}{% endblock %}
 
 </html>

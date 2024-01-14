@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from logging import getLogger
 from os import remove
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 from zipfile import ZipFile
 
 from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
@@ -24,7 +24,7 @@ from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
                                  StatusUpdateStarted, Testpoint,
                                  TestpointGroup, TestpointJudgeResult,
                                  UserCode)
-from commons.util import format_exc, Literal
+from commons.util import Literal, format_exc
 
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
@@ -453,11 +453,12 @@ class ExecutionContext:
 
 raw_code_filename = 'code'
 cpp_main_filename = 'main.cpp'
+python_main_filename = 'main.py'
 verilog_main_filename = 'main.v'
 artifact_filename = 'main'
 
 async def get_compile_source(ctx: ExecutionContext, filename: str) \
-    -> CompileSource:
+    -> Union[CompileSource, Artifact]:
     if ctx.lang == CodeLanguage.CPP:
         return CompileSourceCpp(ctx.file_url(UrlType.CODE, filename))
     if ctx.lang == CodeLanguage.GIT:
@@ -465,12 +466,14 @@ async def get_compile_source(ctx: ExecutionContext, filename: str) \
         if url.startswith('/'):
             raise InvalidCodeException('Local clone not allowed')
         return CompileSourceGit(url)
+    if ctx.lang == CodeLanguage.PYTHON:
+        return Artifact(ctx.file_url(UrlType.CODE, python_main_filename))
     if ctx.lang == CodeLanguage.VERILOG:
         return CompileSourceVerilog(ctx.file_url(UrlType.CODE, filename))
     raise InvalidCodeException('Unknown language')
 
-async def prepare_compile_task(ctx: ExecutionContext, plan: CompileTaskPlan) \
-    -> CompileTask:
+async def prepare_compile(ctx: ExecutionContext, plan: CompileTaskPlan) \
+    -> Union[CompileTask, Artifact]:
     if not plan:
         return None
 
@@ -488,6 +491,9 @@ async def prepare_compile_task(ctx: ExecutionContext, plan: CompileTaskPlan) \
     if filename is None: filename = fallback_filename
     if isinstance(plan.source, UserCode):
         source = await get_compile_source(ctx, filename)
+        if isinstance(source, Artifact):
+            ctx.compile_artifact = source
+            return source
     else:
         source = deepcopy(plan.source)
         if isinstance(source, CompileSourceCpp) \
@@ -517,14 +523,19 @@ async def get_judge_task(ctx: ExecutionContext, plan: JudgeTaskPlan) \
                     raw_code_filename))
             testpoint.input = ctx.compile_artifact
         elif isinstance(testpoint.input, CompileTaskPlan):
-            testpoint.input = \
-                await prepare_compile_task(ctx, testpoint.input)
+            testpoint.input = await prepare_compile(ctx, testpoint.input)
         elif isinstance(testpoint.input, CompileTask):
             pass
         elif isinstance(testpoint.input, Artifact):
             testpoint.input.url = sign_url(testpoint.input.url)
+        else:
+            msg = f'Unknown testpoint input type at testpoint {testpoint.id}'
+            raise InvalidProblemException(msg)
 
         if testpoint.run is not None:
+            if testpoint.run.type == 'elf':
+                if ctx.lang == CodeLanguage.PYTHON:
+                    testpoint.run.type = 'python'
             if testpoint.run.infile is not None:
                 testpoint.run.infile = sign_url(testpoint.run.infile)
             testpoint.run.supplementary_files = \
@@ -559,7 +570,7 @@ async def upload_code(ctx: ExecutionContext):
 
 
 async def run_compile_task(ctx: ExecutionContext) -> Optional[CompileResult]:
-    if ctx.compile is None:
+    if ctx.compile is None or isinstance(ctx.compile, Artifact):
         return None
     async def onprogress(status):
         if isinstance(status, StatusUpdateStarted):
@@ -781,7 +792,7 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
         raise InvalidCodeException('This problem is a quiz. Do not submit code.')
 
     try:
-        ctx.compile = await prepare_compile_task(ctx, ctx.plan.compile)
+        ctx.compile = await prepare_compile(ctx, ctx.plan.compile)
         ctx.judge = await get_judge_tasks(ctx)
         await upload_code(ctx)
         compile_res = await run_compile_task(ctx)

@@ -151,6 +151,7 @@ judge_status_info = {
 
 language_info = {
     'cpp': 'C++',
+    'python': 'Python',
     'git': 'Git',
     'verilog': 'Verilog',
     'quiz': 'Quiz',

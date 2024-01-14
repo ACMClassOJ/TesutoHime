@@ -9,8 +9,8 @@ from typing import Dict, List
 
 from commons.task_typing import Input, RunArgs, RunResult
 from judger2.cache import ensure_cached, upload
-from judger2.config import (valgrind, valgrind_args, valgrind_errexit_code,
-                            verilog_interpreter)
+from judger2.config import (python, valgrind, valgrind_args,
+                            valgrind_errexit_code, verilog_interpreter)
 from judger2.sandbox import run_with_limits
 from judger2.steps.compile_ import NotCompiledException, ensure_input
 from judger2.util import copy_supplementary_files
@@ -36,6 +36,11 @@ class ElfRunner(BaseRunner):
         chmod(program, elf_mode)
         return RunParams([str(program)], [])
 
+class PythonRunner(BaseRunner):
+    def prepare(self, program: PosixPath):
+        argv = [python, str(program)]
+        return RunParams(argv, ['/bin', '/usr/bin', '/usr/libexec'])
+
 class ValgrindRunner(BaseRunner):
     def prepare(self, program: PosixPath):
         chmod(program, elf_mode)
@@ -58,6 +63,7 @@ class VerilogRunner(BaseRunner):
 
 runners: Dict[str, BaseRunner] = {
     'elf': ElfRunner(),
+    'python': PythonRunner(),
     'valgrind': ValgrindRunner(),
     'verilog': VerilogRunner(),
 }

@@ -54,7 +54,10 @@ Input = Union[CompileTask, Artifact]
 
 @dataclass
 class RunArgs:
-    type: Literal['elf', 'valgrind', 'verilog']
+    # the value 'elf' has special meaning when used in a judge plan:
+    # if type='elf' and code language is Python, then the type will be changed
+    # to 'python' at plan execution time.
+    type: Literal['elf', 'valgrind', 'verilog', 'python']
     limits: ResourceUsage
     infile: Optional[FileUrl]
     supplementary_files: List[FileUrl]
@@ -84,7 +87,7 @@ Checker = Union[CompareChecker, DirectChecker, SpjChecker]
 class Testpoint:
     id: str
     dependent_on: Optional[str] # id
-    input: Input
+    input: Input                # program to run
     run: Optional[RunArgs]
     check: Checker
 
@@ -222,6 +225,7 @@ StatusUpdate = Union[
 
 class CodeLanguage(Enum):
     CPP = 'cpp'
+    PYTHON = 'python'
     GIT = 'git'
     VERILOG = 'verilog'
     QUIZ = 'quiz'

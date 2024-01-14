@@ -30,4 +30,6 @@ class OldJudgeManager:
     @staticmethod
     def max_id():
         with SqlSession() as db:
-            return db.scalar(select(func.max(JudgeRecord.id)))
+            max_id = db.scalar(select(func.max(JudgeRecord.id)))
+            if max_id is None: return -1
+            return max_id

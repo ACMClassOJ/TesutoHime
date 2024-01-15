@@ -23,9 +23,9 @@
                 <select class="form-control selectpicker" name="status" id="status"
                         data-style="form-control font-weight-normal border-grey shadow-none">
                     <option value="" {{ 'selected' if not 'status' in args or args['status'] == '' }}>评测状态</option>
-                    {% for key in g.judge_status_info -%}
+                    {% for key in g.consts.judge_status_info -%}
                     <option value="{{ key }}" {{ 'selected' if 'status' in args and args['status'] == key }}>
-                        {{ g.judge_status_info[key].name }}
+                        {{ g.consts.judge_status_info[key].name }}
                     </option>
                     {%- endfor %}
                 </select>

@@ -39,7 +39,6 @@ class ReturnCode:
     SUC_LOGOUT = {'e': 0, 'msg': 'logged out successfully'}
     ERR_LOGIN = {'e': -10, 'msg': 'login failed'}
     ERR_LOGOUT = {'e': -11, 'msg': 'logout failed'}
-    ERR_LOGIN_MIRROR = {'e': -12, 'msg': 'login with account from mirror is prohibited'}
 
     SUC_VALIDATE = {'e': 0, 'msg': '用户信息通过验证！'}
     SUC_REGISTER = {'e': 0, 'msg': '注册成功！'}

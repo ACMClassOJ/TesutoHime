@@ -277,8 +277,6 @@ def login():
         return render_template('login.html', Next=nxt)
     username = request.form.get('username')
     password = request.form.get('password')
-    if username.endswith("mirror"):
-        return ReturnCode.ERR_LOGIN_MIRROR
     if not UserManager.check_login(username, password):  # no need to avoid sql injection
         return ReturnCode.ERR_LOGIN
     lid = str(uuid4())

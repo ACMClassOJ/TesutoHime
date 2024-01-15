@@ -58,7 +58,7 @@ bind 127.0.0.1 ::1
 ssh 10.0.0.2 # 登录到 web 机
 cd /path/to/TesutoHime
 # 下面这行是设置数据库连接，具体连接参数请参考 Web 部署文档
-export DB='mysql+pymysql://ojweb@/OJ?unix_socket=/run/mysqld/mysqld.sock'
+export DB='postgresql+psycopg2://ojweb@/oj'
 python3 -m scripts.add_runner
 ```
 

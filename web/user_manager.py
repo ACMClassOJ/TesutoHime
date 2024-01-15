@@ -1,7 +1,6 @@
 __all__ = ('UserManager',)
 
 import hashlib
-import random
 import sys
 from typing import Optional
 
@@ -98,14 +97,9 @@ class UserManager:
             return db.scalar(stmt)
 
     @staticmethod
-    def get_canonical_username(username: str) -> str:  # Username must exist.
-        """
-        This function seems to be useless but in fact not. The login is NOT
-        case sensitive (in mysql), while many other functions IS case
-        sensitive, so we need the correct name.
-        """
+    def get_canonical_username(username: str) -> Optional[str]:
         with SqlSession() as db:
-            stmt = select(User.username).where(User.username == username)
+            stmt = select(User.username).where(func.lower(User.username) == func.lower(username))
             return db.scalar(stmt)
 
     @staticmethod
@@ -135,6 +129,6 @@ class UserManager:
     @staticmethod
     def list_contests(username: str) -> bool:
         with SqlSession() as db:
-            stmt = select(ContestPlayer.c.Belong) \
-                .where(ContestPlayer.c.Username == username)
+            stmt = select(ContestPlayer.c.contest_id) \
+                .where(ContestPlayer.c.username == username)
             return db.scalars(stmt).all()

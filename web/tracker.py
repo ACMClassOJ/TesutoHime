@@ -1,6 +1,7 @@
 import json
 import logging
 import logging.handlers
+from datetime import datetime
 
 from flask import request
 
@@ -8,7 +9,7 @@ from web.config import LogConfig
 from web.realname_manager import RealnameManager
 from web.session_manager import SessionManager
 from web.user_manager import UserManager
-from web.utils import readable_time, unix_nano
+from web.utils import readable_time
 
 
 class Tracker:
@@ -16,7 +17,7 @@ class Tracker:
         everything = {}
         username = SessionManager.get_username()
         everything['IP'] = request.remote_addr
-        everything['Time'] = readable_time(unix_nano())
+        everything['Time'] = readable_time(datetime.now())
         everything['Username'] = username
         if username is not None and username != '':
             everything['Realname'] = RealnameManager.query_realname(str(UserManager.get_student_id(username)))

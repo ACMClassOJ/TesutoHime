@@ -5,7 +5,7 @@
 所有的文件均需要在 Web 服务器的项目根目录下执行。并保证设置了如下的环境变量 `DB`。(在生产环境中，这个环境变量已经写在了 `.bashrc` 中，无需手动设置。)
 
 ```sh
-export DB='mysql+pymysql://ojweb@/OJ?unix_socket=/run/mysqld/mysqld.sock'
+export DB='postgresql+psycopg2://ojweb@/oj'
 ```
 
 ## 目录

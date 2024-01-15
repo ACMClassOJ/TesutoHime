@@ -2,15 +2,15 @@ import sys
 from datetime import datetime
 from http.client import BAD_REQUEST
 
-from flask import abort
+from flask import abort, g
 
 from commons.models import ContestProblem, JudgeRecord2, Problem
 from web.const import Privilege
 from web.session_manager import SessionManager
-from web.utils import SqlSession, unix_nano
+from web.utils import SqlSession
 from sqlalchemy import update, select, delete, func
 
-FAR_FUTURE_UNIX_NANO = 253402216962
+FAR_FUTURE_TIME = datetime(9999, 12, 31, 8, 42, 42)
 
 
 class ProblemManager:
@@ -19,7 +19,7 @@ class ProblemManager:
         problem_id = ProblemManager.get_max_id() + 1
         problem = Problem(
             id=problem_id,
-            release_time=FAR_FUTURE_UNIX_NANO
+            release_time=FAR_FUTURE_TIME
         )
         with SqlSession.begin() as db:
             db.add(problem)
@@ -42,7 +42,7 @@ class ProblemManager:
             sys.stderr.write("SQL Error in ProblemManager: Modify_Problem\n")
 
     @staticmethod
-    def modify_problem(problem_id: int, title: str, release_time: int, problem_type: int):
+    def modify_problem(problem_id: int, title: str, release_time: datetime, problem_type: int):
         stmt = update(Problem).where(Problem.id == problem_id) \
             .values(title=title,
                     release_time=release_time,
@@ -56,15 +56,14 @@ class ProblemManager:
     @staticmethod
     def hide_problem(problem_id: int):
         stmt = update(Problem).where(Problem.id == problem_id) \
-            .values(release_time=FAR_FUTURE_UNIX_NANO)
+            .values(release_time=FAR_FUTURE_TIME)
         with SqlSession.begin() as db:
             db.execute(stmt)
 
     @staticmethod
     def show_problem(problem_id: int):
-        now = datetime.now().timestamp()
         stmt = update(Problem).where(Problem.id == problem_id) \
-            .values(release_time=now)
+            .values(release_time=g.time)
         with SqlSession.begin() as db:
             db.execute(stmt)
 
@@ -109,7 +108,7 @@ class ProblemManager:
     @staticmethod
     def should_show(problem: Problem) -> bool:
         return problem is not None and \
-            (problem.release_time <= unix_nano()
+            (problem.release_time <= g.time
              or SessionManager.get_privilege() >= Privilege.ADMIN)
 
     @staticmethod

@@ -37,21 +37,19 @@ pip3 install -r web/requirements.txt
 命令行输入：
 
 ```sh
-sudo mysql
+sudo -u postgres psql
 ```
 
 数据库名称为 OJ。
 
 ```sql
 -- 此处用户名需与上面创建的 Linux 用户名一致
-CREATE USER 'ojweb'@'localhost' IDENTIFIED WITH unix_socket;
+CREATE USER "ojweb";
 -- 若要用密码登录:
--- CREATE USER 'ojweb' IDENTIFIED BY 'xxxxxxxx';
+-- CREATE USER "ojweb" PASSWORD 'xxxxxxxx';
 
-CREATE DATABASE OJ;
-GRANT ALL PRIVILEGES ON OJ.* TO 'ojweb'@'localhost';
-FLUSH PRIVILEGES;
-\q -- 退出
+CREATE DATABASE oj OWNER ojweb;
+quit
 ```
 
 创建数据表。
@@ -59,7 +57,7 @@ FLUSH PRIVILEGES;
 ```sh
 sudo -iu ojweb
 cd TesutoHime
-export DB='mysql+pymysql://ojweb@/OJ?unix_socket=/run/mysqld/mysqld.sock'
+export DB='postgresql+psycopg2://ojweb@/oj'
 python3 -m scripts.db.init
 ```
 
@@ -89,17 +87,18 @@ cp config_template.py config.py
 使用编辑器打开 `config.py`，填写对应参数
 
 ```python
-# 数据库地址, 一般替换用户名与数据库名即可
-# 用户名要与上面的 Linux 用户名一致
-# 如果用用户名和密码登录数据库:
-# mysql_connection_string = 'mysql+pymysql://username:password@localhost/OJ'
-mysql_connection_string = 'mysql+pymysql://ojweb@/OJ?unix_socket=/run/mysqld/mysqld.sock'
+class DatabaseConfig:
+    # 数据库地址, 一般替换用户名与数据库名即可
+    # 用户名要与上面的 Linux 用户名一致
+    # 如果用用户名和密码登录数据库:
+    # url = 'postgresql+psycopg2://username:password@localhost/oj'
+    url = 'postgresql+psycopg2://ojweb@/oj'
 
-# 经过多少秒后，一个 mysql 连接将被 sqlalchemy 连接池回收。
-# 由于 mysql 服务端通常对一个连接的最长时长有限制（默认是 28800 秒），
-# 我们需要让 sqlalchemy 连接池在此之前主动作废这些已经过去很久的连接。
-# 参考 https://docs.sqlalchemy.org/en/14/core/engines.html?highlight=cycle#sqlalchemy.create_engine.params.pool_recycle
-mysql_connection_pool_recycle = 7200
+    # 经过多少秒后，一个数据库连接将被 sqlalchemy 连接池回收。
+    # 由于 mysql 服务端通常对一个连接的最长时长有限制（默认是 28800 秒），
+    # 我们需要让 sqlalchemy 连接池在此之前主动作废这些已经过去很久的连接。
+    # 参考 https://docs.sqlalchemy.org/en/14/core/engines.html#sqlalchemy.create_engine.params.pool_recycle
+    connection_pool_recycle = 7200
 
 class RedisConfig:
     host = 'localhost'

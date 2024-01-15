@@ -36,7 +36,7 @@
                 </tr>
             </thead>
             {% for contest in contests -%}
-            {% set status = get_status(contest, current_time) %}
+            {% set status = get_status(contest) %}
             <tr {% if contest.id in user_contests %} class="contest--participant" {% elif status=='Going On' %} class="contest--running" {% elif status=='Pending' %} class="contest--pending" {% endif %}>
                 <td>{{ contest.id }}</td>
                 <td><a href="/OnlineJudge/problemset/{{ contest.id }}">{{ contest.name }}</a></td>
@@ -48,7 +48,7 @@
                     <button disabled class="btn btn-primary btn-sm">已于考试中</button>
                     {%- elif contest.id in user_contests -%}
                     <button disabled class="btn btn-primary btn-sm">已报名</button>
-                    {% elif current_time > contest.end_time -%}
+                    {% elif g.time > contest.end_time -%}
                     <!-- <button disabled class="btn btn-primary btn-sm">报名</button> -->
                     {% else -%}
                     <button data-contest-id="{{ contest.id }}" class="btn btn-primary btn-sm">报名</button>

@@ -41,8 +41,7 @@ from web.template_interface import RowJudgeStatus
 from web.tracker import tracker
 from web.user_manager import UserManager
 from web.utils import (SqlSession, gen_page, gen_page_for_problem_list,
-                       generate_s3_public_url, readable_lang, readable_time,
-                       unix_nano)
+                       generate_s3_public_url, readable_lang, readable_time)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -99,7 +98,7 @@ def problem_in_exam(problem_id):
     1. user is not admin.
     2. the problem is in a ongoing exam.
     """
-    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(SessionManager.get_username(), unix_nano())
+    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(SessionManager.get_username())
 
     if exam_id == -1 or is_exam_started == False:
         return False
@@ -116,7 +115,7 @@ def is_code_visible(code_owner, problem_id, shared):
 
     username = SessionManager.get_username()
     # exam first
-    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(username, unix_nano())
+    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(username)
 
     if exam_id != -1 and is_exam_started:
         # if the user is in a running exam, he can only see his own problems in exam.
@@ -182,7 +181,7 @@ def get_detail():
         'Example_Input': str(problem.example_input),
         'Example_Output': str(problem.example_output),
         'Data_Range': str(problem.data_range),
-        'Release_Time': problem.release_time,
+        'Release_Time': problem.release_time.timestamp(),
         'Problem_Type': problem.problem_type,
         'Limits': str(problem.limits),
     }
@@ -199,8 +198,8 @@ def get_contest_detail():
     data = {
         'ID': contest.id,
         'Name': contest.name,
-        'Start_Time': contest.start_time,
-        'End_Time': contest.end_time,
+        'Start_Time': contest.start_time.timestamp(),
+        'End_Time': contest.end_time.timestamp(),
         'Type': contest.type,
         'Ranked': contest.ranked,
         'Rank_Penalty': contest.rank_penalty,
@@ -216,10 +215,10 @@ def join_contest():
     if arg is None:
         return '-1'
     st, ed = ContestManager.get_time(arg)
-    if unix_nano() > ed:
+    if g.time > ed:
         return '-1'
     username = SessionManager.get_username()
-    exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username, unix_nano())
+    exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username)
     if exam_id != -1:
         return '-1'
     if not ContestManager.check_player_in_contest(arg, username):
@@ -277,10 +276,12 @@ def login():
         return render_template('login.html', Next=nxt)
     username = request.form.get('username')
     password = request.form.get('password')
-    if not UserManager.check_login(username, password):  # no need to avoid sql injection
+    username = UserManager.get_canonical_username(username)
+    if username is None:
+        return ReturnCode.ERR_LOGIN
+    if not UserManager.check_login(username, password):
         return ReturnCode.ERR_LOGIN
     lid = str(uuid4())
-    username = UserManager.get_canonical_username(username)
     SessionManager.new_session(username, lid)
     ret = make_response(ReturnCode.SUC_LOGIN)
     ret.set_cookie(key='Login_ID', value=lid, max_age=LoginConfig.Login_Life_Time)
@@ -343,7 +344,7 @@ def problem_list():
         offset = (page - 1) * WebConfig.Problems_Each_Page
         query = db.query(Problem.id, Problem.title, Problem.problem_type)
         if not is_admin:
-            query = query.where(Problem.release_time <= unix_nano())
+            query = query.where(Problem.release_time <= g.time)
         if problem_name_keyword is not None:
             query = query.where(sa.func.instr(Problem.title, problem_name_keyword) > 0)
         if problem_type is not None:
@@ -386,7 +387,6 @@ def problem_admin(problem_id):
     if not is_admin:
         abort(NOT_FOUND)
 
-    now = datetime.now().timestamp()
     if request.method == 'POST':
         action = request.form['action']
         if action == 'hide':
@@ -414,7 +414,7 @@ def problem_admin(problem_id):
 
     return render_template('problem_admin.html', ID=problem_id, Title=problem.title,
                            In_Exam=in_exam,
-                           problem=problem, now=now, contests=contests,
+                           problem=problem, contests=contests,
                            submission_count=submission_count, ac_count=ac_count)
 
 
@@ -543,7 +543,7 @@ def discuss(problem_id):
         data = DiscussManager.get_discuss_for_problem(problem_id)
         discussion = []
         for ele in data:
-            tmp = [ele.id, UserManager.get_friendly_name(ele.username), ele.data, readable_time(int(ele.time))]
+            tmp = [ele.id, UserManager.get_friendly_name(ele.username), ele.data, readable_time(ele.time)]
             # tmp[4]: editable
             tmp.append(ele.username == username or privilege >= Privilege.SUPER)
             discussion.append(tmp)
@@ -641,7 +641,7 @@ def status():
         query = query.limit(limit).offset(offset)
         submissions: List[RowJudgeStatus] = query.all()
 
-    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(username, unix_nano())
+    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(username)
     # if not None, only problems in here are visible to user
     exam_visible_problems = None
 
@@ -824,14 +824,13 @@ def contest_list_generic(type, type_zh):
     keyword = request.args.get('keyword')
     status = request.args.get('status')
     count, contests = ContestManager.list_contest(type_ids, page, WebConfig.Contests_Each_Page, keyword=keyword, status=status)
-    current_time = unix_nano()
 
     max_page = ceil(count / WebConfig.Contests_Each_Page)
     # here exam_id is an *arbitary* unfinished exam in which the player is in
-    exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username, current_time)
+    exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username)
 
     return render_template('contest_list.html', contests=contests,
-                           current_time=current_time, get_status=ContestManager.get_status,
+                           get_status=ContestManager.get_status,
                            user_contests=user_contests, exam_id=exam_id,
                            type=type, type_zh=type_zh,
                            pages=gen_page(page, max_page),
@@ -862,12 +861,12 @@ def problemset(contest_id):
 
     is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
     problems = ContestManager.list_problem_for_contest(contest_id)
-    problems_visible = is_admin or unix_nano() >= contest.start_time
+    problems_visible = is_admin or g.time >= contest.start_time
     data = ContestManager.get_board_view(contest)
     contest_status = ContestManager.get_status(contest)
 
-    time_elapsed = float(unix_nano() - contest.start_time)
-    time_overall = float(contest.end_time - contest.start_time)
+    time_elapsed = g.time.timestamp() - contest.start_time.timestamp()
+    time_overall = contest.end_time.timestamp() - contest.start_time.timestamp()
     percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
 
     return render_template(

@@ -1,10 +1,11 @@
 __all__ = ('DiscussManager',)
 
+from datetime import datetime
 import sys
 
 from typing import List
 from commons.models import Discuss
-from web.utils import SqlSession, unix_nano
+from web.utils import SqlSession
 from sqlalchemy import update, select, delete
 
 class DiscussManager:
@@ -13,7 +14,7 @@ class DiscussManager:
         discuss = Discuss(problem_id=problem_id,
                           username=username,
                           data=data,
-                          time=unix_nano())
+                          time=datetime.now())
         try:
             with SqlSession.begin() as db:
                 db.add(discuss)

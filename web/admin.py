@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import wraps
 from http.client import (BAD_REQUEST, FORBIDDEN, REQUEST_ENTITY_TOO_LARGE,
                          SEE_OTHER)
@@ -14,7 +15,6 @@ from web.contest_manager import ContestManager
 from web.judge_manager import JudgeManager, NotFoundException
 from web.problem_manager import ProblemManager
 from web.realname_manager import RealnameManager
-from web.session_manager import SessionManager
 from web.user_manager import UserManager
 from web.utils import generate_s3_public_url
 
@@ -154,7 +154,8 @@ def problem_info():
     form = request.json
     try:
         ProblemManager.modify_problem(int(form[String.PROBLEM_ID]),
-           form.get(String.TITLE, None), form.get(String.RELEASE_TIME, None),
+           form.get(String.TITLE, None),
+           datetime.fromtimestamp(form.get(String.RELEASE_TIME, None)),
            form.get(String.PROBLEM_TYPE, None))
         return ReturnCode.SUC_MOD_PROBLEM
     except KeyError:
@@ -185,15 +186,20 @@ def contest_manager():
     try:
         op = int(form[String.TYPE])
         if op == 0:
-            ContestManager.create_contest(int(form[String.CONTEST_ID]), form[String.CONTEST_NAME], int(form[String.START_TIME]),
-                                           int(form[String.END_TIME]), int(form[String.CONTEST_TYPE]),
-                                           form[String.CONTEST_RANKED], form[String.CONTEST_RANK_PENALTY], form[String.CONTEST_RANK_PARTIAL_SCORE])
+            ContestManager.create_contest(int(form[String.CONTEST_ID]), form[String.CONTEST_NAME],
+                                          datetime.fromtimestamp(int(form[String.START_TIME])),
+                                          datetime.fromtimestamp(int(form[String.END_TIME])),
+                                          int(form[String.CONTEST_TYPE]),
+                                          form[String.CONTEST_RANKED],
+                                          form[String.CONTEST_RANK_PENALTY],
+                                          form[String.CONTEST_RANK_PARTIAL_SCORE])
             return ReturnCode.SUC_ADD_CONTEST
         elif op == 1:
             ContestManager.modify_contest(int(form[String.CONTEST_ID]), form.get(String.CONTEST_NAME, None),
-                                           int(form.get(String.START_TIME, None)), int(form.get(String.END_TIME, None)),
-                                           int(form.get(String.CONTEST_TYPE, None)),
-                                           form[String.CONTEST_RANKED], form[String.CONTEST_RANK_PENALTY], form[String.CONTEST_RANK_PARTIAL_SCORE])
+                                          datetime.fromtimestamp(int(form[String.START_TIME])),
+                                          datetime.fromtimestamp(int(form[String.END_TIME])),
+                                          int(form.get(String.CONTEST_TYPE, None)),
+                                          form[String.CONTEST_RANKED], form[String.CONTEST_RANK_PENALTY], form[String.CONTEST_RANK_PARTIAL_SCORE])
             return ReturnCode.SUC_MOD_CONTEST
         elif op == 2:
             ContestManager.delete_contest(int(form[String.CONTEST_ID]))

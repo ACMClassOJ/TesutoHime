@@ -5,19 +5,20 @@ from datetime import datetime
 from functools import cmp_to_key
 from typing import List, Optional, Tuple
 
+from flask import g
+from sqlalchemy import delete, func, insert, join, select, update
 from sqlalchemy.orm import defer, selectinload
 
-from commons.models import Contest, JudgeRecord2, JudgeStatus, User, ContestPlayer, ContestProblem
+from commons.models import (Contest, ContestPlayer, ContestProblem,
+                            JudgeRecord2, JudgeStatus, User)
 from web.contest_cache import ContestCache
 from web.realname_manager import RealnameManager
-from web.utils import SqlSession, regularize_string, unix_nano
-
-from sqlalchemy import update, select, delete, insert, func, join
+from web.utils import SqlSession, regularize_string
 
 
 class ContestManager:
     @staticmethod
-    def create_contest(id: int, name: str, start_time: int, end_time: int, contest_type: int,
+    def create_contest(id: int, name: str, start_time: datetime, end_time: datetime, contest_type: int,
                        ranked: bool, rank_penalty: bool, rank_partial_score: bool):
         try:
             contest = Contest(id=id,
@@ -34,7 +35,7 @@ class ContestManager:
             sys.stderr.write("Error in ContestManager: Create_Contest\n")
 
     @staticmethod
-    def modify_contest(contest_id: int, new_name: str, new_start_time: int, new_end_time: int,
+    def modify_contest(contest_id: int, new_name: str, new_start_time: datetime, new_end_time: datetime,
                        new_contest_type: int,
                        ranked: bool, rank_penalty: bool, rank_partial_score: bool):
         try:
@@ -57,7 +58,7 @@ class ContestManager:
         try:
             with SqlSession.begin() as db:
                 db.execute(delete(ContestPlayer).where(
-                    ContestPlayer.c.Belong == contest_id))
+                    ContestPlayer.c.contest_id == contest_id))
                 db.execute(delete(ContestProblem).where(
                     ContestProblem.contest_id == contest_id))
                 db.execute(delete(Contest).where(Contest.id == contest_id))
@@ -87,7 +88,7 @@ class ContestManager:
     def add_player_to_contest(contest_id: int, username: str):
         try:
             stmt = insert(ContestPlayer).values(
-                Belong=contest_id, Username=username)
+                contest_id=contest_id, username=username)
             with SqlSession.begin() as db:
                 db.execute(stmt)
         except Exception:
@@ -104,50 +105,48 @@ class ContestManager:
     @staticmethod
     def check_player_in_contest(contest_id: int, username: str):
         stmt = select(func.count()) \
-            .where(ContestPlayer.c.Belong == contest_id) \
-            .where(ContestPlayer.c.Username == username)
+            .where(ContestPlayer.c.contest_id == contest_id) \
+            .where(ContestPlayer.c.username == username)
         with SqlSession() as db:
             return db.scalar(stmt) != 0
 
     @staticmethod
-    def get_unfinished_exam_info_for_player(username: str, cur_time: int) -> Tuple[int, bool]:
+    def get_unfinished_exam_info_for_player(username: str) -> Tuple[int, bool]:
         """
             return exam_id, is_exam_started
         """
-        j = join(Contest, ContestPlayer, ContestPlayer.c.Belong == Contest.id)
+        j = join(Contest, ContestPlayer, ContestPlayer.c.contest_id == Contest.id)
         stmt = select(Contest.id, Contest.start_time) \
             .select_from(j) \
             .where(Contest.type == 2) \
-            .where(cur_time <= Contest.end_time) \
-            .where(ContestPlayer.c.Username == username) \
+            .where(g.time <= Contest.end_time) \
+            .where(ContestPlayer.c.username == username) \
             .order_by(Contest.id.desc()) \
             .limit(1)
         with SqlSession() as db:
             data = db.execute(stmt).first()
         if data is not None:
-            return data[0], (cur_time >= int(data[1]))
+            return data[0], (g.time >= data[1])
         return -1, False
 
     @staticmethod
     def delete_player_from_contest(contest_id: int, username: str):
         try:
             stmt = delete(ContestPlayer) \
-                .where(ContestPlayer.c.Belong == contest_id) \
-                .where(ContestPlayer.c.Username == username)
+                .where(ContestPlayer.c.contest_id == contest_id) \
+                .where(ContestPlayer.c.username == username)
             with SqlSession.begin() as db:
                 db.execute(stmt)
         except Exception:
             sys.stderr.write("SQL Error in ContestManager: Delete_Player_From_Contest\n")
 
     @staticmethod
-    def get_status(contest: Contest, time: Optional[int] = None) -> str:
+    def get_status(contest: Contest) -> str:
         # Please ensure stability of these strings; they are more like enum values than UI strings.
         # They are compared with in jinja templates.
-        if time is None:
-            time = unix_nano()
-        if time < contest.start_time:
+        if g.time < contest.start_time:
             return 'Pending'
-        elif time > contest.end_time:
+        elif g.time > contest.end_time:
             return 'Finished'
         else:
             return 'Going On'
@@ -161,7 +160,7 @@ class ContestManager:
         if keyword: # keyword is not None and len(keyword) > 0
             stmt = stmt.where(func.instr(Contest.name, keyword) > 0)
         if status:
-            current_time = unix_nano()
+            current_time = g.time
             if status == 'Pending':
                 stmt = stmt.where(Contest.start_time > current_time)
             elif status == 'Going On':
@@ -182,7 +181,7 @@ class ContestManager:
         stmt = select(Contest.start_time, Contest.end_time).where(Contest.id == contest_id)
         with SqlSession() as db:
             data = db.execute(stmt).first()
-            return int(data[0]), int(data[1])
+            return data[0], data[1]
 
     @staticmethod
     def list_problem_for_contest(contest_id: int):
@@ -261,8 +260,8 @@ class ContestManager:
                 .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
                 .where(JudgeRecord2.problem_id.in_(problems)) \
                 .where(JudgeRecord2.username.in_([x.username for x in players])) \
-                .where(JudgeRecord2.created >= datetime.fromtimestamp(start_time)) \
-                .where(JudgeRecord2.created < datetime.fromtimestamp(end_time)) \
+                .where(JudgeRecord2.created >= start_time) \
+                .where(JudgeRecord2.created < end_time) \
                 .all()
         for submit in submits:
             username = submit.username
@@ -293,7 +292,7 @@ class ContestManager:
             if is_ac:
                 problem['accepted'] = True
                 user_data['ac_count'] += 1
-                user_data['penalty'] += (int(submit_time) - start_time + submit_count * 1200) // 60
+                user_data['penalty'] += (int(submit_time) - int(start_time.timestamp()) + submit_count * 1200) // 60
 
             if status in [JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging]:
                 problem['pending_count'] += 1

@@ -8,12 +8,6 @@ from sqlalchemy import select
 
 
 class RealnameManager:
-    """
-    Realname_Reference
-    * ID: INT, auto_increment, PRIMARY KEY
-    * Student_ID: TINYTEXT
-    * Real_Name: TINYTEXT
-    """
     @staticmethod
     def add_student(Student_ID, Real_Name):
         try:

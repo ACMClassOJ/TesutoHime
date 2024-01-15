@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
@@ -8,10 +7,9 @@ from botocore.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from web.config import (RedisConfig, S3Config, mysql_connection_pool_recycle,
-                        mysql_connection_string)
+from web.config import DatabaseConfig, RedisConfig, S3Config
 
-engine = create_engine(mysql_connection_string, pool_recycle=mysql_connection_pool_recycle)
+engine = create_engine(DatabaseConfig.url, pool_recycle=DatabaseConfig.connection_pool_recycle)
 SqlSession = sessionmaker(bind=engine)
 
 cfg = Config(signature_version='s3v4')
@@ -29,14 +27,6 @@ def generate_s3_public_url(*args, **kwargs):
 
 def redis_connect():
     return redis.StrictRedis(host=RedisConfig.host, port=RedisConfig.port, password=RedisConfig.password, db=RedisConfig.db, decode_responses=True)
-
-
-def unix_nano() -> int:  # Integer Unix Nano
-    return int(time.time())
-
-
-def unix_nano_float() -> float:  # float point time in Second
-    return time.time()
 
 
 def readable_date(time) -> str:

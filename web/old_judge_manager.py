@@ -7,20 +7,6 @@ from commons.models import JudgeRecord
 
 
 class OldJudgeManager:
-    """
-    * ID: INT, auto_increment, PRIMARY KEY
-    * Code: TEXT
-    * User: TINYTEXT
-    * Problem_ID: INT
-    * Language: INT
-    * Status: INT
-    * Score: INT
-    * Time: BIGINT // unix nano
-    * Time_Used: INT // ms
-    * Mem_Used: INT // Byte
-    * Detail: MEDIUMTEXT // may exceed 64 KB
-    """
-
     @staticmethod
     def query_judge(judge_id: int) -> JudgeRecord:  # for details
         with SqlSession(expire_on_commit=False) as db:

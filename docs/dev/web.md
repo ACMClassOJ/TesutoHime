@@ -6,7 +6,7 @@ Web 模块相关代码位于 [`web/`](../../web/) 目录下。本文档中，除
 
 Web 模块负责处理所有用户操作，包括查看数据、修改个人资料、上传数据、提交代码等操作。
 
-用户数据、题面数据、提交数据、比赛数据等均储存在 MySQL 数据库中（参见 [MySQL 数据库](#mysql-数据库)章节），并由 Web 模块管理。
+用户数据、题面数据、提交数据、比赛数据等均储存在 PostgreSQL 数据库中（参见 [PostgreSQL 数据库](#postgresql-数据库)章节），并由 Web 模块管理。
 
 Web 模块使用 [Flask](https://flask.palletsprojects.com/) 渲染网页、处理 HTTP 请求。
 
@@ -42,7 +42,7 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 ## 用户数据管理
 
-用户数据由 `user_manager.py` 负责。其可以创建用户、修改用户、删除用户、修改用户密码、获取用户数据、获取用户列表。用户数据由 mysql 管理（参见 MySQL 数据库的[用户数据表](#user-表)章节）。
+用户数据由 `user_manager.py` 负责。其可以创建用户、修改用户、删除用户、修改用户密码、获取用户数据、获取用户列表。用户数据由 PostgreSQL 管理（参见 PostgreSQL 数据库的[用户数据表](#user-表)章节）。
 
 在用户数据管理中，用户名 (`Username`) 是唯一且不变的。
 
@@ -60,11 +60,11 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 ### 实名数据管理
 
-实名数据由 `reference_manager.py` 负责。其可以修改实名、获取实名数据。实名数据由 MySQL 管理（参见 MySQL 数据库的[实名数据表](#realname_reference-表)章节）。
+实名数据由 `reference_manager.py` 负责。其可以修改实名、获取实名数据。实名数据由 PostgreSQL 管理（参见 PostgreSQL 数据库的[实名数据表](#realname_reference-表)章节）。
 
 ## 比赛数据管理
 
-比赛数据（这里比赛是广泛意义上的比赛，作业、考试、比赛都包含在内）由 `contest_manager.py` 负责。其可以创建比赛、修改比赛、删除比赛、修改参赛用户、获取比赛数据、获取比赛列表。比赛数据由 MySQL 管理（参见 MySQL 数据库的[比赛数据表](#contest-表)、[比赛题目表](#contest_problem-表)、[比赛用户表](#contest_player-表)章节）。
+比赛数据（这里比赛是广泛意义上的比赛，作业、考试、比赛都包含在内）由 `contest_manager.py` 负责。其可以创建比赛、修改比赛、删除比赛、修改参赛用户、获取比赛数据、获取比赛列表。比赛数据由 PostgreSQL 管理（参见 PostgreSQL 数据库的[比赛数据表](#contest-表)、[比赛题目表](#contest_problem-表)、[比赛用户表](#contest_player-表)章节）。
 
 ### 比赛类型
 
@@ -80,11 +80,11 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 ## 讨论数据管理
 
-讨论数据由 `discuss_manager.py` 负责。其可以创建讨论、修改讨论、删除讨论、获取讨论数据。讨论数据由 MySQL 管理（参见 MySQL 数据库的[讨论数据表](#discussion-表)章节）。
+讨论数据由 `discuss_manager.py` 负责。其可以创建讨论、修改讨论、删除讨论、获取讨论数据。讨论数据由 PostgreSQL 管理（参见 PostgreSQL 数据库的[讨论数据表](#discussion-表)章节）。
 
 ## 题目数据管理
 
-题目数据由 `problem_manager.py` 负责。其可以创建题目、修改题目、删除题目、获取题目数据、获取题目列表。题目数据中与题面相关的部分由 MySQL 管理（参见 MySQL 数据库的[题目数据表](#problem-表)章节）。题目数据中的数据包由 S3 服务管理，具体参见 [S3 服务](S3.md)文档。
+题目数据由 `problem_manager.py` 负责。其可以创建题目、修改题目、删除题目、获取题目数据、获取题目列表。题目数据中与题面相关的部分由 PostgreSQL 管理（参见 PostgreSQL 数据库的[题目数据表](#problem-表)章节）。题目数据中的数据包由 S3 服务管理，具体参见 [S3 服务](S3.md)文档。
 
 此外，`QuizManager.py` 可以从 S3 服务上获取 json 数据。
 
@@ -94,11 +94,11 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 ## 评测数据管理
 
-评测数据由 `judge_manager.py` 负责，其可以查询提交、为尚未评测的提交交给 [Scheduler2 模块](scheduler2.md)排程、中止 (abort) 评测、将评测标记为无效 (voided)、重新评测提交。数据参见 MySQL 数据库的[评测数据表](#judge_records2-表)章节。
+评测数据由 `judge_manager.py` 负责，其可以查询提交、为尚未评测的提交交给 [Scheduler2 模块](scheduler2.md)排程、中止 (abort) 评测、将评测标记为无效 (voided)、重新评测提交。数据参见 PostgreSQL 数据库的[评测数据表](#judge_records2-表)章节。
 
-旧版评测数据由 `old_judge_manager.py` 负责。由于架构的不兼容性，目前仅可以查询提交，数据视为只读（数据参见 MySQL 数据库的[旧评测数据表](#judge-表)章节）。
+旧版评测数据由 `old_judge_manager.py` 负责。由于架构的不兼容性，目前仅可以查询提交，数据视为只读（数据参见 PostgreSQL 数据库的[旧评测数据表](#judge-表)章节）。
 
-## MySQL 数据库
+## PostgreSQL 数据库
 
 ### 修改数据库
 

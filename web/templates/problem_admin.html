@@ -86,7 +86,7 @@
             <h3>题目状态</h3>
             <div class="mb-2">
                 <span>发布状态：</span>
-                {% if problem.release_time < now -%}
+                {% if problem.release_time < g.time -%}
                     <span class="text-green mr-3">已发布</span>
                     <form method="POST" class="d-inline">
                         <input type="hidden" name="action" value="hide">
@@ -419,7 +419,7 @@ window.problemId = {{ ID }}
 window.problem = {
     id: {{ ID }},
     title: '{{ ('%s' % problem.title).replace("'", "\\'") }}',
-    release: {{ problem.release_time }},
+    release: {{ problem.release_time.timestamp() }},
     type: {{ problem.problem_type }},
 }
 </script>

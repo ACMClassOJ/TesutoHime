@@ -4,14 +4,14 @@ from datetime import datetime
 import sys
 
 from typing import List
-from commons.models import Discuss
+from commons.models import Discussion
 from web.utils import SqlSession
 from sqlalchemy import update, select, delete
 
 class DiscussManager:
     @staticmethod
     def add_discuss(problem_id: int, username: str, data: str):
-        discuss = Discuss(problem_id=problem_id,
+        discuss = Discussion(problem_id=problem_id,
                           username=username,
                           data=data,
                           time=datetime.now())
@@ -23,7 +23,7 @@ class DiscussManager:
 
     @staticmethod
     def modify_discuss(discuss_id: int, new_data: str):
-        stmt = update(Discuss).where(Discuss.id == discuss_id) \
+        stmt = update(Discussion).where(Discussion.id == discuss_id) \
             .values(data=new_data)
         try:
             with SqlSession.begin() as db:
@@ -34,12 +34,12 @@ class DiscussManager:
     @staticmethod
     def get_author(discuss_id: int) -> str:
         with SqlSession() as db:
-            stmt = select(Discuss.username).where(Discuss.id == discuss_id)
+            stmt = select(Discussion.username).where(Discussion.id == discuss_id)
             return db.scalar(stmt)
 
     @staticmethod
-    def get_discuss_for_problem(problem_id: int) -> List[Discuss]:
-        stmt = select(Discuss).where(Discuss.problem_id == problem_id)
+    def get_discuss_for_problem(problem_id: int) -> List[Discussion]:
+        stmt = select(Discussion).where(Discussion.problem_id == problem_id)
         with SqlSession() as db:
             data = db.scalars(stmt).all()
             return data
@@ -48,7 +48,7 @@ class DiscussManager:
     def delete_discuss(discuss_id: int):
         try:
             with SqlSession.begin() as db:
-                stmt = delete(Discuss).where(Discuss.id == discuss_id)
+                stmt = delete(Discussion).where(Discussion.id == discuss_id)
                 db.execute(stmt)
         except Exception:
             sys.stderr.write("SQL Error in DiscussManager: Delete_Discuss\n")

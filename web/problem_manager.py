@@ -4,7 +4,7 @@ from http.client import BAD_REQUEST
 
 from flask import abort, g
 
-from commons.models import ContestProblem, JudgeRecord2, Problem
+from commons.models import ContestProblem, JudgeRecordV2, Problem
 from web.const import Privilege
 from web.session_manager import SessionManager
 from web.utils import SqlSession
@@ -115,7 +115,7 @@ class ProblemManager:
     def delete_problem(problem_id: int):
         with SqlSession.begin() as db:
             submission_count = db.scalar(select(func.count())
-                                         .where(JudgeRecord2.problem_id == problem_id))
+                                         .where(JudgeRecordV2.problem_id == problem_id))
             contest_count = db.scalar(select(func.count())
                                       .where(ContestProblem.problem_id == problem_id))
             if submission_count > 0 or contest_count > 0:

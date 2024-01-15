@@ -10,7 +10,7 @@ from sqlalchemy import delete, func, insert, join, select, update
 from sqlalchemy.orm import defer, selectinload
 
 from commons.models import (Contest, ContestPlayer, ContestProblem,
-                            JudgeRecord2, JudgeStatus, User)
+                            JudgeRecordV2, JudgeStatus, User)
 from web.contest_cache import ContestCache
 from web.realname_manager import RealnameManager
 from web.utils import SqlSession, regularize_string
@@ -256,12 +256,12 @@ class ContestManager:
 
         with SqlSession() as db:
             submits = db \
-                .query(JudgeRecord2) \
-                .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
-                .where(JudgeRecord2.problem_id.in_(problems)) \
-                .where(JudgeRecord2.username.in_([x.username for x in players])) \
-                .where(JudgeRecord2.created >= start_time) \
-                .where(JudgeRecord2.created < end_time) \
+                .query(JudgeRecordV2) \
+                .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
+                .where(JudgeRecordV2.problem_id.in_(problems)) \
+                .where(JudgeRecordV2.username.in_([x.username for x in players])) \
+                .where(JudgeRecordV2.created >= start_time) \
+                .where(JudgeRecordV2.created < end_time) \
                 .all()
         for submit in submits:
             username = submit.username

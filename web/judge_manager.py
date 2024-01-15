@@ -6,7 +6,7 @@ import requests
 from flask import abort
 from sqlalchemy.orm import defer, joinedload, selectinload
 
-from commons.models import JudgeRecord2, JudgeRunner2, JudgeStatus
+from commons.models import JudgeRecordV2, JudgeRunnerV2, JudgeStatus
 from web.config import S3Config, SchedulerConfig
 from web.old_judge_manager import OldJudgeManager
 from web.utils import SqlSession, s3_internal
@@ -39,9 +39,9 @@ class JudgeManager:
                 raise Exception(f'Scheduler error: {res["error"]}')
         except Exception as e:
             with SqlSession() as db:
-                rec: JudgeRecord2 = db \
-                    .query(JudgeRecord2) \
-                    .where(JudgeRecord2.id == submission_id) \
+                rec: JudgeRecordV2 = db \
+                    .query(JudgeRecordV2) \
+                    .where(JudgeRecordV2.id == submission_id) \
                     .one()
                 rec.status = JudgeStatus.system_error
                 rec.message = str(e)
@@ -54,8 +54,8 @@ class JudgeManager:
         with SqlSession() as db:
             old_judger_max_id = OldJudgeManager.max_id()
             submissions = db \
-                .query(JudgeRecord2.id) \
-                .where(JudgeRecord2.problem_id == problem_id) \
+                .query(JudgeRecordV2.id) \
+                .where(JudgeRecordV2.problem_id == problem_id) \
                 .all()
             for submission in submissions:
                 if submission.id > old_judger_max_id:
@@ -64,9 +64,9 @@ class JudgeManager:
     @staticmethod
     def mark_void(id):
         with SqlSession() as db:
-            submission: JudgeRecord2 = db \
-                .query(JudgeRecord2) \
-                .where(JudgeRecord2.id == id) \
+            submission: JudgeRecordV2 = db \
+                .query(JudgeRecordV2) \
+                .where(JudgeRecordV2.id == id) \
                 .one_or_none()
             if submission is None:
                 raise NotFoundException()
@@ -79,9 +79,9 @@ class JudgeManager:
     @staticmethod
     def rejudge(id):
         with SqlSession() as db:
-            submission: JudgeRecord2 = db \
-                .query(JudgeRecord2) \
-                .where(JudgeRecord2.id == id) \
+            submission: JudgeRecordV2 = db \
+                .query(JudgeRecordV2) \
+                .where(JudgeRecordV2.id == id) \
                 .one_or_none()
             if submission is None:
                 raise NotFoundException()
@@ -106,7 +106,7 @@ class JudgeManager:
     @staticmethod
     def add_submission(*, public, language, username, problem_id, code) -> int:
         with SqlSession() as db:
-            rec = JudgeRecord2(
+            rec = JudgeRecordV2(
                 public=public,
                 language=language,
                 username=username,
@@ -126,9 +126,9 @@ class JudgeManager:
     @staticmethod
     def set_status(submission_id, status: str):
         with SqlSession() as db:
-            rec: JudgeRecord2 = db \
-                .query(JudgeRecord2) \
-                .where(JudgeRecord2.id == submission_id) \
+            rec: JudgeRecordV2 = db \
+                .query(JudgeRecordV2) \
+                .where(JudgeRecordV2.id == submission_id) \
                 .one_or_none()
             if rec is None:
                 abort(NOT_FOUND)
@@ -140,9 +140,9 @@ class JudgeManager:
     @staticmethod
     def set_result(submission_id, *, score, status, message, details: str, time_msecs, memory_bytes):
         with SqlSession() as db:
-            rec: JudgeRecord2 = db \
-                .query(JudgeRecord2) \
-                .where(JudgeRecord2.id == submission_id) \
+            rec: JudgeRecordV2 = db \
+                .query(JudgeRecordV2) \
+                .where(JudgeRecordV2.id == submission_id) \
                 .one_or_none()
             if rec is None:
                 abort(NOT_FOUND)
@@ -155,31 +155,31 @@ class JudgeManager:
             db.commit()
 
     @staticmethod
-    def list_accepted_submissions(problem_id: int) -> List[JudgeRecord2]:
+    def list_accepted_submissions(problem_id: int) -> List[JudgeRecordV2]:
         with SqlSession(expire_on_commit=False) as db:
             return db \
-                .query(JudgeRecord2) \
-                .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
-                .options(selectinload(JudgeRecord2.user)) \
-                .where(JudgeRecord2.problem_id == problem_id) \
-                .where(JudgeRecord2.status == JudgeStatus.accepted) \
+                .query(JudgeRecordV2) \
+                .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
+                .options(selectinload(JudgeRecordV2.user)) \
+                .where(JudgeRecordV2.problem_id == problem_id) \
+                .where(JudgeRecordV2.status == JudgeStatus.accepted) \
                 .all()
 
     @staticmethod
-    def get_submission(submission_id: int) -> Optional[JudgeRecord2]:
+    def get_submission(submission_id: int) -> Optional[JudgeRecordV2]:
         with SqlSession(expire_on_commit=False) as db:
             return db \
-                .query(JudgeRecord2) \
-                .options(joinedload(JudgeRecord2.user)) \
-                .options(joinedload(JudgeRecord2.problem)) \
-                .where(JudgeRecord2.id == submission_id) \
+                .query(JudgeRecordV2) \
+                .options(joinedload(JudgeRecordV2.user)) \
+                .options(joinedload(JudgeRecordV2.problem)) \
+                .where(JudgeRecordV2.id == submission_id) \
                 .one_or_none()
 
     @staticmethod
-    def list_runners() -> List[JudgeRunner2]:
+    def list_runners() -> List[JudgeRunnerV2]:
         with SqlSession(expire_on_commit=False) as db:
             return db \
-                .query(JudgeRunner2) \
-                .where(JudgeRunner2.visible) \
-                .order_by(JudgeRunner2.id) \
+                .query(JudgeRunnerV2) \
+                .where(JudgeRunnerV2.visible) \
+                .order_by(JudgeRunnerV2.id) \
                 .all()

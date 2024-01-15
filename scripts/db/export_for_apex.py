@@ -13,12 +13,12 @@ def export(contest_id, file: csv.writer):
     contest = db.query(Contest).where(Contest.id == contest_id).one()
     print(contest.name)
     problems = db.query(ContestProblem.problem_id).where(ContestProblem.contest_id == contest_id).all()
-    submissions: List[JudgeRecord] = db \
-        .query(JudgeRecord) \
-        .where(JudgeRecord.problem_id.in_(x[0] for x in problems)) \
-        .where(JudgeRecord.username.in_(x.username for x in contest.players)) \
-        .where(JudgeRecord.time >= contest.start_time) \
-        .where(JudgeRecord.time < contest.end_time) \
+    submissions: List[JudgeRecordV1] = db \
+        .query(JudgeRecordV1) \
+        .where(JudgeRecordV1.problem_id.in_(x[0] for x in problems)) \
+        .where(JudgeRecordV1.username.in_(x.username for x in contest.players)) \
+        .where(JudgeRecordV1.time >= contest.start_time) \
+        .where(JudgeRecordV1.time < contest.end_time) \
         .all()
     for submission in submissions:
         file.writerow([

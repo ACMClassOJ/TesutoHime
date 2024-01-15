@@ -1,10 +1,11 @@
 from enum import Enum, auto
 
-from sqlalchemy import BigInteger, Boolean, Column, DateTime
+from sqlalchemy import BigInteger, Boolean, Column, Computed, DateTime
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy import ForeignKey, Index, Integer, Table, Text, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+
 
 class GenerateName:
     def __init_subclass__(cls) -> None:
@@ -23,14 +24,15 @@ metadata = Base.metadata
 
 
 class User(Base):
+    # 'user' is a keyword in postgresql :(
     __tablename__ = 'account'
 
     id = Column(Integer, primary_key=True)
     username = Column(Text, unique=True)
-    student_id = Column(BigInteger)
+    username_lower = Column(Text, Computed('lower(username)'), unique=True)
+    student_id = Column(Text)
     friendly_name = Column(Text)
     password = Column(Text)
-    salt = Column(Integer)
     privilege = Column(Integer)
 
 
@@ -90,23 +92,20 @@ User.contests = relationship(
 class ContestProblem(Base):
     id = Column(Integer, primary_key=True)
     contest_id = Column(Integer, ForeignKey(Contest.id), index=True)
-    problem_id = Column(Integer, ForeignKey(Problem.id))
+    problem_id = Column(Integer, ForeignKey(Problem.id), index=True)
 
 
-class Discuss(Base):
-    __tablename__ = 'discussion'
-
+class Discussion(Base):
     id = Column(Integer, primary_key=True)
     problem_id = Column(Integer, ForeignKey(Problem.id))
     username = Column(Text, ForeignKey(User.username))
     data = Column(Text)
     time = Column(DateTime)
 
-Problem.discussions = relationship(Discuss)
+Problem.discussions = relationship(Discussion)
 
 
-class JudgeRecord(Base):
-    __tablename__ = 'judge_record_v1'
+class JudgeRecordV1(Base):
     __table_args__ = (
         Index('problem_id_time', 'problem_id', 'time'),
     )
@@ -127,9 +126,7 @@ class JudgeRecord(Base):
     public = Column(Boolean, server_default=text('false'))
 
 
-class JudgeServer(Base):
-    __tablename__ = 'judge_server_v1'
-
+class JudgeServerV1(Base):
     id = Column(Integer, primary_key=True)
     base_url = Column(Text)
     secret_key = Column(Text, unique=True)
@@ -142,16 +139,14 @@ class JudgeServer(Base):
 
 class RealnameReference(Base):
     id = Column(Integer, primary_key=True)
-    student_id = Column(BigInteger, index=True)
+    student_id = Column(Text, index=True)
     real_name = Column(Text)
 
 
 # New models for judger2 and scheduler2
 
 
-class JudgeRunner2(Base):
-    __tablename__ = 'judge_runner_v2'
-
+class JudgeRunnerV2(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Text)
     hardware = Column(Text)
@@ -181,8 +176,7 @@ class JudgeStatus(Enum):
     accepted = auto()
 
 
-class JudgeRecord2(Base):
-    __tablename__ = 'judge_record_v2'
+class JudgeRecordV2(Base):
     __table_args__ = (
         Index('problem_id_created', 'problem_id', 'created'),
     )

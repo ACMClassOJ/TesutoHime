@@ -19,7 +19,7 @@ from sqlalchemy.orm import defer, selectinload
 import commons.task_typing
 import web.const as consts
 import web.utils as utils
-from commons.models import (ContestProblem, JudgeRecord2, JudgeStatus, Problem,
+from commons.models import (ContestProblem, JudgeRecordV2, JudgeStatus, Problem,
                             User)
 from commons.task_typing import ProblemJudgeResult
 from commons.util import load_dataclass, serialize
@@ -405,8 +405,8 @@ def problem_admin(problem_id):
         problem = db.query(Problem).where(Problem.id == problem_id).one_or_none()
         if problem is None:
             abort(NOT_FOUND)
-        submission_count = db.query(JudgeRecord2.id).where(JudgeRecord2.problem_id == problem_id).count()
-        ac_count = db.query(JudgeRecord2.id).where(JudgeRecord2.problem_id == problem_id).where(JudgeRecord2.status == JudgeStatus.accepted).count()
+        submission_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem_id).count()
+        ac_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem_id).where(JudgeRecordV2.status == JudgeStatus.accepted).count()
         contests = db.query(ContestProblem.contest_id).where(ContestProblem.problem_id == problem_id).all()
         contests = [ x.contest_id for x in contests ]
 
@@ -623,19 +623,19 @@ def status():
         page = int(page) if page is not None else 1
         limit = JudgeConfig.Judge_Each_Page
         offset = (page - 1) * JudgeConfig.Judge_Each_Page
-        query = db.query(JudgeRecord2) \
-            .options(defer(JudgeRecord2.details), defer(JudgeRecord2.message)) \
-            .options(selectinload(JudgeRecord2.user).load_only(User.student_id, User.friendly_name)) \
-            .options(selectinload(JudgeRecord2.problem).load_only(Problem.title))
+        query = db.query(JudgeRecordV2) \
+            .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
+            .options(selectinload(JudgeRecordV2.user).load_only(User.student_id, User.friendly_name)) \
+            .options(selectinload(JudgeRecordV2.problem).load_only(Problem.title))
         if arg_submitter is not None:
-            query = query.where(JudgeRecord2.username == arg_submitter)
+            query = query.where(JudgeRecordV2.username == arg_submitter)
         if arg_problem_id is not None:
-            query = query.where(JudgeRecord2.problem_id == arg_problem_id)
+            query = query.where(JudgeRecordV2.problem_id == arg_problem_id)
         if arg_status is not None:
-            query = query.where(JudgeRecord2.status == arg_status)
+            query = query.where(JudgeRecordV2.status == arg_status)
         if arg_lang is not None:
-            query = query.where(JudgeRecord2.language == arg_lang)
-        query = query.order_by(JudgeRecord2.id.desc())
+            query = query.where(JudgeRecordV2.language == arg_lang)
+        query = query.order_by(JudgeRecordV2.id.desc())
         count = query.count()
         max_page = ceil(count / JudgeConfig.Judge_Each_Page)
         query = query.limit(limit).offset(offset)
@@ -792,8 +792,8 @@ def abort_judge(submit_id):
         return redirect('/OnlineJudge/login?next=' + request.full_path)
     with SqlSession(expire_on_commit=False) as db:
         submission: Optional[Tuple[str, int]] = db \
-            .query(JudgeRecord2.username) \
-            .where(JudgeRecord2.id == submit_id) \
+            .query(JudgeRecordV2.username) \
+            .where(JudgeRecordV2.id == submit_id) \
             .one_or_none()
         if submission is None:
             abort(NOT_FOUND)

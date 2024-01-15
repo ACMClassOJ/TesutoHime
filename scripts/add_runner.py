@@ -1,9 +1,9 @@
-from commons.models import JudgeRunner2
+from commons.models import JudgeRunnerV2
 from scripts.db.env import Session
 
 
 def add_runner_cli():
-    runner = JudgeRunner2()
+    runner = JudgeRunnerV2()
     runner.id = int(input('Runner ID? '))
     runner.name = input('Runner name? ')
     runner.hardware = input('Runner hardware? ')

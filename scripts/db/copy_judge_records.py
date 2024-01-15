@@ -8,7 +8,7 @@ from scripts.db.env import Session
 
 db = Session()
 
-q = db.query(JudgeRecord)
+q = db.query(JudgeRecordV1)
 count = q.count()
 page_size = 10000
 pages = ceil(count / page_size)
@@ -42,7 +42,7 @@ checked_problems = set()
 bad_problems = set()
 
 for i in range(pages):
-    page: List[JudgeRecord] = q.limit(page_size).offset(i * page_size).all()
+    page: List[JudgeRecordV1] = q.limit(page_size).offset(i * page_size).all()
     recs = []
     for s in page:
         if s.username not in checked_usernames:
@@ -63,7 +63,7 @@ for i in range(pages):
             print(f'Nonexistent problem {s.problem_id} at {s.id}')
             continue
 
-        rec = JudgeRecord2(
+        rec = JudgeRecordV2(
             id=s.id,
             public=s.public,
             language=lang(s.language),

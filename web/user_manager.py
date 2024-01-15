@@ -99,7 +99,7 @@ class UserManager:
     @staticmethod
     def get_canonical_username(username: str) -> Optional[str]:
         with SqlSession() as db:
-            stmt = select(User.username).where(func.lower(User.username) == func.lower(username))
+            stmt = select(User.username).where(User.username_lower == func.lower(username))
             return db.scalar(stmt)
 
     @staticmethod

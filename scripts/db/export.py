@@ -16,10 +16,10 @@ s3 = s3_client('s3', **s3_connection, config=cfg)
 
 db = Session()
 
-def filename (s: JudgeRecord2) -> str:
+def filename (s: JudgeRecordV2) -> str:
     return f'{s.user.student_id}-{names[s.user.username]}-{s.user.username}-{s.id}-T{s.problem.id}-{s.status.name}-{s.score}.cpp'
 
-def prelude (s: JudgeRecord2) -> str:
+def prelude (s: JudgeRecordV2) -> str:
     details_message = 'No details'
     message = s.message
     if message != None:
@@ -55,14 +55,14 @@ def get_realname(user):
 contest = db.query(Contest).where(Contest.id == contest_id).one()
 names = dict((x.username, get_realname(x)) for x in contest.players)
 problems = db.query(ContestProblem.problem_id).where(ContestProblem.contest_id == contest_id).all()
-submissions: List[JudgeRecord2] = db \
-    .query(JudgeRecord2) \
-    .where(JudgeRecord2.problem_id.in_(x[0] for x in problems)) \
-    .where(JudgeRecord2.username.in_(x.username for x in contest.players)) \
-    .where(JudgeRecord2.created >= datetime.fromtimestamp(contest.start_time)) \
-    .where(JudgeRecord2.created < datetime.fromtimestamp(contest.end_time)) \
+submissions: List[JudgeRecordV2] = db \
+    .query(JudgeRecordV2) \
+    .where(JudgeRecordV2.problem_id.in_(x[0] for x in problems)) \
+    .where(JudgeRecordV2.username.in_(x.username for x in contest.players)) \
+    .where(JudgeRecordV2.created >= datetime.fromtimestamp(contest.start_time)) \
+    .where(JudgeRecordV2.created < datetime.fromtimestamp(contest.end_time)) \
     .all()
-submissions: List[JudgeRecord2] = sorted(submissions, key=lambda x: (x.username, x.problem_id))
+submissions: List[JudgeRecordV2] = sorted(submissions, key=lambda x: (x.username, x.problem_id))
 
 for _, tries in groupby(submissions, lambda x: (x.username, x.problem_id)):
     tries = list(tries)

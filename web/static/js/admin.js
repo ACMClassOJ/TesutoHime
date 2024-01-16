@@ -11,22 +11,9 @@ $.fn.serializeObject = function () {
     let data = {};
     this.serializeArray().forEach(function (e) {
         if (e.value !== "")
-            if (e.name.search("[T t]ime") !== -1)
-                data[e.name] = Math.floor(new Date(e.value).getTime() / 1000);
-            else if ($("#" + e.name))
-                data[e.name] = e.value;
+            data[e.name] = e.value;
     });
     return data;
-}
-
-function formatDate(date) {
-    var date = new Date(date);
-    var YY = date.getFullYear() + '-';
-    var MM = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
-    var DD = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate());
-    var hh = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
-    var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
-    return YY + MM + DD +"T"+ hh + mm;
 }
 
 function getUrlArg(arg) {
@@ -120,8 +107,8 @@ $(function () {
         $("#btnModifyContest").attr("disabled","disabled");
         $("#btnRemoveContest").attr("disabled","disabled");
         $("#iptContestName").val("");
-        $("#iptStartTime").val(formatDate(new Date()));
-        $("#iptEndTime").val(formatDate(new Date(2030, 0, 1, 0, 0, 0, 0)));
+        $("#iptStartTime").val(new Date().toISOString().replace(/\..+$|Z/, ''));
+        $("#iptEndTime").val(new Date(2030, 0, 1, 0, 0, 0, 0).toISOString().replace(/\..+$|Z/, ''));
         $("#iptContestType").selectpicker("val", "0");
         $.ajax({
             type: "POST",
@@ -149,8 +136,8 @@ $(function () {
                     $("#iptContestStatusBadge").text("已存在");
                     var main_json = JSON.parse(response_text);
                     $("#iptContestName").val(main_json['Name']);
-                    $("#iptStartTime").val(formatDate(main_json['Start_Time'] * 1000));
-                    $("#iptEndTime").val(formatDate(main_json['End_Time'] * 1000));
+                    $("#iptStartTime").val(main_json['Start_Time']);
+                    $("#iptEndTime").val(main_json['End_Time']);
                     $("#iptContestType").selectpicker("val", main_json['Type']);
                     $('#iptRanked').prop('checked', main_json.Ranked)
                     $('#iptRankPenalty').prop('checked', main_json.Rank_Penalty)

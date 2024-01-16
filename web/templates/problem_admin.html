@@ -64,18 +64,18 @@
                 <div class="form-row">
                     <div class="form-group col-md-3">
                         <label for="iptTitle">题目标题</label>
-                        <input class="form-control" type="text" name="title" id="iptTitle">
+                        <input class="form-control" type="text" name="title" id="iptTitle" value="{{ problem.title }}">
                     </div>
                     <div class="form-group col-md-3">
                         <label for="iptReleaseTime">发布时间 (YYYY-MM-DDThh:mm:ss)</label>
-                        <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime">
+                        <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime" value="{{ problem.release_time.isoformat(timespec='seconds') }}">
                     </div>
                     <div class="form-group col-md-3">
                         <label for="iptProblemType">题目类型</label>
                         <select class="form-control selectpicker" name="problem_type" id="iptProblemType"
                                 data-style="form-control font-weight-normal border-grey shadow-none">
-                            <option value="0">代码题</option>
-                            <option value="1">填选题</option>
+                            <option value="0" {{ 'selected' if problem.problem_type == 0 }}>代码题</option>
+                            <option value="1" {{ 'selected' if problem.problem_type == 1 }}>填选题</option>
                         </select>
                     </div>
                     <div class="float-right d-flex mb-3 ml-auto pr-1">
@@ -416,12 +416,6 @@
 {% endblock %} {% block script %}
 <script>
 window.problemId = {{ ID }}
-window.problem = {
-    id: {{ ID }},
-    title: '{{ ('%s' % problem.title).replace("'", "\\'") }}',
-    release: {{ problem.release_time.timestamp() }},
-    type: {{ problem.problem_type }},
-}
 </script>
 <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/jszip.min.js') }}"></script>
@@ -432,5 +426,5 @@ window.problem = {
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20231212"></script>
+<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240116"></script>
 {% endblock %}

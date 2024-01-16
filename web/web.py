@@ -181,7 +181,7 @@ def get_detail():
         'Example_Input': str(problem.example_input),
         'Example_Output': str(problem.example_output),
         'Data_Range': str(problem.data_range),
-        'Release_Time': problem.release_time.timestamp(),
+        'Release_Time': problem.release_time.isoformat(),
         'Problem_Type': problem.problem_type,
         'Limits': str(problem.limits),
     }
@@ -198,8 +198,8 @@ def get_contest_detail():
     data = {
         'ID': contest.id,
         'Name': contest.name,
-        'Start_Time': contest.start_time.timestamp(),
-        'End_Time': contest.end_time.timestamp(),
+        'Start_Time': contest.start_time.isoformat(),
+        'End_Time': contest.end_time.isoformat(),
         'Type': contest.type,
         'Ranked': contest.ranked,
         'Rank_Penalty': contest.rank_penalty,
@@ -513,7 +513,7 @@ def problem_rank(problem_id):
     if sort_parameter == 'memory':
         submissions = sorted(submissions, key=lambda x: x.memory_bytes)
     elif sort_parameter == 'submit_time':
-        submissions = sorted(submissions, key=lambda x: x.created)
+        submissions = sorted(submissions, key=lambda x: x.created_at)
     else:
         sort_parameter = 'time'
         submissions = sorted(submissions, key=lambda x: x.time_msecs)
@@ -543,7 +543,7 @@ def discuss(problem_id):
         data = DiscussManager.get_discuss_for_problem(problem_id)
         discussion = []
         for ele in data:
-            tmp = [ele.id, UserManager.get_friendly_name(ele.username), ele.data, readable_time(ele.time)]
+            tmp = [ele.id, UserManager.get_friendly_name(ele.username), ele.data, readable_time(ele.created_at)]
             # tmp[4]: editable
             tmp.append(ele.username == username or privilege >= Privilege.SUPER)
             discussion.append(tmp)
@@ -865,8 +865,8 @@ def problemset(contest_id):
     data = ContestManager.get_board_view(contest)
     contest_status = ContestManager.get_status(contest)
 
-    time_elapsed = g.time.timestamp() - contest.start_time.timestamp()
-    time_overall = contest.end_time.timestamp() - contest.start_time.timestamp()
+    time_elapsed = (g.time - contest.start_time).total_seconds()
+    time_overall = (contest.end_time - contest.start_time).total_seconds()
     percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
 
     return render_template(

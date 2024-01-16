@@ -2,7 +2,7 @@ from enum import Enum, auto
 
 from sqlalchemy import BigInteger, Boolean, Column, Computed, DateTime
 from sqlalchemy import Enum as SqlEnum
-from sqlalchemy import ForeignKey, Index, Integer, Table, Text, text
+from sqlalchemy import ForeignKey, Index, Integer, Table, Text, func, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -22,8 +22,12 @@ class GenerateName:
 Base = declarative_base(cls=GenerateName)
 metadata = Base.metadata
 
+class UseTimestamps:
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-class User(Base):
+
+class User(UseTimestamps, Base):
     # 'user' is a keyword in postgresql :(
     __tablename__ = 'account'
 
@@ -36,7 +40,7 @@ class User(Base):
     privilege = Column(Integer)
 
 
-class Problem(Base):
+class Problem(UseTimestamps, Base):
     __table_args__ = (
         Index('release_time_id', 'release_time', 'id'),
     )
@@ -57,7 +61,7 @@ class Problem(Base):
     limits = Column(Text)
 
 
-class Contest(Base):
+class Contest(UseTimestamps, Base):
     id = Column(Integer, primary_key=True)
     name = Column(Text)
     start_time = Column(DateTime)
@@ -95,12 +99,11 @@ class ContestProblem(Base):
     problem_id = Column(Integer, ForeignKey(Problem.id), index=True)
 
 
-class Discussion(Base):
+class Discussion(UseTimestamps, Base):
     id = Column(Integer, primary_key=True)
     problem_id = Column(Integer, ForeignKey(Problem.id))
     username = Column(Text, ForeignKey(User.username))
     data = Column(Text)
-    time = Column(DateTime)
 
 Problem.discussions = relationship(Discussion)
 
@@ -137,7 +140,7 @@ class JudgeServerV1(Base):
     detail = Column(Text)
 
 
-class RealnameReference(Base):
+class RealnameReference(UseTimestamps, Base):
     id = Column(Integer, primary_key=True)
     student_id = Column(Text, index=True)
     real_name = Column(Text)
@@ -146,7 +149,7 @@ class RealnameReference(Base):
 # New models for judger2 and scheduler2
 
 
-class JudgeRunnerV2(Base):
+class JudgeRunnerV2(UseTimestamps, Base):
     id = Column(Integer, primary_key=True)
     name = Column(Text)
     hardware = Column(Text)
@@ -176,15 +179,14 @@ class JudgeStatus(Enum):
     accepted = auto()
 
 
-class JudgeRecordV2(Base):
+class JudgeRecordV2(UseTimestamps, Base):
     __table_args__ = (
-        Index('problem_id_created', 'problem_id', 'created'),
+        Index('problem_id_created_at', 'problem_id', 'created_at'),
     )
 
     id = Column(Integer, primary_key=True)
     public = Column(Boolean)
     language = Column(Text, index=True)
-    created = Column(DateTime, server_default=text('NOW()'))
     username = Column(Text, ForeignKey(User.username), index=True)
     user = relationship(User)
     problem_id = Column(Integer, ForeignKey(Problem.id))

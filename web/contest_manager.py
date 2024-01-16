@@ -223,7 +223,7 @@ class ContestManager:
 
     @staticmethod
     def get_scores(contest: Contest) -> List[dict]:
-        start_time = contest.start_time
+        start_time: datetime = contest.start_time
         end_time = contest.end_time
         problems = ContestManager.list_problem_for_contest(contest.id)
         players: List[User] = contest.players
@@ -255,20 +255,20 @@ class ContestManager:
         problem_to_num = dict(map(lambda entry: [entry[1], entry[0]], enumerate(problems)))
 
         with SqlSession() as db:
-            submits = db \
+            submits: List[JudgeRecordV2] = db \
                 .query(JudgeRecordV2) \
                 .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
                 .where(JudgeRecordV2.problem_id.in_(problems)) \
                 .where(JudgeRecordV2.username.in_([x.username for x in players])) \
-                .where(JudgeRecordV2.created >= start_time) \
-                .where(JudgeRecordV2.created < end_time) \
+                .where(JudgeRecordV2.created_at >= start_time) \
+                .where(JudgeRecordV2.created_at < end_time) \
                 .all()
         for submit in submits:
             username = submit.username
             problem_id = submit.problem_id
             status = submit.status
             score = submit.score
-            submit_time = submit.created.timestamp()
+            submit_time: datetime = submit.created_at
 
             if regularize_string(username) not in username_to_num:
                 continue
@@ -292,7 +292,7 @@ class ContestManager:
             if is_ac:
                 problem['accepted'] = True
                 user_data['ac_count'] += 1
-                user_data['penalty'] += (int(submit_time) - int(start_time.timestamp()) + submit_count * 1200) // 60
+                user_data['penalty'] += (int((submit_time - start_time).total_seconds()) + submit_count * 1200) // 60
 
             if status in [JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging]:
                 problem['pending_count'] += 1

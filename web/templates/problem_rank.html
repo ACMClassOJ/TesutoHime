@@ -101,7 +101,7 @@
                 {%- endif %}
 
                 <td>{{ languages[submission] }}</td>
-                <td>{{ g.utils.readable_time(submission.created) }}</td>
+                <td>{{ g.utils.readable_time(submission.created_at) }}</td>
             </tr>
             {%- endfor %}
         </table>

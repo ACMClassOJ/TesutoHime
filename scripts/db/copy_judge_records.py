@@ -67,7 +67,7 @@ for i in range(pages):
             id=s.id,
             public=s.public,
             language=lang(s.language),
-            created=time(s.time),
+            created_at=time(s.time),
             username=s.username,
             problem_id=s.problem_id,
             status=stat(s.status),

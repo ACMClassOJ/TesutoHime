@@ -13,8 +13,7 @@ class DiscussManager:
     def add_discuss(problem_id: int, username: str, data: str):
         discuss = Discussion(problem_id=problem_id,
                           username=username,
-                          data=data,
-                          time=datetime.now())
+                          data=data)
         try:
             with SqlSession.begin() as db:
                 db.add(discuss)

@@ -1,25 +1,9 @@
 $.fn.serializeObject = function () {
     const data = {}
     this.serializeArray().forEach(function (e) {
-        if (e.value !== '') {
-            if (e.name.search('[T t]ime') !== -1) {
-                data[e.name] = Math.floor(new Date(e.value).getTime() / 1000)
-            } else {
-                data[e.name] = e.value
-            }
-        }
+        data[e.name] = e.value
     })
     return data
-}
-
-function formatDate(date) {
-    var date = new Date(date);
-    var YY = date.getFullYear() + '-';
-    var MM = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
-    var DD = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate());
-    var hh = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
-    var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
-    return YY + MM + DD +"T"+ hh + mm;
 }
 
 const uploadData = async (problemId, file, progressBar) => {
@@ -73,11 +57,6 @@ const uploadData = async (problemId, file, progressBar) => {
 
 $(() => {
     // overview
-    $("#iptTitle").val(problem.title);
-    $("#iptReleaseTime").val(formatDate(problem.release * 1000));
-    $("#iptProblemType").val(problem.type);
-    $("#iptProblemType").selectpicker('val', problem.type);
-
     const updateDisplayTitle = () => document.getElementById('problem-title').textContent = $('#iptTitle').val()
     $('#iptTitle').on('change', updateDisplayTitle)
     $('#iptTitle').on('keyup', updateDisplayTitle)

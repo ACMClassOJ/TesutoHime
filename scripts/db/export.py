@@ -31,7 +31,7 @@ def prelude (s: JudgeRecordV2) -> str:
 /**
  * {s.user.student_id} {names[s.user.username]} ({s.user.username})
  * Problem {s.problem_id} - {s.problem.title}
- * Time: {s.created.strftime('%Y-%m-%d %H:%M:%S')}
+ * Time: {s.created_at.strftime('%Y-%m-%d %H:%M:%S')}
  * Status: {s.status.name}
  * Score: {s.score}
  * Message: {message}
@@ -59,8 +59,8 @@ submissions: List[JudgeRecordV2] = db \
     .query(JudgeRecordV2) \
     .where(JudgeRecordV2.problem_id.in_(x[0] for x in problems)) \
     .where(JudgeRecordV2.username.in_(x.username for x in contest.players)) \
-    .where(JudgeRecordV2.created >= datetime.fromtimestamp(contest.start_time)) \
-    .where(JudgeRecordV2.created < datetime.fromtimestamp(contest.end_time)) \
+    .where(JudgeRecordV2.created_at >= contest.start_time) \
+    .where(JudgeRecordV2.created_at < contest.end_time) \
     .all()
 submissions: List[JudgeRecordV2] = sorted(submissions, key=lambda x: (x.username, x.problem_id))
 

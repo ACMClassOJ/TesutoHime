@@ -23,7 +23,8 @@ bool CheckFile(std::istream& file1, std::istream& file2,
     bool result1 = ReadNextLine(file1, line1, ignoreBlankLine);
     bool result2 = ReadNextLine(file2, line2, ignoreBlankLine);
     while (result1 && result2) {
-        if (!SameLine(line1, line2, ignoreTailingSpace)) {
+        if (!SameLine(line1, line2, ignoreTailingSpace) ||
+            (!ignoreTailingSpace && file1.eof() != file2.eof())) {
             return false;
         }
         result1 = ReadNextLine(file1, line1, ignoreBlankLine);

@@ -9,13 +9,12 @@
     <link rel="stylesheet" href="{{ url_for('.static', filename = 'countdown_svg.css') }}">
 {% endblock %}
 
-{% set submission = submissions[0] %}
 {% block content %}
     <div class="card card-body">
-        <h1>评测详情 {{ submissions[0].id }}</h1>
+        <h1>评测详情 {{ submission.id }}</h1>
         
         {% from 'component/status_table.html' import status_table -%}
-        {{ status_table(submissions, show_time=show_time, show_memory=show_memory, show_score=show_score) }}
+        {{ status_table([submission], { submission: real_name }, { submission: False }, show_time=submission.time_msecs != None, show_memory=submission.memory_bytes != None, show_score=show_score) }}
 
         {% if details != None -%}
         <div class="row">

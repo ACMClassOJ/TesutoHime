@@ -25,8 +25,8 @@ async def process_problem(problem_id):
     s.execute(stmt)
 
 async def main():
-    problems = s.execute(select(Problem.id).order_by(Problem.id.asc())).all()
-    for (problem,) in problems:
+    problems = s.scalars(select(Problem.id).order_by(Problem.id.asc())).all()
+    for problem in problems:
         await process_problem(problem)
 
     input('Press enter to continue...')

@@ -5,49 +5,34 @@ import sys
 
 from typing import List
 from commons.models import Discussion
-from web.utils import SqlSession
+from web.utils import db
 from sqlalchemy import update, select, delete
 
 class DiscussManager:
     @staticmethod
     def add_discuss(problem_id: int, username: str, data: str):
         discuss = Discussion(problem_id=problem_id,
-                          username=username,
-                          data=data)
-        try:
-            with SqlSession.begin() as db:
-                db.add(discuss)
-        except Exception:
-            sys.stderr.write("SQL Error in DiscussManager: Add_Discuss\n")
+                             username=username,
+                             data=data)
+        db.add(discuss)
 
     @staticmethod
     def modify_discuss(discuss_id: int, new_data: str):
-        stmt = update(Discussion).where(Discussion.id == discuss_id) \
+        stmt = update(Discussion) \
+            .where(Discussion.id == discuss_id) \
             .values(data=new_data)
-        try:
-            with SqlSession.begin() as db:
-                db.execute(stmt)
-        except Exception:
-            sys.stderr.write("SQL Error in DiscussManager: Modify_Discuss\n")
+        db.execute(stmt)
 
     @staticmethod
     def get_author(discuss_id: int) -> str:
-        with SqlSession() as db:
-            stmt = select(Discussion.username).where(Discussion.id == discuss_id)
-            return db.scalar(stmt)
+        stmt = select(Discussion.username).where(Discussion.id == discuss_id)
+        return db.scalar(stmt)
 
     @staticmethod
     def get_discuss_for_problem(problem_id: int) -> List[Discussion]:
         stmt = select(Discussion).where(Discussion.problem_id == problem_id)
-        with SqlSession() as db:
-            data = db.scalars(stmt).all()
-            return data
+        return db.scalars(stmt).all()
 
     @staticmethod
     def delete_discuss(discuss_id: int):
-        try:
-            with SqlSession.begin() as db:
-                stmt = delete(Discussion).where(Discussion.id == discuss_id)
-                db.execute(stmt)
-        except Exception:
-            sys.stderr.write("SQL Error in DiscussManager: Delete_Discuss\n")
+        db.execute(delete(Discussion).where(Discussion.id == discuss_id))

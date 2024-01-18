@@ -4,10 +4,14 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 import boto3
 import redis
 from botocore.config import Config
+from flask import g
 from sqlalchemy import create_engine
+from sqlalchemy.orm import Session as _Session
 from sqlalchemy.orm import sessionmaker
+from werkzeug.local import LocalProxy
 
 from web.config import DatabaseConfig, RedisConfig, S3Config
+from web.const import language_info
 
 engine = create_engine(DatabaseConfig.url, pool_recycle=DatabaseConfig.connection_pool_recycle)
 SqlSession = sessionmaker(bind=engine)
@@ -15,6 +19,8 @@ SqlSession = sessionmaker(bind=engine)
 cfg = Config(signature_version='s3v4')
 s3_public = boto3.client('s3', **S3Config.Connections.public, config=cfg)
 s3_internal = boto3.client('s3', **S3Config.Connections.internal, config=cfg)
+
+db: _Session = LocalProxy(lambda: g.db)
 
 def generate_s3_public_url(*args, **kwargs):
     url = s3_public.generate_presigned_url(*args, **kwargs)
@@ -39,7 +45,7 @@ def readable_time(time) -> str:
         time = datetime.fromtimestamp(time)
     return time.strftime('%Y-%m-%d %H:%M:%S')
 
-def readable_lang(lang: int) -> str:
+def readable_lang_v1(lang: int) -> str:
     # Get the readable language name.
     lang_str = {
         0: 'C++',
@@ -51,6 +57,9 @@ def readable_lang(lang: int) -> str:
         return lang_str[lang]
     return 'UNKNOWN'
 
+def readable_lang(lang: str) -> str:
+    return 'Unknown' if lang not in language_info \
+            else language_info[lang].name
 
 def regularize_string(raw_str: str) -> str:
     raw_str = raw_str.lower() # lower_case

@@ -7,108 +7,80 @@ from typing import List, Optional, Tuple
 
 from flask import g
 from sqlalchemy import delete, func, insert, join, select, update
-from sqlalchemy.orm import defer, selectinload
+from sqlalchemy.orm import defer
 
 from commons.models import (Contest, ContestPlayer, ContestProblem,
                             JudgeRecordV2, JudgeStatus, User)
 from web.contest_cache import ContestCache
 from web.realname_manager import RealnameManager
-from web.utils import SqlSession, regularize_string
+from web.utils import db, regularize_string
 
 
 class ContestManager:
     @staticmethod
     def create_contest(id: int, name: str, start_time: datetime, end_time: datetime, contest_type: int,
                        ranked: bool, rank_penalty: bool, rank_partial_score: bool):
-        try:
-            contest = Contest(id=id,
-                              name=name,
-                              start_time=start_time,
-                              end_time=end_time,
-                              type=contest_type,
-                              ranked=ranked,
-                              rank_penalty=rank_penalty,
-                              rank_partial_score=rank_partial_score)
-            with SqlSession.begin() as db:
-                db.add(contest)
-        except Exception:
-            sys.stderr.write("Error in ContestManager: Create_Contest\n")
+        contest = Contest(id=id,
+                          name=name,
+                          start_time=start_time,
+                          end_time=end_time,
+                          type=contest_type,
+                          ranked=ranked,
+                          rank_penalty=rank_penalty,
+                          rank_partial_score=rank_partial_score)
+        db.add(contest)
 
     @staticmethod
     def modify_contest(contest_id: int, new_name: str, new_start_time: datetime, new_end_time: datetime,
                        new_contest_type: int,
                        ranked: bool, rank_penalty: bool, rank_partial_score: bool):
-        try:
-            stmt = update(Contest).where(Contest.id == contest_id).values(
-                name=new_name,
-                start_time=new_start_time,
-                end_time=new_end_time,
-                type=new_contest_type,
-                ranked=ranked,
-                rank_penalty=rank_penalty,
-                rank_partial_score=rank_partial_score
-            )
-            with SqlSession.begin() as db:
-                db.execute(stmt)
-        except Exception:
-            sys.stderr.write("Error in ContestManager: Modify_Contest\n")
+        stmt = update(Contest).where(Contest.id == contest_id).values(
+            name=new_name,
+            start_time=new_start_time,
+            end_time=new_end_time,
+            type=new_contest_type,
+            ranked=ranked,
+            rank_penalty=rank_penalty,
+            rank_partial_score=rank_partial_score
+        )
+        db.execute(stmt)
 
     @staticmethod
     def delete_contest(contest_id: int):
-        try:
-            with SqlSession.begin() as db:
-                db.execute(delete(ContestPlayer).where(
-                    ContestPlayer.c.contest_id == contest_id))
-                db.execute(delete(ContestProblem).where(
-                    ContestProblem.contest_id == contest_id))
-                db.execute(delete(Contest).where(Contest.id == contest_id))
-        except Exception:
-            sys.stderr.write("Error in ContestManager: Delete_Contest\n")
+        db.execute(delete(Contest).where(Contest.id == contest_id))
 
     @staticmethod
     def add_problem_to_contest(contest_id: int, problem_id: int):
-        try:
-            with SqlSession.begin() as db:
-                db.add(ContestProblem(contest_id=contest_id, problem_id=problem_id))
-        except Exception:
-            sys.stderr.write("Error in ContestManager: Add_Problem_To_Contest\n")
+        stmt = insert(ContestProblem) \
+            .values(contest_id=contest_id, problem_id=problem_id)
+        db.execute(stmt)
 
     @staticmethod
     def delete_problem_from_contest(contest_id: int, problem_id: int):
-        try:
-            stmt = delete(ContestProblem) \
-                .where(ContestProblem.contest_id == contest_id) \
-                .where(ContestProblem.problem_id == problem_id)
-            with SqlSession.begin() as db:
-                db.execute(stmt)
-        except Exception:
-            sys.stderr.write("Error in ContestManager: Delete_Problem_From_Contest\n")
+        stmt = delete(ContestProblem) \
+            .where(ContestProblem.c.contest_id == contest_id) \
+            .where(ContestProblem.c.problem_id == problem_id)
+        db.execute(stmt)
 
     @staticmethod
     def add_player_to_contest(contest_id: int, username: str):
-        try:
-            stmt = insert(ContestPlayer).values(
-                contest_id=contest_id, username=username)
-            with SqlSession.begin() as db:
-                db.execute(stmt)
-        except Exception:
-            sys.stderr.write("Error in ContestManager: Add_Player_To_Contest\n")
+        stmt = insert(ContestPlayer).values(
+            contest_id=contest_id, username=username)
+        db.execute(stmt)
 
     @staticmethod
     def check_problem_in_contest(contest_id: int, problem_id: int):
         stmt = select(func.count()) \
-            .where(ContestProblem.contest_id == contest_id) \
-            .where(ContestProblem.problem_id == problem_id)
-        with SqlSession() as db:
-            return db.scalar(stmt) != 0
+            .where(ContestProblem.c.contest_id == contest_id) \
+            .where(ContestProblem.c.problem_id == problem_id)
+        return db.scalar(stmt) != 0
 
     @staticmethod
     def check_player_in_contest(contest_id: int, username: str):
         stmt = select(func.count()) \
             .where(ContestPlayer.c.contest_id == contest_id) \
             .where(ContestPlayer.c.username == username)
-        with SqlSession() as db:
-            return db.scalar(stmt) != 0
+        return db.scalar(stmt) != 0
 
     @staticmethod
     def get_unfinished_exam_info_for_player(username: str) -> Tuple[int, bool]:
@@ -123,22 +95,17 @@ class ContestManager:
             .where(ContestPlayer.c.username == username) \
             .order_by(Contest.id.desc()) \
             .limit(1)
-        with SqlSession() as db:
-            data = db.execute(stmt).first()
+        data = db.execute(stmt).first()
         if data is not None:
             return data[0], (g.time >= data[1])
         return -1, False
 
     @staticmethod
     def delete_player_from_contest(contest_id: int, username: str):
-        try:
-            stmt = delete(ContestPlayer) \
-                .where(ContestPlayer.c.contest_id == contest_id) \
-                .where(ContestPlayer.c.username == username)
-            with SqlSession.begin() as db:
-                db.execute(stmt)
-        except Exception:
-            sys.stderr.write("SQL Error in ContestManager: Delete_Player_From_Contest\n")
+        stmt = delete(ContestPlayer) \
+            .where(ContestPlayer.c.contest_id == contest_id) \
+            .where(ContestPlayer.c.username == username)
+        db.execute(stmt)
 
     @staticmethod
     def get_status(contest: Contest) -> str:
@@ -171,55 +138,24 @@ class ContestManager:
         stmt_count = stmt.with_only_columns(func.count())
         stmt_data = stmt.order_by(Contest.id.desc()) \
             .limit(limit).offset(offset)
-        with SqlSession(expire_on_commit=False) as db:
-            count = db.scalar(stmt_count)
-            this_page = db.scalars(stmt_data).all()
-            return count, this_page
-
-    @staticmethod
-    def get_time(contest_id: int):
-        stmt = select(Contest.start_time, Contest.end_time).where(Contest.id == contest_id)
-        with SqlSession() as db:
-            data = db.execute(stmt).first()
-            return data[0], data[1]
+        count = db.scalar(stmt_count)
+        this_page = db.scalars(stmt_data).all()
+        return count, this_page
 
     @staticmethod
     def list_problem_for_contest(contest_id: int):
-        stmt = select(ContestProblem.problem_id).where(ContestProblem.contest_id == contest_id)
-        with SqlSession() as db:
-            data = db.scalars(stmt).all()
-            return data
-
-    @staticmethod
-    def get_contest_for_board(contest_id: int) -> Optional[Contest]:
-        with SqlSession(expire_on_commit=False) as db:
-            return db \
-                .query(Contest) \
-                .where(Contest.id == contest_id) \
-                .options(selectinload(Contest.players)) \
-                .one_or_none()
+        stmt = select(ContestProblem.c.problem_id).where(ContestProblem.c.contest_id == contest_id)
+        data = db.scalars(stmt).all()
+        return data
 
     @staticmethod
     def get_contest(contest_id: int) -> Optional[Contest]:
-        with SqlSession(expire_on_commit=False) as db:
-            return db \
-                .query(Contest) \
-                .where(Contest.id == contest_id) \
-                .one_or_none()
+        return db.get(Contest, contest_id)
 
     @staticmethod
     def get_max_id() -> int:
-        stmt = select(func.max(Contest.id))
-        with SqlSession() as db:
-            data = db.scalar(stmt)
-            return int(data) if data is not None else 0
-
-    @staticmethod
-    def get_contest_type(contest_id: int) -> int:
-        stmt = select(Contest.type).where(Contest.id == contest_id)
-        with SqlSession() as db:
-            data = db.scalar(stmt)
-            return int(data) if data is not None else 0
+        data = db.scalar(select(func.max(Contest.id)))
+        return int(data) if data is not None else 0
 
     @staticmethod
     def get_scores(contest: Contest) -> List[dict]:
@@ -254,15 +190,14 @@ class ContestManager:
         username_to_num = dict(map(lambda entry: [regularize_string(entry[1].username), entry[0]], enumerate(players)))
         problem_to_num = dict(map(lambda entry: [entry[1], entry[0]], enumerate(problems)))
 
-        with SqlSession() as db:
-            submits: List[JudgeRecordV2] = db \
-                .query(JudgeRecordV2) \
-                .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
-                .where(JudgeRecordV2.problem_id.in_(problems)) \
-                .where(JudgeRecordV2.username.in_([x.username for x in players])) \
-                .where(JudgeRecordV2.created_at >= start_time) \
-                .where(JudgeRecordV2.created_at < end_time) \
-                .all()
+        submits: List[JudgeRecordV2] = db \
+            .query(JudgeRecordV2) \
+            .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
+            .where(JudgeRecordV2.problem_id.in_(problems)) \
+            .where(JudgeRecordV2.username.in_([x.username for x in players])) \
+            .where(JudgeRecordV2.created_at >= start_time) \
+            .where(JudgeRecordV2.created_at < end_time) \
+            .all()
         for submit in submits:
             username = submit.username
             problem_id = submit.problem_id

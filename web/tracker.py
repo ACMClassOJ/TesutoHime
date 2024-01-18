@@ -1,4 +1,5 @@
 import json
+from urllib.parse import urlsplit
 import logging
 import logging.handlers
 from datetime import datetime
@@ -21,7 +22,7 @@ class Tracker:
         everything['Username'] = username
         if username is not None and username != '':
             everything['Realname'] = RealnameManager.query_realname(UserManager.get_student_id(username))
-        everything['url'] = request.url.split('/')[-1]
+        everything['url'] = '/'.join(request.url.split('/')[4:])
         everything['post_args'] = request.form.copy()
         if 'password' in everything['post_args']:
             del everything['post_args']['password']

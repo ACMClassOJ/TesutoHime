@@ -9,7 +9,7 @@ from sqlalchemy import delete, func, select, update
 from commons.models import ContestProblem, JudgeRecordV2, Problem
 from web.const import Privilege, language_info
 from web.session_manager import SessionManager
-from web.utils import SqlSession
+from web.utils import db
 
 FAR_FUTURE_TIME = datetime(9999, 12, 31, 8, 42, 42)
 
@@ -22,8 +22,7 @@ class ProblemManager:
             id=problem_id,
             release_time=FAR_FUTURE_TIME
         )
-        with SqlSession.begin() as db:
-            db.add(problem)
+        db.add(problem)
         return problem_id
 
     @staticmethod
@@ -36,11 +35,7 @@ class ProblemManager:
                     example_input=example_input,
                     example_output=example_output,
                     data_range=data_range)
-        try:
-            with SqlSession.begin() as db:
-                db.execute(stmt)
-        except Exception:
-            sys.stderr.write("SQL Error in ProblemManager: Modify_Problem\n")
+        db.execute(stmt)
 
     @staticmethod
     def modify_problem(problem_id: int, title: str, release_time: datetime, problem_type: int):
@@ -48,56 +43,36 @@ class ProblemManager:
             .values(title=title,
                     release_time=release_time,
                     problem_type=problem_type)
-        try:
-            with SqlSession.begin() as db:
-                db.execute(stmt)
-        except Exception:
-            sys.stderr.write("SQL Error in ProblemManager: Modify_Problem\n")
+        db.execute(stmt)
 
     @staticmethod
     def hide_problem(problem_id: int):
         stmt = update(Problem).where(Problem.id == problem_id) \
             .values(release_time=FAR_FUTURE_TIME)
-        with SqlSession.begin() as db:
-            db.execute(stmt)
+        db.execute(stmt)
 
     @staticmethod
     def show_problem(problem_id: int):
         stmt = update(Problem).where(Problem.id == problem_id) \
             .values(release_time=g.time)
-        with SqlSession.begin() as db:
-            db.execute(stmt)
+        db.execute(stmt)
 
     @staticmethod
-    def get_problem(problem_id: int) -> dict:
-        stmt = select(Problem).where(Problem.id == problem_id)
-        with SqlSession() as db:
-            return db.scalar(stmt)
+    def get_problem(problem_id: int) -> Optional[Problem]:
+        return db.get(Problem, problem_id)
 
     @staticmethod
     def modify_problem_limit(problem_id: int, limit: str):
-        stmt = update(Problem).where(
-            Problem.id == problem_id).values(limits=limit)
-        try:
-            with SqlSession.begin() as db:
-                db.execute(stmt)
-        except Exception:
-            sys.stderr.write(
-                "SQL Error in ProblemManager: Modify_Problem_Limit\n")
+        stmt = update(Problem) \
+            .where(Problem.id == problem_id) \
+            .values(limits=limit)
+        db.execute(stmt)
 
     @staticmethod
     def get_title(problem_id: int) -> str:
         stmt = select(Problem.title).where(Problem.id == problem_id)
-        with SqlSession() as db:
-            data = db.scalar(stmt)
-            return data if data is not None else ""
-
-    @staticmethod
-    def get_problem_type(problem_id: int) -> int:
-        stmt = select(Problem.problem_type).where(Problem.id == problem_id)
-        with SqlSession() as db:
-            data = db.scalar(stmt)
-            return data if data is not None else 0
+        data = db.scalar(stmt)
+        return data if data is not None else ""
 
     @staticmethod
     def languages_accepted(problem: Problem) -> List[str]:
@@ -114,15 +89,13 @@ class ProblemManager:
         stmt = update(Problem) \
             .set(languages_accepted=languages) \
             .where(Problem.id == problem_id)
-        with SqlSession() as db:
-            db.execute(stmt)
+        db.execute(stmt)
 
     @staticmethod
     def get_max_id() -> int:
         stmt = select(func.max(Problem.id)).where(Problem.id < 11000)
-        with SqlSession() as db:
-            data = db.scalar(stmt)
-            return data if data is not None else 0
+        data = db.scalar(stmt)
+        return data if data is not None else 0
 
     @staticmethod
     def should_show(problem: Problem) -> bool:
@@ -132,11 +105,10 @@ class ProblemManager:
 
     @staticmethod
     def delete_problem(problem_id: int):
-        with SqlSession.begin() as db:
-            submission_count = db.scalar(select(func.count())
-                                         .where(JudgeRecordV2.problem_id == problem_id))
-            contest_count = db.scalar(select(func.count())
-                                      .where(ContestProblem.problem_id == problem_id))
-            if submission_count > 0 or contest_count > 0:
-                abort(BAD_REQUEST)
-            db.execute(delete(Problem).where(Problem.id == problem_id))
+        submission_count = db.scalar(select(func.count())
+                                     .where(JudgeRecordV2.problem_id == problem_id))
+        contest_count = db.scalar(select(func.count())
+                                  .where(ContestProblem.c.problem_id == problem_id))
+        if submission_count > 0 or contest_count > 0:
+            abort(BAD_REQUEST)
+        db.execute(delete(Problem).where(Problem.id == problem_id))

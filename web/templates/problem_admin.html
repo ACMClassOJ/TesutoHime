@@ -87,17 +87,17 @@
             <div class="mb-2">
                 <span>发布状态：</span>
                 {% if problem.release_time < g.time -%}
-                    <span class="text-green mr-3">已发布</span>
-                    <form method="POST" class="d-inline">
+                    <span class="text-green mr-2">已发布</span>
+                    <form method="POST" class="d-inline-flex">
                         <input type="hidden" name="action" value="hide">
-                        <button class="btn btn-outline-primary" type="submit">取消发布</button>
+                        <button class="btn btn-outline-primary btn-sm" type="submit">取消发布</button>
                     </form>
                     <span>（点击会将发布时间设为遥远的未来）</span>
                 {%- else -%}
-                    <span class="text-red mr-3">未发布</span>
-                    <form method="POST" class="d-inline">
+                    <span class="text-red mr-2">未发布</span>
+                    <form method="POST" class="d-inline-flex">
                         <input type="hidden" name="action" value="show">
-                        <button class="btn btn-outline-primary" type="submit">立即发布</button>
+                        <button class="btn btn-outline-primary btn-sm" type="submit">立即发布</button>
                     </form>
                     <span>（点击会将发布时间设为现在）</span>
                 {%- endif %}
@@ -105,29 +105,37 @@
             <p>
                 提交状态：
                 {% if submission_count > 0 %}
-                共 {{ submission_count }} 次提交，其中 {{ ac_count }} 次通过，正确率 {{ "%.1f" % (ac_count / submission_count * 100) }}%
+                共
+                <a href="/OnlineJudge/status?problem_id={{ problem.id }}">{{ submission_count }} 次提交</a>，
+                其中
+                <a href="/OnlineJudge/status?problem_id={{ problem.id }}&status=accepted">{{ ac_count }} 次通过</a>，
+                正确率 {{ "%.1f" % (ac_count / submission_count * 100) }}%
                 {% else %}
                 暂无提交
                 {% endif %}
             </p>
-            <p>
-                {% if contests | length == 0 %}
-                题目当前未在考试/作业中
-                {% else %}
-                题目在以下考试/作业中：
-                {% for contest in contests %}
-                <a href="/OnlineJudge/problemset/{{ contest }}">{{ contest }}</a>
+            {% if problem.contests | length == 0 %}
+            <p>题目当前未在比赛/作业中</p>
+            {% else %}
+            <p>题目在以下比赛/作业中使用：</p>
+            <ul>
+                {% for contest in problem.contests %}
+                <li><a href="/OnlineJudge/problemset/{{ contest.id }}">
+                    [{{ [ '比赛', '作业', '考试' ][contest.type] }}]
+                    {{ contest.id }}.
+                    {{ contest.name }}
+                </a></li>
                 {% endfor %}
-                {% endif %}
-            </p>
+            </ul>
+            {% endif %}
             <h3>删除题目</h3>
-            {% if submission_count > 0 or contests | length > 0 %}
-            {% if submission_count > 0 and contests | length > 0 %}
-            当前题目已有提交记录，且已存在于作业/考试中，
+            {% if submission_count > 0 or problem.contests | length > 0 %}
+            {% if submission_count > 0 and problem.contests | length > 0 %}
+            当前题目已有提交记录，且已存在于比赛/作业中，
             {% elif submission_count > 0 %}
             当前题目已有提交记录，
-            {% elif contests | length > 0 %}
-            当前题目已存在于作业/考试中，
+            {% elif problem.contests | length > 0 %}
+            当前题目已存在于比赛/作业中，
             {% endif %}
             删除题目可能会导致不可预料的后果，请联系 OJ 运维组删除题目。
             {% else %}

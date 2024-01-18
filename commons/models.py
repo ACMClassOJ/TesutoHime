@@ -85,19 +85,36 @@ ContestPlayer = Table(
 Contest.players = relationship(
     User,
     ContestPlayer,
+    passive_deletes=True,
     back_populates='contests',
 )
 User.contests = relationship(
     Contest,
     ContestPlayer,
+    passive_deletes=True,
     back_populates='players',
 )
 
 
-class ContestProblem(Base):
-    id = Column(Integer, primary_key=True)
-    contest_id = Column(Integer, ForeignKey(Contest.id), index=True)
-    problem_id = Column(Integer, ForeignKey(Problem.id), index=True)
+ContestProblem = Table(
+    'contest_problem',
+    Base.metadata,
+    Column('id', Integer, primary_key=True),
+    Column('contest_id', Integer, ForeignKey(Contest.id), index=True),
+    Column('problem_id', Integer, ForeignKey(Problem.id), index=True),
+)
+Contest.problems = relationship(
+    Problem,
+    ContestProblem,
+    passive_deletes=True,
+    back_populates='contests',
+)
+Problem.contests = relationship(
+    Contest,
+    ContestProblem,
+    passive_deletes=True,
+    back_populates='problems',
+)
 
 
 class Discussion(UseTimestamps, Base):

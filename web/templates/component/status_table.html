@@ -1,4 +1,4 @@
-{% macro status_table(submissions, show_time=true, show_memory=true, show_score=true) -%}
+{% macro status_table(submissions, real_name_map, show_links, show_time=true, show_memory=true, show_score=true) -%}
 <div class="table-responsive">
 	<table class="table table-striped table-bordered table-hover status-list">
 		<thead>
@@ -31,7 +31,7 @@
 				<span>{{ submission.user.friendly_name }}</span>
 				{%- endif %}
 				{% if g.is_admin -%}
-				<span class="text-black-50 float-right"><small>{{ submission.real_name }}</small></span>
+				<span class="text-black-50 float-right"><small>{{ real_name_map[submission] }}</small></span>
 				{%- endif %}
 			</td>
 			<td class="status-list__problem">
@@ -39,11 +39,11 @@
 			</td>
 			<td>
 				<strong>
-					{% if submission.visible -%}
+					{% if show_links[submission] -%}
 					<a href="/OnlineJudge/code/{{ submission.id }}/">
 					{% endif -%}
 						<span class="text-{{ g.consts.judge_status_info[submission.status.name].color }}">{{ g.consts.judge_status_info[submission.status.name].name }}</span>
-					{% if submission.visible -%}
+					{% if show_links[submission] -%}
 					</a>
 					{% endif -%}
 				</strong>
@@ -68,10 +68,10 @@
 			<td>{{ submission.score }}</td>
 			{%- endif %}
 
-			{% if submission.visible -%}
-			<td><a href="/OnlineJudge/code/{{ submission.id }}/">{{ submission.language }}</a></td>
+			{% if show_links[submission] -%}
+			<td><a href="/OnlineJudge/code/{{ submission.id }}/">{{ g.utils.readable_lang(submission.language) }}</a></td>
 			{% else -%}
-			<td>{{ submission.language }}</td>
+			<td>{{ g.utils.readable_lang(submission.language) }}</td>
 			{%- endif %}
 
 			<td>{{ g.utils.readable_time(submission.created_at) }}</td>

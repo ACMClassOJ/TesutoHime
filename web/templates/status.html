@@ -44,7 +44,7 @@
             </form>
         </div>
         {% from 'component/status_table.html' import status_table -%}
-        {{ status_table(submissions, show_score=False) }}
+        {{ status_table(submissions, real_name_map, show_links, show_score=False) }}
         {% from 'component/page_switcher.html' import page_switcher -%}
         {{ page_switcher(pages, args) }}
     </div>

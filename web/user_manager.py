@@ -9,7 +9,7 @@ from argon2.exceptions import VerificationError
 from sqlalchemy import delete, func, select, update
 
 from commons.models import ContestPlayer, User
-from web.utils import SqlSession
+from web.utils import db
 
 
 password_hasher = PasswordHasher()
@@ -44,12 +44,7 @@ class UserManager:
         password = hash(password)
         user = User(username=username, student_id=student_id, friendly_name=friendly_name,
                     password=password, privilege=privilege)
-        try:
-            with SqlSession.begin() as db:
-                db.add(user)
-        except Exception:
-            sys.stderr.write("SQL Error in UserManager: addUser\n")
-        return
+        db.add(user)
 
     @staticmethod
     def modify_user(username: str, student_id: Optional[int], friendly_name: Optional[str],
@@ -64,71 +59,58 @@ class UserManager:
             stmt = stmt.values(password=password)
         if privilege is not None:
             stmt = stmt.values(privilege=privilege)
-        try:
-            with SqlSession.begin() as db:
-                db.execute(stmt)
-        except Exception:
-            sys.stderr.write("SQL Error in UserManager: ModifyUser\n")
+        db.execute(stmt)
 
     @staticmethod
     def check_login(username: str, password: str) -> bool:
-        with SqlSession() as db:
-            stmt = select(User.password).where(User.username == username)
-            hashed = db.scalar(stmt)
-            if hashed is None:  # user do not exist
+        stmt = select(User.password).where(User.username == username)
+        hashed = db.scalar(stmt)
+        if hashed is None:  # user do not exist
+            return False
+        if hashed.startswith('$SHA512$'):
+            raise Exception('Incomplete database migration!')
+        if hashed.startswith(sha512_transition_prefix):
+            result = verify_sha512(hashed, password)
+            if not result:
                 return False
-            if hashed.startswith('$SHA512$'):
-                raise Exception('Incomplete database migration!')
-            if hashed.startswith(sha512_transition_prefix):
-                result = verify_sha512(hashed, password)
-                if not result:
-                    return False
-                stmt = update(User).where(User.username == username) \
-                    .values(password=hash(password))
-                db.execute(stmt)
-                db.commit()
-                return True
-            return verify_argon2(hashed, password)
+            stmt = update(User).where(User.username == username) \
+                .values(password=hash(password))
+            db.execute(stmt)
+            return True
+        return verify_argon2(hashed, password)
 
     @staticmethod
     def get_friendly_name(username: str) -> str:  # Username must exist.
-        with SqlSession() as db:
-            stmt = select(User.friendly_name).where(User.username == username)
-            return db.scalar(stmt)
+        stmt = select(User.friendly_name).where(User.username == username)
+        return db.scalar(stmt)
 
     @staticmethod
     def get_canonical_username(username: str) -> Optional[str]:
-        with SqlSession() as db:
-            stmt = select(User.username).where(User.username_lower == func.lower(username))
-            return db.scalar(stmt)
+        stmt = select(User.username).where(User.username_lower == func.lower(username))
+        return db.scalar(stmt)
 
     @staticmethod
     def get_student_id(username: str) -> Optional[str]:  # Username must exist.
-        with SqlSession() as db:
-            stmt = select(User.student_id).where(User.username == username)
-            return db.scalar(stmt)
+        stmt = select(User.student_id).where(User.username == username)
+        return db.scalar(stmt)
 
     @staticmethod
     def get_privilege(username: str) -> int:  # Username must exist.
-        with SqlSession() as db:
-            stmt = select(User.privilege).where(User.username == username)
-            return db.scalar(stmt)
+        stmt = select(User.privilege).where(User.username == username)
+        return db.scalar(stmt)
 
     @staticmethod
     def delete_user(username: str):
-        with SqlSession.begin() as db:
-            stmt = delete(User).where(User.username == username)
-            db.execute(stmt)
+        stmt = delete(User).where(User.username == username)
+        db.execute(stmt)
 
     @staticmethod
     def has_user(username: str) -> bool:
-        with SqlSession() as db:
-            stmt = select(func.count()).where(User.username == username)
-            return db.scalar(stmt) == 1
+        stmt = select(func.count()).where(User.username == username)
+        return db.scalar(stmt) == 1
 
     @staticmethod
     def list_contests(username: str) -> bool:
-        with SqlSession() as db:
-            stmt = select(ContestPlayer.c.contest_id) \
-                .where(ContestPlayer.c.username == username)
-            return db.scalars(stmt).all()
+        stmt = select(ContestPlayer.c.contest_id) \
+            .where(ContestPlayer.c.username == username)
+        return db.scalars(stmt).all()

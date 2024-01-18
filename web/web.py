@@ -19,10 +19,9 @@ from sqlalchemy.orm import defer, selectinload
 import commons.task_typing
 import web.const as consts
 import web.utils as utils
-from commons.models import (ContestProblem, JudgeRecordV2, JudgeStatus, Problem,
-                            User)
+from commons.models import JudgeRecordV2, JudgeStatus, Problem, User
 from commons.task_typing import ProblemJudgeResult
-from commons.util import load_dataclass, serialize
+from commons.util import deserialize, load_dataclass, serialize
 from web.admin import admin
 from web.config import (JudgeConfig, LoginConfig, ProblemConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
@@ -37,11 +36,10 @@ from web.problem_manager import ProblemManager
 from web.quiz_manager import QuizManager
 from web.realname_manager import RealnameManager
 from web.session_manager import SessionManager
-from web.template_interface import RowJudgeStatus
 from web.tracker import tracker
 from web.user_manager import UserManager
-from web.utils import (SqlSession, gen_page, gen_page_for_problem_list,
-                       generate_s3_public_url, readable_lang, readable_time)
+from web.utils import (SqlSession, db, gen_page, gen_page_for_problem_list,
+                       generate_s3_public_url, readable_lang_v1, readable_time)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
@@ -131,14 +129,21 @@ def before_request():
                                       '/OnlineJudge/api/heartBeat')) or
         request.full_path.endswith(('.js', '.css', '.ico'))):
         return
-    tracker.log()
 
+    g.db = SqlSession()
     g.time = datetime.now()
     g.friendly_name = SessionManager.get_friendly_name()
     g.privilege = SessionManager.get_privilege()
     g.is_admin = g.privilege >= Privilege.ADMIN
     g.utils = utils
     g.consts = consts
+
+    tracker.log()
+
+@web.teardown_request
+def teardown_request(_exception):
+    if 'db' in g:
+        g.db.commit()
 
 
 @web.route('/')
@@ -214,8 +219,8 @@ def join_contest():
     arg = request.form.get('contest_id')
     if arg is None:
         return '-1'
-    st, ed = ContestManager.get_time(arg)
-    if g.time > ed:
+    contest = ContestManager.get_contest(arg)
+    if contest is None or g.time > contest.end_time:
         return '-1'
     username = SessionManager.get_username()
     exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username)
@@ -339,27 +344,26 @@ def problem_list():
     if contest_id == '':
         contest_id = None
 
-    with SqlSession(expire_on_commit=False) as db:
-        limit = WebConfig.Problems_Each_Page
-        offset = (page - 1) * WebConfig.Problems_Each_Page
-        query = db.query(Problem.id, Problem.title, Problem.problem_type)
-        if not is_admin:
-            query = query.where(Problem.release_time <= g.time)
-        if problem_name_keyword is not None:
-            query = query.where(sa.func.strpos(Problem.title, problem_name_keyword) > 0)
-        if problem_type is not None:
-            query = query.where(Problem.problem_type == problem_type)
-        if contest_id is not None:
-            problem_ids = ContestManager.list_problem_for_contest(contest_id)
-            query = query.where(Problem.id.in_(problem_ids))
-        count_under_11000 = query.where(Problem.id <= 11000).count()
-        max_page_under_11000 = ceil(count_under_11000 / WebConfig.Problems_Each_Page)
-        count = query.count()
-        max_page = ceil(count / WebConfig.Problems_Each_Page)
-        problems: List[Problem] = query \
-            .order_by(Problem.id.asc()) \
-            .limit(limit).offset(offset) \
-            .all()
+    limit = WebConfig.Problems_Each_Page
+    offset = (page - 1) * WebConfig.Problems_Each_Page
+    query = db.query(Problem.id, Problem.title, Problem.problem_type)
+    if not is_admin:
+        query = query.where(Problem.release_time <= g.time)
+    if problem_name_keyword is not None:
+        query = query.where(sa.func.strpos(Problem.title, problem_name_keyword) > 0)
+    if problem_type is not None:
+        query = query.where(Problem.problem_type == problem_type)
+    if contest_id is not None:
+        problem_ids = ContestManager.list_problem_for_contest(contest_id)
+        query = query.where(Problem.id.in_(problem_ids))
+    count_under_11000 = query.where(Problem.id <= 11000).count()
+    max_page_under_11000 = ceil(count_under_11000 / WebConfig.Problems_Each_Page)
+    count = query.count()
+    max_page = ceil(count / WebConfig.Problems_Each_Page)
+    problems: List[Problem] = query \
+        .order_by(Problem.id.asc()) \
+        .limit(limit).offset(offset) \
+        .all()
 
     return render_template('problem_list.html', problems=problems,
                             pages=gen_page_for_problem_list(page, max_page, max_page_under_11000),
@@ -401,20 +405,17 @@ def problem_admin(problem_id):
         else:
             abort(BAD_REQUEST)
 
-    with SqlSession(expire_on_commit=False) as db:
-        problem = db.query(Problem).where(Problem.id == problem_id).one_or_none()
-        if problem is None:
-            abort(NOT_FOUND)
-        submission_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem_id).count()
-        ac_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem_id).where(JudgeRecordV2.status == JudgeStatus.accepted).count()
-        contests = db.query(ContestProblem.contest_id).where(ContestProblem.problem_id == problem_id).all()
-        contests = [ x.contest_id for x in contests ]
+    problem = db.query(Problem).where(Problem.id == problem_id).one_or_none()
+    if problem is None:
+        abort(NOT_FOUND)
+    submission_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem_id).count()
+    ac_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem_id).where(JudgeRecordV2.status == JudgeStatus.accepted).count()
 
     in_exam = problem_in_exam(problem_id)
 
     return render_template('problem_admin.html', ID=problem_id, Title=problem.title,
                            In_Exam=in_exam,
-                           problem=problem, contests=contests,
+                           problem=problem,
                            submission_count=submission_count, ac_count=ac_count)
 
 
@@ -624,27 +625,26 @@ def status():
     username = SessionManager.get_username()
     is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
 
-    with SqlSession(expire_on_commit=False) as db:
-        page = int(page) if page is not None else 1
-        limit = JudgeConfig.Judge_Each_Page
-        offset = (page - 1) * JudgeConfig.Judge_Each_Page
-        query = db.query(JudgeRecordV2) \
-            .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
-            .options(selectinload(JudgeRecordV2.user).load_only(User.student_id, User.friendly_name)) \
-            .options(selectinload(JudgeRecordV2.problem).load_only(Problem.title))
-        if arg_submitter is not None:
-            query = query.where(JudgeRecordV2.username == arg_submitter)
-        if arg_problem_id is not None:
-            query = query.where(JudgeRecordV2.problem_id == arg_problem_id)
-        if arg_status is not None:
-            query = query.where(JudgeRecordV2.status == arg_status)
-        if arg_lang is not None:
-            query = query.where(JudgeRecordV2.language == arg_lang)
-        query = query.order_by(JudgeRecordV2.id.desc())
-        count = query.count()
-        max_page = ceil(count / JudgeConfig.Judge_Each_Page)
-        query = query.limit(limit).offset(offset)
-        submissions: List[RowJudgeStatus] = query.all()
+    page = int(page) if page is not None else 1
+    limit = JudgeConfig.Judge_Each_Page
+    offset = (page - 1) * JudgeConfig.Judge_Each_Page
+    query = db.query(JudgeRecordV2) \
+        .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
+        .options(selectinload(JudgeRecordV2.user).load_only(User.student_id, User.friendly_name)) \
+        .options(selectinload(JudgeRecordV2.problem).load_only(Problem.title))
+    if arg_submitter is not None:
+        query = query.where(JudgeRecordV2.username == arg_submitter)
+    if arg_problem_id is not None:
+        query = query.where(JudgeRecordV2.problem_id == arg_problem_id)
+    if arg_status is not None:
+        query = query.where(JudgeRecordV2.status == arg_status)
+    if arg_lang is not None:
+        query = query.where(JudgeRecordV2.language == arg_lang)
+    query = query.order_by(JudgeRecordV2.id.desc())
+    count = query.count()
+    max_page = ceil(count / JudgeConfig.Judge_Each_Page)
+    query = query.limit(limit).offset(offset)
+    submissions = query.all()
 
     exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(username)
     # if not None, only problems in here are visible to user
@@ -654,10 +654,12 @@ def status():
     if exam_id != -1 and is_exam_started:
         exam_visible_problems = ContestManager.list_problem_for_contest(exam_id)
 
+    real_name_map = {}
+    show_links = {}
     for submission in submissions:
         if is_admin:
-            submission.real_name = RealnameManager.query_realname(submission.user.student_id)
-        submission.visible = (
+            real_name_map[submission] = RealnameManager.query_realname(submission.user.student_id)
+        show_links[submission] = (
             is_admin or (
                 # user's own problem: username == ele['Username']
                 # shared problems are always banned if exam_visible_problems is None (this means user in exam)
@@ -666,10 +668,10 @@ def status():
                 and (exam_visible_problems is None or submission.problem_id in exam_visible_problems)
             )
         )
-        submission.language = 'Unknown' if submission.language not in language_info \
-            else language_info[submission.language].name
     return render_template('status.html', pages=gen_page(page, max_page),
                            submissions=submissions,
+                           real_name_map=real_name_map,
+                           show_links=show_links,
                            args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
 
 
@@ -686,7 +688,7 @@ def code_old(run_id):
     else:
         friendly_name = UserManager.get_friendly_name(detail.username)
         problem_title = ProblemManager.get_title(detail.problem_id)
-        language = readable_lang(detail.language)
+        language = readable_lang_v1(detail.language)
         time = readable_time(int(detail.time))
         data = None
         if detail.detail != 'None':
@@ -715,13 +717,13 @@ def code(submission_id):
         return redirect('/OnlineJudge/login?next=' + request.full_path)
     if submission_id <= OldJudgeManager.max_id():
         return code_old(submission_id)
-    submission: RowJudgeStatus = JudgeManager.get_submission(submission_id)
+    submission = JudgeManager.get_submission(submission_id)
     if submission is None:
         abort(NOT_FOUND)
     if not is_code_visible(submission.username, submission.problem_id, submission.public):
         abort(FORBIDDEN)
 
-    details = json.loads(submission.details) if submission.details is not None else None
+    details = deserialize(submission.details) if submission.details is not None else None
     if details is None and submission.status == JudgeStatus.judging:
         url = f'submission/{quote(str(submission.id))}/status'
         try:
@@ -737,37 +739,24 @@ def code(submission_id):
             # TODO: error handling
             print(e)
             pass
-    if details is not None:
-        details = load_dataclass(details, commons.task_typing.__dict__)
 
     code_url = generate_s3_public_url('get_object', {
         'Bucket': S3Config.Buckets.submissions,
         'Key': JudgeManager.key_from_submission_id(submission.id),
     }, ExpiresIn=60)
-    is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
     abortable = submission.status in \
         (JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging) and \
-        (is_admin or submission.username == SessionManager.get_username())
+        (g.is_admin or submission.username == SessionManager.get_username())
     show_score = not abortable and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
-    submission.real_name = RealnameManager.query_realname(submission.user.student_id) if is_admin else ''
-    submission.language = language_info[submission.language].name \
-        if submission.language in language_info else 'Unknown'
-    if details is not None and details.resource_usage is not None:
-        submission.time_msecs = details.resource_usage.time_msecs
-        submission.memory_bytes = details.resource_usage.memory_bytes
-        show_time = True
-        show_memory = True
-    else:
-        show_time = False
-        show_memory = False
-    return render_template('judge_detail.html', submissions=[submission],
+    real_name = None if not g.is_admin else RealnameManager.query_realname(submission.user.student_id)
+    return render_template('judge_detail.html',
+                           submission=submission,
+                           real_name=real_name,
                            code_url=code_url,
                            details=details,
                            abortable=abortable,
-                           show_score=show_score,
-                           show_time=show_time,
-                           show_memory=show_memory)
+                           show_score=show_score)
 
 @web.route('/code/<int:submit_id>/void', methods=['POST'])
 def mark_void(submit_id):
@@ -795,14 +784,13 @@ def rejudge(submit_id):
 def abort_judge(submit_id):
     if not SessionManager.check_user_status():  # not login
         return redirect('/OnlineJudge/login?next=' + request.full_path)
-    with SqlSession(expire_on_commit=False) as db:
-        submission: Optional[Tuple[str, int]] = db \
-            .query(JudgeRecordV2.username) \
-            .where(JudgeRecordV2.id == submit_id) \
-            .one_or_none()
-        if submission is None:
-            abort(NOT_FOUND)
-        username = submission[0]
+    submission: Optional[Tuple[str, int]] = db \
+        .query(JudgeRecordV2.username) \
+        .where(JudgeRecordV2.id == submit_id) \
+        .one_or_none()
+    if submission is None:
+        abort(NOT_FOUND)
+    username = submission[0]
     if username != SessionManager.get_username() \
         and SessionManager.get_privilege() < Privilege.ADMIN:
         abort(FORBIDDEN)
@@ -820,7 +808,6 @@ def contest_list_generic(type, type_zh):
     if contest_id is not None:
         return redirect(f'/OnlineJudge/problemset/{contest_id}')
     username = SessionManager.get_username()
-    is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
     user_contests = UserManager.list_contests(username)
 
     page = request.args.get('page')
@@ -860,7 +847,7 @@ def homework(contest_id):
 def problemset(contest_id):
     if not SessionManager.check_user_status():
         return redirect('/OnlineJudge/login?next=' + request.full_path)
-    contest = ContestManager.get_contest_for_board(contest_id)
+    contest = ContestManager.get_contest(contest_id)
     if contest == None:
         abort(NOT_FOUND)
 

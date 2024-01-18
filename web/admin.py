@@ -248,6 +248,8 @@ def data_update(problem_id):
     url = urljoin(SchedulerConfig.base_url, f'problem/{problem_id}/update')
     res = requests.post(url).json()
     if res['result'] == 'ok':
+        languages = res['languages']
+        ProblemManager.set_languages_accepted(problem_id, languages)
         return 'ok'
     elif res['result'] == 'invalid problem':
         return f'Invalid problem: {res["error"]}'

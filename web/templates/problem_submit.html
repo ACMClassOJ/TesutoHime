@@ -43,17 +43,22 @@
         </h1>
         <hr>
         <form method="post" id="problem_submit_form">
+            {% if languages_accepted | length > 1 -%}
             <div class="form-group">
                 <label for="lang">语言</label>
                 <select id="lang" name="lang" class="form-control input-group py-0 selectpicker"
                         data-style="form-control rounded border-grey shadow-none font-weight-normal">
-                    <option value="auto_detect" selected="selected">自动检测</option>
-                    <option value="cpp">C++</option>
-                    <option value="python">Python</option>
-                    <option value="git">Git</option>
-                    <option value="Verilog">Verilog</option>
+                    <option value="autodetect" selected>自动检测</option>
+                    {%- for lang in languages_accepted -%}
+                    <option value="{{ lang }}">{{ g.consts.language_info[lang].name }}</option>
+                    {%- endfor -%}
                 </select>
             </div>
+            {%- elif languages_accepted | length == 0 -%}
+            <p><strong>题目配置错误：不允许任何语言提交</strong></p>
+            {%- else -%}
+            <input type="hidden" id="lang" name="lang" value="{{ languages_accepted[0] }}">
+            {%- endif %}
             <div class="row mx-0">
                 <label for="code">代码</label>
                 {% if not In_Exam -%}
@@ -78,5 +83,5 @@
 
 {% block script %}
     <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}?v=20240114"></script>
+    <script src="{{ url_for('.static', filename = 'js/problem_submit.js') }}?v=20240118"></script>
 {% endblock %}

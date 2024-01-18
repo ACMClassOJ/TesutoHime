@@ -419,7 +419,7 @@ def problem_admin(problem_id):
 
 
 @web.route('/problem/<int:problem_id>/submit', methods=['GET', 'POST'])
-def submit_problem(problem_id):
+def problem_submit(problem_id):
     if not SessionManager.check_user_status():
         return redirect('/OnlineJudge/login?next=' + request.full_path)
     problem = ProblemManager.get_problem(problem_id)
@@ -431,7 +431,10 @@ def submit_problem(problem_id):
         problem_type = problem.problem_type
         in_exam = problem_in_exam(problem_id)
         if problem_type == 0:
-            return render_template('problem_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam)
+            languages_accepted = ProblemManager.languages_accepted(problem)
+            return render_template('problem_submit.html',
+                                   Problem_ID=problem_id, Title=title, In_Exam=in_exam,
+                                   languages_accepted=languages_accepted)
         elif problem_type == 1:
             return render_template('quiz_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam)
     else:
@@ -445,6 +448,8 @@ def submit_problem(problem_id):
         if len(str(user_code)) > ProblemConfig.Max_Code_Length:
             abort(REQUEST_ENTITY_TOO_LARGE)
         lang_str = lang_request_str.lower()
+        if lang_str not in ProblemManager.languages_accepted(problem):
+            abort(BAD_REQUEST)
         submission_id = JudgeManager.add_submission(
             public=public,
             language=lang_str,
@@ -508,7 +513,7 @@ def problem_rank(problem_id):
         if is_admin:
             real_names[submission] = RealnameManager.query_realname(submission.user.student_id)
         languages[submission] = 'Unknown' if submission.language not in language_info \
-            else language_info[submission.language]
+            else language_info[submission.language].name
 
     if sort_parameter == 'memory':
         submissions = sorted(submissions, key=lambda x: x.memory_bytes)
@@ -662,7 +667,7 @@ def status():
             )
         )
         submission.language = 'Unknown' if submission.language not in language_info \
-            else language_info[submission.language]
+            else language_info[submission.language].name
     return render_template('status.html', pages=gen_page(page, max_page),
                            submissions=submissions,
                            args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
@@ -746,7 +751,7 @@ def code(submission_id):
     show_score = not abortable and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
     submission.real_name = RealnameManager.query_realname(submission.user.student_id) if is_admin else ''
-    submission.language = language_info[submission.language] \
+    submission.language = language_info[submission.language].name \
         if submission.language in language_info else 'Unknown'
     if details is not None and details.resource_usage is not None:
         submission.time_msecs = details.resource_usage.time_msecs

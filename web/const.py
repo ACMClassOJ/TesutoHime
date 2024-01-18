@@ -149,12 +149,19 @@ judge_status_info = {
     'unknown_error': JudgeStatusInfo('Unknown Error', 'gray-dark', 'UKE', 'default'),
 }
 
+@dataclass
+class LanguageInfo:
+    name: str
+    # if false, users could not submit in this language, unless the problem
+    # allows explicitly
+    acceptable_by_default: bool = True
+
 language_info = {
-    'cpp': 'C++',
-    'python': 'Python',
-    'git': 'Git',
-    'verilog': 'Verilog',
-    'quiz': 'Quiz',
+    'cpp': LanguageInfo('C++'),
+    'python': LanguageInfo('Python'),
+    'git': LanguageInfo('Git'),
+    'verilog': LanguageInfo('Verilog', False),
+    'quiz': LanguageInfo('Quiz', False),
 }
 
 @dataclass

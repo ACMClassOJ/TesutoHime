@@ -1,6 +1,6 @@
 from enum import Enum, auto
 
-from sqlalchemy import BigInteger, Boolean, Column, Computed, DateTime
+from sqlalchemy import ARRAY, BigInteger, Boolean, Column, Computed, DateTime
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy import ForeignKey, Index, Integer, Table, Text, func, text
 from sqlalchemy.ext.declarative import declarative_base
@@ -55,10 +55,11 @@ class Problem(UseTimestamps, Base):
     example_input = Column(Text)
     example_output = Column(Text)
     data_range = Column(Text)
+    limits = Column(Text)
 
     release_time = Column(DateTime, nullable=False)
     problem_type = Column(Integer, nullable=False, server_default=text('0'))
-    limits = Column(Text)
+    languages_accepted = Column(ARRAY(Text))
 
 
 class Contest(UseTimestamps, Base):

@@ -25,6 +25,10 @@ class S3Buckets:
 s3_buckets = S3Buckets(**config['s3']['buckets'])
 
 
+def plan_key(problem_id: str) -> str:
+    return f'plans/{problem_id}.json'
+
+
 problem_config_filename = 'config.json'
 quiz_filename = 'quiz.json'
 

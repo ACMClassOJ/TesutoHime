@@ -16,11 +16,12 @@ from botocore.exceptions import ClientError
 from commons.task_typing import (CodeLanguage, ProblemJudgeResult,
                                  SourceLocation)
 from commons.util import deserialize, dump_dataclass, format_exc, serialize
-from scheduler2.config import (host, port, runner_heartbeat_interval_secs,
-                               s3_buckets)
+from scheduler2.config import (host, plan_key, port,
+                               runner_heartbeat_interval_secs, s3_buckets)
 from scheduler2.monitor import get_runner_status
 from scheduler2.plan import (InvalidCodeException, InvalidProblemException,
                              execute_plan, generate_plan, get_partial_result)
+from scheduler2.plan.languages import languages_accepted
 from scheduler2.s3 import read_file, upload_str
 from scheduler2.util import make_request
 
@@ -53,10 +54,6 @@ def register_judge_task(problem_id, submission_id, language, source,
     task.add_done_callback(cleanup)
 
 
-def plan_key(problem_id: str) -> str:
-    return f'plans/{problem_id}.json'
-
-
 @routes.post('/problem/{problem_id}/update')
 async def update_problem(request: Request):
     problem_id = request.match_info['problem_id']
@@ -72,6 +69,7 @@ async def update_problem(request: Request):
         task_args = [judge_task_args[x] for x in tasks]
 
         plan = await generate_plan(problem_id)
+        languages = languages_accepted(plan)
         plan = serialize(plan)
         await upload_str(s3_buckets.problems, plan_key(problem_id), plan)
     except InvalidProblemException as e:
@@ -83,7 +81,7 @@ async def update_problem(request: Request):
     finally:
         for task in task_args:
             register_judge_task(*task)
-    return json_response({'result': 'ok', 'error': None})
+    return json_response({'result': 'ok', 'error': None, 'languages': languages})
 
 
 async def run_judge(problem_id: str, submission_id: str,

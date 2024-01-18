@@ -1,14 +1,15 @@
 import sys
 from datetime import datetime
 from http.client import BAD_REQUEST
+from typing import List, Optional
 
 from flask import abort, g
+from sqlalchemy import delete, func, select, update
 
 from commons.models import ContestProblem, JudgeRecordV2, Problem
-from web.const import Privilege
+from web.const import Privilege, language_info
 from web.session_manager import SessionManager
 from web.utils import SqlSession
-from sqlalchemy import update, select, delete, func
 
 FAR_FUTURE_TIME = datetime(9999, 12, 31, 8, 42, 42)
 
@@ -97,6 +98,24 @@ class ProblemManager:
         with SqlSession() as db:
             data = db.scalar(stmt)
             return data if data is not None else 0
+
+    @staticmethod
+    def languages_accepted(problem: Problem) -> List[str]:
+        if problem.languages_accepted is not None:
+            return problem.languages_accepted
+        default_languages = []
+        for k in language_info:
+            if language_info[k].acceptable_by_default:
+                default_languages.append(k)
+        return default_languages
+
+    @staticmethod
+    def set_languages_accepted(problem_id: int, languages: Optional[List[str]]):
+        stmt = update(Problem) \
+            .set(languages_accepted=languages) \
+            .where(Problem.id == problem_id)
+        with SqlSession() as db:
+            db.execute(stmt)
 
     @staticmethod
     def get_max_id() -> int:

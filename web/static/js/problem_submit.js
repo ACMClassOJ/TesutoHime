@@ -1,5 +1,18 @@
 const max_len = 1048576;
 
+function detectLangage (code, languagesAllowed) {
+    const defaultLanguage = languagesAllowed.includes('python') ? 'python' : languagesAllowed[0]
+    const detectors = [
+        [ 'git', /^(https?:\/\/|git)/i ],
+        [ 'verilog', /endmodule/ ],
+        [ 'cpp', /\([^)]*\)[^:{]*{/ ],
+    ]
+    for (const [ language, re ] of detectors) {
+        if (languagesAllowed.includes(language) && code.match(re)) return language
+    }
+    return defaultLanguage
+}
+
 $(function() {
     $("#code").keyup(function() {
         if (this.value.length > max_len) {
@@ -10,14 +23,11 @@ $(function() {
 
     var submit_options = {
         beforeSerialize: function() {
-            if ($("#lang").val() == "auto_detect") {
-                var detected_type = "cpp";
-                var tmp_code = $("#code").val();
-                if (tmp_code.indexOf("http") == 0 || tmp_code.indexOf("git") == 0)
-                    var detected_type = "git";
-                else if (tmp_code.search("module") != -1 && tmp_code.search("endmodule") != -1)
-                    var detected_type = "Verilog";
-                $("#lang").val(detected_type);
+            const el = document.querySelector('#lang')
+            if (el.value == 'autodetect') {
+                const languagesAllowed = Array.from(el.options).map(x => x.value).filter(x => x != 'autodetect')
+                const code = document.querySelector('#code').value
+                el.value = detectLangage(code, languagesAllowed)
             }
         },
         beforeSubmit: function() {

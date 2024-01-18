@@ -1,4 +1,3 @@
-from datetime import datetime
 from itertools import groupby
 from os import makedirs
 from typing import *

@@ -158,7 +158,7 @@ class ContestManager:
         offset = (page - 1) * num_per_page
         stmt = select(Contest).where(Contest.type.in_(types))
         if keyword: # keyword is not None and len(keyword) > 0
-            stmt = stmt.where(func.instr(Contest.name, keyword) > 0)
+            stmt = stmt.where(func.strpos(Contest.name, keyword) > 0)
         if status:
             current_time = g.time
             if status == 'Pending':

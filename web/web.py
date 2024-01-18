@@ -346,7 +346,7 @@ def problem_list():
         if not is_admin:
             query = query.where(Problem.release_time <= g.time)
         if problem_name_keyword is not None:
-            query = query.where(sa.func.instr(Problem.title, problem_name_keyword) > 0)
+            query = query.where(sa.func.strpos(Problem.title, problem_name_keyword) > 0)
         if problem_type is not None:
             query = query.where(Problem.problem_type == problem_type)
         if contest_id is not None:

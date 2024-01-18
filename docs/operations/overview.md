@@ -33,7 +33,7 @@ Alias /OnlineJudge/ /var/www/maintenance/
 
 Minio 运行在 9000 和 9001 端口上 (**9000 对内网开放，部分对公网开放**，因为评测机需要访问；9001 只监听本机地址)。其中 9001 端口为 Web 控制台，需要访问时可以用 `ssh -L 9001:localhost:9001 oj.acm` 将其转发到运维自己的电脑上进行访问。
 
-MariaDB 运行在 3306 端口上 (只监听本机地址)，同时监听 /run/mysqld/mysqld.sock。有 acmoj 与 ojweb 两个用户，均为 unix socket 免密码登录。直接使用 `mariadb OJ` 即可管理数据库。同时，为方便运行 scripts/ 中的脚本，在 acmoj 用户的 .bashrc 中已设好对应的 DB 环境变量，无需手动设置。
+PostgreSQL 运行在 5432 端口上 (只监听本机地址)，同时监听 /run/postgresql/.s.PGSQL.5432。有 acmoj、ojweb 与 bak 三个用户，均为 unix socket 免密码登录。直接使用 `psql` 即可管理数据库。同时，为方便运行 scripts/ 中的脚本，在 acmoj 用户的 .bashrc 中已设好对应的 DB 环境变量，无需手动设置。
 
 Redis 运行在 6379 端口上 (**对内网开放**，因为评测机需要访问)，有密码保护。
 

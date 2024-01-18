@@ -42,17 +42,17 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 ## 用户数据管理
 
-用户数据由 `user_manager.py` 负责。其可以创建用户、修改用户、删除用户、修改用户密码、获取用户数据、获取用户列表。用户数据由 PostgreSQL 管理（参见 PostgreSQL 数据库的[用户数据表](#user-表)章节）。
+用户数据由 `user_manager.py` 负责。其可以创建用户、修改用户、删除用户、修改用户密码、获取用户数据、获取用户列表。用户数据由 PostgreSQL 管理（参见 PostgreSQL 数据库的[用户数据表](#account-表)章节）。
 
-在用户数据管理中，用户名 (`Username`) 是唯一且不变的。
+在用户数据管理中，用户名 (`username`) 是唯一且不变的。
 
 ### 用户密码
 
-为尽可能确保用户密码安全，用户密码将会加上一个随机生成的 salt，然后使用 `SHA-512` 算法加密。加密后的密码将会存储在数据库中。
+为尽可能确保用户密码安全，用户密码将会加上一个随机生成的 salt，然后使用 Argon2 算法加密。加密后的密码将会存储在数据库中。
 
 ### 用户权限
 
-用户权限共有 3 中，
+用户权限共有 3 种，
 
 - `0`: 普通用户，可以修改自己的个人资料、提交代码、查看比赛数据等，不可以修改他人的个人资料、查看他人的非公开提交；
 - `1`: 管理员，除普通用户的权限外，可以查看所有提交、创建比赛、修改比赛、删除比赛、新增题目、修改题目数据、删除题目，但不能修改他人的个人资料；
@@ -60,7 +60,7 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 ### 实名数据管理
 
-实名数据由 `reference_manager.py` 负责。其可以修改实名、获取实名数据。实名数据由 PostgreSQL 管理（参见 PostgreSQL 数据库的[实名数据表](#realname_reference-表)章节）。
+实名数据由 `realname_manager.py` 负责。其可以修改实名、获取实名数据。实名数据由 PostgreSQL 管理（参见 PostgreSQL 数据库的[实名数据表](#realname_reference-表)章节）。
 
 ## 比赛数据管理
 
@@ -94,9 +94,9 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 ## 评测数据管理
 
-评测数据由 `judge_manager.py` 负责，其可以查询提交、为尚未评测的提交交给 [Scheduler2 模块](scheduler2.md)排程、中止 (abort) 评测、将评测标记为无效 (voided)、重新评测提交。数据参见 PostgreSQL 数据库的[评测数据表](#judge_records2-表)章节。
+评测数据由 `judge_manager.py` 负责，其可以查询提交、为尚未评测的提交交给 [Scheduler2 模块](scheduler2.md)排程、中止 (abort) 评测、将评测标记为无效 (voided)、重新评测提交。数据参见 PostgreSQL 数据库的[评测数据表](#judge_record_v2-表)章节。
 
-旧版评测数据由 `old_judge_manager.py` 负责。由于架构的不兼容性，目前仅可以查询提交，数据视为只读（数据参见 PostgreSQL 数据库的[旧评测数据表](#judge-表)章节）。
+旧版评测数据由 `old_judge_manager.py` 负责。由于架构的不兼容性，目前仅可以查询提交，数据视为只读（数据参见 PostgreSQL 数据库的[旧评测数据表](#judge_record_v1-表)章节）。
 
 ## PostgreSQL 数据库
 
@@ -112,137 +112,140 @@ alembic 会自动对比数据库内容和当前 model 的差异，生成 migrati
 
 关于将修改应用到数据库，请参阅迁移文档的 [Web#迁移数据库](../migration/web.md#数据库迁移)部分。
 
-### User 表
+### account 表
+
+这个表本来应该叫 user，但是 pg 里 user 是关键字，就换了个名字。
 
 *另请参见[用户数据管理](#用户数据管理)章节。*
 
-- `tempID`: 用户 ID；
-- `Username`: 用户名；
-- `Friendly_Name`: 昵称；
-- `Password`: 密码；
-- `Salt`: 密码 salt；
-- `Privilege`: 用户权限。
+- `id`: 用户 ID；
+- `username`: 用户名；
+- `student_id`: 学号；
+- `friendly_name`: 昵称；
+- `password`: 密码；
+- `privilege`: 用户权限。
 
-### Realname_Reference 表
+### realname_reference 表
 
 *另请参见[实名数据管理](#实名数据管理)章节。*
 
-- `ID`: 条目 ID；
-- `Student_ID`: 学号；
-- `Real_Name`: 实名。
+- `id`: 条目 id；
+- `student_id`: 学号；
+- `real_name`: 实名。
 
-### Contest 表
+### contest 表
 
-*另请参见[比赛数据管理](#比赛数据管理)章节。*
-
-- `ID`: 比赛 ID；
-- `Name`: 比赛名称；
-- `Start_Time`: 比赛开始时间；
-- `End_Time`: 比赛结束时间；
-- `Type`: 比赛类型；
-- `Ranked`: 是否显示排名；
-- `Rank_Penalty`: 是否计算罚时；
-- `Rank_Partial_Score`: 是否计算部分分。
-
-### Contest_Problem 表
+比赛、考试和作业都是一种 contest。
 
 *另请参见[比赛数据管理](#比赛数据管理)章节。*
 
-- `tempID`: 条目 ID；
-- `Belong`: 题目所属比赛 ID；
-- `Problem_ID`: 题目 ID。
+- `id`: 比赛 id；
+- `name`: 比赛名称；
+- `start_time`: 比赛开始时间；
+- `end_time`: 比赛结束时间；
+- `type`: 比赛类型；
+- `ranked`: 是否显示排名；
+- `rank_penalty`: 是否计算罚时；
+- `rank_partial_score`: 是否计算部分分。
 
-### Contest_Player 表
+### contest_problem 表
 
 *另请参见[比赛数据管理](#比赛数据管理)章节。*
 
-- `tempID`: 条目 ID；
-- `Belong`: 用户所属比赛 ID；
-- `Username`: 用户名。
+- `id`: 条目 id；
+- `contest_id`: 题目所属比赛 id；
+- `problem_id`: 题目 id。
 
-### Discussion 表
+### contest_player 表
+
+*另请参见[比赛数据管理](#比赛数据管理)章节。*
+
+- `id`: 条目 id；
+- `contest_id`: 用户所属比赛 id；
+- `username`: 用户名。
+
+### discussion 表
 
 *另请参见[讨论数据管理](#讨论数据管理)章节。*
 
-- `ID`: 讨论 ID；
-- `Problem_ID`: 题目 ID；
-- `Username`: 用户名；
-- `Data`: 讨论内容；
-- `Time`: 发布时间。
+- `id`: 讨论 id；
+- `problem_id`: 题目 id；
+- `username`: 用户名；
+- `data`: 讨论内容；
 
-### Problem 表
+### problem 表
 
 *另请参见[题目数据管理](#题目数据管理)章节。*
 
-- `ID`: 题目 ID；
-- `Title`: 题目标题；
-- `Description`: 题目描述；
-- `Input`: 输入格式；
-- `Output`: 输出格式；
-- `Example_Input`: 样例输入；
-- `Example_Output`: 样例输出；
-- `Date_Range`: 数据范围；
-- `Release_Time`: 发布时间；
-- `Problem_Type`: 题目类型；
-- `Limit`: 时空限制。
+- `id`: 题目 id；
+- `title`: 题目标题；
+- `description`: 题目描述；
+- `input`: 输入格式；
+- `output`: 输出格式；
+- `example_input`: 样例输入；
+- `example_output`: 样例输出；
+- `data_range`: 数据范围；
+- `release_time`: 发布时间；
+- `problem_type`: 题目类型；
+- `limits`: 时空限制。
 
-### Judge 表
+### judge_record_v1 表
 
-*在 Judger2 架构下，Judge 表是只读的，仅用于记录过去的提交数据。*
+*在 Judger2 架构下，judge_record_v1 表是只读的，仅用于记录过去的提交数据。*
 
 *另请参见[评测数据管理](#题目数据管理)章节。*
 
-- `ID`: 提交 ID；
-- `Code`: 提交代码；
-- `User`: 提交用户；
-- `Problem_ID`: 提交题目；
-- `Language`: 提交语言；
-- `Status`: 评测状态；
-- `Score`: 评测得分；
-- `Time`: 提交时间；
-- `Time_Used`: 评测耗时；
-- `Memory_Used`: 评测内存占用；
-- `Detail`: 评测详情；
-- `Share`: 是否公开。
+- `id`: 提交 id；
+- `code`: 提交代码；
+- `user`: 提交用户；
+- `problem_id`: 提交题目；
+- `language`: 提交语言；
+- `status`: 评测状态；
+- `score`: 评测得分；
+- `time`: 提交时间；
+- `time_msecs`: 评测耗时；
+- `memory_kbytes`: 评测内存占用；
+- `detail`: 评测详情；
+- `public`: 是否公开。
 
-### judge_records2 表
+### judge_record_v2 表
 
 *另请参见[评测数据管理](#题目数据管理)章节。*
 
 - `id`: 提交 ID；
 - `public`: 是否公开；
 - `language`: 提交语言；
-- `created`: 提交时间；
 - `username`: 提交用户；
 - `problem_id`: 提交题目；
 - `status`: 评测状态；
 - `score`: 评测得分；
 - `message`: 评测详情信息；
 - `details`: 评测详情；
-- `time_msec`: 评测耗时 (ms)；
+- `time_msecs`: 评测耗时 (ms)；
 - `memory_bytes`: 评测内存占用 (bytes)。
 
-### judge_runners2 表
+### judge_runner_v2 表
 
 - `id`: 评测机 ID；
 - `name`: 评测机名称；
 - `hardware`: 评测机硬件信息；
-- `provider`: 评测机提供者。
+- `provider`: 评测机提供者；
+- `visible`: 是否显示在关于页上。
 
-### Judge_Server 表（弃用）
+### judge_server_v1 表（弃用）
 
-- `ID`: 评测机 ID；
-- `Address`: 评测机 IP 地址；
-- `Secret_Key`: 评测机密钥；
-- `Last_Seen_Time`: 最后一次心跳时间；
-- `Busy`: 评测机是否正在评测；
-- `Current_Task`: 评测机正在评测的提交 ID；
-- `Friendly_Name`: 评测机名称；
-- `Detail`: 评测机硬件信息。
+- `id`: 评测机 id；
+- `address`: 评测机 ip 地址；
+- `secret_key`: 评测机密钥；
+- `last_seen_time`: 最后一次心跳时间；
+- `busy`: 评测机是否正在评测；
+- `current_task`: 评测机正在评测的提交 id；
+- `friendly_name`: 评测机名称；
+- `detail`: 评测机硬件信息。
 
-### version 表
+### alembic_version 表
 
-- `version`: 版本号，用于记录数据库格式的版本。
+- `version_num`: 版本号，用于记录数据库格式的版本。
 
 ## Web 与 Frontend 接口说明
 

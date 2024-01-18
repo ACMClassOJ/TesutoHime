@@ -9,7 +9,10 @@
 安装必备环境，终端输入
 
 ```sh
-sudo apt install python3 python3-pip git wget curl mariadb-server redis-server
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /usr/share/keyrings/pgdg.asc > /dev/null
+sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/pgdg.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+sudo apt update
+sudo apt install python3 python3-pip git wget curl postgresql redis-server
 ```
 
 创建 OJ 用户 (用户名可自定义)

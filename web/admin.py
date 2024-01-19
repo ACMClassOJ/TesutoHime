@@ -20,54 +20,6 @@ from web.utils import generate_s3_public_url
 
 admin = Blueprint('admin', __name__, static_folder='static')
 
-
-# TODO(Pioooooo): validate data
-def _validate_user_data(form):
-    if String.TYPE not in form:
-        return ReturnCode.ERR_BAD_DATA
-    # TODO: validate username
-    op = int(form[String.TYPE])
-    if 0 <= op < 2:
-        # TODO: validate
-        return None
-    return None
-
-
-def _validate_problem_data(form):
-    if String.TYPE not in form:
-        return ReturnCode.ERR_BAD_DATA
-    op = int(form[String.TYPE])
-    if 1 <= op < 3:
-        # TODO: validate ID
-        return None
-    if 0 <= op < 2:
-        # TODO: validate
-        return None
-    return None
-
-
-def _validate_contest_data(form):
-    # if String.TYPE not in form:
-        # return ReturnCode.ERR_BAD_DATA
-    op = int(form[String.TYPE])
-    if 0 <= op <= 1:
-        if int(form[String.START_TIME]) > int(form[String.END_TIME]):
-            return ReturnCode.ERR_CONTEST_ENDTIME_BEFORE_START_TIME
-    # if 1 <= op < 6:
-        # TODO: validate contest ID
-        # return None
-    # if 0 <= op < 2:
-        # TODO: validate
-        # return None
-    # elif 3 <= op < 5:
-        # TODO: validate problem ID
-        # return None
-    # elif 5 <= op < 6:
-        # TODO: validate username
-        # return None
-    return None
-
-
 def require_admin(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
@@ -180,15 +132,12 @@ def problem_limit():
 @require_admin
 def contest_manager():
     form = request.json
-    err = _validate_contest_data(form)
-    if err is not None:
-        return err
     try:
         op = int(form[String.TYPE])
         if op == 0:
             ContestManager.create_contest(int(form[String.CONTEST_ID]), form[String.CONTEST_NAME],
-                                          datetime.fromisoformat(int(form[String.START_TIME])),
-                                          datetime.fromisoformat(int(form[String.END_TIME])),
+                                          datetime.fromisoformat(form[String.START_TIME]),
+                                          datetime.fromisoformat(form[String.END_TIME]),
                                           int(form[String.CONTEST_TYPE]),
                                           form[String.CONTEST_RANKED],
                                           form[String.CONTEST_RANK_PENALTY],
@@ -196,8 +145,8 @@ def contest_manager():
             return ReturnCode.SUC_ADD_CONTEST
         elif op == 1:
             ContestManager.modify_contest(int(form[String.CONTEST_ID]), form.get(String.CONTEST_NAME, None),
-                                          datetime.fromisoformat(int(form[String.START_TIME])),
-                                          datetime.fromisoformat(int(form[String.END_TIME])),
+                                          datetime.fromisoformat(form[String.START_TIME]),
+                                          datetime.fromisoformat(form[String.END_TIME]),
                                           int(form.get(String.CONTEST_TYPE, None)),
                                           form[String.CONTEST_RANKED],
                                           form[String.CONTEST_RANK_PENALTY],

@@ -34,7 +34,7 @@
                     <option value="" {{ 'selected' if not 'lang' in args or args['lang'] == '' }}>语言</option>
                     {% for key in g.consts.language_info -%}
                     <option value="{{ key }}" {{ 'selected' if 'lang' in args and args['lang'] == key }}>
-                        {{ g.consts.language_info[key] }}
+                        {{ g.consts.language_info[key].name }}
                     </option>
                     {%- endfor %}
                 </select>

@@ -60,6 +60,7 @@
         <div class="tab-pane fade show active" id="overview_tab" role="tabpanel" aria-labelledby="overview_tab-tab">
             <h3>基本信息</h3>
             <form action="/OnlineJudge/admin/problem" method="POST" id="form-overview">
+                {{ g.csrf() }}
                 <input type="hidden" name="id" value="{{ ID }}">
                 <div class="form-row">
                     <div class="form-group col-md-3">
@@ -89,6 +90,7 @@
                 {% if problem.release_time < g.time -%}
                     <span class="text-green mr-2">已发布</span>
                     <form method="POST" class="d-inline-flex">
+                        {{ g.csrf() }}
                         <input type="hidden" name="action" value="hide">
                         <button class="btn btn-outline-primary btn-sm" type="submit">取消发布</button>
                     </form>
@@ -96,6 +98,7 @@
                 {%- else -%}
                     <span class="text-red mr-2">未发布</span>
                     <form method="POST" class="d-inline-flex">
+                        {{ g.csrf() }}
                         <input type="hidden" name="action" value="show">
                         <button class="btn btn-outline-primary btn-sm" type="submit">立即发布</button>
                     </form>
@@ -141,6 +144,7 @@
             {% else %}
             <p>删除题目将会不可逆地从数据库中删除题目的基本信息及题面信息。如您确认要删除题目，请在下方文本框中输入本题编号以确认：</p>
             <form method="POST">
+                {{ g.csrf() }}
                 <div class="form-row d-flex">
                     <input type="hidden" name="action" value="delete">
                     <div class="col-md-3">
@@ -208,6 +212,7 @@
             <h3>
                 下载数据压缩包
                 <form class="float-right ml-auto" id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
+                    {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="id" value="{{ ID }}">
                         <div class="d-flex mb-3 pr-1">
@@ -227,6 +232,7 @@
             <p>当前有 {{ submission_count }} 次提交，您确定要重测所有这些代码吗？请在下方文本框中输入题目编号以确认：</p>
             {% endif %}
             <form id="form-rejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+                {{ g.csrf() }}
                 <input type="hidden" name="type" value="by_problem_id">
                 <div class="form-row">
                     {% if submission_count < 30 %}
@@ -251,6 +257,7 @@
             <p>当前有 {{ submission_count }} 次提交，您确定要取消所有这些提交的成绩吗？请在下方文本框中输入题目编号以确认：</p>
             {% endif %}
             <form id="form-void" action="/OnlineJudge/admin/disable_judge" method="POST">
+                {{ g.csrf() }}
                 <div class="form-row">
                     <input type="hidden" name="type" value="by_problem_id">
                     {% if submission_count < 30 %}
@@ -270,6 +277,7 @@
             <h3>终止评测全部提交</h3>
             <p>如果想终止评测单份提交，请进入代码页面，点击代码上方的「终止评测」按钮。</p>
             <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
+                {{ g.csrf() }}
                 <div class="form-row">
                     <input type="hidden" name="type" value="by_problem_id">
                     <input type="hidden" name="problem_id" value="{{ ID }}">
@@ -434,5 +442,5 @@ window.problemId = {{ ID }}
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240116"></script>
+<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240120"></script>
 {% endblock %}

@@ -89,9 +89,9 @@ $(function () {
 
     $("#btnGetContestAutoIncreseID").click(function(){
         $.ajax({
-            type: "POST",
+            type: "GET",
             dataType: "text",
-            url: "/OnlineJudge/api/get_contest_id_autoinc",
+            url: "/OnlineJudge/api/contest-id-autoinc",
             success: function (response_text)
             {
                 $("#iptContestID").val(parseInt(response_text));
@@ -110,11 +110,10 @@ $(function () {
         $("#iptStartTime").val(new Date().toISOString().replace(/\..+$|Z/, ''));
         $("#iptEndTime").val(new Date(2030, 0, 1, 0, 0, 0, 0).toISOString().replace(/\..+$|Z/, ''));
         $("#iptContestType").selectpicker("val", "0");
+        const contestId = $("#iptContestID").val()
         $.ajax({
-            type: "POST",
             dataType: "text",
-            data: {contest_id: $("#iptContestID").val()},
-            url: "/OnlineJudge/api/get_contest_detail",
+            url: `/OnlineJudge/api/contest/${contestId}`,
             success: function (response_text)
             {
                 if(response_text == "{}")

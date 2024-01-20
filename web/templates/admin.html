@@ -182,6 +182,7 @@
                 <h3>新建题目</h3>
                 <p>请勿连续多次点击此按钮。</p>
                 <form action="/OnlineJudge/admin/problem-create" method="POST">
+                    {{ g.csrf() }}
                     <div class="form-row">
                         <button type="submit" class="btn btn-outline-primary" onclick="setTimeout(() => this.disabled = true)">新建题目</button>
                     </div>
@@ -193,6 +194,7 @@
                 </p>
                 <h3> 批量重测 </h3>
                 <form id="formRejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+                    {{ g.csrf() }}
                     <input type="hidden" name="type" value="by_judge_id">
                     <div class="form-row">
                         <div class="form-group col-md-3">
@@ -209,6 +211,7 @@
 
                 <h3> 批量题目重测 </h3>
                 <form id="formRejudge2" action="/OnlineJudge/admin/rejudge" method="POST">
+                    {{ g.csrf() }}
                     <input type="hidden" name="type" value="by_problem_id">
                     <div class="form-row">
                         <div class="form-group col-md-3">
@@ -229,6 +232,7 @@
                     因此，建议在如下情况使用此功能：需要作废一条已经出了结果的评测记录。
                 </p>
                 <form id="formDisableJudge" action="/OnlineJudge/admin/disable_judge" method="POST">
+                    {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_judge_id">
                         <div class="form-group col-md-3 mb-3">
@@ -243,6 +247,7 @@
                 <hr>
                 <h3>批量题目取消成绩</h3>
                 <form id="formDisableJudge2" action="/OnlineJudge/admin/disable_judge" method="POST">
+                    {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_problem_id">
                         <div class="form-group col-md-3 mb-3">
@@ -259,6 +264,7 @@
                 <h3>批量终止评测</h3>
                 <p>若指定的评测记录还在评测中，则将其状态设置为 Aborted (已测完的点不受影响)，使评测机终止评测任务，并判零分。</p>
                 <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
+                    {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_judge_id">
                         <div class="form-group col-md-3 mb-3">
@@ -273,6 +279,7 @@
                 <hr>
                 <h3>批量题目终止评测</h3>
                 <form id="form-abort-2" action="/OnlineJudge/admin/abort_judge" method="POST">
+                    {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_problem_id">
                         <div class="form-group col-md-3 mb-3">
@@ -290,6 +297,7 @@
                 <h3> 批量添加实名信息 </h3>
                 <p> 左右一一对应，文本框请均以回车分割，实名建议格式为年份-课程-名字，如 22-IEEE算法-张三。如果同一学号出现了多条实名信息，系统将以最后一条导入的为准。 </p>
                 <form id="formRealname" action="/OnlineJudge/admin/add_realname" method="POST">
+                    {{ g.csrf() }}
                     <div class="form-row">
                         <div class="form-group col-md-3">
                             <label for="iptRealnameStudentID"> 学号 </label>
@@ -327,5 +335,5 @@
     <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=20240116"></script>
+    <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=20240120"></script>
 {% endblock %}

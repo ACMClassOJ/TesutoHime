@@ -9,6 +9,7 @@
             <h4 class="text-center">您已经以 {{ g.friendly_name }} 身份登录。</h4>
         {% else -%}
             <form method="post" id="login">
+                {{ g.csrf() }}
                 <div class="form-group">
                     <label for="username">用户名</label>
                     <input class="form-control" type="text" name="username" id="username"

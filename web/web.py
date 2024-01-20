@@ -28,6 +28,7 @@ from web.config import (JudgeConfig, LoginConfig, ProblemConfig,
                         WebConfig)
 from web.const import Privilege, ReturnCode, language_info, runner_status_info
 from web.contest_manager import ContestManager
+from web.csrf import setup_csrf
 from web.discuss_manager import DiscussManager
 from web.judge_manager import JudgeManager, NotFoundException
 from web.news_manager import NewsManager
@@ -43,6 +44,7 @@ from web.utils import (SqlSession, db, gen_page, gen_page_for_problem_list,
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(admin, url_prefix='/admin')
+setup_csrf(web)
 
 
 def validate(username: Optional['str'] = None,
@@ -156,24 +158,23 @@ def index2():
     return redirect('/')
 
 
-@web.route('/api/get_username', methods=['POST'])
+@web.route('/api/username')
 def get_username():
     return SessionManager.get_friendly_name()
 
 
-@web.route('/api/get_problem_id_autoinc', methods=['POST'])
+@web.route('/api/problem-id-autoinc')
 def get_problem_id_autoinc():
     return str(ProblemManager.get_max_id() + 1)
 
-@web.route('/api/get_contest_id_autoinc', methods=['POST'])
+@web.route('/api/contest-id-autoinc')
 def get_contest_id_autoinc():
     return str(ContestManager.get_max_id() + 1)
 
-@web.route('/api/get_detail', methods=['POST'])
-def get_detail():
+@web.route('/api/problem/<int:problem_id>/description')
+def get_problem_description(problem_id):
     if not SessionManager.check_user_status():
         return '-1'
-    problem_id = request.form.get('problem_id')
     problem = ProblemManager.get_problem(problem_id)
     if not ProblemManager.should_show(problem):
         return '-1'
@@ -192,11 +193,10 @@ def get_detail():
     }
     return json.dumps(data)
 
-@web.route('/api/get_contest_detail', methods=['POST'])
-def get_contest_detail():
+@web.route('/api/contest/<int:contest_id>')
+def get_contest_detail(contest_id):
     if not SessionManager.check_user_status():
         return '-1'
-    contest_id = request.form.get('contest_id')
     contest = ContestManager.get_contest(contest_id)
     if contest is None:
         return '{}'

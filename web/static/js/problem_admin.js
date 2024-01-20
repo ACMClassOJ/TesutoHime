@@ -101,10 +101,8 @@ $(() => {
     }
 
     const reloadDescription = () => $.ajax({
-        type: 'POST',
         dataType: 'text',
-        data: {problem_id: problemId},
-        url: '/OnlineJudge/api/get_detail',
+        url: `/OnlineJudge/api/problem/${problemId}/description`,
         success: response_text => {
             const main_json = JSON.parse(response_text)
             new_or_modify_content_in_editormd('iptDescription', main_json['Description'])

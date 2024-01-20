@@ -63,15 +63,18 @@
             </span>
             {% if g.is_admin and not abortable and submission.status.name != 'void' -%}
                 <form action="void" method="POST" style="display: inline" onsubmit="return confirm('确认将此份代码标记为无效？')">
+                    {{ g.csrf() }}
                     <button class="btn btn-secondary btn-sm">Void</button>
                 </form>
                 <form action="rejudge" method="POST" style="display: inline" onsubmit="return confirm('确认重测？')">
+                    {{ g.csrf() }}
                     <button class="btn btn-secondary btn-sm">重测</button>
                 </form>
             {%- endif %}
             <span class="float-right">
                 {% if abortable -%}
                 <form action="abort" method="POST" style="display: inline">
+                    {{ g.csrf() }}
                     <button class="btn btn-secondary btn-sm">终止评测</button>
                 </form>
                 {%- endif %}

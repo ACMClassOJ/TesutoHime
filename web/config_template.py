@@ -35,7 +35,7 @@ class S3Config:
         images = 'oj-images'
 
 
-class LoginConfig:                        #登陆过期时间，单位s
+class LoginConfig:                        #登录过期时间，单位s
     Login_Life_Time = 24 * 60 * 60 * 60
 
 class WebConfig:

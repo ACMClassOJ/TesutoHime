@@ -5,6 +5,7 @@ from logging import (DEBUG, INFO, NOTSET, WARNING, Formatter, LogRecord,
 from logging.handlers import WatchedFileHandler
 from pathlib import PosixPath
 from re import sub
+from os import environ
 
 class RemoveSignaturesFormatter(Formatter):
     def __init__(self):
@@ -31,4 +32,5 @@ def setup_logging(log_dir):
     add_handler(DEBUG, WatchedFileHandler(cwd / 'verbose.log'))
     add_handler(INFO, WatchedFileHandler(cwd / 'info.log'))
     add_handler(WARNING, WatchedFileHandler(cwd / 'errors.log'))
-    add_handler(INFO, StreamHandler())
+    output_level = DEBUG if environ.get('ENV') == 'development' else INFO
+    add_handler(output_level, StreamHandler())

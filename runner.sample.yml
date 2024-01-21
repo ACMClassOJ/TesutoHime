@@ -1,4 +1,4 @@
-runner_config: v2
+runner_config: v3
 
 id: 1
 group: default
@@ -15,3 +15,10 @@ redis:
     port: 6379
     password: xxxxxxxx
     db: 1
+
+git:
+  ssh:
+    private_key: |
+      -----BEGIN OPENSSH PRIVATE KEY-----
+      ...
+      -----END OPENSSH PRIVATE KEY-----

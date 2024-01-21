@@ -27,6 +27,12 @@ sudo mkdir -p /var/oj/runner /var/log/oj/runner /var/cache/oj/runner
 sudo chown ojrunner:ojrunner /var/oj/runner /var/log/oj/runner /var/cache/oj/runner
 ```
 
+生成 git clone 所需的密钥：(如果不需要 ssh clone 可以跳过)
+
+```sh
+ssh-keygen -t ed25519
+```
+
 复制并编辑配置文件:
 
 ```sh

@@ -4,7 +4,7 @@ from commons.task_typing import ResourceUsage
 from commons.util import RedisQueues, load_config
 from redis.asyncio import Redis
 
-config = load_config('runner', 'v2')
+config = load_config('runner', 'v3')
 
 runner_id: str = str(config['id'])
 runner_group: str = config['group']
@@ -56,6 +56,7 @@ gitflags = [
     '--shallow-submodules',
     '--no-local',
 ]
+git_ssh_private_key = config['git']['ssh']['private_key']
 
 verilog = which('iverilog')
 verilog_file_name = 'main.v'

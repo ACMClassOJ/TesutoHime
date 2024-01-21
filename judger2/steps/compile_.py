@@ -4,7 +4,7 @@ from logging import getLogger
 from os import utime
 from pathlib import PosixPath
 from shutil import copy2, which
-from subprocess import DEVNULL, PIPE
+from subprocess import DEVNULL
 from typing import Any, Callable, Coroutine, Dict, List
 from uuid import uuid4
 
@@ -12,12 +12,12 @@ from commons.task_typing import (CompileLocalResult, CompileResult,
                                  CompileSource, CompileSourceCpp,
                                  CompileSourceGit, CompileSourceVerilog,
                                  CompileTask, Input, ResourceUsage)
-
 from judger2.cache import CachedFile, ensure_cached, upload
 from judger2.config import (cache_dir, cxx, cxx_exec_name, cxx_file_name,
-                            cxxflags, exec_file_name, git_exec_name, gitflags,
-                            verilog, verilog_exec_name, verilog_file_name)
-from judger2.sandbox import chown_back, run_with_limits
+                            cxxflags, exec_file_name, git_exec_name,
+                            git_ssh_private_key, gitflags, verilog,
+                            verilog_exec_name, verilog_file_name)
+from judger2.sandbox import chown_back, chown_to_user, run_with_limits
 from judger2.util import TempDir, copy_supplementary_files
 
 logger = getLogger(__name__)
@@ -107,6 +107,7 @@ def get_resolv_conf_path():
     return str(resolv_conf.resolve())
 
 resolv_conf_path = get_resolv_conf_path()
+git_ssh_config_path = str(PosixPath(__file__).with_name('ssh_config'))
 
 async def compile_git(
     cwd: PosixPath,
@@ -115,33 +116,45 @@ async def compile_git(
 ) -> CompileLocalResult:
     logger.debug(f'about to compile git repo {repr(source.url)}')
 
-    def run_build_step(argv: List[str], network = False, output = DEVNULL):
-        bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc']
+    async def git_setup_root(root: PosixPath):
+        identity_file = root / 'id_acmoj'
+        with open(identity_file, 'w') as f:
+            f.write(git_ssh_private_key)
+        chown_to_user(identity_file)
+
+    def run_build_step(argv: List[str], *, output = DEVNULL, is_git_clone = False):
+        bind = [
+            f'{git_ssh_config_path}:/etc/ssh/ssh_config',
+        ] if is_git_clone else []
+        bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc'] + bind
         if resolv_conf_path is not None:
             bind.append(resolv_conf_path)
         return run_with_limits(
             argv, cwd, limits,
             outfile=output,
             supplementary_paths=bind,
-            network_access=network,
+            network_access=is_git_clone,
+            setup_root_dir=git_setup_root if is_git_clone else None,
             env=[
-                'GIT_CONFIG_COUNT=1',
+                'GIT_CONFIG_COUNT=2',
                 'GIT_CONFIG_KEY_0=safe.directory',
                 'GIT_CONFIG_VALUE_0=*',
+                'GIT_CONFIG_KEY_1=url.git@github.com:.insteadOf',
+                'GIT_CONFIG_VALUE_1=https://github.com/'
             ],
         )
 
     # clone
     git_argv = [which('git'), 'clone', source.url, '.'] + gitflags
     logger.debug(f'about to run {git_argv}')
-    clone_res = await run_build_step(git_argv, True)
+    clone_res = await run_build_step(git_argv, is_git_clone=True)
     if clone_res.error != None:
         return CompileLocalResult.from_run_failure(clone_res)
 
     # get commit hash
     with TempDir() as d, open(d / 'commit-hash', 'w+b') as ouf:
         commit_hash_argv = [which('git'), 'log', '-1', '--pretty=%H']
-        commit_hash_res = await run_build_step(commit_hash_argv, False, ouf)
+        commit_hash_res = await run_build_step(commit_hash_argv, output=ouf)
         if commit_hash_res.error != None:
             return CompileLocalResult.from_run_failure(commit_hash_res)
         ouf.seek(0)

@@ -1,0 +1,10 @@
+Host github.com
+User git
+Hostname ssh.github.com
+Port 443
+
+Host *
+IdentityFile /id_acmoj
+StrictHostKeyChecking no
+UserKnownHostsFile /dev/null
+LogLevel ERROR

@@ -4,7 +4,8 @@ from asyncio import create_subprocess_exec, wait_for
 from dataclasses import asdict, dataclass, field
 from logging import getLogger
 from math import ceil
-from os import WEXITSTATUS, WIFEXITED, WIFSIGNALED, WTERMSIG, getuid, strerror, wait4
+from os import (WEXITSTATUS, WIFEXITED, WIFSIGNALED, WTERMSIG, getuid,
+                strerror, wait4)
 from pathlib import PosixPath
 from shlex import quote
 from shutil import which
@@ -12,7 +13,7 @@ from signal import strsignal
 from subprocess import DEVNULL, PIPE, Popen
 from sys import platform
 from time import time
-from typing import IO, List, Union
+from typing import IO, Any, Callable, Coroutine, List, Union
 
 from commons.task_typing import ResourceUsage, RunResult
 from commons.util import Literal, asyncrun
@@ -108,6 +109,7 @@ async def run_with_limits(
     tmpfsmount: bool = False,
     disable_stderr: bool = False,
     env: List[str] = [],
+    setup_root_dir: Callable[[PosixPath], Coroutine[Any, Any, None]] = None,
 ) -> RunResult:
     # these are nsjail args
     fsize = 'inf' if limits.file_size_bytes < 0 else \
@@ -127,6 +129,8 @@ async def run_with_limits(
         tmp_dir.chmod(0o700)
         chroot = tmp_dir / 'root'
         chroot.mkdir(0o750)
+        if setup_root_dir is not None:
+            await setup_root_dir(chroot)
         result_dir = tmp_dir / 'result'
         result_dir.mkdir(0o700)
         result_file = result_dir / 'result'
@@ -272,5 +276,19 @@ def chown_back(path: PosixPath):
         'quiet': True,
         'bindmount': str(path),
     }) + ['--', which('chown'), '-R', 'root', '.']
+    Popen(argv, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL) \
+        .wait(timeout=10.0)
+
+def chown_to_user(path: PosixPath):
+    logger.debug(f'about to chown_to_user {path}')
+    argv = [nsjail] + format_args({
+        'cwd': str(path),
+        'chroot': '/',
+        'uid_mapping': worker_uid_maps,
+        'group': '0',
+        'cap': 'CAP_CHOWN',
+        'quiet': True,
+        'bindmount': str(path),
+    }) + ['--', which('chown'), '-R', str(worker_uid_inside), '.']
     Popen(argv, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL) \
         .wait(timeout=10.0)

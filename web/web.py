@@ -730,7 +730,7 @@ def code(submission_id):
             # TODO: caching
             res = requests.get(urljoin(SchedulerConfig.base_url, url))
             if res.status_code == OK:
-                details = res.json()
+                details = deserialize(res.text)
             elif res.status_code == NOT_FOUND:
                 pass
             else:

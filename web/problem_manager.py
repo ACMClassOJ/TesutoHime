@@ -87,7 +87,7 @@ class ProblemManager:
     @staticmethod
     def set_languages_accepted(problem_id: int, languages: Optional[List[str]]):
         stmt = update(Problem) \
-            .set(languages_accepted=languages) \
+            .values(languages_accepted=languages) \
             .where(Problem.id == problem_id)
         db.execute(stmt)
 

@@ -140,6 +140,7 @@ def upgrade() -> None:
                nullable=False)
     op.alter_column('judge_record_v2', 'score',
                existing_type=sa.BIGINT(),
+               server_default=sa.text('0'),
                nullable=False)
     op.alter_column('judge_record_v2', 'created_at',
                existing_type=postgresql.TIMESTAMP(),

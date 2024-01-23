@@ -273,7 +273,7 @@ chown = which('chown')
 assert chown is not None
 chown: str
 
-def chown_back(path: PosixPath):
+def chown_back(path: Union[PosixPath, str]):
     logger.debug(f'about to chown_back {path}')
     cwd = PosixPath(path)
     if not cwd.is_dir():

@@ -48,7 +48,7 @@ for i in range(pages):
         if s.username not in checked_usernames:
             checked_usernames.add(s.username)
             u = db.query(User.id).where(User.username == s.username).one_or_none()
-            if u == None:
+            if u is None:
                 bad_usernames.add(s.username)
         if s.username in bad_usernames:
             print(f'Nonexistent user {s.username} at {s.id}')
@@ -57,7 +57,7 @@ for i in range(pages):
         if s.problem_id not in checked_problems:
             checked_problems.add(s.problem_id)
             p = db.query(Problem.id).where(Problem.id == s.problem_id).one_or_none()
-            if p == None:
+            if p is None:
                 bad_problems.add(s.problem_id)
         if s.problem_id in bad_problems:
             print(f'Nonexistent problem {s.problem_id} at {s.id}')

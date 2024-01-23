@@ -57,7 +57,7 @@ async def poll_for_tasks():
                     try:
                         message = await redis.brpop(task_queues.abort,
                             poll_timeout_secs)
-                        if message == None: continue
+                        if message is None: continue
                         aio_task.cancel()
                         return
                     except CancelledError:

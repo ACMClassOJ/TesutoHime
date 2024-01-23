@@ -1,9 +1,8 @@
 __all__ = ('ContestManager',)
 
-import sys
 from datetime import datetime
 from functools import cmp_to_key
-from typing import List, Optional, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 from flask import g
 from sqlalchemy import delete, func, insert, join, select, update
@@ -120,7 +119,8 @@ class ContestManager:
 
     @staticmethod
     def list_contest(types: List[int], page: int, num_per_page: int,
-                     keyword: Optional[str] = None, status: Optional[str] = None) -> Tuple[int, List[Contest]]:
+                     keyword: Optional[str] = None,
+                     status: Optional[str] = None) -> Tuple[int, Sequence[Contest]]:
         limit = num_per_page
         offset = (page - 1) * num_per_page
         stmt = select(Contest).where(Contest.type.in_(types))
@@ -139,11 +139,12 @@ class ContestManager:
         stmt_data = stmt.order_by(Contest.id.desc()) \
             .limit(limit).offset(offset)
         count = db.scalar(stmt_count)
+        assert count is not None
         this_page = db.scalars(stmt_data).all()
         return count, this_page
 
     @staticmethod
-    def list_problem_for_contest(contest_id: int):
+    def list_problem_for_contest(contest_id: int) -> Sequence[int]:
         stmt = select(ContestProblem.c.problem_id).where(ContestProblem.c.contest_id == contest_id)
         data = db.scalars(stmt).all()
         return data
@@ -187,8 +188,8 @@ class ContestManager:
                 'username': user.username,
             } for user in players
         ]
-        username_to_num = dict(map(lambda entry: [regularize_string(entry[1].username), entry[0]], enumerate(players)))
-        problem_to_num = dict(map(lambda entry: [entry[1], entry[0]], enumerate(problems)))
+        username_to_num = dict((regularize_string(user.username), i) for i, user in enumerate(players))
+        problem_to_num = dict((problem, i) for i, problem in enumerate(problems))
 
         submits: List[JudgeRecordV2] = db \
             .query(JudgeRecordV2) \
@@ -248,7 +249,8 @@ class ContestManager:
             return sorted(scores, key=lambda x: x['friendly_name'])
 
         key = 'score' if contest.rank_partial_score else 'ac_count'
-        scores.sort(key=cmp_to_key(lambda x, y: y[key] - x[key] if x[key] != y[key] else x['penalty'] - y['penalty']))
+        scores.sort(key=cmp_to_key(
+            lambda x, y: y[key] - x[key] if x[key] != y[key] else x['penalty'] - y['penalty']))  # type: ignore
         for i, player in enumerate(scores):
             player['rank'] = i + 1
             if i > 0 and player[key] == scores[i - 1][key]:

@@ -13,10 +13,13 @@ from signal import strsignal
 from subprocess import DEVNULL, PIPE, Popen
 from sys import platform
 from time import time
-from typing import IO, Any, Callable, Coroutine, List, Union
+from typing import (IO, Any, Callable, Coroutine, List, Optional, Sequence,
+                    Union)
+
+from typing_extensions import Literal
 
 from commons.task_typing import ResourceUsage, RunResult
-from commons.util import Literal, asyncrun
+from commons.util import asyncrun
 from judger2.config import relative_slowness, task_envp, worker_uid
 from judger2.util import TempDir, format_args
 
@@ -102,14 +105,14 @@ async def run_with_limits(
     *,
     infile: Union[IO, int] = DEVNULL,
     outfile: Union[IO, int] = DEVNULL,
-    supplementary_paths: List[PosixPath] = [],
-    supplementary_paths_rw: List[PosixPath] = [],
+    supplementary_paths: Sequence[Union[str, PosixPath]] = [],
+    supplementary_paths_rw: Sequence[Union[str, PosixPath]] = [],
     network_access: bool = False,
     disable_proc: bool = True,
     tmpfsmount: bool = False,
     disable_stderr: bool = False,
     env: List[str] = [],
-    setup_root_dir: Callable[[PosixPath], Coroutine[Any, Any, None]] = None,
+    setup_root_dir: Optional[Callable[[PosixPath], Coroutine[Any, Any, None]]] = None,
 ) -> RunResult:
     # these are nsjail args
     fsize = 'inf' if limits.file_size_bytes < 0 else \
@@ -198,6 +201,7 @@ async def run_with_limits(
         du_code = await wait_for(du_proc.wait(), 10.0)
         if du_code != 0:
             raise Exception(f'du exited with code {du_code}')
+        assert du_proc.stdout is not None
         du_out = (await du_proc.stdout.read(4096)).decode(errors='replace') \
             .split('\n')
         file_size_bytes, file_count = [int(x) for x in du_out[:2]]
@@ -265,9 +269,13 @@ async def run_with_limits(
         return RunResult(None, err, usage)
 
 
+chown = which('chown')
+assert chown is not None
+chown: str
+
 def chown_back(path: PosixPath):
     logger.debug(f'about to chown_back {path}')
-    argv = [nsjail] + format_args({
+    argv: List[str] = [nsjail] + format_args({
         'cwd': str(path),
         'chroot': '/',
         'uid_mapping': worker_uid_maps,
@@ -275,7 +283,7 @@ def chown_back(path: PosixPath):
         'cap': 'CAP_CHOWN',
         'quiet': True,
         'bindmount': str(path),
-    }) + ['--', which('chown'), '-R', 'root', '.']
+    }) + ['--', chown, '-R', 'root', '.']
     Popen(argv, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL) \
         .wait(timeout=10.0)
 
@@ -289,6 +297,6 @@ def chown_to_user(path: PosixPath):
         'cap': 'CAP_CHOWN',
         'quiet': True,
         'bindmount': str(path),
-    }) + ['--', which('chown'), '-R', str(worker_uid_inside), '.']
+    }) + ['--', chown, '-R', str(worker_uid_inside), '.']
     Popen(argv, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL) \
         .wait(timeout=10.0)

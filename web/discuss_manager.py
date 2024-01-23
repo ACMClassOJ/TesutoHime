@@ -1,9 +1,6 @@
 __all__ = ('DiscussManager',)
 
-from datetime import datetime
-import sys
-
-from typing import List
+from typing import Optional, Sequence
 from commons.models import Discussion
 from web.utils import db
 from sqlalchemy import update, select, delete
@@ -24,12 +21,12 @@ class DiscussManager:
         db.execute(stmt)
 
     @staticmethod
-    def get_author(discuss_id: int) -> str:
+    def get_author(discuss_id: int) -> Optional[str]:
         stmt = select(Discussion.username).where(Discussion.id == discuss_id)
         return db.scalar(stmt)
 
     @staticmethod
-    def get_discuss_for_problem(problem_id: int) -> List[Discussion]:
+    def get_discuss_for_problem(problem_id: int) -> Sequence[Discussion]:
         stmt = select(Discussion).where(Discussion.problem_id == problem_id)
         return db.scalars(stmt).all()
 

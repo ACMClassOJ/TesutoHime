@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import PosixPath
-from typing import List, Optional, Union
+from typing import List, Optional, TypeVar, Union
 
-from commons.util import Literal
+from typing_extensions import Generic, Literal
 
 # scheduler -> runner
 
@@ -81,22 +81,24 @@ class SpjChecker:
     limits: ResourceUsage
 
 Checker = Union[CompareChecker, DirectChecker, SpjChecker]
+InputPlan = Union[Input, 'UserCode', 'CompileTaskPlan']
+_TestpointInput = TypeVar('_TestpointInput', Input, InputPlan)
 
 
 @dataclass
-class Testpoint:
+class Testpoint(Generic[_TestpointInput]):
     id: str
     dependent_on: Optional[str] # id
-    input: Input                # program to run
+    input: _TestpointInput      # program to run
     run: Optional[RunArgs]
     check: Checker
 
 @dataclass
-class JudgeTask:
-    testpoints: List[Testpoint]
+class JudgeTask(Generic[_TestpointInput]):
+    testpoints: List[Testpoint[_TestpointInput]]
 
 
-Task = Union[CompileTask, JudgeTask]
+Task = TypeVar('Task', CompileTask, JudgeTask[Input])
 
 
 # runner -> scheduler, runner internal state
@@ -108,6 +110,7 @@ RunError = Literal[
     'memory_limit_exceeded',
     'disk_limit_exceeded',
     'memory_leak',
+    'system_error',
 ]
 CheckError = Literal['wrong_answer']
 Skipped = Literal['skipped']
@@ -116,7 +119,6 @@ Aborted = Literal['aborted']
 Judging = Literal['judging']
 Pending = Literal['pending']
 MiscError = Literal[
-    'system_error',
     'unknown_error',
 ]
 Accepted = Literal['accepted']
@@ -135,6 +137,7 @@ ResultType = Union[
 
 Compiled = Literal['compiled']
 CompileResultType = Union[
+    CompileError,
     RunError,
     Aborted,
     MiscError,
@@ -148,7 +151,7 @@ class CompileResult:
 
 @dataclass
 class RunResult:
-    error: Optional[RunError]
+    error: Optional[Union[CompileError, RunError]]
     message: str
     resource_usage: Optional[ResourceUsage] = None
     code: Optional[int] = None # for runtime errors
@@ -162,6 +165,7 @@ class CompileLocalResult:
 
     @staticmethod
     def from_run_failure(res: RunResult):
+        if res.error is None: raise Exception
         return CompileLocalResult(
             CompileResult(res.error, res.message),
             None,
@@ -179,7 +183,7 @@ CheckInput = Union[Input, RunResult]
 
 @dataclass
 class TestpointJudgeResult:
-    id: Optional[str]
+    id: str
     result: ResultType
     message: str
     score: float = 0.0
@@ -244,7 +248,7 @@ class CompileTaskPlan:
 
 @dataclass
 class JudgeTaskPlan:
-    task: JudgeTask
+    task: JudgeTask[InputPlan]
     dependencies: List[int]
     dependents: List[int]
 
@@ -277,8 +281,8 @@ DEFAULT_GROUP = 'default'
 class JudgePlan:
     group: str = DEFAULT_GROUP
     compile: Optional[CompileTaskPlan] = None
-    judge: List[JudgeTaskPlan] = None
-    score: List[TestpointGroup] = None
+    judge: List[JudgeTaskPlan] = field(default_factory=lambda: [])
+    score: List[TestpointGroup] = field(default_factory=lambda: [])
     quiz: Optional[List[QuizProblem]] = None
 
 

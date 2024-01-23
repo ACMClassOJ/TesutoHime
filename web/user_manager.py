@@ -1,8 +1,7 @@
 __all__ = ('UserManager',)
 
 import hashlib
-import sys
-from typing import Optional
+from typing import Optional, Sequence
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
@@ -10,7 +9,6 @@ from sqlalchemy import delete, func, select, update
 
 from commons.models import ContestPlayer, User
 from web.utils import db
-
 
 password_hasher = PasswordHasher()
 
@@ -39,7 +37,7 @@ def verify_sha512(hashed, password):
 
 class UserManager:
     @staticmethod
-    def add_user(username: str, student_id: int, friendly_name: str, password: str,
+    def add_user(username: str, student_id: str, friendly_name: str, password: str,
                  privilege: int):  # will not check whether the argument is illegal
         password = hash(password)
         user = User(username=username, student_id=student_id, friendly_name=friendly_name,
@@ -73,14 +71,14 @@ class UserManager:
             result = verify_sha512(hashed, password)
             if not result:
                 return False
-            stmt = update(User).where(User.username == username) \
+            stmt1 = update(User).where(User.username == username) \
                 .values(password=hash(password))
-            db.execute(stmt)
+            db.execute(stmt1)
             return True
         return verify_argon2(hashed, password)
 
     @staticmethod
-    def get_friendly_name(username: str) -> str:  # Username must exist.
+    def get_friendly_name(username: str) -> Optional[str]:
         stmt = select(User.friendly_name).where(User.username == username)
         return db.scalar(stmt)
 
@@ -90,12 +88,12 @@ class UserManager:
         return db.scalar(stmt)
 
     @staticmethod
-    def get_student_id(username: str) -> Optional[str]:  # Username must exist.
+    def get_student_id(username: str) -> Optional[str]:
         stmt = select(User.student_id).where(User.username == username)
         return db.scalar(stmt)
 
     @staticmethod
-    def get_privilege(username: str) -> int:  # Username must exist.
+    def get_privilege(username: str) -> Optional[int]:
         stmt = select(User.privilege).where(User.username == username)
         return db.scalar(stmt)
 
@@ -110,7 +108,7 @@ class UserManager:
         return db.scalar(stmt) == 1
 
     @staticmethod
-    def list_contests(username: str) -> bool:
+    def list_contest_ids(username: str) -> Sequence[int]:
         stmt = select(ContestPlayer.c.contest_id) \
             .where(ContestPlayer.c.username == username)
         return db.scalars(stmt).all()

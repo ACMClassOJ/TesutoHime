@@ -1,8 +1,8 @@
 import json
-from urllib.parse import urlsplit
 import logging
 import logging.handlers
 from datetime import datetime
+from typing import Any, Dict
 
 from flask import request
 
@@ -15,7 +15,7 @@ from web.utils import readable_time
 
 class Tracker:
     def log(self):
-        everything = {}
+        everything: Dict[Any, Any] = {}
         username = SessionManager.get_username()
         everything['IP'] = request.remote_addr
         everything['Time'] = readable_time(datetime.now())

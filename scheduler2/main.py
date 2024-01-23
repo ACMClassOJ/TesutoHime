@@ -31,7 +31,7 @@ routes = RouteTableDef()
 
 judge_tasks: Dict[str, Set[Task]] = {}
 judge_tasks_from_submission_id: Dict[str, Task] = {}
-judge_task_args: Dict[Task, Tuple[str, str, CodeLanguage, SourceLocation]] = {}
+judge_task_args: Dict[Task, Tuple[str, str, CodeLanguage, SourceLocation, str]] = {}
 
 def register_judge_task(problem_id, submission_id, language, source,
     rate_limit_group):
@@ -70,8 +70,8 @@ async def update_problem(request: Request):
 
         plan = await generate_plan(problem_id)
         languages = languages_accepted(plan)
-        plan = serialize(plan)
-        await upload_str(s3_buckets.problems, plan_key(problem_id), plan)
+        plan_str = serialize(plan)
+        await upload_str(s3_buckets.problems, plan_key(problem_id), plan_str)
     except InvalidProblemException as e:
         return json_response({'result': 'invalid problem', 'error': str(e)})
     except Exception as e:
@@ -79,8 +79,8 @@ async def update_problem(request: Request):
         logger.error(f'error updating problem: {err}')
         return json_response({'result': 'system error', 'error': err})
     finally:
-        for task in task_args:
-            register_judge_task(*task)
+        for task1 in task_args:
+            register_judge_task(*task1)
     return json_response({'result': 'ok', 'error': None, 'languages': languages})
 
 
@@ -89,14 +89,14 @@ async def run_judge(problem_id: str, submission_id: str,
     res = None
     logger.info(f'judging submission {submission_id} for problem {problem_id}')
     try:
-        plan = None
+        plan_str = None
         try:
-            plan = await read_file(s3_buckets.problems, plan_key(problem_id))
+            plan_str = await read_file(s3_buckets.problems, plan_key(problem_id))
         except ClientError:
             msg = 'Cannot get judge plan'
             res = ProblemJudgeResult(result='system_error', message=msg)
-        if plan is not None:
-            plan = deserialize(plan)
+        if plan_str is not None:
+            plan = deserialize(plan_str)
             logger.debug(f'plan for problem {problem_id} loaded')
             res = await execute_plan(plan, submission_id, problem_id, language,
                 source, rate_limit_group)
@@ -180,6 +180,7 @@ async def runner_status(request: Request):
     global cached_runner_status_time
     global runner_status_future
     if cached_runner_status is not None:
+        assert cached_runner_status_time is not None
         if time() - cached_runner_status_time > runner_heartbeat_interval_secs:
             cached_runner_status = None
             cached_runner_status_time = None
@@ -208,4 +209,4 @@ if __name__ == '__main__':
     register(lambda: logger.info('scheduler stopping'))
     app = Application()
     app.add_routes(routes)
-    run_app(app, host=host, port=port, print=None)
+    run_app(app, host=host, port=port, print=None)  # type: ignore

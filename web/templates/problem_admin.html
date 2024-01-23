@@ -69,7 +69,7 @@
                     </div>
                     <div class="form-group col-md-3">
                         <label for="iptReleaseTime">发布时间 (YYYY-MM-DDThh:mm:ss)</label>
-                        <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime" value="{{ problem.release_time.isoformat(timespec='seconds') }}">
+                        <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime" value="{{ problem.release_time.isoformat(timespec='minutes') }}">
                     </div>
                     <div class="form-group col-md-3">
                         <label for="iptProblemType">题目类型</label>

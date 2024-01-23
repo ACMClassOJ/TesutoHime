@@ -3,8 +3,10 @@ from dataclasses import dataclass
 from logging import getLogger
 from time import time
 from typing import Dict, Optional
-from commons.util import RedisQueues, format_exc, Literal
 
+from typing_extensions import Literal
+
+from commons.util import RedisQueues, format_exc
 from scheduler2.config import (redis, redis_queues,
                                runner_heartbeat_interval_secs)
 from scheduler2.util import RunnerOfflineException, taskinfo_from_task_id
@@ -23,14 +25,14 @@ async def get_runner_status(runner_id: str):
     try:
         runner_info = RedisQueues.RunnerInfo(runner_id, '')
         runner_queues = redis_queues.runner(runner_info)
-        heartbeat = await redis.get(runner_queues.heartbeat)
-        if heartbeat is not None:
-            heartbeat = float(heartbeat)
+        heartbeat_str = await redis.get(runner_queues.heartbeat)
+        heartbeat = float(heartbeat_str) if heartbeat_str is not None else None
         if heartbeat is None \
         or heartbeat < time() - runner_heartbeat_interval_secs * 2:
             return RunnerStatus('offline', 'Offline', heartbeat)
 
         task_ids = await redis.lrange(runner_queues.in_progress, 0, -1)
+        status: Literal['idle', 'busy', 'invalid']
         if len(task_ids) == 0:
             status = 'idle'
             msg = 'Idle'

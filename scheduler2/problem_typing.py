@@ -2,8 +2,9 @@ from dataclasses import dataclass, field
 from enum import IntEnum, unique
 from typing import List, Optional, Union
 
+from typing_extensions import Literal
+
 from commons.task_typing import DEFAULT_GROUP
-from commons.util import Literal
 
 
 @unique
@@ -39,7 +40,7 @@ class ProblemConfig:
     Details: List[Testpoint]
     Groups: List[Group]
     CompileTimeLimit: Optional[int] = None
-    SPJ: Spj = 0
+    SPJ: Spj = Spj.CLASSIC_COMPARE
     Scorer: Literal[0] = 0
     SupportedFiles: List[str] = field(default_factory=lambda: [])
     Verilog: bool = False

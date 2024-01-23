@@ -4,12 +4,14 @@ from time import time
 from typing import Awaitable, Callable, Optional
 from uuid import uuid4
 
-import commons.task_typing
-from commons.task_typing import (Result, StatusUpdate, StatusUpdateDone,
-                                 StatusUpdateError, StatusUpdateProgress,
-                                 StatusUpdateStarted)
-from commons.util import deserialize, serialize
+from typing_extensions import overload
 
+import commons.task_typing
+from commons.task_typing import (CompileResult, CompileTask, Input,
+                                 JudgeResult, JudgeTask, Result, StatusUpdate,
+                                 StatusUpdateDone, StatusUpdateError,
+                                 StatusUpdateProgress, StatusUpdateStarted)
+from commons.util import deserialize, serialize
 from scheduler2.config import (redis, redis_queues,
                                task_concurrency_per_account, task_retries,
                                task_retry_interval_secs, task_timeout_secs)
@@ -23,12 +25,22 @@ classes = commons.task_typing.__dict__
 rate_limiter = RateLimiter(task_concurrency_per_account)
 
 
+@overload
 async def run_task(
-    taskinfo: TaskInfo,
-    onprogress: Callable[[StatusUpdate], Awaitable] = None,
+    taskinfo: TaskInfo[CompileTask],
+    onprogress: Optional[Callable[[StatusUpdate], Awaitable]] = None,
     rate_limit_group: Optional[str] = None,
     retries_left: int = task_retries,
-) -> Result:
+) -> CompileResult: pass
+@overload
+async def run_task(
+    taskinfo: TaskInfo[JudgeTask[Input]],
+    onprogress: Optional[Callable[[StatusUpdate], Awaitable]] = None,
+    rate_limit_group: Optional[str] = None,
+    retries_left: int = task_retries,
+) -> JudgeResult: pass
+async def run_task(taskinfo, onprogress = None, rate_limit_group = None,
+                   retries_left = task_retries):
     task_id = str(uuid4())
     taskinfo.id = task_id
     task = taskinfo.task
@@ -62,15 +74,15 @@ async def run_task(
                     if offline_task is not None:
                         tasks = (progress_task, offline_task)
                     done, _ = await wait(tasks, return_when=FIRST_COMPLETED)
-                    for task in done:
+                    for done_task in done:
                         try:
-                            res = await task
+                            res = await done_task
                         except RunnerOfflineException:
                             return await retry('Runner offline')
                     if res is None:
                         return await retry('Task timed out')
                     _, status = res
-                    status: StatusUpdate = deserialize(status)
+                    status: StatusUpdate = deserialize(status)  # type: ignore
                     logger.debug(f'received status update from task {task_id}: {status}')
 
                     if isinstance(status, StatusUpdateStarted):

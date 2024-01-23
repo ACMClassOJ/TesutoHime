@@ -2,9 +2,8 @@ from base64 import b64encode
 from http.client import BAD_REQUEST
 from secrets import token_bytes
 
-from flask import Flask, Response, abort, g, request
+from flask import Blueprint, Response, abort, g, request
 from markupsafe import Markup
-
 
 csrf_cookie_name = '__Host-acmoj-csrf'
 csrf_input_name = '_acmoj-csrf'
@@ -36,6 +35,6 @@ def set_csrf_cookies(resp: Response) -> Response:
         resp.set_cookie(csrf_cookie_name, g.csrf_token, secure=True, samesite='Lax', httponly=True)
     return resp
 
-def setup_csrf(app: Flask):
+def setup_csrf(app: Blueprint):
     app.before_request(check_csrf)
     app.after_request(set_csrf_cookies)

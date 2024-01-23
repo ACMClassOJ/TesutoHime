@@ -14,11 +14,6 @@ logger = getLogger(__name__)
 
 T = TypeVar('T')
 
-class _Literal:
-    def __getitem__(self, _): return
-
-Literal = _Literal()
-
 
 import commons.task_typing
 
@@ -125,11 +120,11 @@ class RedisQueues:
     def __init__(self, prefix: str, runner: Optional[RunnerInfo] = None):
         def queue(name):
             return f'{prefix}-{name}'
-        def rqueue(name):
-            return f'{queue(name)}-runner{runner.id}'
         self._prefix = prefix
         self._task_prefix = queue('task')
         if runner is not None:
+            def rqueue(name):
+                return f'{queue(name)}-runner{runner.id}'
             self.tasks = queue(f'{runner.group}-tasks')
             self.in_progress = rqueue('in-progress')
             self.heartbeat = rqueue('heartbeat')

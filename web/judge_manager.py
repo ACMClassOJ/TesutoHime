@@ -38,13 +38,11 @@ class JudgeManager:
             if res['result'] != 'ok':
                 raise Exception(f'Scheduler error: {res["error"]}')
         except Exception as e:
-            rec: JudgeRecordV2 = db \
-                .query(JudgeRecordV2) \
-                .where(JudgeRecordV2.id == submission_id) \
-                .one()
-            rec.status = JudgeStatus.system_error
-            rec.message = str(e)
-            rec.score = 0
+            rec = db.get(JudgeRecordV2, submission_id)
+            if rec is not None:
+                rec.status = JudgeStatus.system_error
+                rec.message = str(e)
+                rec.score = 0
 
 
     @staticmethod
@@ -60,10 +58,7 @@ class JudgeManager:
 
     @staticmethod
     def mark_void(id):
-        submission: JudgeRecordV2 = db \
-            .query(JudgeRecordV2) \
-            .where(JudgeRecordV2.id == id) \
-            .one_or_none()
+        submission = db.get(JudgeRecordV2, id)
         if submission is None:
             raise NotFoundException()
         submission.details = None
@@ -73,10 +68,7 @@ class JudgeManager:
 
     @staticmethod
     def rejudge(id):
-        submission: JudgeRecordV2 = db \
-            .query(JudgeRecordV2) \
-            .where(JudgeRecordV2.id == id) \
-            .one_or_none()
+        submission = db.get(JudgeRecordV2, id)
         if submission is None:
             raise NotFoundException()
         # to avoid blocking judge queue too much,
@@ -118,22 +110,17 @@ class JudgeManager:
 
     @staticmethod
     def set_status(submission_id, status: str):
-        rec: JudgeRecordV2 = db \
-            .query(JudgeRecordV2) \
-            .where(JudgeRecordV2.id == submission_id) \
-            .one_or_none()
+        rec = db.get(JudgeRecordV2, submission_id)
         if rec is None:
             abort(NOT_FOUND)
         rec.status = getattr(JudgeStatus, status)
         rec.details = None
         rec.message = None
+        db.flush()
 
     @staticmethod
     def set_result(submission_id, *, score, status, message, details: str, time_msecs, memory_bytes):
-        rec: JudgeRecordV2 = db \
-            .query(JudgeRecordV2) \
-            .where(JudgeRecordV2.id == submission_id) \
-            .one_or_none()
+        rec = db.get(JudgeRecordV2, submission_id)
         if rec is None:
             abort(NOT_FOUND)
         rec.score = score
@@ -156,10 +143,7 @@ class JudgeManager:
 
     @staticmethod
     def get_submission(submission_id: int) -> Optional[JudgeRecordV2]:
-        return db \
-            .query(JudgeRecordV2) \
-            .where(JudgeRecordV2.id == submission_id) \
-            .one_or_none()
+        return db.get(JudgeRecordV2, submission_id)
 
     @staticmethod
     def list_runners() -> List[JudgeRunnerV2]:

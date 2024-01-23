@@ -6,7 +6,7 @@ from http.client import (BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR,
                          NOT_FOUND, OK, REQUEST_ENTITY_TOO_LARGE, SEE_OTHER,
                          UNAUTHORIZED)
 from math import ceil
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from urllib.parse import quote, urlencode, urljoin
 from uuid import uuid4
 
@@ -50,7 +50,7 @@ setup_csrf(web)
 def validate(username: Optional['str'] = None,
              password: Optional['str'] = None,
              friendly_name: Optional['str'] = None,
-             student_id: Optional['str'] = None) -> int:
+             student_id: Optional['str'] = None) -> dict:
     """Validate a user.
 
     This function is used in registering and updating user information.
@@ -216,18 +216,19 @@ def get_contest_detail(contest_id):
 def join_contest():
     if not SessionManager.check_user_status():
         return '-1'
-    arg = request.form.get('contest_id')
-    if arg is None:
+    contest_id = request.form.get('contest_id')
+    if contest_id is None:
         return '-1'
-    contest = ContestManager.get_contest(arg)
+    contest_id = int(contest_id)
+    contest = ContestManager.get_contest(contest_id)
     if contest is None or g.time > contest.end_time:
         return '-1'
     username = SessionManager.get_username()
     exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username)
     if exam_id != -1:
         return '-1'
-    if not ContestManager.check_player_in_contest(arg, username):
-        ContestManager.add_player_to_contest(arg, username)
+    if not ContestManager.check_player_in_contest(contest_id, username):
+        ContestManager.add_player_to_contest(contest_id, username)
     return '0'
 
 
@@ -235,12 +236,12 @@ def join_contest():
 def get_code():
     if not SessionManager.check_user_status():
         return '-1'
-    arg = request.form.get('submit_id')
-    if arg is None:
+    run_id = request.form.get('submit_id')
+    if run_id is None:
         return '-1'
-    if not str(request.form.get('submit_id')).isdigit():  # bad argument
+    if not str(run_id).isdigit():  # bad argument
         return '-1'
-    run_id = int(request.form.get('submit_id'))
+    run_id = int(run_id)
     if run_id < 0 or run_id > OldJudgeManager.max_id():
         return '-1'
     detail = OldJudgeManager.query_judge(run_id)
@@ -281,6 +282,8 @@ def login():
         return render_template('login.html', Next=nxt)
     username = request.form.get('username')
     password = request.form.get('password')
+    if username is None or password is None:
+        abort(BAD_REQUEST)
     username = UserManager.get_canonical_username(username)
     if username is None:
         return ReturnCode.ERR_LOGIN
@@ -313,9 +316,11 @@ def register():
     password = request.form.get('password')
     friendly_name = request.form.get('friendly_name')
     student_id = request.form.get('student_id')
+    if username is None or password is None or friendly_name is None or student_id is None:
+        abort(BAD_REQUEST)
     val = validate(username, password, friendly_name, student_id)
     if val == ReturnCode.SUC_VALIDATE:
-        UserManager.add_user(username, student_id, friendly_name, password, '0')
+        UserManager.add_user(username, student_id, friendly_name, password, 0)
         return ReturnCode.SUC_REGISTER
     else:
         return val
@@ -332,7 +337,7 @@ def problem_list():
     problem_id = request.args.get('problem_id')
     if problem_id == '':
         problem_id = None
-    if problem_id != None:
+    if problem_id is not None:
         return redirect(f'/OnlineJudge/problem/{problem_id}')
     problem_name_keyword = request.args.get('problem_name_keyword')
     if problem_name_keyword == '':
@@ -341,8 +346,7 @@ def problem_list():
     if problem_type == '-1' or problem_type == '':
         problem_type = None
     contest_id = request.args.get('contest_id')
-    if contest_id == '':
-        contest_id = None
+    contest_id = int(contest_id) if contest_id is not None and contest_id != '' else None
 
     limit = WebConfig.Problems_Each_Page
     offset = (page - 1) * WebConfig.Problems_Each_Page
@@ -360,7 +364,7 @@ def problem_list():
     max_page_under_11000 = ceil(count_under_11000 / WebConfig.Problems_Each_Page)
     count = query.count()
     max_page = ceil(count / WebConfig.Problems_Each_Page)
-    problems: List[Problem] = query \
+    problems = query \
         .order_by(Problem.id.asc()) \
         .limit(limit).offset(offset) \
         .all()
@@ -405,7 +409,7 @@ def problem_admin(problem_id):
         else:
             abort(BAD_REQUEST)
 
-    problem = db.query(Problem).where(Problem.id == problem_id).one_or_none()
+    problem = ProblemManager.get_problem(problem_id)
     if problem is None:
         abort(NOT_FOUND)
     submission_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem_id).count()
@@ -443,9 +447,11 @@ def problem_submit(problem_id):
         username = SessionManager.get_username()
         lang_request_str = str(request.form.get('lang'))
         if lang_request_str == 'quiz':
-            user_code = json.dumps(request.form.to_dict())
+            user_code: Optional[str] = json.dumps(request.form.to_dict())
         else:
             user_code = request.form.get('code')
+        if user_code is None:
+            abort(BAD_REQUEST)
         if len(str(user_code)) > ProblemConfig.Max_Code_Length:
             abort(REQUEST_ENTITY_TOO_LARGE)
         lang_str = lang_request_str.lower()
@@ -517,12 +523,12 @@ def problem_rank(problem_id):
             else language_info[submission.language].name
 
     if sort_parameter == 'memory':
-        submissions = sorted(submissions, key=lambda x: x.memory_bytes)
+        submissions = sorted(submissions, key=lambda x: x.memory_bytes if x.memory_bytes is not None else 0)
     elif sort_parameter == 'submit_time':
         submissions = sorted(submissions, key=lambda x: x.created_at)
     else:
         sort_parameter = 'time'
-        submissions = sorted(submissions, key=lambda x: x.time_msecs)
+        submissions = sorted(submissions, key=lambda x: x.time_msecs if x.time_msecs is not None else 0)
 
     in_exam = problem_in_exam(problem_id)
 
@@ -561,6 +567,8 @@ def discuss(problem_id):
             return ReturnCode.ERR_USER_NOT_LOGGED_IN
         try:
             form = request.json
+            if form is None:
+                abort(BAD_REQUEST)
             action = form.get('action')  # post, edit, delete
             if action == 'post':
                 text = form.get('text')
@@ -605,7 +613,6 @@ def status():
     if not SessionManager.check_user_status():
         return redirect('/OnlineJudge/login?next=' + request.full_path)
 
-    page = request.args.get('page')
     arg_submitter = request.args.get('submitter')
     if arg_submitter == '':
         arg_submitter = None
@@ -623,8 +630,8 @@ def status():
     if arg_lang == '':
         arg_lang = None
     username = SessionManager.get_username()
-    is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
 
+    page = request.args.get('page')
     page = int(page) if page is not None else 1
     limit = JudgeConfig.Judge_Each_Page
     offset = (page - 1) * JudgeConfig.Judge_Each_Page
@@ -657,10 +664,10 @@ def status():
     real_name_map = {}
     show_links = {}
     for submission in submissions:
-        if is_admin:
+        if g.is_admin:
             real_name_map[submission] = RealnameManager.query_realname(submission.user.student_id)
         show_links[submission] = (
-            is_admin or (
+            g.is_admin or (
                 # user's own problem: username == ele['Username']
                 # shared problems are always banned if exam_visible_problems is None (this means user in exam)
                 (username == submission.username or (exam_visible_problems is None and submission.public))
@@ -691,7 +698,7 @@ def code_old(run_id):
         language = readable_lang_v1(detail.language)
         time = readable_time(int(detail.time))
         data = None
-        if detail.detail != 'None':
+        if detail.detail is not None and detail.detail != 'None':
             temp = json.loads(detail.detail)
             score = int(temp[1])
             data = temp[4:]
@@ -784,7 +791,7 @@ def rejudge(submit_id):
 def abort_judge(submit_id):
     if not SessionManager.check_user_status():  # not login
         return redirect('/OnlineJudge/login?next=' + request.full_path)
-    submission: Optional[Tuple[str, int]] = db \
+    submission = db \
         .query(JudgeRecordV2.username) \
         .where(JudgeRecordV2.id == submit_id) \
         .one_or_none()
@@ -808,10 +815,10 @@ def contest_list_generic(type, type_zh):
     if contest_id is not None:
         return redirect(f'/OnlineJudge/problemset/{contest_id}')
     username = SessionManager.get_username()
-    user_contests = UserManager.list_contests(username)
+    user_contests = UserManager.list_contest_ids(username)
 
     page = request.args.get('page')
-    page = int(page) if page else 1
+    page = int(page) if page is not None else 1
     type_ids = [0, 2] if type == 'contest' else [1]
     keyword = request.args.get('keyword')
     status = request.args.get('status')
@@ -848,12 +855,11 @@ def problemset(contest_id):
     if not SessionManager.check_user_status():
         return redirect('/OnlineJudge/login?next=' + request.full_path)
     contest = ContestManager.get_contest(contest_id)
-    if contest == None:
+    if contest is None:
         abort(NOT_FOUND)
 
-    is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
     problems = ContestManager.list_problem_for_contest(contest_id)
-    problems_visible = is_admin or g.time >= contest.start_time
+    problems_visible = g.is_admin or g.time >= contest.start_time
     data = ContestManager.get_board_view(contest)
     contest_status = ContestManager.get_status(contest)
 
@@ -882,6 +888,8 @@ def profile():
         if not SessionManager.check_user_status():
             return ReturnCode.ERR_USER_NOT_LOGGED_IN
         form = request.json
+        if form is None:
+            abort(BAD_REQUEST)
         try:
             ret = validate(password=form.get('password'), friendly_name=form.get('friendly_name'))
             if ret == ReturnCode.SUC_VALIDATE:
@@ -902,7 +910,7 @@ def about():
     runners = JudgeManager.list_runners()
     if len(runners) == 0:
         runner_dict = {}
-        runner_list = []
+        runner_list: List[dict] = []
     else:
         query = urlencode({'id': ','.join(str(x.id) for x in runners)})
         url = urljoin(SchedulerConfig.base_url, f'status?{query}')

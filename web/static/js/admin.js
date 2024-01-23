@@ -107,7 +107,7 @@ $(function () {
         $("#btnModifyContest").attr("disabled","disabled");
         $("#btnRemoveContest").attr("disabled","disabled");
         $("#iptContestName").val("");
-        $("#iptStartTime").val(new Date().toISOString().replace(/\..+$|Z/, ''));
+        $("#iptStartTime").val(new Date().toISOString().replace(/:\d+\..+$|Z/, ''));
         $("#iptEndTime").val(new Date(2030, 0, 1, 0, 0, 0, 0).toISOString().replace(/\..+$|Z/, ''));
         $("#iptContestType").selectpicker("val", "0");
         const contestId = $("#iptContestID").val()

@@ -17,7 +17,7 @@ class ContestCache:
     @staticmethod
     def get(contest_id: int):
         rst = ContestCache.redis.get(ContestCache._key(contest_id))
-        return json.loads(rst) if rst != None else None
+        return json.loads(rst) if rst is not None else None
 
     @staticmethod
     def put(contest_id: int, data: list):

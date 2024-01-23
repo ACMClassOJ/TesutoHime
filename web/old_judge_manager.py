@@ -1,14 +1,16 @@
 __all__ = ('OldJudgeManager',)
 
-from sqlalchemy import select, func
+from typing import Optional
 
-from web.utils import db
+from sqlalchemy import func, select
+
 from commons.models import JudgeRecordV1
+from web.utils import db
 
 
 class OldJudgeManager:
     @staticmethod
-    def query_judge(judge_id: int) -> JudgeRecordV1:  # for details
+    def query_judge(judge_id: int) -> Optional[JudgeRecordV1]:  # for details
         stmt = select(JudgeRecordV1).where(JudgeRecordV1.id == judge_id)
         return db.scalar(stmt)
 

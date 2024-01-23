@@ -54,13 +54,15 @@ def user_manager():
     if g.privilege < Privilege.SUPER:
         abort(FORBIDDEN)
     form = request.json
+    if form is None:
+        abort(BAD_REQUEST)
     # err = _validate_user_data(form)
     # if err is not None:
     #     return err
     try:
         op = int(form[String.TYPE])
         if op == 0:
-            UserManager.add_user(form[String.USERNAME], int(form[String.STUDENT_ID]), form[String.FRIENDLY_NAME],
+            UserManager.add_user(form[String.USERNAME], form[String.STUDENT_ID], form[String.FRIENDLY_NAME],
                                   form[String.PASSWORD], form[String.PRIVILEGE])
             return ReturnCode.SUC_ADD_USER
         elif op == 1:
@@ -83,6 +85,8 @@ def user_manager():
 @require_admin
 def problem_description():
     form = request.json
+    if form is None:
+        abort(BAD_REQUEST)
     try:
         ProblemManager.modify_problem_description(int(form[String.PROBLEM_ID]),
            form.get(String.DESCRIPTION, None), form.get(String.INPUT, None),
@@ -104,6 +108,8 @@ def problem_create():
 @require_admin
 def problem_info():
     form = request.json
+    if form is None:
+        abort(BAD_REQUEST)
     try:
         ProblemManager.modify_problem(int(form[String.PROBLEM_ID]),
            form.get(String.TITLE, None),
@@ -119,8 +125,10 @@ def problem_info():
 @require_admin
 def problem_limit():
     form = request.form
+    if form is None:
+        abort(BAD_REQUEST)
     try:
-        ProblemManager.modify_problem_limit(form["id"], form["data"])
+        ProblemManager.modify_problem_limit(int(form["id"]), form["data"])
         return ReturnCode.SUC_ADD_PROBLEM
     except KeyError:
         return ReturnCode.ERR_BAD_DATA
@@ -132,6 +140,8 @@ def problem_limit():
 @require_admin
 def contest_manager():
     form = request.json
+    if form is None:
+        abort(BAD_REQUEST)
     try:
         op = int(form[String.TYPE])
         if op == 0:

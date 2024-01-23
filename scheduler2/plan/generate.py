@@ -5,17 +5,19 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from logging import getLogger
 from os import remove
-from typing import List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple, Union
 from zipfile import ZipFile
 
-from commons.task_typing import (Artifact, CompareChecker, CompileSourceCpp,
-                                 CompileSourceVerilog, CompileTask,
-                                 CompileTaskPlan, DirectChecker, FileUrl,
-                                 JudgePlan, JudgeTask, JudgeTaskPlan,
+from typing_extensions import Literal, Type
+
+from commons.task_typing import (Artifact, Checker, CompareChecker,
+                                 CompileSourceCpp, CompileSourceVerilog,
+                                 CompileTask, CompileTaskPlan, DirectChecker,
+                                 FileUrl, JudgePlan, JudgeTask, JudgeTaskPlan,
                                  QuizOption, QuizProblem, ResourceUsage,
                                  RunArgs, SpjChecker, Testpoint,
                                  TestpointGroup, UserCode)
-from commons.util import Literal, format_exc
+from commons.util import format_exc
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
                                quiz_filename, s3_buckets, working_dir)
@@ -28,16 +30,19 @@ from scheduler2.s3 import download, sign_url_put, upload_obj
 logger = getLogger(__name__)
 
 
+CompileType = Literal['classic', 'hpp', 'hpp-per-testpoint', 'none']
+CheckType = Literal['compare', 'direct', 'spj']
+
 @dataclass
 class ParseContext:
     problem_id: str
     zip: ZipFile
-    cfg: Optional[ProblemConfig] = None
+    cfg: ProblemConfig
 
     quiz_problems: Optional[List[QuizProblem]] = None
     testpoint_count: Optional[int] = None
-    compile_type: Literal['classic', 'hpp', 'hpp-per-testpoint', 'none'] = None
-    check_type: Literal['compare', 'direct', 'spj'] = None
+    compile_type: Optional[CompileType] = None
+    check_type: Optional[CheckType] = None
     compile_limits: Optional[ResourceUsage] = None
     compile_supp: Optional[List[str]] = None
     files_to_upload: Set[str] = field(default_factory=lambda: set())
@@ -101,7 +106,7 @@ checker_exec_filename = 'checker'
 
 async def parse_spj(ctx: ParseContext):
     spj = ctx.cfg.SPJ
-    type_map = {
+    type_map: Dict[Spj, Tuple[CompileType, CheckType]] = {
         Spj.CLASSIC_COMPARE: ('classic', 'compare'),
         Spj.CLASSIC_SPJ: ('classic', 'spj'),
         Spj.HPP_DIRECT: ('hpp', 'direct'),
@@ -147,6 +152,7 @@ async def parse_compile(ctx: ParseContext) -> Optional[CompileTaskPlan]:
     # into supplementary_files, and there is no user code
     # during SPJ compilation.
     ctx.compile_supp = supplementary_files[:]
+    supplementary_files: List[Union[str, UserCode]] = supplementary_files  # type: ignore
 
     if ctx.compile_type == 'none':
         return None
@@ -171,7 +177,6 @@ async def parse_compile(ctx: ParseContext) -> Optional[CompileTaskPlan]:
     # the generated compile task is just a template.
     # the compile task will be set to None in parse_testpoints.
     ctx.compile_type = 'hpp-per-testpoint'
-    task.source = None
     task.artifact = False
     return task
 
@@ -203,7 +208,7 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
     if conf.DiskLimit is not None: run_limits.file_size_bytes = abs(conf.DiskLimit)
     if conf.FileNumberLimit is not None: run_limits.file_count = conf.FileNumberLimit
 
-    type = 'verilog' if ctx.cfg.Verilog else \
+    type: Literal['verilog', 'valgrind', 'elf'] = 'verilog' if ctx.cfg.Verilog else \
         'valgrind' if conf.ValgrindTestOn else 'elf'
     run = None if ctx.compile_type == 'none' else RunArgs(
         type=type,
@@ -221,12 +226,14 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
             return ctx.file_url(ans_filename_alt)
         return None
     if ctx.check_type == 'compare':
-        check = CompareChecker(True, ans())
-        if check.answer is None:
+        answer = ans()
+        if answer is None:
             raise InvalidProblemException(f'Answer file needed for testpoint {id}')
+        check: Checker = CompareChecker(True, answer)
     elif ctx.check_type == 'direct':
         check = DirectChecker()
     elif ctx.check_type == 'spj':
+        assert ctx.checker_artifact is not None
         check = SpjChecker(
             format='checker',
             executable=ctx.checker_artifact,
@@ -245,10 +252,12 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
         check=check,
     )
     if ctx.compile_type == 'hpp-per-testpoint':
+        assert ctx.plan.compile is not None
         main_template = hpp_main_template_vlog if ctx.cfg.Verilog \
             else hpp_main_template
         task = deepcopy(ctx.plan.compile)
-        ctor = CompileSourceVerilog if ctx.cfg.Verilog else CompileSourceCpp
+        ctor: Union[Type[CompileSourceVerilog], Type[CompileSourceCpp]] = \
+            CompileSourceVerilog if ctx.cfg.Verilog else CompileSourceCpp
         task.source = ctor(ctx.file_url(main_template.format(id)))
         testpoint.input = task
     return testpoint
@@ -262,7 +271,7 @@ async def parse_testpoints(ctx: ParseContext) -> List[JudgeTaskPlan]:
     if any(x.DiskLimit is not None and x.DiskLimit > 0 for x in ctx.cfg.Details):
         plan: List[JudgeTaskPlan] = []
         for testpoint, conf in zip(testpoints, ctx.cfg.Details):
-            if len(plan) == 0 or conf.DiskLimit < 0:
+            if len(plan) == 0 or conf.DiskLimit is None or conf.DiskLimit < 0:
                 plan.append(JudgeTaskPlan(
                     task=JudgeTask([]),
                     dependencies=[],
@@ -290,13 +299,13 @@ async def parse_testpoints(ctx: ParseContext) -> List[JudgeTaskPlan]:
             if not testpoint.dependent_on in testpoints_map:
                 msg = f'Invalid dep {conf.Dependency} declared by {conf.ID}'
                 raise InvalidProblemException(msg)
-            dep = testpoints.index(testpoints_map[testpoint.dependent_on])
-            dep = [dep]
+            dependency = testpoints.index(testpoints_map[testpoint.dependent_on])
+            dependencies = [dependency]
         else:
-            dep = []
+            dependencies = []
         plan.append(JudgeTaskPlan(
             task=JudgeTask([testpoint]),
-            dependencies=dep,
+            dependencies=dependencies,
             dependents=[],
         ))
     return generate_dependents(plan)
@@ -328,6 +337,8 @@ async def compile_checker(ctx: ParseContext):
     source = ctx.checker_to_compile
     if source is None:
         return
+    assert ctx.compile_supp is not None
+    assert ctx.compile_limits is not None
     task = CompileTask(
         source=CompileSourceCpp(sign_url(source)),
         supplementary_files=list(map(sign_url, ctx.compile_supp)),
@@ -350,7 +361,7 @@ async def generate_plan(problem_id: str) -> JudgePlan:
     try:
         await download(s3_buckets.problems, zip_filename, zip_path)
         with ZipFile(zip_path) as zip:
-            ctx = ParseContext(problem_id, zip)
+            ctx = ParseContext(problem_id, zip, None)  # type: ignore
             await load_config(ctx)
             ctx.plan.group = ctx.cfg.RunnerGroup
             if ctx.plan.quiz is not None:

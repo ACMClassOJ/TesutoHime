@@ -46,20 +46,23 @@ add_executable(code main.c)
         )
         bin_files = ['/bin', '/usr/bin', '/usr/include', '/usr/share/cmake']
         with open('test.out', 'w') as outfile:
+            cmake = which('cmake')
+            make = which('make')
+            assert cmake is not None and make is not None
             res = await run_with_limits(
-                [which('cmake'), '.'], cwd, limits,
+                [cmake, '.'], cwd, limits,
                 supplementary_paths=bin_files,
                 outfile=outfile,
             )
             print(res)
-            if res.error != None: return
+            if res.error is not None: return
             res = await run_with_limits(
-                [which('make')], cwd, limits,
+                [make], cwd, limits,
                 supplementary_paths=bin_files,
                 outfile=outfile,
             )
             print(res)
-            if res.error != None: return
+            if res.error is not None: return
             res = await run_with_limits([str(exe)], cwd, limits, outfile=outfile)
             print(res)
 

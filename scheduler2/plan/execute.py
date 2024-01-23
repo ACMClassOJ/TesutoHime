@@ -5,17 +5,20 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from logging import getLogger
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+
+from typing_extensions import Literal, TypeAlias, TypeGuard, overload
 
 from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
                                  CompileResult, CompileSource,
                                  CompileSourceCpp, CompileSourceGit,
                                  CompileSourceVerilog, CompileTask,
                                  CompileTaskPlan, DirectChecker,
-                                 GroupJudgeResult, JudgePlan, JudgeResult,
-                                 JudgeTask, JudgeTaskPlan, ProblemJudgeResult,
-                                 QuizProblem, ResourceUsage, ResultType,
-                                 SourceLocation, SpjChecker,
+                                 GroupJudgeResult, Input, JudgePlan,
+                                 JudgeResult, JudgeTask, JudgeTaskPlan,
+                                 ProblemJudgeResult, QuizProblem,
+                                 ResourceUsage, ResultType, SourceLocation,
+                                 SpjChecker, StatusUpdate,
                                  StatusUpdateProgress, StatusUpdateStarted,
                                  Testpoint, TestpointGroup,
                                  TestpointJudgeResult, UserCode)
@@ -35,11 +38,13 @@ class UrlType(Enum):
     CODE = auto()
     ARTIFACT = auto()
 
-class DependencyNotSatisfied: pass
+class DependencyNotSatisfied(str):
+    def __str__(self) -> str:
+        return 'DependencyNotSatisfied'
 
 @dataclass
 class JudgeTaskRecord:
-    task: JudgeTask
+    task: JudgeTask[Input]
     plan: JudgeTaskPlan
     result: Optional[JudgeResult] = None
 
@@ -56,7 +61,7 @@ class ExecutionContext:
     judge: Optional[List[JudgeTaskRecord]] = None
     code_key: Optional[str] = None
     compile_artifact: Optional[Artifact] = None
-    files_to_clean: Set[str] = field(default_factory=lambda: set())
+    files_to_clean: Set[Tuple[str, str]] = field(default_factory=lambda: set())
     results: Dict[str, TestpointJudgeResult] = field(default_factory=lambda: {})
 
     def file_url(self, type: UrlType, filename: str):
@@ -79,7 +84,7 @@ class ExecutionContext:
         else:
             raise Exception(f'Invalid url type {type}')
 
-    def dependencies_satisfied(self, rec: JudgeTaskRecord) -> bool:
+    def dependencies_satisfied(self, rec: JudgeTaskRecord) -> TypeGuard[bool]:
         def dependency_satisfied(testpoint: Testpoint) -> bool:
             dep = testpoint.dependent_on
             return dep is None or isinstance(dep, DependencyNotSatisfied) \
@@ -108,9 +113,12 @@ async def get_compile_source(ctx: ExecutionContext, filename: str) \
         return CompileSourceVerilog(ctx.file_url(UrlType.CODE, filename))
     raise InvalidCodeException('Unknown language')
 
-async def prepare_compile(ctx: ExecutionContext, plan: CompileTaskPlan) \
-    -> Union[CompileTask, Artifact]:
-    if not plan:
+@overload
+async def prepare_compile(ctx: ExecutionContext, plan: CompileTaskPlan) -> Union[CompileTask, Artifact]: pass
+@overload
+async def prepare_compile(ctx: ExecutionContext, plan: None) -> None: pass
+async def prepare_compile(ctx, plan):
+    if plan is None:
         return None
 
     user_codes = list(filter(lambda x: isinstance(x, UserCode),
@@ -130,6 +138,7 @@ async def prepare_compile(ctx: ExecutionContext, plan: CompileTaskPlan) \
         if isinstance(source, Artifact):
             ctx.compile_artifact = source
             return source
+        source: CompileSource
     else:
         source = deepcopy(plan.source)
         if isinstance(source, CompileSourceCpp) \
@@ -151,7 +160,7 @@ async def prepare_compile(ctx: ExecutionContext, plan: CompileTaskPlan) \
 
 async def get_judge_task(ctx: ExecutionContext, plan: JudgeTaskPlan) \
     -> JudgeTaskRecord:
-    task = deepcopy(plan.task)
+    task: JudgeTask[Input] = deepcopy(plan.task)  # type: ignore
     for testpoint in task.testpoints:
         if isinstance(testpoint.input, UserCode):
             if ctx.compile_artifact is None:
@@ -225,6 +234,7 @@ def remove_skipped_testpoints_from_task(ctx: ExecutionContext,
                                         unaccepted: List[Testpoint]):
     # for all dependent tasks...
     for dependent in plan.dependents:
+        assert ctx.judge is not None
         rec = ctx.judge[dependent]
         removed_testpoints: List[Testpoint] = []
         testpoints_removed = True
@@ -261,24 +271,30 @@ def remove_skipped_testpoints_from_task(ctx: ExecutionContext,
 async def run_judge_tasks(ctx: ExecutionContext):
     await update_status(ctx.id, 'judging')
     records = ctx.judge
+    assert records is not None
     ready = list(filter(ctx.dependencies_satisfied, records))
-    tasks_running: List[Task[Tuple[JudgeTaskRecord, JudgeResult]]] = []
-    def run(task: JudgeTaskRecord):
+    ResType: TypeAlias = Task[Union[
+        Tuple[JudgeTaskRecord, Literal[True], JudgeResult],
+        Tuple[JudgeTaskRecord, Literal[False], Exception],
+    ]]
+    tasks_running: List[ResType] = []
+    def run(task: JudgeTaskRecord) -> Optional[ResType]:
         if len(task.task.testpoints) == 0:
             return None
-        async def onprogress(status):
+        async def onprogress(status: StatusUpdate):
             if isinstance(status, StatusUpdateStarted):
                 for testpoint in task.task.testpoints:
                     if not testpoint.id in ctx.results:
                         ctx.results[testpoint.id] = TestpointJudgeResult(
                             testpoint.id, 'judging', 'Judging')
             elif isinstance(status, StatusUpdateProgress):
-                for testpoint in status.result.testpoints:
-                    if testpoint is not None and (
-                        not testpoint.id in ctx.results
-                        or ctx.results[testpoint.id].result
+                assert isinstance(status.result, JudgeResult)
+                for testpoint1 in status.result.testpoints:
+                    if testpoint1 is not None and (
+                        not testpoint1.id in ctx.results
+                        or ctx.results[testpoint1.id].result
                             in ('pending', 'judging')):
-                        ctx.results[testpoint.id] = testpoint
+                        ctx.results[testpoint1.id] = testpoint1
         async def run_with_rec():
             try:
                 msg = f'Running test for submission #{ctx.id}'
@@ -292,13 +308,12 @@ async def run_judge_tasks(ctx: ExecutionContext):
                 return (task, False, e)
         return create_task(run_with_rec())
     while len(ready) > 0 or len(tasks_running) > 0:
-        tasks_running.extend(filter(lambda x: x is not None, map(run, ready)))
+        tasks_running.extend(filter(lambda x: x is not None, map(run, ready)))  # type: ignore
         if len(tasks_running) == 0:
             ready = []
             break
         try:
-            done, pending = await wait(tasks_running,
-                return_when=FIRST_COMPLETED)
+            done, pending = await wait(tasks_running, return_when=FIRST_COMPLETED)
         except CancelledError:
             for task in tasks_running:
                 if not task.cancelled():
@@ -306,8 +321,7 @@ async def run_judge_tasks(ctx: ExecutionContext):
             raise
         tasks_running = list(pending)
         dependents = set()
-        for task in done:
-            record, ok, res = await task
+        for record, ok, res in done:  # type: Tuple[Any, Any, Any]
             if not ok:
                 error = res
                 res = JudgeResult([TestpointJudgeResult(
@@ -327,7 +341,7 @@ async def run_judge_tasks(ctx: ExecutionContext):
             unaccepted_testpoints = []
             accepted_testpoints = []
             for testpoint in record.task.testpoints:
-                status = list(filter(lambda x: x.id == testpoint.id,
+                status = list(filter(lambda x: x.id == testpoint.id,  # type: ignore
                     record.result.testpoints))
                 if len(status) == 1 and status[0].result == 'accepted':
                     accepted_testpoints.append(testpoint)
@@ -365,8 +379,8 @@ def pending_result(name):
 def synthesize_scores(ctx: ExecutionContext, *, aborted: bool = False,
     in_progress: bool = False) -> ProblemJudgeResult:
     testpoints = ctx.results
-    rusage = synthesize_rusage(x.resource_usage for x in \
-        filter(lambda x: x is not None, testpoints.values()))
+    rusage = synthesize_rusage(x.resource_usage for x in  # type: ignore
+        filter(lambda x: x is not None and x.resource_usage is not None, testpoints.values()))
     def fallback_result(_):
         raise InvalidProblemException('Loop detected in dependent_on relations')
     if aborted: fallback_result = aborted_result
@@ -400,8 +414,8 @@ async def judge_quiz(quiz: List[QuizProblem], answer: Dict[str, str]):
         return TestpointJudgeResult(id, 'wrong_answer', 'Wrong Answer')
     correct = dict((x.id, x.answer == answer.get(x.id, None)) for x in quiz)
     testpoints = [ac(id) if correct[id] else wa(id) for id in correct]
-    result = 'accepted' if all(correct[id] for id in correct) \
-        else 'wrong_answer'
+    result: Literal['accepted', 'wrong_answer'] = \
+        'accepted' if all(correct[id] for id in correct) else 'wrong_answer'
     score = float(len(list(filter(lambda id: correct[id], correct))))
     groups = [GroupJudgeResult('quiz', 'Quiz', result, testpoints, score)]
     return ProblemJudgeResult(result, None, score, groups=groups)
@@ -423,17 +437,18 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
             answer = json.loads(answer)
         except Exception as e:
             raise InvalidCodeException(f'Answer is invalid JSON: {e}')
-        return await judge_quiz(plan.quiz, answer)
+        return await judge_quiz(plan.quiz, answer)  # type: ignore
     if plan.quiz is not None:
         raise InvalidCodeException('This problem is a quiz. Do not submit code.')
 
     try:
-        ctx.compile = await prepare_compile(ctx, ctx.plan.compile)
+        ctx.compile = await prepare_compile(ctx, ctx.plan.compile)  # type: ignore
         ctx.judge = await get_judge_tasks(ctx)
         await upload_code(ctx)
         compile_res = await run_compile_task(ctx)
         if compile_res is not None and compile_res.result != 'compiled':
-            status = 'system_error' if compile_res.result == 'system_error' \
+            status: ResultType = \
+                'system_error' if compile_res.result == 'system_error' \
                 else 'aborted' if compile_res.result == 'aborted' \
                 else 'compile_error'
             message = compile_res.message

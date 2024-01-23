@@ -7,6 +7,7 @@ from os import chmod, path, remove, rename, scandir, stat, utime
 from pathlib import PosixPath
 from shutil import copy
 from time import time
+from typing import Union
 from urllib.parse import urlsplit
 from uuid import NAMESPACE_URL, uuid5
 
@@ -21,17 +22,16 @@ logger = getLogger(__name__)
 
 @dataclass
 class CachedFile:
-    path: PosixPath = None
-    filename: str = None
+    path: PosixPath
+    filename: str
 
 
 def cached_from_url(url: str) -> CachedFile:
-    cache = CachedFile()
     key = urlsplit(url).path
     cache_id = str(uuid5(NAMESPACE_URL, key))
-    cache.path = PosixPath(path.join(cache_dir, cache_id))
-    cache.filename = PosixPath(key).name
-    return cache
+    p = PosixPath(path.join(cache_dir, cache_id))
+    filename = PosixPath(key).name
+    return CachedFile(p, filename)
 
 
 utc_time_format = '%a, %d %b %Y %H:%M:%S GMT'
@@ -76,7 +76,7 @@ async def ensure_cached(url: str) -> CachedFile:
         return cache
 
 
-async def upload(local_path: str, url: str) -> CachedFile:
+async def upload(local_path: Union[str, PosixPath], url: str) -> CachedFile:
     cache = cached_from_url(url)
     copy(local_path, cache.path)
     chmod(cache.path, 0o640)

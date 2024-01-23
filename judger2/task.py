@@ -1,11 +1,13 @@
 from asyncio import CancelledError
 from logging import getLogger
 from pathlib import PosixPath
-from typing import List, Optional
+from typing import List, Optional, Sequence, Union
 
-from commons.task_typing import (CompileResult, CompileTask,
+from typing_extensions import overload
+
+from commons.task_typing import (Artifact, CompileResult, CompileTask, Input,
                                  InvalidTaskException, JudgeResult, JudgeTask,
-                                 Result, StatusUpdateProgress, Task, Testpoint,
+                                 RunResult, StatusUpdateProgress, Testpoint,
                                  TestpointJudgeResult)
 from commons.util import format_exc, serialize
 from judger2.config import queues, redis, task_timeout_secs
@@ -18,7 +20,11 @@ from judger2.util import TempDir, copy_supplementary_files
 logger = getLogger(__name__)
 
 
-async def run_task(task: Task, task_id: str) -> Result:
+@overload
+async def run_task(task: CompileTask, task_id: str) -> CompileResult: pass
+@overload
+async def run_task(task: JudgeTask[Input], task_id: str) -> JudgeResult: pass
+async def run_task(task, task_id):
     task_logger.info(f'received task {task_id}')
     task_logger.debug(f'received task {task_id}: {task}')
     if isinstance(task, CompileTask):
@@ -39,14 +45,15 @@ async def compile_task(task: CompileTask) -> CompileResult:
 
 
 def get_skip_reason(
-    testpoint: Testpoint,
-    results: List[Optional[TestpointJudgeResult]],
+    testpoint: Testpoint[Input],
+    results: Sequence[Optional[TestpointJudgeResult]],
 ) -> Optional[str]:
     dep = testpoint.dependent_on
-    if dep == None:
+    if dep is None:
         return None
 
-    res = list(filter(lambda x: x != None and x.id == dep, results))
+    res: List[TestpointJudgeResult] = \
+        list(filter(lambda x: x is not None and x.id == dep, results))  # type: ignore
     if len(res) == 0:
         msg = f'system error: testpoint {testpoint.id} ran before dependency {dep}'
         raise InvalidTaskException(msg)
@@ -64,10 +71,10 @@ class Ref:
     def __init__(self, value):
         self.value = value
 
-async def judge_testpoint(testpoint: Testpoint, result: JudgeResult, \
+async def judge_testpoint(testpoint: Testpoint[Input], result: JudgeResult, \
     cwd: PosixPath, rusage: Ref):
     skip_reason = get_skip_reason(testpoint, result.testpoints)
-    if skip_reason != None:
+    if skip_reason is not None:
         task_logger.debug(f'skipping {testpoint.id} due to {skip_reason}')
         return TestpointJudgeResult(
             id=testpoint.id,
@@ -76,7 +83,8 @@ async def judge_testpoint(testpoint: Testpoint, result: JudgeResult, \
         )
 
     with TempDir() as oufdir:
-        if testpoint.run != None:
+        output: Union[CompileTask, Artifact, RunResult]
+        if testpoint.run is not None:
             await copy_supplementary_files(testpoint.run.supplementary_files,
                 cwd)
             output = await run(oufdir, cwd, testpoint.input, testpoint.run)
@@ -102,8 +110,8 @@ async def judge_testpoint(testpoint: Testpoint, result: JudgeResult, \
         task_logger.debug(f'testpoint {testpoint.id} finished with {res}')
         return res
 
-async def judge_task(task: JudgeTask, task_id: str) -> JudgeResult:
-    result = JudgeResult([None for _ in task.testpoints])
+async def judge_task(task: JudgeTask[Input], task_id: str) -> JudgeResult:
+    result = JudgeResult([None for _ in task.testpoints])  # type: ignore
     with TempDir() as cwd:
         for i, testpoint in enumerate(task.testpoints):
             rusage = Ref(None)

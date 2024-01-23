@@ -13,14 +13,15 @@ from werkzeug.local import LocalProxy
 from web.config import DatabaseConfig, RedisConfig, S3Config
 from web.const import language_info
 
-engine = create_engine(DatabaseConfig.url, pool_recycle=DatabaseConfig.connection_pool_recycle)
+engine = create_engine(DatabaseConfig.url,
+                       pool_recycle=DatabaseConfig.connection_pool_recycle)
 SqlSession = sessionmaker(bind=engine)
 
 cfg = Config(signature_version='s3v4')
-s3_public = boto3.client('s3', **S3Config.Connections.public, config=cfg)
-s3_internal = boto3.client('s3', **S3Config.Connections.internal, config=cfg)
+s3_public = boto3.client('s3', **S3Config.Connections.public, config=cfg)  # type: ignore
+s3_internal = boto3.client('s3', **S3Config.Connections.internal, config=cfg)  # type: ignore
 
-db: _Session = LocalProxy(lambda: g.db)
+db: _Session = LocalProxy(lambda: g.db)  # type: ignore
 
 def generate_s3_public_url(*args, **kwargs):
     url = s3_public.generate_presigned_url(*args, **kwargs)

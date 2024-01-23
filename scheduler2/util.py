@@ -6,6 +6,7 @@ from typing import Dict, Optional
 from urllib.parse import quote, urljoin
 
 from aiohttp import request
+from typing_extensions import Generic
 
 from commons.task_typing import Task
 from commons.util import dump_dataclass
@@ -16,14 +17,14 @@ logger = getLogger(__name__)
 
 
 async def make_request(path, body):
-    if isinstance(body, str) or isinstance(body, bytes):
+    if isinstance(body, str):
         args = {'data': body}
     else:
         args = {'json': dump_dataclass(body)}
     url = urljoin(web_base_url, path)
     headers = {'Authorization': web_auth}
     async def do_request():
-        async with request('PUT', url, headers=headers, **args) as res:
+        async with request('PUT', url, headers=headers, **args) as res:  # type: ignore
             if res.status != OK:
                 raise Exception(f'{res.status}')
     interval = request_retry_interval_secs
@@ -55,7 +56,7 @@ class RateLimiter:
     class Unlimited:
         async def __aenter__(self): pass
         async def __aexit__(self, *_): pass
-    def limit(self, key: str):
+    def limit(self, key: Optional[str]):
         if key is None:
             return RateLimiter.Unlimited()
         if key not in self.semaphores:
@@ -65,7 +66,7 @@ class RateLimiter:
 
 
 @dataclass
-class TaskInfo:
+class TaskInfo(Generic[Task]):
     task: Task
     submission_id: Optional[str]
     problem_id: str

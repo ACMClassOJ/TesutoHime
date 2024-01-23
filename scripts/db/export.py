@@ -21,9 +21,9 @@ def filename (s: JudgeRecordV2) -> str:
 def prelude (s: JudgeRecordV2) -> str:
     details_message = 'No details'
     message = s.message
-    if message != None:
+    if message is not None:
         message = '\n * '.join(message.split('\n'))
-    if s.details != None:
+    if s.details is not None:
         details: ProblemJudgeResult = deserialize(s.details)
         details_message = '\n * '.join(f'{group.name}: {group.score} {group.result}' for group in details.groups)
     return f'''

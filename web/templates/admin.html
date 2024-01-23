@@ -89,7 +89,7 @@
                         <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="iptContestName"> 比赛名称 </label>
-                                <input class="form-control" type="text" name="name" id="iptContestName">
+                                <input class="form-control" type="text" name="name" id="iptContestName" required>
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="iptStartTime"> 起始时间 (YYYY-MM-DDThh:mm:ss) </label>
@@ -335,5 +335,5 @@
     <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=20240120"></script>
+    <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=20240122"></script>
 {% endblock %}

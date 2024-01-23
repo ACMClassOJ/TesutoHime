@@ -5,8 +5,10 @@ from os import utime
 from pathlib import PosixPath
 from shutil import copy2, which
 from subprocess import DEVNULL
-from typing import Any, Callable, Coroutine, Dict, List
+from typing import Any, Callable, Coroutine, Dict, List, Type
 from uuid import uuid4
+
+from typing_extensions import TypeAlias
 
 from commons.task_typing import (CompileLocalResult, CompileResult,
                                  CompileSource, CompileSourceCpp,
@@ -42,7 +44,7 @@ async def compile(task: CompileTask) -> CompileLocalResult:
         # check for errors
         if res.result.result != 'compiled':
             return res
-        if res.local_path == None:
+        if res.local_path is None:
             return CompileLocalResult(
                 result=CompileResult(
                     result='system_error',
@@ -56,7 +58,7 @@ async def compile(task: CompileTask) -> CompileLocalResult:
         chown_back(cwd)
 
         # upload artifacts
-        if task.artifact != None:
+        if task.artifact is not None:
             local_path = (await upload(res.local_path, task.artifact.url)).path
         else:
             local_path = PosixPath(cache_dir) / str(uuid4())
@@ -75,6 +77,7 @@ async def ensure_input(input: Input) -> CachedFile:
         res = await compile(input)
         if res.result.result != 'compiled':
             raise NotCompiledException(res.result.message)
+        assert res.local_path is not None
         return CachedFile(res.local_path, exec_file_name)
     return await ensure_cached(input.url)
 
@@ -88,12 +91,13 @@ async def compile_cpp(
     code_file = cwd / cxx_file_name
     exec_file = cwd / cxx_exec_name
     copy2(main_file, code_file)
+    assert cxx is not None
     res = await run_with_limits(
         [cxx] + cxxflags + [str(code_file), '-o', str(exec_file)],
         cwd, limits,
         supplementary_paths=['/bin', '/usr/bin', '/usr/include'],
     )
-    if res.error != None:
+    if res.error is not None:
         return CompileLocalResult.from_run_failure(res)
     return CompileLocalResult.from_file(exec_file, res.message)
 
@@ -145,17 +149,19 @@ async def compile_git(
         )
 
     # clone
-    git_argv = [which('git'), 'clone', source.url, '.'] + gitflags
+    git = which('git')
+    assert git is not None
+    git_argv = [git, 'clone', source.url, '.'] + gitflags
     logger.debug(f'about to run {git_argv}')
     clone_res = await run_build_step(git_argv, is_git_clone=True)
-    if clone_res.error != None:
+    if clone_res.error is not None:
         return CompileLocalResult.from_run_failure(clone_res)
 
     # get commit hash
     with TempDir() as d, open(d / 'commit-hash', 'w+b') as ouf:
-        commit_hash_argv = [which('git'), 'log', '-1', '--pretty=%H']
+        commit_hash_argv = [git, 'log', '-1', '--pretty=%H']
         commit_hash_res = await run_build_step(commit_hash_argv, output=ouf)
-        if commit_hash_res.error != None:
+        if commit_hash_res.error is not None:
             return CompileLocalResult.from_run_failure(commit_hash_res)
         ouf.seek(0)
         commit_hash = ouf.read(128).decode().strip()
@@ -166,8 +172,10 @@ async def compile_git(
     cmake_lists_path = cwd / 'CMakeLists.txt'
     if cmake_lists_path.is_file():
         logger.debug('CMake config found, invoking cmake')
-        res = await run_build_step([which('cmake'), '.'])
-        if res.error != None:
+        cmake = which('cmake')
+        assert cmake is not None
+        res = await run_build_step([cmake, '.'])
+        if res.error is not None:
             return CompileLocalResult.from_run_failure(res)
     else:
         message += '\nWarning: CMakeLists.txt not found, skipping cmake invocation'
@@ -176,8 +184,10 @@ async def compile_git(
     makefile_paths = [cwd / x for x in ['GNUmakefile', 'makefile', 'Makefile']]
     if any(x.is_file() for x in makefile_paths):
         logger.debug('makefile found, invoking make')
-        res = await run_build_step([which('make')])
-        if res.error != None:
+        make = which('make')
+        assert make is not None
+        res = await run_build_step([make])
+        if res.error is not None:
             return CompileLocalResult.from_run_failure(res)
     else:
         message += '\nWarning: Makefile not found, skipping make invocation'
@@ -207,23 +217,24 @@ async def compile_verilog(
     code_file = cwd / verilog_file_name
     exec_file = cwd / verilog_exec_name
     copy2(main_file, code_file)
+    assert verilog is not None
     res = await run_with_limits(
         [verilog, str(code_file), '-o', str(exec_file)],
         cwd, limits,
         supplementary_paths=['/bin', '/usr/bin'],
         tmpfsmount=True,
     )
-    if res.error != None:
+    if res.error is not None:
         return CompileLocalResult.from_run_failure(res)
     return CompileLocalResult.from_file(exec_file)
 
 
-Compiler = Callable[
+Compiler: TypeAlias = Callable[
     [PosixPath, CompileSource, ResourceUsage],
     Coroutine[Any, Any, CompileLocalResult],
 ]
-compilers: Dict[Any, Compiler] = {
-    CompileSourceCpp: compile_cpp,
-    CompileSourceGit: compile_git,
-    CompileSourceVerilog: compile_verilog,
+compilers: Dict[Type[CompileSource], Compiler] = {
+    CompileSourceCpp: compile_cpp,  # type: ignore
+    CompileSourceGit: compile_git,  # type: ignore
+    CompileSourceVerilog: compile_verilog,  # type: ignore
 }

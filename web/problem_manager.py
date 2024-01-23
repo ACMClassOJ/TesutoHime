@@ -1,7 +1,7 @@
-import sys
 from datetime import datetime
 from http.client import BAD_REQUEST
 from typing import List, Optional
+from typing_extensions import TypeGuard
 
 from flask import abort, g
 from sqlalchemy import delete, func, select, update
@@ -98,7 +98,7 @@ class ProblemManager:
         return data if data is not None else 0
 
     @staticmethod
-    def should_show(problem: Problem) -> bool:
+    def should_show(problem: Optional[Problem]) -> TypeGuard[Problem]:
         return problem is not None and \
             (problem.release_time <= g.time
              or SessionManager.get_privilege() >= Privilege.ADMIN)
@@ -109,6 +109,8 @@ class ProblemManager:
                                      .where(JudgeRecordV2.problem_id == problem_id))
         contest_count = db.scalar(select(func.count())
                                   .where(ContestProblem.c.problem_id == problem_id))
+        assert submission_count is not None
+        assert contest_count is not None
         if submission_count > 0 or contest_count > 0:
             abort(BAD_REQUEST)
         db.execute(delete(Problem).where(Problem.id == problem_id))

@@ -3,7 +3,8 @@ from math import isinf, isnan
 from os import devnull
 from pathlib import PosixPath
 from shutil import copy2
-from typing import Any, Callable, Coroutine, Dict, Optional
+from typing import Any, Callable, Coroutine, Dict, Literal, Optional, Type
+from typing_extensions import TypeAlias
 
 from commons.task_typing import (Checker, CheckInput, CheckResult,
                                  CompareChecker, DirectChecker, RunResult, SpjChecker)
@@ -23,7 +24,7 @@ async def check(outfile: CheckInput, cwd: PosixPath, checker: Checker) -> CheckR
     if not isinstance(outfile, RunResult):
         try:
             inf = None
-            ouf = (await ensure_input(outfile)).path
+            ouf: Optional[PosixPath] = (await ensure_input(outfile)).path
         except NotCompiledException as e:
             return CheckResult('compile_error', str(e))
     else:
@@ -105,7 +106,7 @@ def checker_read_float(outfile: PosixPath, message: str = ''):
     if isnan(score):
         return CheckResult('system_error', 'Invalid SPJ checker: score is NaN')
 
-    result = 'accepted' if score >= 1.0 else 'wrong_answer'
+    result: Literal['accepted', 'wrong_answer'] = 'accepted' if score >= 1.0 else 'wrong_answer'
     return CheckResult(result, message, score)
 
 async def checker_direct(_infile, outfile: PosixPath, _cwd, _checker):
@@ -156,12 +157,12 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
         return checker_read_float(score, msg)
 
 
-Checker = Callable[
+CheckerFunction: TypeAlias = Callable[
     [Optional[PosixPath], PosixPath, PosixPath, Checker],
     Coroutine[Any, Any, CheckResult],
 ]
-checkers: Dict[Any, Checker] = {
+checkers: Dict[Type[Checker], CheckerFunction] = {
     CompareChecker: checker_cmp_abtest,
     DirectChecker: checker_direct,
-    SpjChecker: checker_spj,
+    SpjChecker: checker_spj,  # type: ignore
 }

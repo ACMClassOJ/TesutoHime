@@ -1,13 +1,19 @@
+from datetime import datetime
 from enum import Enum, auto
+from typing import List, Optional
 
-from sqlalchemy import ARRAY, BigInteger, Boolean, Column, Computed, DateTime
+from sqlalchemy import ARRAY, BigInteger, Column, Computed
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy import ForeignKey, Index, Integer, Table, Text, func, text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from typing_extensions import Annotated
 
 
-class GenerateName:
+class Base(DeclarativeBase):
+    type_annotation_map = {
+        str: Text,
+    }
+
     def __init_subclass__(cls) -> None:
         if '__tablename__' not in cls.__dict__:
             name = ''
@@ -16,28 +22,38 @@ class GenerateName:
                     if name != '':
                         name += '_'
                 name += c.lower()
-            cls.__tablename__ = name
+            setattr(cls, '__tablename__', name)
         return super().__init_subclass__()
 
-Base = declarative_base(cls=GenerateName)
-metadata = Base.metadata
+metadata = Base.metadata  # type: ignore
+
+intpk = Annotated[int, mapped_column(primary_key=True)]
+bigint = Annotated[int, mapped_column(BigInteger)]
 
 class UseTimestamps:
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
 
 
 class User(UseTimestamps, Base):
     # 'user' is a keyword in postgresql :(
     __tablename__ = 'account'
 
-    id = Column(Integer, primary_key=True)
-    username = Column(Text, unique=True)
-    username_lower = Column(Text, Computed('lower(username)'), unique=True)
-    student_id = Column(Text)
-    friendly_name = Column(Text)
-    password = Column(Text)
-    privilege = Column(Integer)
+    id: Mapped[intpk]
+    username: Mapped[str] = mapped_column(unique=True)
+    username_lower: Mapped[str] = mapped_column(Computed('lower(username)'), unique=True)
+    student_id: Mapped[str]
+    friendly_name: Mapped[str]
+    password: Mapped[str]
+    privilege: Mapped[int]
+
+    contests: Mapped[List['Contest']] = relationship(
+        secondary='contest_player',
+        passive_deletes=True,
+        back_populates='players',
+    )
+
+user_fk = Annotated[str, mapped_column(ForeignKey(User.username), index=True)]
 
 
 class Problem(UseTimestamps, Base):
@@ -45,56 +61,61 @@ class Problem(UseTimestamps, Base):
         Index('release_time_id', 'release_time', 'id'),
     )
 
-    id = Column(Integer, primary_key=True)
-    title = Column(Text)
+    id: Mapped[intpk]
+    title: Mapped[str]
 
     # problem description
-    description = Column(Text)
-    input = Column(Text)
-    output = Column(Text)
-    example_input = Column(Text)
-    example_output = Column(Text)
-    data_range = Column(Text)
-    limits = Column(Text)
+    description: Mapped[Optional[str]]
+    input: Mapped[Optional[str]]
+    output: Mapped[Optional[str]]
+    example_input: Mapped[Optional[str]]
+    example_output: Mapped[Optional[str]]
+    data_range: Mapped[Optional[str]]
+    limits: Mapped[Optional[str]]
 
-    release_time = Column(DateTime, nullable=False)
-    problem_type = Column(Integer, nullable=False, server_default=text('0'))
-    languages_accepted = Column(ARRAY(Text))
+    release_time: Mapped[datetime]
+    problem_type: Mapped[int] = mapped_column(server_default=text('0'))
+    languages_accepted: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text))
+
+    contests: Mapped[List['Contest']] = relationship(
+        secondary='contest_problem',
+        passive_deletes=True,
+        back_populates='problems',
+    )
+
+problem_fk = Annotated[int, mapped_column(ForeignKey(Problem.id), index=True)]
 
 
 class Contest(UseTimestamps, Base):
-    id = Column(Integer, primary_key=True)
-    name = Column(Text)
-    start_time = Column(DateTime)
-    end_time = Column(DateTime)
-    type = Column(Integer, index=True)
-    ranked = Column(Boolean, nullable=False)
-    rank_penalty = Column(Boolean, nullable=False)
-    rank_partial_score = Column(Boolean, nullable=False)
+    id: Mapped[intpk]
+    name: Mapped[str]
+    start_time: Mapped[datetime]
+    end_time: Mapped[datetime]
+    type: Mapped[int] = mapped_column(index=True)
+    ranked: Mapped[bool]
+    rank_penalty: Mapped[bool]
+    rank_partial_score: Mapped[bool]
+
+    players: Mapped[List[User]] = relationship(
+        secondary='contest_player',
+        passive_deletes=True,
+        back_populates='contests',
+    )
+    problems: Mapped[List[Problem]] = relationship(
+        secondary='contest_problem',
+        passive_deletes=True,
+        back_populates='contests',
+    )
 
 
 ContestPlayer = Table(
     'contest_player',
     Base.metadata,
     Column('id', Integer, primary_key=True),
-    Column('contest_id', Integer, ForeignKey(Contest.id)),
-    Column('username', Text, ForeignKey(User.username)),
+    Column('contest_id', Integer, ForeignKey(Contest.id), index=True),
+    Column('username', Text, ForeignKey(User.username), index=True),
     Index('contest_id_username', 'contest_id', 'username'),
 )
-
-Contest.players = relationship(
-    User,
-    ContestPlayer,
-    passive_deletes=True,
-    back_populates='contests',
-)
-User.contests = relationship(
-    Contest,
-    ContestPlayer,
-    passive_deletes=True,
-    back_populates='players',
-)
-
 
 ContestProblem = Table(
     'contest_problem',
@@ -103,25 +124,13 @@ ContestProblem = Table(
     Column('contest_id', Integer, ForeignKey(Contest.id), index=True),
     Column('problem_id', Integer, ForeignKey(Problem.id), index=True),
 )
-Contest.problems = relationship(
-    Problem,
-    ContestProblem,
-    passive_deletes=True,
-    back_populates='contests',
-)
-Problem.contests = relationship(
-    Contest,
-    ContestProblem,
-    passive_deletes=True,
-    back_populates='problems',
-)
 
 
 class Discussion(UseTimestamps, Base):
-    id = Column(Integer, primary_key=True)
-    problem_id = Column(Integer, ForeignKey(Problem.id))
-    username = Column(Text, ForeignKey(User.username))
-    data = Column(Text)
+    id: Mapped[intpk]
+    problem_id: Mapped[problem_fk]
+    username: Mapped[user_fk]
+    data: Mapped[str]
 
 Problem.discussions = relationship(Discussion)
 
@@ -131,48 +140,48 @@ class JudgeRecordV1(Base):
         Index('problem_id_time', 'problem_id', 'time'),
     )
 
-    id = Column(Integer, primary_key=True)
-    code = Column(Text)
-    username = Column(Text, ForeignKey(User.username), index=True)
-    user = relationship(User)
-    problem_id = Column(Integer, ForeignKey(Problem.id))
-    problem = relationship(Problem)
-    language = Column(Integer)
-    status = Column(Integer, index=True)
-    score = Column(Integer, server_default=text('-1'))
-    time = Column(BigInteger)
-    time_msecs = Column(Integer, server_default=text('-1'))
-    memory_kbytes = Column(Integer, server_default=text('-1'))
-    detail = Column(Text)
-    public = Column(Boolean, server_default=text('false'))
+    id: Mapped[intpk]
+    code: Mapped[str]
+    username: Mapped[user_fk]
+    user: Mapped[User] = relationship()
+    problem_id: Mapped[problem_fk]
+    problem: Mapped[Problem] = relationship()
+    language: Mapped[int]
+    status: Mapped[int] = mapped_column(index=True)
+    score: Mapped[int] = mapped_column(server_default=text('-1'))
+    time: Mapped[bigint]
+    time_msecs: Mapped[int] = mapped_column(server_default=text('-1'))
+    memory_kbytes: Mapped[int] = mapped_column(server_default=text('-1'))
+    detail: Mapped[Optional[str]]
+    public: Mapped[bool] = mapped_column(server_default=text('false'))
 
 
 class JudgeServerV1(Base):
-    id = Column(Integer, primary_key=True)
-    base_url = Column(Text)
-    secret_key = Column(Text, unique=True)
-    last_seen = Column(BigInteger, server_default=text('0'))
-    busy = Column(Boolean, server_default=text('false'))
-    current_task = Column(Integer, server_default=text('-1'))
-    friendly_name = Column(Text)
-    detail = Column(Text)
+    id: Mapped[intpk]
+    base_url: Mapped[str]
+    secret_key: Mapped[str] = mapped_column(unique=True)
+    last_seen: Mapped[bigint] = mapped_column(server_default=text('0'))
+    busy: Mapped[bool] = mapped_column(server_default=text('false'))
+    current_task: Mapped[int] = mapped_column(server_default=text('-1'))
+    friendly_name: Mapped[str]
+    detail: Mapped[str]
 
 
 class RealnameReference(UseTimestamps, Base):
-    id = Column(Integer, primary_key=True)
-    student_id = Column(Text, index=True)
-    real_name = Column(Text)
+    id: Mapped[intpk]
+    student_id: Mapped[str] = mapped_column(index=True)
+    real_name: Mapped[str]
 
 
 # New models for judger2 and scheduler2
 
 
 class JudgeRunnerV2(UseTimestamps, Base):
-    id = Column(Integer, primary_key=True)
-    name = Column(Text)
-    hardware = Column(Text)
-    provider = Column(Text)
-    visible = Column(Boolean, server_default=text('true'))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    hardware: Mapped[str]
+    provider: Mapped[str]
+    visible: Mapped[bool] = mapped_column(server_default=text('true'))
 
 
 class JudgeStatus(Enum):
@@ -202,17 +211,17 @@ class JudgeRecordV2(UseTimestamps, Base):
         Index('problem_id_created_at', 'problem_id', 'created_at'),
     )
 
-    id = Column(Integer, primary_key=True)
-    public = Column(Boolean)
-    language = Column(Text, index=True)
-    username = Column(Text, ForeignKey(User.username), index=True)
-    user = relationship(User)
-    problem_id = Column(Integer, ForeignKey(Problem.id))
-    problem = relationship(Problem)
+    id: Mapped[intpk]
+    public: Mapped[bool]
+    language: Mapped[str] = mapped_column(index=True)
+    username: Mapped[user_fk]
+    user: Mapped[User] = relationship()
+    problem_id: Mapped[problem_fk]
+    problem: Mapped[Problem] = relationship()
 
-    status = Column(SqlEnum(JudgeStatus), index=True)
-    score = Column(BigInteger, default=0)
-    message = Column(Text)
-    details = Column(Text) # actually JSON of ProblemJudgeResult
-    time_msecs = Column(BigInteger)
-    memory_bytes = Column(BigInteger)
+    status: Mapped[JudgeStatus] = mapped_column(SqlEnum(JudgeStatus), index=True)
+    score: Mapped[bigint] = mapped_column(server_default=text('0'))
+    message: Mapped[Optional[str]]
+    details: Mapped[Optional[str]]  # actually JSON of ProblemJudgeResult
+    time_msecs: Mapped[Optional[bigint]]
+    memory_bytes: Mapped[Optional[bigint]]

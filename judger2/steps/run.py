@@ -44,6 +44,7 @@ class PythonRunner(BaseRunner):
 class ValgrindRunner(BaseRunner):
     def prepare(self, program: PosixPath):
         chmod(program, elf_mode)
+        assert valgrind is not None
         argv = [valgrind] + valgrind_args + [str(program)]
         return RunParams(argv, ['/bin', '/usr/bin', '/usr/libexec'], False, True)
 
@@ -58,6 +59,7 @@ class ValgrindRunner(BaseRunner):
 
 class VerilogRunner(BaseRunner):
     def prepare(self, program: PosixPath):
+        assert verilog_interpreter is not None
         argv = [verilog_interpreter, str(program)]
         return RunParams(argv, [verilog_interpreter])
 
@@ -95,14 +97,14 @@ async def run(oufdir: PosixPath, cwd: PosixPath, input: Input, args: RunArgs) \
 
     # run
     try:
-        inf = DEVNULL if infile is None else open(infile, 'r')
+        inf = None if infile is None else open(infile, 'r')
         with open(outfile, 'w') as ouf:
             res: RunResult = runner.interpret_result(await run_with_limits(
                 params.argv,
                 cwd,
                 args.limits,
-                supplementary_paths=[exec_file] + params.supplementary_paths,
-                infile=inf,
+                supplementary_paths=[exec_file] + params.supplementary_paths,  # type: ignore
+                infile=DEVNULL if inf is None else inf,
                 outfile=ouf,
                 disable_stderr=True,
                 disable_proc=params.disable_procfs,
@@ -110,17 +112,17 @@ async def run(oufdir: PosixPath, cwd: PosixPath, input: Input, args: RunArgs) \
             ))
     finally:
         try:
-            if inf != DEVNULL and not inf.closed:
+            if inf is not None and not inf.closed:
                 inf.close()
         finally:
             pass
 
     # return result
-    if res.error != None:
+    if res.error is not None:
         return res
 
     # upload artifact
-    if args.outfile != None:
+    if args.outfile is not None:
         await upload(outfile, args.outfile.url)
 
     return RunResult(

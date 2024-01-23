@@ -146,19 +146,31 @@ def before_request():
 
     tracker.log()
 
-@web.teardown_request
-def teardown_request(_exception):
+@web.after_request
+def after_request(resp):
     if 'db' in g:
-        g.db.commit()
+        try:
+            g.db.commit()
+        except Exception as e:
+            return errorhandler(e)
+    return resp
 
 
 @web.errorhandler(Exception)
 def errorhandler(exc: Exception):
+    if 'db' in g:
+        try:
+            g.db.rollback()
+        except Exception as e:
+            exc = e
     if 'privilege' in g and g.privilege >= Privilege.SUPER:
-        resp = make_response(format_exc(exc))
-        resp.content_type = 'text/plain'
-        return resp, INTERNAL_SERVER_ERROR
-    return 'We encountered an error serving your request. Please contact site maintenance.', INTERNAL_SERVER_ERROR
+        msg = format_exc(exc)
+    else:
+        msg = 'We encountered an error serving your request. Please contact site maintainer.'
+    resp = make_response(msg)
+    resp.status_code = INTERNAL_SERVER_ERROR
+    resp.content_type = 'text/plain'
+    return resp
 
 
 @web.route('/')
@@ -746,19 +758,14 @@ def code(submission_id):
     details = deserialize(submission.details) if submission.details is not None else None
     if details is None and submission.status == JudgeStatus.judging:
         url = f'submission/{quote(str(submission.id))}/status'
-        try:
-            # TODO: caching
-            res = requests.get(urljoin(SchedulerConfig.base_url, url))
-            if res.status_code == OK:
-                details = deserialize(res.text)
-            elif res.status_code == NOT_FOUND:
-                pass
-            else:
-                raise Exception(f'Unknown status code {res.status_code}')
-        except Exception as e:
-            # TODO: error handling
-            print(e)
+        # TODO: caching
+        res = requests.get(urljoin(SchedulerConfig.base_url, url))
+        if res.status_code == OK:
+            details = deserialize(res.text)
+        elif res.status_code == NOT_FOUND:
             pass
+        else:
+            raise Exception(f'Unknown status code {res.status_code} fetching judge status')
 
     code_url = generate_s3_public_url('get_object', {
         'Bucket': S3Config.Buckets.submissions,
@@ -814,10 +821,7 @@ def abort_judge(submit_id):
     if username != SessionManager.get_username() \
         and SessionManager.get_privilege() < Privilege.ADMIN:
         abort(FORBIDDEN)
-    try:
-        JudgeManager.abort_judge(submit_id)
-    except Exception as e:
-        abort(INTERNAL_SERVER_ERROR, str(e))
+    JudgeManager.abort_judge(submit_id)
     return redirect('.', SEE_OTHER)
 
 

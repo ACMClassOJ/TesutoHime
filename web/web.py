@@ -21,7 +21,7 @@ import web.const as consts
 import web.utils as utils
 from commons.models import JudgeRecordV2, JudgeStatus, Problem, User
 from commons.task_typing import ProblemJudgeResult
-from commons.util import deserialize, load_dataclass, serialize
+from commons.util import deserialize, format_exc, load_dataclass, serialize
 from web.admin import admin
 from web.config import (JudgeConfig, LoginConfig, ProblemConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
@@ -150,6 +150,15 @@ def before_request():
 def teardown_request(_exception):
     if 'db' in g:
         g.db.commit()
+
+
+@web.errorhandler(Exception)
+def errorhandler(exc: Exception):
+    if 'privilege' in g and g.privilege >= Privilege.SUPER:
+        resp = make_response(format_exc(exc))
+        resp.content_type = 'text/plain'
+        return resp, INTERNAL_SERVER_ERROR
+    return 'We encountered an error serving your request. Please contact site maintenance.', INTERNAL_SERVER_ERROR
 
 
 @web.route('/')

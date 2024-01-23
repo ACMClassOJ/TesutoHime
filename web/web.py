@@ -132,6 +132,10 @@ def before_request():
         request.full_path.endswith(('.js', '.css', '.ico'))):
         return
 
+    xff = request.headers.get('X-Forwarded-For')
+    if xff is not None and xff != '':
+        request.remote_addr = xff.split(',')[-1]
+
     g.db = SqlSession()
     g.time = datetime.now()
     g.friendly_name = SessionManager.get_friendly_name()

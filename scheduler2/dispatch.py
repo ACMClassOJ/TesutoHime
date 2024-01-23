@@ -8,7 +8,7 @@ from typing_extensions import overload
 
 import commons.task_typing
 from commons.task_typing import (CompileResult, CompileTask, Input,
-                                 JudgeResult, JudgeTask, Result, StatusUpdate,
+                                 JudgeResult, JudgeTask, StatusUpdate,
                                  StatusUpdateDone, StatusUpdateError,
                                  StatusUpdateProgress, StatusUpdateStarted)
 from commons.util import deserialize, serialize

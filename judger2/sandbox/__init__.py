@@ -275,28 +275,34 @@ chown: str
 
 def chown_back(path: PosixPath):
     logger.debug(f'about to chown_back {path}')
+    cwd = PosixPath(path)
+    if not cwd.is_dir():
+        cwd = cwd.parent
     argv: List[str] = [nsjail] + format_args({
-        'cwd': str(path),
+        'cwd': str(cwd),
         'chroot': '/',
         'uid_mapping': worker_uid_maps,
         'group': '0',
         'cap': 'CAP_CHOWN',
-        'quiet': True,
-        'bindmount': str(path),
-    }) + ['--', chown, '-R', 'root', '.']
+        'really_quiet': True,
+        'bindmount': str(cwd),
+    }) + ['--', chown, '-R', 'root', str(path)]
     Popen(argv, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL) \
         .wait(timeout=10.0)
 
-def chown_to_user(path: PosixPath):
+def chown_to_user(path: Union[PosixPath, str]):
     logger.debug(f'about to chown_to_user {path}')
+    cwd = PosixPath(path)
+    if not cwd.is_dir():
+        cwd = cwd.parent
     argv = [nsjail] + format_args({
-        'cwd': str(path),
+        'cwd': str(cwd),
         'chroot': '/',
         'uid_mapping': worker_uid_maps,
         'group': '0',
         'cap': 'CAP_CHOWN',
-        'quiet': True,
-        'bindmount': str(path),
-    }) + ['--', chown, '-R', str(worker_uid_inside), '.']
+        'really_quiet': True,
+        'bindmount': str(cwd),
+    }) + ['--', chown, '-R', str(worker_uid_inside), str(path)]
     Popen(argv, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL) \
         .wait(timeout=10.0)

@@ -177,7 +177,7 @@ class RealnameReference(UseTimestamps, Base):
 
 
 class JudgeRunnerV2(UseTimestamps, Base):
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[intpk]
     name: Mapped[str]
     hardware: Mapped[str]
     provider: Mapped[str]

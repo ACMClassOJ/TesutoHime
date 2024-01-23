@@ -42,6 +42,7 @@ async def poll_for_tasks():
             if task_id is None: continue
             task_queues = queues.task(task_id)
             async def report_progress(status):
+                logger.debug(f'reporting progress for task {task_id}: {status}')
                 await redis.lpush(task_queues.progress, serialize(status))
                 await redis.expire(task_queues.progress, task_timeout_secs)
 
@@ -49,8 +50,8 @@ async def poll_for_tasks():
             if task_serialized is None:
                 continue
             task = deserialize(task_serialized)
-            aio_task = create_task(run_task(task, task_id))
             await report_progress(StatusUpdateStarted(runner_id))
+            aio_task = create_task(run_task(task, task_id))
 
             async def poll_for_abort_signal():
                 while True:

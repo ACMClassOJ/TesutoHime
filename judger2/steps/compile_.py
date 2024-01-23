@@ -1,10 +1,11 @@
 __all__ = 'compile', 'ensure_input'
 
 from logging import getLogger
-from os import utime
+from os import chmod, utime
 from pathlib import PosixPath
 from shutil import copy2, which
 from subprocess import DEVNULL
+from tempfile import NamedTemporaryFile
 from typing import Any, Callable, Coroutine, Dict, List, Type
 from uuid import uuid4
 
@@ -120,33 +121,40 @@ async def compile_git(
 ) -> CompileLocalResult:
     logger.debug(f'about to compile git repo {repr(source.url)}')
 
-    async def git_setup_root(root: PosixPath):
-        identity_file = root / 'id_acmoj'
-        with open(identity_file, 'w') as f:
-            f.write(git_ssh_private_key)
-        chown_to_user(identity_file)
-
-    def run_build_step(argv: List[str], *, output = DEVNULL, is_git_clone = False):
-        bind = [
-            f'{git_ssh_config_path}:/etc/ssh/ssh_config',
-        ] if is_git_clone else []
-        bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc'] + bind
-        if resolv_conf_path is not None:
-            bind.append(resolv_conf_path)
-        return run_with_limits(
-            argv, cwd, limits,
-            outfile=output,
-            supplementary_paths=bind,
-            network_access=is_git_clone,
-            setup_root_dir=git_setup_root if is_git_clone else None,
-            env=[
-                'GIT_CONFIG_COUNT=2',
-                'GIT_CONFIG_KEY_0=safe.directory',
-                'GIT_CONFIG_VALUE_0=*',
-                'GIT_CONFIG_KEY_1=url.git@github.com:.insteadOf',
-                'GIT_CONFIG_VALUE_1=https://github.com/'
-            ],
-        )
+    async def run_build_step(argv: List[str], *, output = DEVNULL, is_git_clone = False):
+        tempfile = NamedTemporaryFile('w+') if is_git_clone else None
+        try:
+            if tempfile is not None:
+                chmod(tempfile.name, 0o600)
+                tempfile.write(git_ssh_private_key)
+                tempfile.flush()
+                chown_to_user(tempfile.name)
+                bind = [
+                    f'{git_ssh_config_path}:/etc/ssh/ssh_config',
+                    f'{tempfile.name}:/id_acmoj',
+                ]
+            else:
+                bind = []
+            bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc'] + bind
+            if resolv_conf_path is not None:
+                bind.append(resolv_conf_path)
+            return await run_with_limits(
+                argv, cwd, limits,
+                outfile=output,
+                supplementary_paths=bind,
+                network_access=is_git_clone,
+                env=[
+                    'GIT_CONFIG_COUNT=2',
+                    'GIT_CONFIG_KEY_0=safe.directory',
+                    'GIT_CONFIG_VALUE_0=*',
+                    'GIT_CONFIG_KEY_1=url.git@github.com:.insteadOf',
+                    'GIT_CONFIG_VALUE_1=https://github.com/'
+                ],
+            )
+        finally:
+            if tempfile is not None:
+                chown_back(tempfile.name)
+                tempfile.close()
 
     # clone
     git = which('git')

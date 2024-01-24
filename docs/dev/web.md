@@ -22,6 +22,21 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 `web.py` 负责处理所有除 `/admin` 及其子页面以外的请求；`admin.py` 负责处理所有 `/admin` 及其子页面的请求。
 
+## CSRF 防护
+
+[Cross-Site Request Forgery (简称 CSRF 或 XSRF)][csrf] 是一类比较常见的网络攻击方式。攻击者诱导用户访问一个第三方网页，第三方网页会向 OJ 发起请求。由于早起浏览器同源政策不是很规范，导致 GET 或 POST 请求都可以直接由其他域名发起，无需用户确认，且请求中会携带用户的 cookies。这种攻击方式下，第三方网页无法获取到生成的请求返回的响应，攻击者的目的是请求所带来的副作用。
+
+[csrf]: https://en.wikipedia.org/wiki/Cross-site_request_forgery
+
+OJ 对 GET 请求没有做防护，根据 HTTP 的语义，GET 请求不应该产生状态的改变。因此，即使请求没有参数，只要这个请求会写数据库 (写 log 等信息除外)，就不应该使用 GET 方法。
+
+OJ 对 **所有** POST 请求都有强制的 CSRF 保护，无声明的 POST 请求会被直接拦截。相关代码位于 `web/csrf.py` 中。可以用两种方式来证明一个请求不是 CSRF，满足其中一种即会放行：
+
+- 如果是用 JS 发起请求：在 HTTP 头中将 `X-Acmoj-Is-Csrf` 设置为除 `yes` 外的任意值 (建议设置为 `no`)。CSRF 的攻击请求无法设置 HTTP 头。**使用 JQuery.ajax 或 window.fetch 时无需手动设置请求头**，OJ 页面框架中针对这两个 API 做了特殊设置，发起 POST 请求时会自动设置请求头，相关代码位于 `static/js/csrf.js`。使用 `XMLHttpRequest` 时需手动设置请求头。
+- 如果是 HTML 中的表单提交：在 Jinja template 中 `<form>` 里包含一个 `{{ g.csrf() }}`。这个函数会返回一个带有 CSRF token 的 `<input type="hidden">`，token 同时存储于名为 `__Host-acmoj-csrf` 的 cookie 中。CSRF 的攻击请求无法获取也无法设置 `__Host-` 开头的 cookie。
+
+除 GET 和 POST 外，PUT、DELETE 等其他 HTTP verb 无法跨域发起，故无需保护。
+
 ## 页面渲染及模板
 
 所有页面的渲染均由 `render_template` 函数 (`templating.py`) 完成。此函数会将 `web/templates/` 目录下的模板文件按照特定规则渲染出来。关于渲染规则，请参阅 Flask 文档中的 [Rendering Templates 部分](https://flask.palletsprojects.com/en/2.2.x/quickstart/#rendering-templates)。

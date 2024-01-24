@@ -321,10 +321,11 @@ def login():
     return ret
 
 
-@web.route('/logout')
+@web.route('/logout', methods=['POST'])
 def logout():
     if not SessionManager.check_user_status():
         return redirect('/OnlineJudge/')
+    SessionManager.logout()
     ret = make_response(redirect('/OnlineJudge/'))
     ret.delete_cookie('Login_ID')
     return ret

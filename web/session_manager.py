@@ -17,6 +17,11 @@ class SessionManager:
         return rst is not None
 
     @staticmethod
+    def logout() -> bool:
+        lid = request.cookies.get('Login_ID')
+        SessionManager.redis.delete(SessionManager.prefix + str(lid))
+
+    @staticmethod
     def new_session(username: str, login_id: str):
         SessionManager.redis.set(SessionManager.prefix + login_id, username, ex = 86400 * 14)
         return

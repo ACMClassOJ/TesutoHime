@@ -20,7 +20,8 @@ class ProblemManager:
         problem_id = ProblemManager.get_max_id() + 1
         problem = Problem(
             id=problem_id,
-            release_time=FAR_FUTURE_TIME
+            title='新建题目',
+            release_time=FAR_FUTURE_TIME,
         )
         db.add(problem)
         return problem_id

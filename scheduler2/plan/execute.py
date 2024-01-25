@@ -321,7 +321,8 @@ async def run_judge_tasks(ctx: ExecutionContext):
             raise
         tasks_running = list(pending)
         dependents = set()
-        for record, ok, res in done:  # type: Tuple[Any, Any, Any]
+        for task in done:
+            record, ok, res = await task  # type: Tuple[Any, Any, Any]
             if not ok:
                 error = res
                 res = JudgeResult([TestpointJudgeResult(

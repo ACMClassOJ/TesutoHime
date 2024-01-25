@@ -34,6 +34,15 @@ from scheduler2.util import update_status
 logger = getLogger(__name__)
 
 
+# typing shim for Python 3.7
+try:
+    Task[None]
+except TypeError:
+    class _Task:
+        def __getitem__(self, _): return Any
+    Task = _Task()  # type: ignore
+
+
 class UrlType(Enum):
     CODE = auto()
     ARTIFACT = auto()

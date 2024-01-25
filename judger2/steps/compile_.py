@@ -1,5 +1,6 @@
 __all__ = 'compile', 'ensure_input'
 
+from dataclasses import dataclass
 from logging import getLogger
 from os import chmod, utime
 from pathlib import PosixPath
@@ -21,26 +22,43 @@ from judger2.config import (cache_dir, cxx, cxx_exec_name, cxx_file_name,
                             git_ssh_private_key, gitflags, verilog,
                             verilog_exec_name, verilog_file_name)
 from judger2.sandbox import chown_back, chown_to_user, run_with_limits
-from judger2.util import TempDir, copy_supplementary_files
+from judger2.util import TempDir, copy_supplementary_files, FileConflictException
 
 logger = getLogger(__name__)
 
+@dataclass
+class StageResult:
+    success: bool
+    message: str
 
 async def compile(task: CompileTask) -> CompileLocalResult:
     with TempDir() as cwd:
+        type = task.source.__class__
+        # prepare
+        result = await prepareStages[type](cwd, task.source, task.limits)
+        if result.success is False:
+            return CompileLocalResult(
+                CompileResult(result='compile_error', message=result.message),
+                local_path=None,
+            )
+
         # copy supplementary files
-        await copy_supplementary_files(task.supplementary_files, cwd)
+        try:
+            await copy_supplementary_files(task.supplementary_files, cwd)
+        except FileConflictException as e:
+            return CompileLocalResult(
+                CompileResult(result='compile_error', message=str(e)),
+                local_path=None,
+            )
 
         # compile
-        type = task.source.__class__
-
         # The compiled program returned by these functions
         # reside inside cwd. As cwd is deleted once this
         # function returns, the file need to be uploaded or
         # cached for later use, and the cache location is
         # returned as a semi-persistent compile artifact
         # location.
-        res = await compilers[type](cwd, task.source, task.limits)
+        res = await compileStages[type](cwd, task.source, task.limits)
 
         # check for errors
         if res.result.result != 'compiled':
@@ -83,15 +101,25 @@ async def ensure_input(input: Input) -> CachedFile:
     return await ensure_cached(input.url)
 
 
+
+async def prepare_cpp(
+    cwd: PosixPath,
+    source: CompileSourceCpp,
+    limits: ResourceUsage,
+) -> StageResult:
+    """return whether the operation is successful"""
+    main_file = (await ensure_cached(source.main)).path
+    code_file = cwd / cxx_file_name
+    copy2(main_file, code_file)
+    return StageResult(True, '')
+
 async def compile_cpp(
     cwd: PosixPath,
     source: CompileSourceCpp,
     limits: ResourceUsage,
 ) -> CompileLocalResult:
-    main_file = (await ensure_cached(source.main)).path
     code_file = cwd / cxx_file_name
     exec_file = cwd / cxx_exec_name
-    copy2(main_file, code_file)
     assert cxx is not None
     res = await run_with_limits(
         [cxx] + cxxflags + [str(code_file), '-o', str(exec_file)],
@@ -114,35 +142,32 @@ def get_resolv_conf_path():
 resolv_conf_path = get_resolv_conf_path()
 git_ssh_config_path = str(PosixPath(__file__).with_name('ssh_config'))
 
-async def compile_git(
+async def prepare_git(
     cwd: PosixPath,
     source: CompileSourceGit,
     limits: ResourceUsage,
-) -> CompileLocalResult:
+) -> StageResult:
     logger.debug(f'about to compile git repo {repr(source.url)}')
 
-    async def run_build_step(argv: List[str], *, output = DEVNULL, is_git_clone = False):
-        tempfile = NamedTemporaryFile('w+') if is_git_clone else None
+    async def run_build_step(argv: List[str], *, output = DEVNULL):
+        tempfile = NamedTemporaryFile('w+')
         try:
-            if tempfile is not None:
-                chmod(tempfile.name, 0o600)
-                tempfile.write(git_ssh_private_key)
-                tempfile.flush()
-                chown_to_user(tempfile.name)
-                bind = [
-                    f'{git_ssh_config_path}:/etc/ssh/ssh_config',
-                    f'{tempfile.name}:/id_acmoj',
-                ]
-            else:
-                bind = []
-            bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc'] + bind
+            chmod(tempfile.name, 0o600)
+            tempfile.write(git_ssh_private_key)
+            tempfile.flush()
+            chown_to_user(tempfile.name)
+            bind = [
+                '/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc',
+                f'{git_ssh_config_path}:/etc/ssh/ssh_config',
+                f'{tempfile.name}:/id_acmoj',
+            ]
             if resolv_conf_path is not None:
                 bind.append(resolv_conf_path)
             return await run_with_limits(
                 argv, cwd, limits,
                 outfile=output,
                 supplementary_paths=bind,
-                network_access=is_git_clone,
+                network_access=True,
                 env=[
                     'GIT_CONFIG_COUNT=2',
                     'GIT_CONFIG_KEY_0=safe.directory',
@@ -152,18 +177,45 @@ async def compile_git(
                 ],
             )
         finally:
-            if tempfile is not None:
-                chown_back(tempfile.name)
-                tempfile.close()
-
+            chown_back(tempfile.name)
+            tempfile.close()
+    
     # clone
     git = which('git')
     assert git is not None
     git_argv = [git, 'clone', source.url, '.'] + gitflags
     logger.debug(f'about to run {git_argv}')
-    clone_res = await run_build_step(git_argv, is_git_clone=True)
+    clone_res = await run_build_step(git_argv)
     if clone_res.error is not None:
-        return CompileLocalResult.from_run_failure(clone_res)
+        return StageResult(False, clone_res.message)
+    else:
+        return StageResult(True, '')
+
+async def compile_git(
+    cwd: PosixPath,
+    source: CompileSourceGit,
+    limits: ResourceUsage,
+) -> CompileLocalResult:
+    async def run_build_step(argv: List[str], *, output = DEVNULL):
+        bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc']
+        if resolv_conf_path is not None:
+            bind.append(resolv_conf_path)
+        return await run_with_limits(
+            argv, cwd, limits,
+            outfile=output,
+            supplementary_paths=bind,
+            network_access=False,
+            env=[
+                'GIT_CONFIG_COUNT=2',
+                'GIT_CONFIG_KEY_0=safe.directory',
+                'GIT_CONFIG_VALUE_0=*',
+                'GIT_CONFIG_KEY_1=url.git@github.com:.insteadOf',
+                'GIT_CONFIG_VALUE_1=https://github.com/'
+            ],
+        )
+
+    git = which('git')
+    assert git is not None
 
     # get commit hash
     with TempDir() as d, open(d / 'commit-hash', 'w+b') as ouf:
@@ -216,15 +268,23 @@ async def compile_git(
     return CompileLocalResult.from_file(exe, message)
 
 
+async def prepare_verilog(
+    cwd: PosixPath,
+    source: CompileSourceVerilog,
+    limits: ResourceUsage,
+) -> StageResult:
+    main_file = (await ensure_cached(source.main)).path
+    code_file = cwd / verilog_file_name
+    copy2(main_file, code_file)
+    return StageResult(True, '')
+
 async def compile_verilog(
     cwd: PosixPath,
     source: CompileSourceVerilog,
     limits: ResourceUsage,
 ) -> CompileLocalResult:
-    main_file = (await ensure_cached(source.main)).path
     code_file = cwd / verilog_file_name
     exec_file = cwd / verilog_exec_name
-    copy2(main_file, code_file)
     assert verilog is not None
     res = await run_with_limits(
         [verilog, str(code_file), '-o', str(exec_file)],
@@ -236,12 +296,21 @@ async def compile_verilog(
         return CompileLocalResult.from_run_failure(res)
     return CompileLocalResult.from_file(exec_file)
 
+PrepareStage: TypeAlias = Callable[
+    [PosixPath, CompileSource, ResourceUsage],
+    Coroutine[Any, Any, StageResult],
+]
+prepareStages: Dict[Type[CompileSource], PrepareStage] = {
+    CompileSourceCpp: prepare_cpp,  # type: ignore
+    CompileSourceGit: prepare_git,  # type: ignore
+    CompileSourceVerilog: prepare_verilog,  # type: ignore
+}
 
-Compiler: TypeAlias = Callable[
+CompileStage: TypeAlias = Callable[
     [PosixPath, CompileSource, ResourceUsage],
     Coroutine[Any, Any, CompileLocalResult],
 ]
-compilers: Dict[Type[CompileSource], Compiler] = {
+compileStages: Dict[Type[CompileSource], CompileStage] = {
     CompileSourceCpp: compile_cpp,  # type: ignore
     CompileSourceGit: compile_git,  # type: ignore
     CompileSourceVerilog: compile_verilog,  # type: ignore

@@ -34,6 +34,7 @@ TempDir.config(working_dir, _judger_before_tmpdir_exit)
 
 
 class InvalidProblemException(Exception): pass
+class FileConflictException(Exception): pass
 
 async def copy_supplementary_files(files: List[FileUrl], cwd: PosixPath):
     if len(files) != 0:
@@ -41,7 +42,12 @@ async def copy_supplementary_files(files: List[FileUrl], cwd: PosixPath):
     for f in as_completed(map(ensure_cached, files)):
         try:
             file = await f
-            copy2(file.path, cwd / file.filename)
+            dest = cwd / file.filename
+            if dest.is_file():
+                raise FileConflictException(f'File \'{file.filename}\' already exists')
+            copy2(file.path, dest)
+        except FileConflictException:
+            raise
         except Exception as e:
             msg = f'Cannot copy supplementary file: {format_exc(e)}'
             raise InvalidProblemException(msg) from e

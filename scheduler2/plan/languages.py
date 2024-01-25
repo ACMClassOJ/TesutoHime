@@ -9,9 +9,6 @@ def languages_accepted(plan: JudgePlan) -> Optional[List[str]]:
     has_compile_or_run = False
     if plan.compile is not None:
         has_compile_or_run = True
-        if len(plan.compile.supplementary_files) > 0:
-            # currently Git could not handle compile-time supplementary files
-            return ['cpp']
     if plan.judge is not None:
         for task in plan.judge:
             for tp in task.task.testpoints:

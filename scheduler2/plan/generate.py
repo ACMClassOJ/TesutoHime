@@ -62,6 +62,8 @@ class ParseContext:
         return f'{self.problem_id}/'
 
     def open(self, filename: str, *args):
+        if filename.startswith('/') or filename.startswith('../') or '/../' in filename or filename.endswith('/..'):
+            raise InvalidProblemException(f'Invalid file name {repr(filename)}')
         return self.zip.open(f'{self.prefix()}{filename}', *args)
 
     def namelist(self) -> List[str]:

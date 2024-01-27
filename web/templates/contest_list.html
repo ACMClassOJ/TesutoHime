@@ -51,7 +51,10 @@
                     {% elif g.time > contest.end_time -%}
                     <!-- <button disabled class="btn btn-primary btn-sm">报名</button> -->
                     {% else -%}
-                    <button data-contest-id="{{ contest.id }}" class="btn btn-primary btn-sm">报名</button>
+                    <form action="/OnlineJudge/problemset/{{ contest.id }}/join" method="POST">
+                        {{ g.csrf() }}
+                        <button type="submit" class="btn btn-primary btn-sm">报名</button>
+                    </form>
                     {%- endif -%}
                 </td>
             </tr>
@@ -64,6 +67,5 @@
 {% endblock %}
 
 {% block script %}
-<script src="{{ url_for('.static', filename = 'js/post_join.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
 {% endblock %}

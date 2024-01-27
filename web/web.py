@@ -2,6 +2,7 @@ import json
 import os
 import re
 from datetime import datetime
+from functools import wraps
 from http.client import (BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR,
                          NOT_FOUND, OK, REQUEST_ENTITY_TOO_LARGE, SEE_OTHER,
                          UNAUTHORIZED)
@@ -15,6 +16,7 @@ import sqlalchemy as sa
 from flask import (Blueprint, Flask, abort, g, make_response, redirect,
                    render_template, request, send_from_directory)
 from sqlalchemy.orm import defer, selectinload
+from werkzeug.exceptions import HTTPException
 
 import commons.task_typing
 import web.const as consts
@@ -26,7 +28,8 @@ from web.admin import admin
 from web.config import (JudgeConfig, LoginConfig, ProblemConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
-from web.const import Privilege, ReturnCode, language_info, runner_status_info
+from web.const import (ContestType, Privilege, ReturnCode, language_info,
+                       runner_status_info)
 from web.contest_manager import ContestManager
 from web.csrf import setup_csrf
 from web.discuss_manager import DiscussManager
@@ -158,6 +161,8 @@ def after_request(resp):
 
 @web.errorhandler(Exception)
 def errorhandler(exc: Exception):
+    if isinstance(exc, HTTPException):
+        return exc
     if 'db' in g:
         try:
             g.db.rollback()
@@ -171,6 +176,15 @@ def errorhandler(exc: Exception):
     resp.status_code = INTERNAL_SERVER_ERROR
     resp.content_type = 'text/plain'
     return resp
+
+
+def require_logged_in(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if not SessionManager.check_user_status():
+            return redirect('/OnlineJudge/login?next=' + quote(request.full_path))
+        return func(*args, **kwargs)
+    return wrapped
 
 
 @web.route('/')
@@ -236,25 +250,6 @@ def get_contest_detail(contest_id):
         'Rank_Partial_Score': contest.rank_partial_score,
     }
     return json.dumps(data)
-
-@web.route('/api/join', methods=['POST'])
-def join_contest():
-    if not SessionManager.check_user_status():
-        return '-1'
-    contest_id = request.form.get('contest_id')
-    if contest_id is None:
-        return '-1'
-    contest_id = int(contest_id)
-    contest = ContestManager.get_contest(contest_id)
-    if contest is None or g.time > contest.end_time:
-        return '-1'
-    username = SessionManager.get_username()
-    exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username)
-    if exam_id != -1:
-        return '-1'
-    if not ContestManager.check_player_in_contest(contest_id, username):
-        ContestManager.add_player_to_contest(contest_id, username)
-    return '0'
 
 
 @web.route('/api/code', methods=['POST'])
@@ -353,9 +348,8 @@ def register():
 
 
 @web.route('/problem')
+@require_logged_in
 def problem_list():
-    if not SessionManager.check_user_status():
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
     is_admin = bool(SessionManager.get_privilege() >= Privilege.ADMIN)
     page = request.args.get('page')
     page = int(page) if page else 1
@@ -400,9 +394,8 @@ def problem_list():
                             args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
 
 @web.route('/problem/<int:problem_id>')
+@require_logged_in
 def problem_detail(problem_id):
-    if not SessionManager.check_user_status():
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
     problem = ProblemManager.get_problem(problem_id)
     if not ProblemManager.should_show(problem):
         abort(NOT_FOUND)
@@ -414,9 +407,8 @@ def problem_detail(problem_id):
 
 
 @web.route('/problem/<int:problem_id>/admin', methods=['GET', 'POST'])
+@require_logged_in
 def problem_admin(problem_id):
-    if not SessionManager.check_user_status():
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
     is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
     if not is_admin:
         abort(NOT_FOUND)
@@ -450,9 +442,8 @@ def problem_admin(problem_id):
 
 
 @web.route('/problem/<int:problem_id>/submit', methods=['GET', 'POST'])
+@require_logged_in
 def problem_submit(problem_id):
-    if not SessionManager.check_user_status():
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
     problem = ProblemManager.get_problem(problem_id)
     if not ProblemManager.should_show(problem):
         abort(NOT_FOUND)
@@ -533,9 +524,8 @@ def set_result(submission_id):
 
 
 @web.route('/problem/<int:problem_id>/rank')
+@require_logged_in
 def problem_rank(problem_id):
-    if not SessionManager.check_user_status():
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
     sort_parameter = request.args.get('sort')
     is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
 
@@ -565,11 +555,9 @@ def problem_rank(problem_id):
 
 
 @web.route('/problem/<int:problem_id>/discuss', methods=['GET', 'POST'])
+@require_logged_in
 def discuss(problem_id):
     if request.method == 'GET':
-        if not SessionManager.check_user_status():
-            return redirect('/OnlineJudge/login?next=' + request.full_path)
-
         in_exam = problem_in_exam(problem_id)
 
         if in_exam:  # Problem in Contest or Homework and Current User is NOT administrator
@@ -589,8 +577,6 @@ def discuss(problem_id):
                                Title=ProblemManager.get_title(problem_id), Discuss=discussion,
                                In_Exam=False)
     else:
-        if not SessionManager.check_user_status():
-            return ReturnCode.ERR_USER_NOT_LOGGED_IN
         try:
             form = request.json
             if form is None:
@@ -635,10 +621,8 @@ def discuss(problem_id):
 
 
 @web.route('/status')
+@require_logged_in
 def status():
-    if not SessionManager.check_user_status():
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
-
     arg_submitter = request.args.get('submitter')
     if arg_submitter == '':
         arg_submitter = None
@@ -709,8 +693,6 @@ def status():
 
 
 def code_old(run_id):
-    if not SessionManager.check_user_status():  # not login
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
     if run_id < 0 or run_id > OldJudgeManager.max_id():
         abort(NOT_FOUND)
     detail = OldJudgeManager.query_judge(run_id)
@@ -745,9 +727,8 @@ def code_compat():
     return redirect(f'/OnlineJudge/code/{submit_id}/')
 
 @web.route('/code/<int:submission_id>/')
+@require_logged_in
 def code(submission_id):
-    if not SessionManager.check_user_status():  # not login
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
     if submission_id <= OldJudgeManager.max_id():
         return code_old(submission_id)
     submission = JudgeManager.get_submission(submission_id)
@@ -809,9 +790,8 @@ def rejudge(submit_id):
 
 
 @web.route('/code/<int:submit_id>/abort', methods=['POST'])
+@require_logged_in
 def abort_judge(submit_id):
-    if not SessionManager.check_user_status():  # not login
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
     submission = db \
         .query(JudgeRecordV2.username) \
         .where(JudgeRecordV2.id == submit_id) \
@@ -826,9 +806,8 @@ def abort_judge(submit_id):
     return redirect('.', SEE_OTHER)
 
 
+@require_logged_in
 def contest_list_generic(type, type_zh):
-    if not SessionManager.check_user_status():
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
     contest_id = request.args.get(f'{type}_id')
     if contest_id is not None:
         return redirect(f'/OnlineJudge/problemset/{contest_id}')
@@ -869,9 +848,8 @@ def homework(contest_id):
     return redirect(f'/OnlineJudge/problemset/{contest_id}')
 
 @web.route('/problemset/<int:contest_id>')
+@require_logged_in
 def problemset(contest_id):
-    if not SessionManager.check_user_status():
-        return redirect('/OnlineJudge/login?next=' + request.full_path)
     contest = ContestManager.get_contest(contest_id)
     if contest is None:
         abort(NOT_FOUND)
@@ -896,15 +874,29 @@ def problemset(contest_id):
     )
 
 
+@web.route('/problemset/<int:contest_id>/join', methods=['POST'])
+def problemset_join(contest_id):
+    if not SessionManager.check_user_status():
+        abort(UNAUTHORIZED)
+    contest = ContestManager.get_contest(contest_id)
+    if contest is None or g.time > contest.end_time:
+        abort(BAD_REQUEST)
+    username = SessionManager.get_username()
+    if contest.type == ContestType.EXAM:
+        exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username)
+        if exam_id != -1:
+            abort(BAD_REQUEST)
+    if not ContestManager.check_player_in_contest(contest_id, username):
+        ContestManager.add_player_to_contest(contest_id, username)
+    return redirect(f'/OnlineJudge/problemset/{contest_id}')
+
+
 @web.route('/profile', methods=['GET', 'POST'])
+@require_logged_in
 def profile():
     if request.method == 'GET':
-        if not SessionManager.check_user_status():
-            return redirect('/OnlineJudge/login?next=' + request.full_path)
         return render_template('profile.html')
     else:
-        if not SessionManager.check_user_status():
-            return ReturnCode.ERR_USER_NOT_LOGGED_IN
         form = request.json
         if form is None:
             abort(BAD_REQUEST)

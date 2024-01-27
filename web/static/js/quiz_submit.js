@@ -1,6 +1,12 @@
 var id = $("#problem_id").text();
 var problem_type = {};
 var main_json = {};
+const sanitize = function (text) {
+    return DOMPurify.sanitize(text, { FORCE_BODY: true })
+}
+const render = function (text) {
+    return sanitize(marked(text))
+}
 $(function(){
     $.ajax({
         type: "POST",
@@ -20,7 +26,7 @@ $(function(){
                 {
                     var problem = problems[i];
                     var title = document.createElement("p");
-                    title.innerHTML = marked(problem["id"] + ". " + problem["title"]);
+                    title.innerHTML = render(problem["id"] + ". " + problem["title"]);
                     quiz_rendering_node.appendChild(title);
                     problem_type[i] = problem["type"];
                     if(problem["type"] == "SELECT")
@@ -30,13 +36,13 @@ $(function(){
                         {
                             var option = options[j];
                             var option_div = document.createElement("div");
-                            option_div_word = '<div class="custom-control custom-radio mb-3">';
+                            let option_div_word = '<div class="custom-control custom-radio mb-3">';
                             option_div_word += '<input id="' + problem["id"] + "__" + option["value"] 
                                 + '" name="' + problem["id"] + '" class="custom-control-input" value="' 
                                 + option["value"] + '" type="radio">';
                             option_div_word += '<label class="custom-control-label" for="' 
-                                + problem["id"] + '__' + option["value"] + '">' + marked(option["text"]) + '</label>';
-                            option_div.innerHTML = option_div_word;
+                                + problem["id"] + '__' + option["value"] + '">' + render(option["text"]) + '</label>';
+                            option_div.innerHTML = sanitize(option_div_word);
                             quiz_rendering_node.appendChild(option_div);
                         }
                     }

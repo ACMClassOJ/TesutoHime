@@ -83,10 +83,11 @@
     </div>
 </div>
 {% endblock %} {% block script %}
+<script src="{{ url_for('.static', filename = 'lib/purify.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/katex.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/auto-render.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/problem_details.js') }}?v=20240101"></script>
+<script src="{{ url_for('.static', filename = 'js/problem_details.js') }}?v=20240127"></script>
 {% endblock %}

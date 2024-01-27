@@ -1,5 +1,11 @@
 $(function(){
     const problemId = $("#problem_id").text()
+    const sanitize = function (text) {
+        return DOMPurify.sanitize(text, { FORCE_BODY: true })
+    }
+    const render = function (text) {
+        return sanitize(marked(text))
+    }
     $.ajax({
         dataType: "text",
         url: '/OnlineJudge/api/problem/' + problemId + '/description',
@@ -7,17 +13,17 @@ $(function(){
         {
             var main_json = JSON.parse(response_text);
             if (main_json['Description'] == "None") $("#problem_details_description_header").html("");
-            else $("#problem_details_description").html(marked(main_json['Description']));
+            else $("#problem_details_description").html(render(main_json['Description']));
             if (main_json['Input'] == "None") $("#problem_details_input_header").html("");
-            else $("#problem_details_input").html(marked(main_json['Input']));
+            else $("#problem_details_input").html(render(main_json['Input']));
             if (main_json['Output'] == "None") $("#problem_details_output_header").html("");
-            else $("#problem_details_output").html(marked(main_json['Output']));
+            else $("#problem_details_output").html(render(main_json['Output']));
             if (main_json['Example_Input'] == "None") $("#problem_details_example_input_header").html("");
-            else $("#problem_details_example_input").html(marked(main_json['Example_Input']));
+            else $("#problem_details_example_input").html(render(main_json['Example_Input']));
             if (main_json['Example_Output'] == "None") $("#problem_details_example_output_header").html("");
-            else $("#problem_details_example_output").html(marked(main_json['Example_Output']));
+            else $("#problem_details_example_output").html(render(main_json['Example_Output']));
             if (main_json['Data_Range'] == "None") $("#problem_details_data_range_header").html("");
-            else $("#problem_details_data_range").html(marked(main_json['Data_Range']));
+            else $("#problem_details_data_range").html(render(main_json['Data_Range']));
             if (main_json['Limits'] == "None") $("#problem_details_time_mem_disk_limit_header").html("");
             else
             {
@@ -128,7 +134,7 @@ $(function(){
                 str += "<p>raw config data:<p>";
                 str += "<code>" + raw_config_str + "</code>";
                 str += "</details>";
-                $("#problem_details_time_mem_disk_limit").html(str);
+                $("#problem_details_time_mem_disk_limit").html(sanitize(str));
             }
             renderMathInElement(document.body,
                 {

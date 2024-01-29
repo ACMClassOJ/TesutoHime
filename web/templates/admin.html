@@ -24,7 +24,7 @@
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" id="judge_tab_btn" data-toggle="tab" href="#judge_tab" role="tab" aria-controls="judge_tab" aria-selected="false">评测</a>
                 </li>
-                {% if g.privilege >= g.consts.Privilege.SUPER %}
+                {% if g.user.privilege >= g.consts.Privilege.SUPER %}
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" id="user_tab_btn" data-toggle="tab" href="#user_tab" role="tab" aria-controls="user_tab" aria-selected="false">用户</a>
                 </li>
@@ -39,7 +39,7 @@
         </h1>
         <hr>
         <div class="tab-content" id="main_tab_content">
-            {% if g.privilege >= g.consts.Privilege.SUPER %}
+            {% if g.user.privilege >= g.consts.Privilege.SUPER %}
             <div class="tab-pane fade" id="user_tab" role="tabpanel" aria-labelledby="user_tab-tab">
                 <form id="formUser">
                     <div class="form-row">
@@ -66,7 +66,6 @@
                         <div class="float-right d-flex mb-3 ml-auto pr-1">
                             <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUser"> Add User </button>
                             <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyUser"> Modify User </button>
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUser"> Remove User </button>
                         </div>
                     </div>
                 </form>
@@ -335,5 +334,5 @@
     <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=20240122"></script>
+    <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=20240129"></script>
 {% endblock %}

@@ -101,31 +101,30 @@ def problem_in_exam(problem_id):
     1. user is not admin.
     2. the problem is in a ongoing exam.
     """
-    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(SessionManager.get_username())
+    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(g.user)
 
     if exam_id == -1 or is_exam_started == False:
         return False
 
-    return SessionManager.get_privilege() < Privilege.ADMIN and ContestManager.check_problem_in_contest(exam_id, problem_id)
+    return not g.is_admin and ContestManager.check_problem_in_contest(exam_id, problem_id)
 
 
-def is_code_visible(code_owner, problem_id, shared):
+def is_code_visible(code_owner_id: int, problem_id: int, shared: bool):
     # Check whether the code is visible.
 
     # admin always visible
-    if SessionManager.get_privilege() >= Privilege.ADMIN:
+    if g.is_admin:
         return True
 
-    username = SessionManager.get_username()
     # exam first
-    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(username)
+    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(g.user)
 
     if exam_id != -1 and is_exam_started:
         # if the user is in a running exam, he can only see his own problems in exam.
-        return code_owner == username and ContestManager.check_problem_in_contest(exam_id, problem_id)
+        return code_owner_id == g.user.id and ContestManager.check_problem_in_contest(exam_id, problem_id)
     else:
         # otherwise, the user can see his own and shared problems
-        return code_owner == username or shared
+        return code_owner_id == g.user.id or shared
 
 
 @web.before_request
@@ -141,9 +140,8 @@ def before_request():
 
     g.db = SqlSession()
     g.time = datetime.now()
-    g.friendly_name = SessionManager.get_friendly_name()
-    g.privilege = SessionManager.get_privilege()
-    g.is_admin = g.privilege >= Privilege.ADMIN
+    g.user = SessionManager.current_user()
+    g.is_admin = g.user is not None and g.user.privilege >= Privilege.ADMIN
     g.utils = utils
     g.consts = consts
 
@@ -168,7 +166,7 @@ def errorhandler(exc: Exception):
             g.db.rollback()
         except Exception as e:
             exc = e
-    if 'privilege' in g and g.privilege >= Privilege.SUPER:
+    if 'user' in g and g.user is not None and g.user.privilege >= Privilege.SUPER:
         msg = format_exc(exc)
     else:
         msg = 'We encountered an error serving your request. Please contact site maintainer.'
@@ -181,7 +179,7 @@ def errorhandler(exc: Exception):
 def require_logged_in(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
-        if not SessionManager.check_user_status():
+        if g.user is None:
             return redirect('/OnlineJudge/login?next=' + quote(request.full_path))
         return func(*args, **kwargs)
     return wrapped
@@ -197,11 +195,6 @@ def index2():
     return redirect('/')
 
 
-@web.route('/api/username')
-def get_username():
-    return SessionManager.get_friendly_name()
-
-
 @web.route('/api/problem-id-autoinc')
 def get_problem_id_autoinc():
     return str(ProblemManager.get_max_id() + 1)
@@ -212,7 +205,7 @@ def get_contest_id_autoinc():
 
 @web.route('/api/problem/<int:problem_id>/description')
 def get_problem_description(problem_id):
-    if not SessionManager.check_user_status():
+    if g.user is None:
         return '-1'
     problem = ProblemManager.get_problem(problem_id)
     if not ProblemManager.should_show(problem):
@@ -234,7 +227,7 @@ def get_problem_description(problem_id):
 
 @web.route('/api/contest/<int:contest_id>')
 def get_contest_detail(contest_id):
-    if not SessionManager.check_user_status():
+    if g.user is None:
         return '-1'
     contest = ContestManager.get_contest(contest_id)
     if contest is None:
@@ -254,7 +247,7 @@ def get_contest_detail(contest_id):
 
 @web.route('/api/code', methods=['POST'])
 def get_code():
-    if not SessionManager.check_user_status():
+    if g.user is None:
         return '-1'
     run_id = request.form.get('submit_id')
     if run_id is None:
@@ -267,14 +260,14 @@ def get_code():
     detail = OldJudgeManager.query_judge(run_id)
     if detail is None:
         return '-1'
-    if not is_code_visible(detail.username, detail.problem_id, detail.public):
+    if not is_code_visible(detail.user_id, detail.problem_id, detail.public):
         return '-1'
     return detail.code
 
 
 @web.route('/api/quiz', methods=['POST'])
 def get_quiz():
-    if not SessionManager.check_user_status():
+    if g.user is None:
         return ReturnCode.ERR_USER_NOT_LOGGED_IN
     problem_id = request.form.get('problem_id')
     if problem_id is None:
@@ -304,13 +297,13 @@ def login():
     password = request.form.get('password')
     if username is None or password is None:
         abort(BAD_REQUEST)
-    username = UserManager.get_canonical_username(username)
-    if username is None:
+    user = UserManager.get_user_by_username(username)
+    if user is None:
         return ReturnCode.ERR_LOGIN
-    if not UserManager.check_login(username, password):
+    if not UserManager.check_login(user, password):
         return ReturnCode.ERR_LOGIN
     lid = str(uuid4())
-    SessionManager.new_session(username, lid)
+    SessionManager.new_session(user, lid)
     ret = make_response(ReturnCode.SUC_LOGIN)
     ret.set_cookie(key='Login_ID', value=lid, max_age=LoginConfig.Login_Life_Time)
     return ret
@@ -318,7 +311,7 @@ def login():
 
 @web.route('/logout', methods=['POST'])
 def logout():
-    if not SessionManager.check_user_status():
+    if g.user is None:
         return redirect('/OnlineJudge/')
     SessionManager.logout()
     ret = make_response(redirect('/OnlineJudge/'))
@@ -350,7 +343,6 @@ def register():
 @web.route('/problem')
 @require_logged_in
 def problem_list():
-    is_admin = bool(SessionManager.get_privilege() >= Privilege.ADMIN)
     page = request.args.get('page')
     page = int(page) if page else 1
 
@@ -371,7 +363,7 @@ def problem_list():
     limit = WebConfig.Problems_Each_Page
     offset = (page - 1) * WebConfig.Problems_Each_Page
     query = db.query(Problem.id, Problem.title, Problem.problem_type)
-    if not is_admin:
+    if not g.is_admin:
         query = query.where(Problem.release_time <= g.time)
     if problem_name_keyword is not None:
         query = query.where(sa.func.strpos(Problem.title, problem_name_keyword) > 0)
@@ -409,8 +401,7 @@ def problem_detail(problem_id):
 @web.route('/problem/<int:problem_id>/admin', methods=['GET', 'POST'])
 @require_logged_in
 def problem_admin(problem_id):
-    is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
-    if not is_admin:
+    if not g.is_admin:
         abort(NOT_FOUND)
 
     if request.method == 'POST':
@@ -461,7 +452,6 @@ def problem_submit(problem_id):
             return render_template('quiz_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam)
     else:
         public = bool(request.form.get('shared', 0))  # 0 or 1
-        username = SessionManager.get_username()
         lang_request_str = str(request.form.get('lang'))
         if lang_request_str == 'quiz':
             user_code: Optional[str] = json.dumps(request.form.to_dict())
@@ -477,7 +467,7 @@ def problem_submit(problem_id):
         submission_id = JudgeManager.add_submission(
             public=public,
             language=lang_str,
-            username=username,
+            user=g.user,
             problem_id=problem_id,
             code=user_code,
         )
@@ -527,13 +517,12 @@ def set_result(submission_id):
 @require_logged_in
 def problem_rank(problem_id):
     sort_parameter = request.args.get('sort')
-    is_admin = SessionManager.get_privilege() >= Privilege.ADMIN
 
     submissions = JudgeManager.list_accepted_submissions(problem_id)
     real_names = {}
     languages = {}
     for submission in submissions:
-        if is_admin:
+        if g.is_admin:
             real_names[submission] = RealnameManager.query_realname(submission.user.student_id)
         languages[submission] = 'Unknown' if submission.language not in language_info \
             else language_info[submission.language].name
@@ -564,17 +553,15 @@ def discuss(problem_id):
             return render_template('problem_discussion.html', Problem_ID=problem_id,
                                    Title=ProblemManager.get_title(problem_id), Blocked=True,
                                    In_Exam=True)  # Discussion Closed
-        username = SessionManager.get_username()  # for whether to display edit or delete
-        privilege = SessionManager.get_privilege()
         data = DiscussManager.get_discuss_for_problem(problem_id)
-        discussion = []
+        discussions = []
         for ele in data:
-            tmp = [ele.id, UserManager.get_friendly_name(ele.username), ele.data, readable_time(ele.created_at)]
+            tmp = [ele.id, ele.user.username, ele.data, readable_time(ele.created_at)]
             # tmp[4]: editable
-            tmp.append(ele.username == username or privilege >= Privilege.SUPER)
-            discussion.append(tmp)
+            tmp.append(ele.user_id == g.user.user_id or g.user.privilege >= Privilege.SUPER)
+            discussions.append(tmp)
         return render_template('problem_discussion.html', Problem_ID=problem_id,
-                               Title=ProblemManager.get_title(problem_id), Discuss=discussion,
+                               Title=ProblemManager.get_title(problem_id), Discuss=discussions,
                                In_Exam=False)
     else:
         try:
@@ -584,30 +571,31 @@ def discuss(problem_id):
             action = form.get('action')  # post, edit, delete
             if action == 'post':
                 text = form.get('text')
-                username = SessionManager.get_username()
-                if SessionManager.get_privilege() >= Privilege.ADMIN:    # administrator
-                    DiscussManager.add_discuss(problem_id, username, text)
+                if g.is_admin:
+                    DiscussManager.add_discuss(problem_id, g.user, text)
                     return ReturnCode.SUC
                 else:
                     print('Access Denied in Discuss: Add')
                     return ReturnCode.ERR_PERMISSION_DENIED
             if action == 'edit':
-                discuss_id = form.get('discuss_id')
+                discuss_id = int(form.get('discuss_id'))
+                discussion = DiscussManager.get_discussion(discuss_id)
+                if discussion is None:
+                    return ReturnCode.ERR_PERMISSION_DENIED
                 text = form.get('text')
-                username = SessionManager.get_username()
-                if username == DiscussManager.get_author(
-                        discuss_id) or SessionManager.get_privilege() >= Privilege.ADMIN:  # same user or administrator
-                    DiscussManager.modify_discuss(discuss_id, text)
+                if g.user.id == discussion.user_id or g.is_admin:
+                    discussion.data = text
                     return ReturnCode.SUC
                 else:
                     print('Access Denied in Discuss: Edit')
                     return ReturnCode.ERR_PERMISSION_DENIED
             if action == 'delete':
-                discuss_id = form.get('discuss_id')
-                username = SessionManager.get_username()
-                if username == DiscussManager.get_author(
-                        discuss_id) or SessionManager.get_privilege() >= Privilege.ADMIN:  # same user or administrator
-                    DiscussManager.delete_discuss(discuss_id)
+                discuss_id = int(form.get('discuss_id'))
+                discussion = DiscussManager.get_discussion(discuss_id)
+                if discussion is None:
+                    return ReturnCode.ERR_PERMISSION_DENIED
+                if g.user.id == discussion.user_id or g.is_admin:
+                    DiscussManager.delete_discuss(discussion)
                     return ReturnCode.SUC
                 else:
                     print('Access Dined in Discuss: Delete')
@@ -639,7 +627,6 @@ def status():
     arg_lang = request.args.get('lang')
     if arg_lang == '':
         arg_lang = None
-    username = SessionManager.get_username()
 
     page = request.args.get('page')
     page = int(page) if page is not None else 1
@@ -650,7 +637,9 @@ def status():
         .options(selectinload(JudgeRecordV2.user).load_only(User.student_id, User.friendly_name)) \
         .options(selectinload(JudgeRecordV2.problem).load_only(Problem.title))
     if arg_submitter is not None:
-        query = query.where(JudgeRecordV2.username == arg_submitter)
+        user = UserManager.get_user_by_username(arg_submitter)
+        if user is not None:
+            query = query.where(JudgeRecordV2.user_id == user.id)
     if arg_problem_id is not None:
         query = query.where(JudgeRecordV2.problem_id == arg_problem_id)
     if arg_status is not None:
@@ -663,7 +652,7 @@ def status():
     query = query.limit(limit).offset(offset)
     submissions = query.all()
 
-    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(username)
+    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(g.user)
     # if not None, only problems in here are visible to user
     exam_visible_problems = None
 
@@ -680,7 +669,7 @@ def status():
             g.is_admin or (
                 # user's own problem: username == ele['Username']
                 # shared problems are always banned if exam_visible_problems is None (this means user in exam)
-                (username == submission.username or (exam_visible_problems is None and submission.public))
+                (g.user.user_id == submission.user_id or (exam_visible_problems is None and submission.public))
                 # and exam visible check for problems
                 and (exam_visible_problems is None or submission.problem_id in exam_visible_problems)
             )
@@ -698,11 +687,11 @@ def code_old(run_id):
     detail = OldJudgeManager.query_judge(run_id)
     if detail is None:
         abort(NOT_FOUND)
-    if not is_code_visible(detail.username, detail.problem_id, detail.public):
+    if not is_code_visible(detail.user_id, detail.problem_id, detail.public):
         abort(FORBIDDEN)
     else:
-        friendly_name = UserManager.get_friendly_name(detail.username)
-        problem_title = ProblemManager.get_title(detail.problem_id)
+        friendly_name = detail.user.friendly_name
+        problem_title = detail.problem.title
         language = readable_lang_v1(detail.language)
         time = readable_time(int(detail.time))
         data = None
@@ -734,7 +723,7 @@ def code(submission_id):
     submission = JudgeManager.get_submission(submission_id)
     if submission is None:
         abort(NOT_FOUND)
-    if not is_code_visible(submission.username, submission.problem_id, submission.public):
+    if not is_code_visible(submission.user_id, submission.problem_id, submission.public):
         abort(FORBIDDEN)
 
     details = deserialize(submission.details) if submission.details is not None else None
@@ -755,7 +744,7 @@ def code(submission_id):
     }, ExpiresIn=60)
     abortable = submission.status in \
         (JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging) and \
-        (g.is_admin or submission.username == SessionManager.get_username())
+        (g.is_admin or submission.user_id == g.user.id)
     show_score = not abortable and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
     real_name = None if not g.is_admin else RealnameManager.query_realname(submission.user.student_id)
@@ -769,7 +758,7 @@ def code(submission_id):
 
 @web.route('/code/<int:submit_id>/void', methods=['POST'])
 def mark_void(submit_id):
-    if SessionManager.get_privilege() < Privilege.ADMIN:
+    if not g.is_admin:
         abort(FORBIDDEN)
     try:
         JudgeManager.mark_void(submit_id)
@@ -780,7 +769,7 @@ def mark_void(submit_id):
 
 @web.route('/code/<int:submit_id>/rejudge', methods=['POST'])
 def rejudge(submit_id):
-    if SessionManager.get_privilege() < Privilege.ADMIN:
+    if not g.is_admin:
         abort(FORBIDDEN)
     try:
         JudgeManager.rejudge(submit_id)
@@ -792,15 +781,10 @@ def rejudge(submit_id):
 @web.route('/code/<int:submit_id>/abort', methods=['POST'])
 @require_logged_in
 def abort_judge(submit_id):
-    submission = db \
-        .query(JudgeRecordV2.username) \
-        .where(JudgeRecordV2.id == submit_id) \
-        .one_or_none()
+    submission = JudgeManager.get_submission(submit_id)
     if submission is None:
         abort(NOT_FOUND)
-    username = submission[0]
-    if username != SessionManager.get_username() \
-        and SessionManager.get_privilege() < Privilege.ADMIN:
+    if submission.user_id != g.user.id and not g.is_admin:
         abort(FORBIDDEN)
     JudgeManager.abort_judge(submit_id)
     return redirect('.', SEE_OTHER)
@@ -811,8 +795,7 @@ def contest_list_generic(type, type_zh):
     contest_id = request.args.get(f'{type}_id')
     if contest_id is not None:
         return redirect(f'/OnlineJudge/problemset/{contest_id}')
-    username = SessionManager.get_username()
-    user_contests = UserManager.list_contest_ids(username)
+    user_contests = UserManager.list_contest_ids(g.user)
 
     page = request.args.get('page')
     page = int(page) if page is not None else 1
@@ -823,7 +806,7 @@ def contest_list_generic(type, type_zh):
 
     max_page = ceil(count / WebConfig.Contests_Each_Page)
     # here exam_id is an *arbitary* unfinished exam in which the player is in
-    exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username)
+    exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(g.user)
 
     return render_template('contest_list.html', contests=contests,
                            get_status=ContestManager.get_status,
@@ -876,18 +859,17 @@ def problemset(contest_id):
 
 @web.route('/problemset/<int:contest_id>/join', methods=['POST'])
 def problemset_join(contest_id):
-    if not SessionManager.check_user_status():
+    if g.user is None:
         abort(UNAUTHORIZED)
     contest = ContestManager.get_contest(contest_id)
     if contest is None or g.time > contest.end_time:
         abort(BAD_REQUEST)
-    username = SessionManager.get_username()
     if contest.type == ContestType.EXAM:
-        exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(username)
+        exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(g.user)
         if exam_id != -1:
             abort(BAD_REQUEST)
-    if not ContestManager.check_player_in_contest(contest_id, username):
-        ContestManager.add_player_to_contest(contest_id, username)
+    if g.user not in contest.players:
+        contest.players.add(g.user)
     return redirect(f'/OnlineJudge/problemset/{contest_id}')
 
 
@@ -903,7 +885,7 @@ def profile():
         try:
             ret = validate(password=form.get('password'), friendly_name=form.get('friendly_name'))
             if ret == ReturnCode.SUC_VALIDATE:
-                UserManager.modify_user(SessionManager.get_username(), None, form.get('friendly_name'), form.get(
+                UserManager.modify_user(g.user.username, None, form.get('friendly_name'), form.get(
                     'password'), None)
                 return ReturnCode.SUC_MOD_USER
             else:

@@ -5,8 +5,8 @@
 {% block content %}
     <div class="card card-body col-lg-5 m-auto">
         <h1>登录</h1>
-        {% if g.friendly_name != '' -%}
-            <h4 class="text-center">您已经以 {{ g.friendly_name }} 身份登录。</h4>
+        {% if g.user != None -%}
+            <h4 class="text-center">您已经以 {{ g.user.friendly_name }} 身份登录。</h4>
         {% else -%}
             <form method="post" id="login">
                 {{ g.csrf() }}

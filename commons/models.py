@@ -50,7 +50,7 @@ class User(UseTimestamps, Base):
         back_populates='players',
     )
 
-user_fk = Annotated[str, mapped_column(ForeignKey(User.username), index=True)]
+user_fk = Annotated[int, mapped_column(ForeignKey(User.id), index=True)]
 
 
 class Problem(UseTimestamps, Base):
@@ -110,7 +110,7 @@ contest_fk = Annotated[int, mapped_column(ForeignKey(Contest.id), index=True)]
 class ContestPlayer(UseTimestamps, Base):
     id: Mapped[intpk]
     contest_id: Mapped[contest_fk]
-    username: Mapped[user_fk]
+    user_id: Mapped[user_fk]
 
 class ContestProblem(UseTimestamps, Base):
     id: Mapped[intpk]
@@ -121,7 +121,7 @@ class ContestProblem(UseTimestamps, Base):
 class Discussion(UseTimestamps, Base):
     id: Mapped[intpk]
     problem_id: Mapped[problem_fk]
-    username: Mapped[user_fk]
+    user_id: Mapped[user_fk]
     data: Mapped[str]
 
 Problem.discussions = relationship(Discussion)
@@ -134,7 +134,7 @@ class JudgeRecordV1(Base):
 
     id: Mapped[intpk]
     code: Mapped[str]
-    username: Mapped[user_fk]
+    user_id: Mapped[user_fk]
     user: Mapped[User] = relationship()
     problem_id: Mapped[problem_fk]
     problem: Mapped[Problem] = relationship()
@@ -206,7 +206,7 @@ class JudgeRecordV2(UseTimestamps, Base):
     id: Mapped[intpk]
     public: Mapped[bool]
     language: Mapped[str] = mapped_column(index=True)
-    username: Mapped[user_fk]
+    user_id: Mapped[user_fk]
     user: Mapped[User] = relationship()
     problem_id: Mapped[problem_fk]
     problem: Mapped[Problem] = relationship()

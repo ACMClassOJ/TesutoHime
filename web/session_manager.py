@@ -1,7 +1,10 @@
 __all__ = ('SessionManager',)
 
+from typing import Optional
+
 from flask import request
 
+from commons.models import User
 from web.user_manager import UserManager
 from web.utils import RedisConfig, redis_connect
 
@@ -10,40 +13,18 @@ class SessionManager:
     redis = redis_connect()
     prefix = RedisConfig.prefix + 'session_'
 
-    @staticmethod
-    def check_user_status() -> bool:  # to check whether current user has logged in properly
-        lid = request.cookies.get('Login_ID')
-        rst = SessionManager.redis.get(SessionManager.prefix + str(lid))
-        return rst is not None
+    @classmethod
+    def current_user(cls) -> Optional[User]:
+        session_id = request.cookies.get('Login_ID')
+        user_id = cls.redis.get(cls.prefix + str(session_id))
+        if user_id is None: return None
+        return UserManager.get_user(int(user_id))
 
-    @staticmethod
-    def logout():
-        lid = request.cookies.get('Login_ID')
-        SessionManager.redis.delete(SessionManager.prefix + str(lid))
+    @classmethod
+    def logout(cls) -> None:
+        session_id = request.cookies.get('Login_ID')
+        cls.redis.delete(cls.prefix + str(session_id))
 
-    @staticmethod
-    def new_session(username: str, login_id: str):
-        SessionManager.redis.set(SessionManager.prefix + login_id, username, ex = 86400 * 14)
-        return
-
-    @staticmethod
-    def get_username() -> str:
-        lid = request.cookies.get('Login_ID')
-        rst = SessionManager.redis.get(SessionManager.prefix + str(lid))
-        return rst if rst is not None else ''
-
-    @staticmethod
-    def get_friendly_name() -> str:
-        lid = request.cookies.get('Login_ID')
-        rst = SessionManager.redis.get(SessionManager.prefix + str(lid))
-        if rst is None: return ''
-        friendly_name = UserManager.get_friendly_name(rst)
-        return friendly_name if friendly_name is not None else ''
-
-    @staticmethod
-    def get_privilege() -> int:
-        lid = request.cookies.get('Login_ID')
-        rst = SessionManager.redis.get(SessionManager.prefix + str(lid))
-        if rst is None: return -1
-        priv = UserManager.get_privilege(rst)
-        return priv if priv is not None else -1
+    @classmethod
+    def new_session(cls, user: User, login_id: str) -> None:
+        cls.redis.set(cls.prefix + login_id, str(user.id), ex = 86400 * 14)

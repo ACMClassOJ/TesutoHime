@@ -102,7 +102,7 @@ class ProblemManager:
     def should_show(problem: Optional[Problem]) -> TypeGuard[Problem]:
         return problem is not None and \
             (problem.release_time <= g.time
-             or SessionManager.get_privilege() >= Privilege.ADMIN)
+             or g.user.privilege >= Privilege.ADMIN)
 
     @staticmethod
     def delete_problem(problem_id: int):

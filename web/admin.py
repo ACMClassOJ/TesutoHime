@@ -51,7 +51,7 @@ def package_sample():
 
 @admin.route('/user', methods=['post'])
 def user_manager():
-    if g.privilege < Privilege.SUPER:
+    if g.user is None or g.user.privilege < Privilege.SUPER:
         abort(FORBIDDEN)
     form = request.json
     if form is None:
@@ -70,9 +70,6 @@ def user_manager():
                                      form.get(String.FRIENDLY_NAME, None), form.get(String.PASSWORD, None),
                                      form.get(String.PRIVILEGE, None))
             return ReturnCode.SUC_MOD_USER
-        elif op == 2:
-            UserManager.delete_user(form[String.USERNAME])
-            return ReturnCode.SUC_DEL_USER
         else:
             return ReturnCode.ERR_BAD_DATA
     except KeyError:
@@ -175,14 +172,21 @@ def contest_manager():
             return ReturnCode.SUC_DEL_PROBLEMS_FROM_CONTEST
         elif op == 5:
             for username in form[String.CONTEST_USERNAMES]:
-                if not UserManager.has_user(username):
+                user = UserManager.get_user(username)
+                if user is not None:
+                    ContestManager.add_player_to_contest(int(form[String.CONTEST_ID]), user)
+                else:
                     return ReturnCode.ERR_ADDS_USER_TO_CONTEST
-            for username in form[String.CONTEST_USERNAMES]:
-                ContestManager.add_player_to_contest(int(form[String.CONTEST_ID]), username)
             return ReturnCode.SUC_ADD_USERS_TO_CONTEST
         elif op == 6:
+            contest_id = int(form[String.CONTEST_ID])
+            contest = ContestManager.get_contest(contest_id)
+            if contest is None:
+                return ReturnCode.ERR_DEL_USERS_FROM_CONTEST
             for username in form[String.CONTEST_USERNAMES]:
-                ContestManager.delete_player_from_contest(int(form[String.CONTEST_ID]), username)
+                user = UserManager.get_user(username)
+                if user is not None:
+                    contest.players.remove(user)
             return ReturnCode.SUC_DEL_USERS_FROM_CONTEST
         else:
             return ReturnCode.ERR_BAD_DATA

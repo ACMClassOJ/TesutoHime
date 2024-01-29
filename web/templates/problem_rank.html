@@ -80,7 +80,7 @@
                 <td><a href="/OnlineJudge/code/{{ submission.id }}/">{{ loop.index }}</a></td>
                 <td>
                 {% if g.is_admin -%}
-                    <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ submission.username }}">{{ submission.user.friendly_name }}</span>
+                    <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ submission.user.username }}">{{ submission.user.friendly_name }}</span>
                 {% else -%}
                     {{ submission.user.friendly_name }}
                 {%- endif %}

@@ -4,24 +4,21 @@ import logging.handlers
 from datetime import datetime
 from typing import Any, Dict
 
-from flask import request
+from flask import g, request
 
 from web.config import LogConfig
 from web.realname_manager import RealnameManager
-from web.session_manager import SessionManager
-from web.user_manager import UserManager
 from web.utils import readable_time
 
 
 class Tracker:
     def log(self):
         everything: Dict[Any, Any] = {}
-        username = SessionManager.get_username()
         everything['IP'] = request.remote_addr
         everything['Time'] = readable_time(datetime.now())
-        everything['Username'] = username
-        if username is not None and username != '':
-            everything['Realname'] = RealnameManager.query_realname(UserManager.get_student_id(username))
+        if g.user is not None:
+            everything['Username'] = g.user.username
+            everything['Realname'] = RealnameManager.query_realname(g.user.student_id)
         everything['url'] = '/'.join(request.url.split('/')[4:])
         everything['post_args'] = request.form.copy()
         if 'password' in everything['post_args']:

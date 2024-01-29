@@ -31,7 +31,7 @@
                     <td>{{ Detail.id }}</td>
                     <td>
                         {% if g.is_admin -%}
-                        <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ Detail.username }}">{{ friendly_name }}</span>
+                        <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ Detail.user.username }}">{{ friendly_name }}</span>
                         {% else -%}
                         <span>{{ friendly_name }}</span>
                         {%- endif %}

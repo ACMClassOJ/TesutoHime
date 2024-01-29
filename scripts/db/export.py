@@ -16,7 +16,7 @@ s3 = s3_client('s3', **s3_connection, config=cfg)
 db = Session()
 
 def filename (s: JudgeRecordV2) -> str:
-    return f'{s.user.student_id}-{names[s.user.username]}-{s.user.username}-{s.id}-T{s.problem.id}-{s.status.name}-{s.score}.cpp'
+    return f'{s.user.student_id}-{names[s.user.user_id]}-{s.user.username}-{s.id}-T{s.problem.id}-{s.status.name}-{s.score}.cpp'
 
 def prelude (s: JudgeRecordV2) -> str:
     details_message = 'No details'
@@ -28,7 +28,7 @@ def prelude (s: JudgeRecordV2) -> str:
         details_message = '\n * '.join(f'{group.name}: {group.score} {group.result}' for group in details.groups)
     return f'''
 /**
- * {s.user.student_id} {names[s.user.username]} ({s.user.username})
+ * {s.user.student_id} {names[s.user.user_id]} ({s.user.username})
  * Problem {s.problem_id} - {s.problem.title}
  * Time: {s.created_at.strftime('%Y-%m-%d %H:%M:%S')}
  * Status: {s.status.name}
@@ -52,18 +52,18 @@ def get_realname(user):
     return rec[-1][0]
 
 contest = db.query(Contest).where(Contest.id == contest_id).one()
-names = dict((x.username, get_realname(x)) for x in contest.players)
+names = dict((x.user_id, get_realname(x)) for x in contest.players)
 problems = db.query(ContestProblem.problem_id).where(ContestProblem.contest_id == contest_id).all()
 submissions: List[JudgeRecordV2] = db \
     .query(JudgeRecordV2) \
     .where(JudgeRecordV2.problem_id.in_(x[0] for x in problems)) \
-    .where(JudgeRecordV2.username.in_(x.username for x in contest.players)) \
+    .where(JudgeRecordV2.user_id.in_(x.user_id for x in contest.players)) \
     .where(JudgeRecordV2.created_at >= contest.start_time) \
     .where(JudgeRecordV2.created_at < contest.end_time) \
     .all()
-submissions: List[JudgeRecordV2] = sorted(submissions, key=lambda x: (x.username, x.problem_id))
+submissions: List[JudgeRecordV2] = sorted(submissions, key=lambda x: (x.user_id, x.problem_id))
 
-for _, tries in groupby(submissions, lambda x: (x.username, x.problem_id)):
+for _, tries in groupby(submissions, lambda x: (x.user_id, x.problem_id)):
     tries = list(tries)
     score = max(x.score for x in tries)
     score_tries = list(sorted(filter(lambda x: x.score == score, tries), key=lambda x: x.id))

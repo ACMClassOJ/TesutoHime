@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import boto3

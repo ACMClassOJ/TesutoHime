@@ -6,7 +6,7 @@ import requests
 from flask import abort
 from sqlalchemy.orm import defer, selectinload
 
-from commons.models import JudgeRecordV2, JudgeRunnerV2, JudgeStatus
+from commons.models import JudgeRecordV2, JudgeRunnerV2, JudgeStatus, User
 from web.config import S3Config, SchedulerConfig
 from web.old_judge_manager import OldJudgeManager
 from web.utils import db, s3_internal
@@ -21,7 +21,7 @@ class JudgeManager:
 
 
     @staticmethod
-    def schedule_judge(problem_id, submission_id, language, username):
+    def schedule_judge(problem_id: int, submission_id: int, language: str, rate_limit_group: str):
         task = {
             'problem_id': str(problem_id),
             'submission_id': str(submission_id),
@@ -30,7 +30,7 @@ class JudgeManager:
                 'bucket': S3Config.Buckets.submissions,
                 'key': JudgeManager.key_from_submission_id(submission_id),
             },
-            'rate_limit_group': username,
+            'rate_limit_group': rate_limit_group,
         }
         url = urljoin(SchedulerConfig.base_url, 'judge')
         try:
@@ -90,11 +90,11 @@ class JudgeManager:
             raise Exception('Runner error')
 
     @staticmethod
-    def add_submission(*, public, language, username, problem_id, code) -> int:
+    def add_submission(*, public: bool, language: str, user: User, problem_id: int, code: str) -> int:
         rec = JudgeRecordV2(
             public=public,
             language=language,
-            username=username,
+            user_id=user.id,
             problem_id=problem_id,
             status=JudgeStatus.pending,
         )
@@ -105,7 +105,7 @@ class JudgeManager:
         bucket = S3Config.Buckets.submissions
         s3_internal.put_object(Bucket=bucket, Key=key, Body=code.encode())
         JudgeManager.schedule_judge(problem_id, submission_id, language,
-                                    username)
+                                    str(user.id))
         return submission_id
 
     @staticmethod

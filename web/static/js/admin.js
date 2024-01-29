@@ -53,9 +53,6 @@ $(function () {
     $("#btnModifyUser").click(function () {
         op = 1;
     });
-    $("#btnRemoveUser").click(function () {
-        op = 2;
-    });
     $("#formUser").submit(function (e) {
         e.preventDefault();
         e.stopPropagation();

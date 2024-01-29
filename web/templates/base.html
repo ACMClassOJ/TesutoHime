@@ -44,16 +44,16 @@
                     <li class="nav-item"><a href="/OnlineJudge/admin" class="nav-link">管理</a></li>
                     {% endif %}
                     <li class="nav-item"><a href="/OnlineJudge/about" class="nav-link">关于</a></li>
-                    {% if g.friendly_name == '' -%}
+                    {% if g.user == None -%}
                     <li class="dropdown-divider"></li>
                     <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/login">登录</a></li>
                     <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/register">注册</a></li>
                     {%- endif %}
                 </ul>
                 <ul class="navbar-nav ml-lg-auto" style="line-height: 1;">
-                    {% if g.friendly_name != '' -%}
+                    {% if g.user != None -%}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ g.friendly_name }}</a>
+                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ g.user.friendly_name }}</a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <a class="dropdown-item" href="/OnlineJudge/profile">个人信息</a>
                             <div class="dropdown-divider"></div>

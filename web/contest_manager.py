@@ -2,7 +2,7 @@ __all__ = ('ContestManager',)
 
 from datetime import datetime
 from functools import cmp_to_key
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Set, Tuple
 
 from flask import g
 from sqlalchemy import delete, func, insert, join, select, update
@@ -63,11 +63,8 @@ class ContestManager:
         db.execute(stmt)
 
     @staticmethod
-    def add_player_to_contest(contest_id: int, username: str):
-        db.add(ContestPlayer(
-            contest_id=contest_id,
-            username=username,
-        ))
+    def add_player_to_contest(contest_id: int, user: User):
+        db.add(ContestPlayer(contest_id=contest_id, user_id=user.id))
 
     @staticmethod
     def check_problem_in_contest(contest_id: int, problem_id: int):
@@ -77,14 +74,7 @@ class ContestManager:
         return db.scalar(stmt) != 0
 
     @staticmethod
-    def check_player_in_contest(contest_id: int, username: str):
-        stmt = select(func.count()) \
-            .where(ContestPlayer.contest_id == contest_id) \
-            .where(ContestPlayer.username == username)
-        return db.scalar(stmt) != 0
-
-    @staticmethod
-    def get_unfinished_exam_info_for_player(username: str) -> Tuple[int, bool]:
+    def get_unfinished_exam_info_for_player(user: User) -> Tuple[int, bool]:
         """
             return exam_id, is_exam_started
         """
@@ -93,20 +83,13 @@ class ContestManager:
             .select_from(j) \
             .where(Contest.type == 2) \
             .where(g.time <= Contest.end_time) \
-            .where(ContestPlayer.username == username) \
+            .where(ContestPlayer.user_id == user.id) \
             .order_by(Contest.id.desc()) \
             .limit(1)
         data = db.execute(stmt).first()
         if data is not None:
             return data[0], (g.time >= data[1])
         return -1, False
-
-    @staticmethod
-    def delete_player_from_contest(contest_id: int, username: str):
-        stmt = delete(ContestPlayer) \
-            .where(ContestPlayer.contest_id == contest_id) \
-            .where(ContestPlayer.username == username)
-        db.execute(stmt)
 
     @staticmethod
     def get_status(contest: Contest) -> str:
@@ -165,7 +148,7 @@ class ContestManager:
         start_time: datetime = contest.start_time
         end_time = contest.end_time
         problems = ContestManager.list_problem_for_contest(contest.id)
-        players: List[User] = contest.players
+        players: Set[User] = contest.players
 
         data = ContestCache.get(contest.id)
         if data is not None:
@@ -190,28 +173,28 @@ class ContestManager:
                 'username': user.username,
             } for user in players
         ]
-        username_to_num = dict((regularize_string(user.username), i) for i, user in enumerate(players))
+        user_id_to_num = dict((user.id, i) for i, user in enumerate(players))
         problem_to_num = dict((problem, i) for i, problem in enumerate(problems))
 
         submits: List[JudgeRecordV2] = db \
             .query(JudgeRecordV2) \
             .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
             .where(JudgeRecordV2.problem_id.in_(problems)) \
-            .where(JudgeRecordV2.username.in_([x.username for x in players])) \
+            .where(JudgeRecordV2.user_id.in_([x.id for x in players])) \
             .where(JudgeRecordV2.created_at >= start_time) \
             .where(JudgeRecordV2.created_at < end_time) \
             .all()
         for submit in submits:
-            username = submit.username
+            user_id = submit.user_id
             problem_id = submit.problem_id
             status = submit.status
             score = submit.score
             submit_time: datetime = submit.created_at
 
-            if regularize_string(username) not in username_to_num:
+            if user_id not in user_id_to_num:
                 continue
 
-            rank = username_to_num[regularize_string(username)]
+            rank = user_id_to_num[user_id]
             problem_index = problem_to_num[problem_id]
             user_data = data[rank]
             problem = user_data['problems'][problem_index]

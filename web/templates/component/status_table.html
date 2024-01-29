@@ -26,7 +26,7 @@
 			<td class="status-list__user">
 				{% if g.is_admin -%}
 				<span data-container="body" data-toggle="popover" data-placement="left"
-					data-content="用户名：{{ submission.username }}">{{ submission.user.friendly_name }}</span>
+					data-content="用户名：{{ submission.user.username }}">{{ submission.user.friendly_name }}</span>
 				{% else -%}
 				<span>{{ submission.user.friendly_name }}</span>
 				{%- endif %}

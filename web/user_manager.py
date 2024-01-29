@@ -60,9 +60,8 @@ class UserManager:
         db.execute(stmt)
 
     @staticmethod
-    def check_login(username: str, password: str) -> bool:
-        stmt = select(User.password).where(User.username == username)
-        hashed = db.scalar(stmt)
+    def check_login(user: User, password: str) -> bool:
+        hashed = user.password
         if hashed is None:  # user do not exist
             return False
         if hashed.startswith('$SHA512$'):
@@ -71,44 +70,24 @@ class UserManager:
             result = verify_sha512(hashed, password)
             if not result:
                 return False
-            stmt1 = update(User).where(User.username == username) \
-                .values(password=hash(password))
-            db.execute(stmt1)
+            user.password = hash(password)
             return True
         return verify_argon2(hashed, password)
 
     @staticmethod
-    def get_friendly_name(username: str) -> Optional[str]:
-        stmt = select(User.friendly_name).where(User.username == username)
-        return db.scalar(stmt)
+    def get_user(user_id: int) -> Optional[User]:
+        return db.get(User, user_id)
 
     @staticmethod
-    def get_canonical_username(username: str) -> Optional[str]:
-        stmt = select(User.username).where(User.username_lower == func.lower(username))
-        return db.scalar(stmt)
-
-    @staticmethod
-    def get_student_id(username: str) -> Optional[str]:
-        stmt = select(User.student_id).where(User.username == username)
-        return db.scalar(stmt)
-
-    @staticmethod
-    def get_privilege(username: str) -> Optional[int]:
-        stmt = select(User.privilege).where(User.username == username)
-        return db.scalar(stmt)
-
-    @staticmethod
-    def delete_user(username: str):
-        stmt = delete(User).where(User.username == username)
-        db.execute(stmt)
+    def get_user_by_username(username: str) -> Optional[User]:
+        return db.scalar(select(User).where(User.username_lower == func.lower(username)))
 
     @staticmethod
     def has_user(username: str) -> bool:
-        stmt = select(func.count()).where(User.username == username)
-        return db.scalar(stmt) == 1
+        return UserManager.get_user_by_username(username) is not None
 
     @staticmethod
-    def list_contest_ids(username: str) -> Sequence[int]:
+    def list_contest_ids(user: User) -> Sequence[int]:
         stmt = select(ContestPlayer.contest_id) \
-            .where(ContestPlayer.username == username)
+            .where(ContestPlayer.user_id == user.id)
         return db.scalars(stmt).all()

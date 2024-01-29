@@ -109,7 +109,7 @@ class ProblemManager:
         submission_count = db.scalar(select(func.count())
                                      .where(JudgeRecordV2.problem_id == problem_id))
         contest_count = db.scalar(select(func.count())
-                                  .where(ContestProblem.c.problem_id == problem_id))
+                                  .where(ContestProblem.problem_id == problem_id))
         assert submission_count is not None
         assert contest_count is not None
         if submission_count > 0 or contest_count > 0:

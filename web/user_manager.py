@@ -109,6 +109,6 @@ class UserManager:
 
     @staticmethod
     def list_contest_ids(username: str) -> Sequence[int]:
-        stmt = select(ContestPlayer.c.contest_id) \
-            .where(ContestPlayer.c.username == username)
+        stmt = select(ContestPlayer.contest_id) \
+            .where(ContestPlayer.username == username)
         return db.scalars(stmt).all()

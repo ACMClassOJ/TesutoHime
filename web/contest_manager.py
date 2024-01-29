@@ -50,35 +50,37 @@ class ContestManager:
 
     @staticmethod
     def add_problem_to_contest(contest_id: int, problem_id: int):
-        stmt = insert(ContestProblem) \
-            .values(contest_id=contest_id, problem_id=problem_id)
-        db.execute(stmt)
+        db.add(ContestProblem(
+            contest_id=contest_id,
+            problem_id=problem_id,
+        ))
 
     @staticmethod
     def delete_problem_from_contest(contest_id: int, problem_id: int):
         stmt = delete(ContestProblem) \
-            .where(ContestProblem.c.contest_id == contest_id) \
-            .where(ContestProblem.c.problem_id == problem_id)
+            .where(ContestProblem.contest_id == contest_id) \
+            .where(ContestProblem.problem_id == problem_id)
         db.execute(stmt)
 
     @staticmethod
     def add_player_to_contest(contest_id: int, username: str):
-        stmt = insert(ContestPlayer).values(
-            contest_id=contest_id, username=username)
-        db.execute(stmt)
+        db.add(ContestPlayer(
+            contest_id=contest_id,
+            username=username,
+        ))
 
     @staticmethod
     def check_problem_in_contest(contest_id: int, problem_id: int):
         stmt = select(func.count()) \
-            .where(ContestProblem.c.contest_id == contest_id) \
-            .where(ContestProblem.c.problem_id == problem_id)
+            .where(ContestProblem.contest_id == contest_id) \
+            .where(ContestProblem.problem_id == problem_id)
         return db.scalar(stmt) != 0
 
     @staticmethod
     def check_player_in_contest(contest_id: int, username: str):
         stmt = select(func.count()) \
-            .where(ContestPlayer.c.contest_id == contest_id) \
-            .where(ContestPlayer.c.username == username)
+            .where(ContestPlayer.contest_id == contest_id) \
+            .where(ContestPlayer.username == username)
         return db.scalar(stmt) != 0
 
     @staticmethod
@@ -86,12 +88,12 @@ class ContestManager:
         """
             return exam_id, is_exam_started
         """
-        j = join(Contest, ContestPlayer, ContestPlayer.c.contest_id == Contest.id)
+        j = join(Contest, ContestPlayer, ContestPlayer.contest_id == Contest.id)
         stmt = select(Contest.id, Contest.start_time) \
             .select_from(j) \
             .where(Contest.type == 2) \
             .where(g.time <= Contest.end_time) \
-            .where(ContestPlayer.c.username == username) \
+            .where(ContestPlayer.username == username) \
             .order_by(Contest.id.desc()) \
             .limit(1)
         data = db.execute(stmt).first()
@@ -102,8 +104,8 @@ class ContestManager:
     @staticmethod
     def delete_player_from_contest(contest_id: int, username: str):
         stmt = delete(ContestPlayer) \
-            .where(ContestPlayer.c.contest_id == contest_id) \
-            .where(ContestPlayer.c.username == username)
+            .where(ContestPlayer.contest_id == contest_id) \
+            .where(ContestPlayer.username == username)
         db.execute(stmt)
 
     @staticmethod
@@ -145,7 +147,7 @@ class ContestManager:
 
     @staticmethod
     def list_problem_for_contest(contest_id: int) -> Sequence[int]:
-        stmt = select(ContestProblem.c.problem_id).where(ContestProblem.c.contest_id == contest_id)
+        stmt = select(ContestProblem.problem_id).where(ContestProblem.contest_id == contest_id)
         data = db.scalars(stmt).all()
         return data
 

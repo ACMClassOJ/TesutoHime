@@ -2,9 +2,9 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import List, Optional
 
-from sqlalchemy import ARRAY, BigInteger, Column, Computed
+from sqlalchemy import ARRAY, BigInteger, Computed
 from sqlalchemy import Enum as SqlEnum
-from sqlalchemy import ForeignKey, Index, Integer, Table, Text, func, text
+from sqlalchemy import ForeignKey, Index, Text, func, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing_extensions import Annotated
 
@@ -36,9 +36,6 @@ class UseTimestamps:
 
 
 class User(UseTimestamps, Base):
-    # 'user' is a keyword in postgresql :(
-    __tablename__ = 'account'
-
     id: Mapped[intpk]
     username: Mapped[str] = mapped_column(unique=True)
     username_lower: Mapped[str] = mapped_column(Computed('lower(username)'), unique=True)
@@ -107,23 +104,18 @@ class Contest(UseTimestamps, Base):
         back_populates='contests',
     )
 
+contest_fk = Annotated[int, mapped_column(ForeignKey(Contest.id), index=True)]
 
-ContestPlayer = Table(
-    'contest_player',
-    Base.metadata,
-    Column('id', Integer, primary_key=True),
-    Column('contest_id', Integer, ForeignKey(Contest.id), index=True),
-    Column('username', Text, ForeignKey(User.username), index=True),
-    Index('contest_id_username', 'contest_id', 'username'),
-)
 
-ContestProblem = Table(
-    'contest_problem',
-    Base.metadata,
-    Column('id', Integer, primary_key=True),
-    Column('contest_id', Integer, ForeignKey(Contest.id), index=True),
-    Column('problem_id', Integer, ForeignKey(Problem.id), index=True),
-)
+class ContestPlayer(UseTimestamps, Base):
+    id: Mapped[intpk]
+    contest_id: Mapped[contest_fk]
+    username: Mapped[user_fk]
+
+class ContestProblem(UseTimestamps, Base):
+    id: Mapped[intpk]
+    contest_id: Mapped[contest_fk]
+    problem_id: Mapped[problem_fk]
 
 
 class Discussion(UseTimestamps, Base):

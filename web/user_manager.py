@@ -5,7 +5,7 @@ from typing import Optional, Sequence
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import func, select, update
 
 from commons.models import ContestPlayer, User
 from web.utils import db

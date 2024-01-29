@@ -5,14 +5,14 @@ from functools import cmp_to_key
 from typing import List, Optional, Sequence, Set, Tuple
 
 from flask import g
-from sqlalchemy import delete, func, insert, join, select, update
+from sqlalchemy import delete, func, join, select, update
 from sqlalchemy.orm import defer
 
 from commons.models import (Contest, ContestPlayer, ContestProblem,
                             JudgeRecordV2, JudgeStatus, User)
 from web.contest_cache import ContestCache
 from web.realname_manager import RealnameManager
-from web.utils import db, regularize_string
+from web.utils import db
 
 
 class ContestManager:

@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum, auto
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from sqlalchemy import ARRAY, BigInteger, Computed
 from sqlalchemy import Enum as SqlEnum
@@ -44,13 +44,116 @@ class User(UseTimestamps, Base):
     password: Mapped[str]
     privilege: Mapped[int]
 
-    contests: Mapped[List['Contest']] = relationship(
+    contests: Mapped[Set['Contest']] = relationship(
         secondary='contest_player',
         passive_deletes=True,
         back_populates='players',
     )
+    courses: Mapped[Set['Course']] = relationship(
+        secondary='enrollment',
+        passive_deletes=True,
+        back_populates='users',
+    )
 
 user_fk = Annotated[int, mapped_column(ForeignKey(User.id), index=True)]
+
+class CourseTag(UseTimestamps, Base):
+    id: Mapped[intpk]
+    name: Mapped[str]
+    site_owner: Mapped[bool] = mapped_column(server_default=text('false'))
+
+    courses: Mapped[Set['Course']] = relationship(back_populates='tag')
+
+course_tag_fk = Annotated[int, mapped_column(ForeignKey(CourseTag.id), index=True)]
+
+class Term(UseTimestamps, Base):
+    id: Mapped[intpk]
+    name: Mapped[str]
+    start_time: Mapped[datetime]
+    end_time: Mapped[datetime]
+
+    courses: Mapped[Set['Course']] = relationship(back_populates='term')
+
+term_fk = Annotated[int, mapped_column(ForeignKey(Term.id), index=True)]
+
+class Course(UseTimestamps, Base):
+    id: Mapped[intpk]
+    name: Mapped[str]
+    description: Mapped[str] = mapped_column(server_default='')
+
+    tag_id: Mapped[Optional[course_tag_fk]]
+    tag: Mapped[Optional[CourseTag]] = relationship(back_populates='courses')
+    term_id: Mapped[Optional[term_fk]]
+    term: Mapped[Optional[Term]] = relationship(back_populates='courses')
+
+    problems: Mapped[Set['Problem']] = relationship(back_populates='course')
+    groups: Mapped[Set['Group']] = relationship(back_populates='course')
+    users: Mapped[Set[User]] = relationship(
+        secondary='enrollment',
+        passive_deletes=True,
+        back_populates='courses',
+    )
+
+course_fk = Annotated[int, mapped_column(ForeignKey(Course.id), index=True)]
+
+class Enrollment(UseTimestamps, Base):
+    __table_args__ = (
+        Index('ix_enrollment_user_id_course_id', 'user_id', 'course_id', unique=True),
+    )
+
+    id: Mapped[intpk]
+    user_id: Mapped[user_fk]
+    course_id: Mapped[course_fk]
+    admin: Mapped[bool] = mapped_column(server_default=text('false'))
+
+class Group(UseTimestamps, Base):
+    id: Mapped[intpk]
+    name: Mapped[str]
+    description: Mapped[str] = mapped_column(server_default='')
+
+    course_id: Mapped[course_fk]
+    course: Mapped[Course] = relationship(back_populates='groups')
+
+    contests: Mapped[Set['Contest']] = relationship(
+        secondary='contest_group',
+        passive_deletes=True,
+        back_populates='groups',
+    )
+    realname_references: Mapped[Set['RealnameReference']] = relationship(
+        secondary='group_realname_reference',
+        passive_deletes=True,
+        back_populates='groups',
+    )
+
+group_fk = Annotated[int, mapped_column(ForeignKey(Group.id), index=True)]
+
+class RealnameReference(UseTimestamps, Base):
+    __table_args__ = (
+        Index('ix_realname_reference_student_id_course_id', 'student_id', 'course_id', unique=True),
+    )
+
+    id: Mapped[intpk]
+    student_id: Mapped[str] = mapped_column(index=True)
+    real_name: Mapped[str]
+    course_id: Mapped[course_fk]
+    course: Mapped[Course] = relationship()
+
+    groups: Mapped[Set[Group]] = relationship(
+        secondary='group_realname_reference',
+        passive_deletes=True,
+        back_populates='realname_references',
+    )
+
+realname_reference_fk = Annotated[int, mapped_column(ForeignKey(RealnameReference.id), index=True)]
+
+class GroupRealnameReference(UseTimestamps, Base):
+    __table_args__ = (
+        Index('ix_group_realname_reference_group_id_realname_reference_id', 'group_id', 'realname_reference_id', unique=True),
+    )
+
+    id: Mapped[intpk]
+    group_id: Mapped[group_fk]
+    realname_reference_id: Mapped[realname_reference_fk]
 
 
 class Problem(UseTimestamps, Base):
@@ -60,6 +163,8 @@ class Problem(UseTimestamps, Base):
 
     id: Mapped[intpk]
     title: Mapped[str]
+    course_id: Mapped[course_fk]
+    course: Mapped[Course] = relationship(back_populates='problems')
 
     # problem description
     description: Mapped[Optional[str]]
@@ -74,13 +179,28 @@ class Problem(UseTimestamps, Base):
     problem_type: Mapped[int] = mapped_column(server_default=text('0'))
     languages_accepted: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text))
 
-    contests: Mapped[List['Contest']] = relationship(
+    contests: Mapped[Set['Contest']] = relationship(
         secondary='contest_problem',
         passive_deletes=True,
         back_populates='problems',
     )
+    discussions: Mapped[Set['Discussion']] = relationship()
 
 problem_fk = Annotated[int, mapped_column(ForeignKey(Problem.id), index=True)]
+
+
+class ProblemPrivilegeType(Enum):
+    readonly = auto()
+    owner = auto()
+
+class ProblemPrivilege(UseTimestamps, Base):
+    id: Mapped[intpk]
+    user_id: Mapped[user_fk]
+    user: Mapped[User] = relationship()
+    problem_id: Mapped[problem_fk]
+    problem: Mapped[Problem] = relationship()
+    privilege: Mapped[ProblemPrivilegeType] = mapped_column(SqlEnum(ProblemPrivilegeType))
+    comment: Mapped[str] = mapped_column(server_default='')
 
 
 class Contest(UseTimestamps, Base):
@@ -93,13 +213,18 @@ class Contest(UseTimestamps, Base):
     rank_penalty: Mapped[bool]
     rank_partial_score: Mapped[bool]
 
-    players: Mapped[List[User]] = relationship(
+    players: Mapped[Set[User]] = relationship(
         secondary='contest_player',
         passive_deletes=True,
         back_populates='contests',
     )
-    problems: Mapped[List[Problem]] = relationship(
+    problems: Mapped[Set[Problem]] = relationship(
         secondary='contest_problem',
+        passive_deletes=True,
+        back_populates='contests',
+    )
+    groups: Mapped[Set[Group]] = relationship(
+        secondary='contest_group',
         passive_deletes=True,
         back_populates='contests',
     )
@@ -117,14 +242,18 @@ class ContestProblem(UseTimestamps, Base):
     contest_id: Mapped[contest_fk]
     problem_id: Mapped[problem_fk]
 
+class ContestGroup(UseTimestamps, Base):
+    id: Mapped[intpk]
+    contest_id: Mapped[contest_fk]
+    group_id: Mapped[group_fk]
+
 
 class Discussion(UseTimestamps, Base):
     id: Mapped[intpk]
     problem_id: Mapped[problem_fk]
     user_id: Mapped[user_fk]
+    user: Mapped[User] = relationship()
     data: Mapped[str]
-
-Problem.discussions = relationship(Discussion)
 
 
 class JudgeRecordV1(Base):
@@ -157,12 +286,6 @@ class JudgeServerV1(Base):
     current_task: Mapped[int] = mapped_column(server_default=text('-1'))
     friendly_name: Mapped[str]
     detail: Mapped[str]
-
-
-class RealnameReference(UseTimestamps, Base):
-    id: Mapped[intpk]
-    student_id: Mapped[str] = mapped_column(index=True)
-    real_name: Mapped[str]
 
 
 # New models for judger2 and scheduler2

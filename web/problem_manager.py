@@ -8,7 +8,6 @@ from sqlalchemy import delete, func, select, update
 
 from commons.models import ContestProblem, JudgeRecordV2, Problem
 from web.const import Privilege, language_info
-from web.session_manager import SessionManager
 from web.utils import db
 
 FAR_FUTURE_TIME = datetime(9999, 12, 31, 8, 42, 42)
@@ -101,8 +100,7 @@ class ProblemManager:
     @staticmethod
     def should_show(problem: Optional[Problem]) -> TypeGuard[Problem]:
         return problem is not None and \
-            (problem.release_time <= g.time
-             or g.user.privilege >= Privilege.ADMIN)
+            (problem.release_time <= g.time or g.is_admin)
 
     @staticmethod
     def delete_problem(problem_id: int):

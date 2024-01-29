@@ -1,7 +1,5 @@
 __all__ = ('RealnameManager',)
 
-import sys
-
 from commons.models import RealnameReference
 from web.utils import db
 from sqlalchemy import select

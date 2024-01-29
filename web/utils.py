@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import boto3
@@ -62,11 +61,6 @@ def readable_lang_v1(lang: int) -> str:
 def readable_lang(lang: str) -> str:
     return 'Unknown' if lang not in language_info \
             else language_info[lang].name
-
-def regularize_string(raw_str: str) -> str:
-    raw_str = raw_str.lower() # lower_case
-    raw_str = raw_str.replace(' ', '') # eliminate the blank
-    return raw_str
 
 
 def gen_page(cur_page: int, max_page: int):

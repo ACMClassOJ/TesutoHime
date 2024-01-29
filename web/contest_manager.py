@@ -10,8 +10,10 @@ from sqlalchemy.orm import defer
 
 from commons.models import (Contest, ContestPlayer, ContestProblem,
                             JudgeRecordV2, JudgeStatus, User)
+from web.const import ContestType, PrivilegeType
 from web.contest_cache import ContestCache
 from web.realname_manager import RealnameManager
+from web.user_manager import UserManager
 from web.utils import db
 
 
@@ -73,6 +75,16 @@ class ContestManager:
             .where(ContestProblem.problem_id == problem_id)
         return db.scalar(stmt) != 0
 
+
+    @staticmethod
+    def can_read(contest: Contest):
+        return UserManager.get_contest_privilege(g.user, contest) >= PrivilegeType.readonly
+
+    @staticmethod
+    def can_write(contest: Contest):
+        return UserManager.get_contest_privilege(g.user, contest) >= PrivilegeType.owner
+
+
     @staticmethod
     def get_unfinished_exam_info_for_player(user: User) -> Tuple[int, bool]:
         """
@@ -81,7 +93,7 @@ class ContestManager:
         j = join(Contest, ContestPlayer, ContestPlayer.contest_id == Contest.id)
         stmt = select(Contest.id, Contest.start_time) \
             .select_from(j) \
-            .where(Contest.type == 2) \
+            .where(Contest.type == ContestType.EXAM) \
             .where(g.time <= Contest.end_time) \
             .where(ContestPlayer.user_id == user.id) \
             .order_by(Contest.id.desc()) \

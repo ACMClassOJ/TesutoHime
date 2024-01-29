@@ -30,7 +30,7 @@
                     {%- if problems_visible and problems | length > 2 -%}
                     <button class="btn btn-outline-primary" id="open-all">打开所有题目</button>
                     {%- endif -%}
-                    {% if g.is_admin -%}
+                    {% if g.can_write -%}
                     <a href="/OnlineJudge/admin/?contest_id={{ contest.id }}" class="btn btn-outline-primary">管理</a>
                     {%- endif -%}
                     {%- if problems_visible and problems | length > 4 -%}
@@ -124,7 +124,7 @@
 {% endblock %}
 {% block script %}
 
-{% if g.is_admin %}
+{% if g.can_read %}
 <script src="{{ url_for('.static', filename = 'lib/jquery.dataTables.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/dataTables.bootstrap4.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/dataTables.buttons.min.js') }}"></script>
@@ -155,7 +155,7 @@
         }
     })
 
-{% if g.is_admin %}
+{% if g.can_read %}
     $(function(){
         const table = $("#contest").DataTable({
             dom: 'Bft',

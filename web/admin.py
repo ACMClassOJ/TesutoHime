@@ -1,14 +1,16 @@
 from datetime import datetime
 from functools import wraps
-from http.client import (BAD_REQUEST, FORBIDDEN, REQUEST_ENTITY_TOO_LARGE,
-                         SEE_OTHER)
+from http.client import (BAD_REQUEST, FORBIDDEN, NO_CONTENT,
+                         REQUEST_ENTITY_TOO_LARGE, SEE_OTHER)
 from urllib.parse import urljoin
 from uuid import uuid4
 
 import requests
-from flask import Blueprint, abort, g, redirect, render_template, request
+from flask import (Blueprint, abort, g, make_response, redirect,
+                   render_template, request)
 from requests.exceptions import RequestException
 
+from commons.models import Problem
 from web.config import S3Config, SchedulerConfig
 from web.const import Privilege, ReturnCode, String
 from web.contest_manager import ContestManager
@@ -33,6 +35,9 @@ def require_admin(func):
 def index():
     return render_template('admin.html')
 
+
+# docs
+
 @admin.route('/admin-doc')
 def admin_doc():
     return render_template('admin_doc.html')
@@ -48,6 +53,9 @@ def data_doc():
 @admin.route('/package-sample')
 def package_sample():
     return render_template('package_sample.html')
+
+
+# user
 
 @admin.route('/user', methods=['post'])
 def user_manager():
@@ -78,22 +86,7 @@ def user_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-@admin.route('/problem-description', methods=['post'])
-@require_admin
-def problem_description():
-    form = request.json
-    if form is None:
-        abort(BAD_REQUEST)
-    try:
-        ProblemManager.modify_problem_description(int(form[String.PROBLEM_ID]),
-           form.get(String.DESCRIPTION, None), form.get(String.INPUT, None),
-           form.get(String.OUTPUT, None), form.get(String.EXAMPLE_INPUT, None),
-           form.get(String.EXAMPLE_OUTPUT, None), form.get(String.DATA_RANGE, None))
-        return ReturnCode.SUC_MOD_PROBLEM
-    except KeyError:
-        return ReturnCode.ERR_BAD_DATA
-    except TypeError:
-        return ReturnCode.ERR_BAD_DATA
+# problem
 
 @admin.route('/problem-create', methods=['post'])
 @require_admin
@@ -101,37 +94,136 @@ def problem_create():
     problem_id = ProblemManager.add_problem()
     return redirect(f'/OnlineJudge/problem/{problem_id}/admin', SEE_OTHER)
 
-@admin.route('/problem', methods=['post'])
-@require_admin
-def problem_info():
+def reads_problem(func):
+    @wraps(func)
+    def wrapped(problem, *args, **kwargs):
+        if not ProblemManager.can_read(problem):
+            abort(FORBIDDEN)
+        return func(problem, *args, **kwargs)
+    return wrapped
+
+def writes_problem(func):
+    @wraps(func)
+    def wrapped(problem, *args, **kwargs):
+        if not ProblemManager.can_write(problem):
+            abort(FORBIDDEN)
+        return func(problem, *args, **kwargs)
+    return wrapped
+
+@admin.route('/problem/<problem:problem>', methods=['put'])
+@writes_problem
+def problem_info(problem: Problem):
     form = request.json
     if form is None:
         abort(BAD_REQUEST)
     try:
-        ProblemManager.modify_problem(int(form[String.PROBLEM_ID]),
-           form.get(String.TITLE, None),
-           datetime.fromisoformat(form.get(String.RELEASE_TIME, None)),
-           form.get(String.PROBLEM_TYPE, None))
-        return ReturnCode.SUC_MOD_PROBLEM
+        problem.title = form['title']
+        problem.release_time = datetime.fromisoformat(form['time'])
+        problem.problem_type = form['problem_type']
+        return make_response('', NO_CONTENT)
     except KeyError:
-        return ReturnCode.ERR_BAD_DATA
-    except TypeError:
-        return ReturnCode.ERR_BAD_DATA
+        abort(BAD_REQUEST)
+    except ValueError:
+        abort(BAD_REQUEST)
 
-@admin.route('/problem_limit', methods=['post'])
-@require_admin
-def problem_limit():
-    form = request.form
+@admin.route('/problem/<problem:problem>/description', methods=['put'])
+@writes_problem
+def problem_description(problem: Problem):
+    form = request.json
     if form is None:
         abort(BAD_REQUEST)
-    try:
-        ProblemManager.modify_problem_limit(int(form["id"]), form["data"])
-        return ReturnCode.SUC_ADD_PROBLEM
-    except KeyError:
-        return ReturnCode.ERR_BAD_DATA
-    except TypeError:
-        return ReturnCode.ERR_BAD_DATA
+    problem.description = form['description']
+    problem.input = form['input']
+    problem.output = form['output']
+    problem.example_input = form['example_input']
+    problem.example_output = form['example_output']
+    problem.data_range = form['data_range']
+    return make_response('', NO_CONTENT)
 
+@admin.route('/problem/<problem:problem>/limit', methods=['put'])
+@writes_problem
+def problem_limit(problem: Problem):
+    problem.limits = request.data.decode()
+    return make_response('', NO_CONTENT)
+
+@admin.route('/problem/<problem:problem>/upload-url')
+@writes_problem
+def data_upload(problem: Problem):
+    return generate_s3_public_url('put_object', {
+        'Bucket': S3Config.Buckets.problems,
+        'Key': f'{problem.id}.zip',
+    }, ExpiresIn=3600)
+
+
+@admin.route('/problem/<problem:problem>/update-plan', methods=['POST'])
+@writes_problem
+def data_update(problem: Problem):
+    url = urljoin(SchedulerConfig.base_url, f'problem/{problem.id}/update')
+    res = requests.post(url).json()
+    if res['result'] == 'ok':
+        problem.languages_accepted = res['languages']
+        return 'ok'
+    elif res['result'] == 'invalid problem':
+        return f'Invalid problem: {res["error"]}'
+    elif res['result'] == 'system error':
+        return f'System error: {res["error"]}'
+    return 'Bad result from scheduler'
+
+@admin.route('/problem/<problem:problem>/data-zip')
+@reads_problem
+def data_download(problem: Problem):
+    key = f'{problem.id}.zip'
+    url = generate_s3_public_url('get_object', {
+        'Bucket': S3Config.Buckets.problems,
+        'Key': key,
+    }, ExpiresIn=3600)
+    return redirect(url, SEE_OTHER)
+
+def problem_admin_api(callback, success_retcode):
+    type = request.form['type']
+
+    if type == 'by_judge_id':
+        id = request.form['judge_id']
+        id_list = id.strip().splitlines()
+        try:
+            for i in id_list:
+                submission = JudgeManager.get_submission(int(i))
+                if submission is None:
+                    raise NotFoundException
+                if not ProblemManager.can_write(submission.problem):
+                    raise NotFoundException
+                callback(submission)
+            return success_retcode
+        except NotFoundException:
+            return ReturnCode.ERR_BAD_DATA
+    elif type == 'by_problem_id':
+        ids = request.form['problem_id'].strip().splitlines()
+        try:
+            for id in ids:
+                problem = ProblemManager.get_problem(int(id))
+                if problem is None:
+                    raise NotFoundException
+                if not ProblemManager.can_write(problem):
+                    raise NotFoundException
+                JudgeManager.problem_judge_foreach(callback, id)
+            return success_retcode
+        except NotFoundException:
+            return ReturnCode.ERR_BAD_DATA
+
+@admin.route('/rejudge', methods=['POST'])
+def rejudge():
+    return problem_admin_api(JudgeManager.rejudge, ReturnCode.SUC_REJUDGE)
+
+@admin.route('/mark-void', methods=['POST'])
+def mark_void():
+    return problem_admin_api(JudgeManager.mark_void, ReturnCode.SUC_DISABLE_JUDGE)
+
+@admin.route('/abort-judge', methods=['POST'])
+def abort_judge():
+    return problem_admin_api(JudgeManager.abort_judge, ReturnCode.SUC_ABORT_JUDGE)
+
+
+# contest
 
 @admin.route('/contest', methods=['post'])
 @require_admin
@@ -196,42 +288,7 @@ def contest_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-@admin.route('/problem/<int:problem_id>/upload-url')
-@require_admin
-def data_upload(problem_id):
-    return generate_s3_public_url('put_object', {
-        'Bucket': S3Config.Buckets.problems,
-        'Key': f'{problem_id}.zip',
-    }, ExpiresIn=3600)
-
-
-@admin.route('/problem/<int:problem_id>/update', methods=['POST'])
-@require_admin
-def data_update(problem_id):
-    url = urljoin(SchedulerConfig.base_url, f'problem/{problem_id}/update')
-    res = requests.post(url).json()
-    if res['result'] == 'ok':
-        languages = res['languages']
-        ProblemManager.set_languages_accepted(problem_id, languages)
-        return 'ok'
-    elif res['result'] == 'invalid problem':
-        return f'Invalid problem: {res["error"]}'
-    elif res['result'] == 'system error':
-        return f'System error: {res["error"]}'
-    return 'Bad result from scheduler'
-
-
-@admin.route('/data_download', methods=['POST'])
-@require_admin
-def data_download():
-    id = request.form['id']
-    key = f'{id}.zip'
-    url = generate_s3_public_url('get_object', {
-        'Bucket': S3Config.Buckets.problems,
-        'Key': key,
-    }, ExpiresIn=3600)
-    return redirect(url, SEE_OTHER)
-
+# misc
 
 max_pic_size = 10485760
 
@@ -252,41 +309,6 @@ def pic_upload():
         'ContentLength': length,
         'ContentType': type,
     }, ExpiresIn=3600)
-
-
-@require_admin
-def problem_admin_api(callback, success_retcode):
-    type = request.form['type']
-
-    if type == "by_judge_id":
-        id = request.form['judge_id']
-        id_list = id.strip().splitlines()
-        try:
-            for i in id_list:
-                callback(i)
-            return success_retcode
-        except NotFoundException:
-            return ReturnCode.ERR_BAD_DATA
-    elif type == "by_problem_id":
-        ids = request.form['problem_id'].strip().splitlines()
-        try:
-            for id in ids:
-                JudgeManager.problem_judge_foreach(callback, id)
-            return success_retcode
-        except NotFoundException:
-            return ReturnCode.ERR_BAD_DATA
-
-@admin.route('/rejudge', methods=['POST'])
-def rejudge():
-    return problem_admin_api(JudgeManager.rejudge, ReturnCode.SUC_REJUDGE)
-
-@admin.route('/disable_judge', methods=['POST'])
-def mark_void():
-    return problem_admin_api(JudgeManager.mark_void, ReturnCode.SUC_DISABLE_JUDGE)
-
-@admin.route('/abort_judge', methods=['POST'])
-def abort_judge():
-    return problem_admin_api(JudgeManager.abort_judge, ReturnCode.SUC_ABORT_JUDGE)
 
 
 @admin.route('/add_realname', methods=['POST'])

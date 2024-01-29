@@ -13,7 +13,7 @@ class RedisConfig:
     port = 6379
     password = 'Progynova'
     db = 0
-    prefix = 'OJ_'
+    prefix = 'oj:'
 
 
 class S3Config:

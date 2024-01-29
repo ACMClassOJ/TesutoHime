@@ -30,7 +30,7 @@ const uploadData = async (problemId, file, progressBar) => {
             }
             progressBar.removeAttribute('value')
             try {
-                const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/update`, { method: 'POST' })
+                const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/update-plan`, { method: 'POST' })
                 if (res.status !== 200) {
                     swal('Error', `未知错误: ${res.status}`, 'error')
                     return
@@ -135,21 +135,19 @@ $(() => {
         e.preventDefault()
         e.stopPropagation()
         const data = $(this).serializeObject()
-        $.ajax({
-            type: 'POST',
-            contentType: 'application/json',
-            url: '/OnlineJudge/admin/problem-description',
-            dataType: 'json',
-            data: JSON.stringify(data),
-            complete: function (ret) {
-                var ret_json = JSON.parse(ret.responseText)
-                if(ret_json.e < 0) {
-                    swal('Error ' + ret_json.e, ret_json.msg, 'error')
-                } else {
-                    swal('Success', ret_json.msg, 'success')
-                }
-                reloadDescription()
+        fetch(`/OnlineJudge/admin/problem/${problemId}/description`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
             },
+            body: JSON.stringify(data),
+        }).then(res => {
+            if (!res.ok) {
+                swal(`Error ${res.status}`, res.statusText, 'error')
+            } else {
+                swal('Success', '', 'success')
+            }
+            reloadDescription()
         })
     })
 
@@ -157,20 +155,18 @@ $(() => {
         e.preventDefault()
         e.stopPropagation()
         const data = $(this).serializeObject()
-        $.ajax({
-            type: 'POST',
-            contentType: 'application/json',
-            url: '/OnlineJudge/admin/problem',
-            dataType: 'json',
-            data: JSON.stringify(data),
-            complete: function (ret) {
-                var ret_json = JSON.parse(ret.responseText)
-                if(ret_json.e < 0) {
-                    swal('Error ' + ret_json.e, ret_json.msg, 'error')
-                } else {
-                    swal('Success', ret_json.msg, 'success')
-                }
+        fetch(`/OnlineJudge/admin/problem/${problemId}`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
             },
+            body: JSON.stringify(data),
+        }).then(res => {
+            if (!res.ok) {
+                swal(`Error ${res.status}`, res.statusText, 'error')
+            } else {
+                swal('Success', '', 'success')
+            }
         })
     })
 
@@ -190,6 +186,20 @@ $(() => {
             config['disk'].push(parseInt(d[4].innerHTML.replace('<br>', '')));
         });
         return config;
+    }
+
+    function uploadLimit (limit) {
+        fetch(`/OnlineJudge/admin/problem/${problemId}/limit`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'text/plain',
+            },
+            body: JSON.stringify(limit),
+        }).then(res => {
+            if (!res.ok) {
+                swal(`Error ${res.status}`, res.statusText, 'error')
+            }
+        })
     }
 
     function generateConfig() {
@@ -270,19 +280,7 @@ $(() => {
     $('#formData').submit(function (e) {
         e.preventDefault()
         e.stopPropagation()
-        $.ajax({
-            url: '/OnlineJudge/admin/problem_limit',
-            type: 'POST',
-            data: {id: problemId, data: JSON.stringify(extract_limit())},
-            dataType: 'json',
-            complete: function (ret) {
-                var ret_json = JSON.parse(ret.responseText);
-                if (ret_json.e < 0) {
-                    swal('Error ' + ret_json.e, ret_json.msg, 'error')
-                    return
-                }
-            }
-        })
+        uploadLimit(extract_limit())
         const zip = new JSZip();
         const folder = zip.folder(problemId);
         let data_files = $('#iptData')
@@ -382,20 +380,7 @@ $(() => {
                     if('DiskLimit' in item) limit_config.disk.push(item.DiskLimit)
                     if('FileNumberLimit' in item) limit_config.file.push(item.FileNumberLimit)
                 });
-                console.log(limit_config)
-                $.ajax({
-                    url: '/OnlineJudge/admin/problem_limit',
-                    type: 'POST',
-                    data: {id: problemId, data: JSON.stringify(limit_config)},
-                    dataType: 'json',
-                    complete: function (ret) {
-                        var ret_json = JSON.parse(ret.responseText);
-                        if(ret_json.e < 0) {
-                            swal('Error ' + ret_json.e, ret_json.msg, 'error');
-                            return
-                        }
-                    }
-                })
+                uploadLimit(limit_config)
                 doUpload()
             })
         }, e => zipError(e.message, doUpload))

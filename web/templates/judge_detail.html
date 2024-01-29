@@ -61,7 +61,7 @@
             <span class="badge badge-secondary"> 私有代码 </span>
             {%- endif %}    
             </span>
-            {% if g.is_admin and not abortable and submission.status.name != 'void' -%}
+            {% if g.can_write and not g.can_abort and submission.status.name != 'void' -%}
                 <form action="void" method="POST" style="display: inline" onsubmit="return confirm('确认将此份代码标记为无效？')">
                     {{ g.csrf() }}
                     <button class="btn btn-secondary btn-sm">Void</button>
@@ -72,7 +72,7 @@
                 </form>
             {%- endif %}
             <span class="float-right">
-                {% if abortable -%}
+                {% if g.can_abort -%}
                 <form action="abort" method="POST" style="display: inline">
                     {{ g.csrf() }}
                     <button class="btn btn-secondary btn-sm">终止评测</button>

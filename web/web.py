@@ -17,11 +17,12 @@ from flask import (Blueprint, Flask, abort, g, make_response, redirect,
                    render_template, request, send_from_directory)
 from sqlalchemy.orm import defer, selectinload
 from werkzeug.exceptions import HTTPException
+from werkzeug.routing import BaseConverter
 
 import commons.task_typing
 import web.const as consts
 import web.utils as utils
-from commons.models import JudgeRecordV2, JudgeStatus, Problem, User
+from commons.models import Contest, JudgeRecordV2, JudgeStatus, Problem, User
 from commons.task_typing import ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
 from web.admin import admin
@@ -33,7 +34,7 @@ from web.const import (ContestType, Privilege, ReturnCode, language_info,
 from web.contest_manager import ContestManager
 from web.csrf import setup_csrf
 from web.discuss_manager import DiscussManager
-from web.judge_manager import JudgeManager, NotFoundException
+from web.judge_manager import JudgeManager
 from web.news_manager import NewsManager
 from web.old_judge_manager import OldJudgeManager
 from web.problem_manager import ProblemManager
@@ -109,23 +110,13 @@ def problem_in_exam(problem_id):
     return not g.is_admin and ContestManager.check_problem_in_contest(exam_id, problem_id)
 
 
-def is_code_visible(code_owner_id: int, problem_id: int, shared: bool):
-    # Check whether the code is visible.
-
-    # admin always visible
-    if g.is_admin:
-        return True
-
-    # exam first
-    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(g.user)
-
-    if exam_id != -1 and is_exam_started:
-        # if the user is in a running exam, he can only see his own problems in exam.
-        return code_owner_id == g.user.id and ContestManager.check_problem_in_contest(exam_id, problem_id)
-    else:
-        # otherwise, the user can see his own and shared problems
-        return code_owner_id == g.user.id or shared
-
+def setup_appcontext():
+    g.db = SqlSession()
+    g.time = datetime.now()
+    g.user = SessionManager.current_user()
+    g.is_admin = g.user is not None and g.user.privilege >= Privilege.ADMIN
+    g.utils = utils
+    g.consts = consts
 
 @web.before_request
 def before_request():
@@ -138,12 +129,8 @@ def before_request():
     if xff is not None and xff != '':
         request.remote_addr = xff.split(',')[-1]
 
-    g.db = SqlSession()
-    g.time = datetime.now()
-    g.user = SessionManager.current_user()
-    g.is_admin = g.user is not None and g.user.privilege >= Privilege.ADMIN
-    g.utils = utils
-    g.consts = consts
+    if 'db' not in g:
+        setup_appcontext()
 
     tracker.log()
 
@@ -176,11 +163,14 @@ def errorhandler(exc: Exception):
     return resp
 
 
+def not_logged_in():
+    return redirect('/OnlineJudge/login?next=' + quote(request.full_path))
+
 def require_logged_in(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
         if g.user is None:
-            return redirect('/OnlineJudge/login?next=' + quote(request.full_path))
+            return not_logged_in()
         return func(*args, **kwargs)
     return wrapped
 
@@ -203,13 +193,8 @@ def get_problem_id_autoinc():
 def get_contest_id_autoinc():
     return str(ContestManager.get_max_id() + 1)
 
-@web.route('/api/problem/<int:problem_id>/description')
-def get_problem_description(problem_id):
-    if g.user is None:
-        return '-1'
-    problem = ProblemManager.get_problem(problem_id)
-    if not ProblemManager.should_show(problem):
-        return '-1'
+@web.route('/api/problem/<problem:problem>/description')
+def get_problem_description(problem: Problem):
     data = {
         'ID': problem.id,
         'Title': problem.title,
@@ -225,13 +210,10 @@ def get_problem_description(problem_id):
     }
     return json.dumps(data)
 
-@web.route('/api/contest/<int:contest_id>')
-def get_contest_detail(contest_id):
-    if g.user is None:
-        return '-1'
-    contest = ContestManager.get_contest(contest_id)
-    if contest is None:
-        return '{}'
+@web.route('/api/contest/<contest:contest>')
+def get_contest_detail(contest):
+    if not g.can_read:
+        abort(FORBIDDEN)
     data = {
         'ID': contest.id,
         'Name': contest.name,
@@ -260,7 +242,7 @@ def get_code():
     detail = OldJudgeManager.query_judge(run_id)
     if detail is None:
         return '-1'
-    if not is_code_visible(detail.user_id, detail.problem_id, detail.public):
+    if not JudgeManager.can_show(JudgeManager.get_submission(run_id)):
         return '-1'
     return detail.code
 
@@ -276,7 +258,7 @@ def get_quiz():
         return ReturnCode.ERR_BAD_DATA
     problem_id = int(problem_id)
     problem = ProblemManager.get_problem(problem_id)
-    if not ProblemManager.should_show(problem):
+    if not ProblemManager.can_show(problem):
         return ReturnCode.ERR_BAD_DATA
     if problem.problem_type != 1:
         return ReturnCode.ERR_PROBLEM_NOT_QUIZ
@@ -305,7 +287,7 @@ def login():
     lid = str(uuid4())
     SessionManager.new_session(user, lid)
     ret = make_response(ReturnCode.SUC_LOGIN)
-    ret.set_cookie(key='Login_ID', value=lid, max_age=LoginConfig.Login_Life_Time)
+    ret.set_cookie(key=SessionManager.session_cookie_name, value=lid, max_age=LoginConfig.Login_Life_Time)
     return ret
 
 
@@ -315,7 +297,7 @@ def logout():
         return redirect('/OnlineJudge/')
     SessionManager.logout()
     ret = make_response(redirect('/OnlineJudge/'))
-    ret.delete_cookie('Login_ID')
+    ret.delete_cookie(SessionManager.session_cookie_name)
     return ret
 
 
@@ -363,8 +345,10 @@ def problem_list():
     limit = WebConfig.Problems_Each_Page
     offset = (page - 1) * WebConfig.Problems_Each_Page
     query = db.query(Problem.id, Problem.title, Problem.problem_type)
-    if not g.is_admin:
-        query = query.where(Problem.release_time <= g.time)
+    if not UserManager.has_site_owner_tag(g.user):
+        readable_course_ids = UserManager.get_readable_course_ids(g.user)
+        query = query.where(sa.or_(Problem.release_time <= g.time,
+                                   Problem.course_id.in_(readable_course_ids)))
     if problem_name_keyword is not None:
         query = query.where(sa.func.strpos(Problem.title, problem_name_keyword) > 0)
     if problem_type is not None:
@@ -385,71 +369,56 @@ def problem_list():
                             pages=gen_page_for_problem_list(page, max_page, max_page_under_11000),
                             args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
 
-@web.route('/problem/<int:problem_id>')
+@web.route('/problem/<problem:problem>')
 @require_logged_in
-def problem_detail(problem_id):
-    problem = ProblemManager.get_problem(problem_id)
-    if not ProblemManager.should_show(problem):
-        abort(NOT_FOUND)
-
-    in_exam = problem_in_exam(problem_id)
-
-    return render_template('problem_details.html', ID=problem_id, Title=problem.title,
+def problem_detail(problem: Problem):
+    in_exam = problem_in_exam(problem.id)
+    return render_template('problem_details.html', ID=problem.id, Title=problem.title,
                            In_Exam=in_exam)
 
 
-@web.route('/problem/<int:problem_id>/admin', methods=['GET', 'POST'])
+@web.route('/problem/<problem:problem>/admin', methods=['GET', 'POST'])
 @require_logged_in
-def problem_admin(problem_id):
-    if not g.is_admin:
+def problem_admin(problem: Problem):
+    if not ProblemManager.can_write(problem):
         abort(NOT_FOUND)
 
     if request.method == 'POST':
         action = request.form['action']
         if action == 'hide':
-            ProblemManager.hide_problem(problem_id)
+            ProblemManager.hide_problem(problem)
         elif action == 'show':
-            ProblemManager.show_problem(problem_id)
+            ProblemManager.show_problem(problem)
         elif action == 'delete':
-            if request.form['confirm'] != str(problem_id):
+            if request.form['confirm'] != str(problem.id):
                 abort(BAD_REQUEST)
-            ProblemManager.delete_problem(problem_id)
+            ProblemManager.delete_problem(problem)
             return redirect('/OnlineJudge/admin/')
         else:
             abort(BAD_REQUEST)
 
-    problem = ProblemManager.get_problem(problem_id)
-    if problem is None:
-        abort(NOT_FOUND)
-    submission_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem_id).count()
-    ac_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem_id).where(JudgeRecordV2.status == JudgeStatus.accepted).count()
+    submission_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem.id).count()
+    ac_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem.id).where(JudgeRecordV2.status == JudgeStatus.accepted).count()
 
-    in_exam = problem_in_exam(problem_id)
-
-    return render_template('problem_admin.html', ID=problem_id, Title=problem.title,
-                           In_Exam=in_exam,
+    return render_template('problem_admin.html', ID=problem.id, Title=problem.title,
                            problem=problem,
                            submission_count=submission_count, ac_count=ac_count)
 
 
-@web.route('/problem/<int:problem_id>/submit', methods=['GET', 'POST'])
+@web.route('/problem/<problem:problem>/submit', methods=['GET', 'POST'])
 @require_logged_in
-def problem_submit(problem_id):
-    problem = ProblemManager.get_problem(problem_id)
-    if not ProblemManager.should_show(problem):
-        abort(NOT_FOUND)
-
+def problem_submit(problem: Problem):
     if request.method == 'GET':
         title = problem.title
         problem_type = problem.problem_type
-        in_exam = problem_in_exam(problem_id)
+        in_exam = problem_in_exam(problem.id)
         if problem_type == 0:
             languages_accepted = ProblemManager.languages_accepted(problem)
             return render_template('problem_submit.html',
-                                   Problem_ID=problem_id, Title=title, In_Exam=in_exam,
+                                   Problem_ID=problem.id, Title=title, In_Exam=in_exam,
                                    languages_accepted=languages_accepted)
         elif problem_type == 1:
-            return render_template('quiz_submit.html', Problem_ID=problem_id, Title=title, In_Exam=in_exam)
+            return render_template('quiz_submit.html', Problem_ID=problem.id, Title=title, In_Exam=in_exam)
     else:
         public = bool(request.form.get('shared', 0))  # 0 or 1
         lang_request_str = str(request.form.get('lang'))
@@ -468,7 +437,7 @@ def problem_submit(problem_id):
             public=public,
             language=lang_str,
             user=g.user,
-            problem_id=problem_id,
+            problem_id=problem.id,
             code=user_code,
         )
         return str(submission_id)
@@ -513,12 +482,12 @@ def set_result(submission_id):
     return ''
 
 
-@web.route('/problem/<int:problem_id>/rank')
+@web.route('/problem/<problem:problem>/rank')
 @require_logged_in
-def problem_rank(problem_id):
+def problem_rank(problem: Problem):
     sort_parameter = request.args.get('sort')
 
-    submissions = JudgeManager.list_accepted_submissions(problem_id)
+    submissions = JudgeManager.list_accepted_submissions(problem.id)
     real_names = {}
     languages = {}
     for submission in submissions:
@@ -535,33 +504,33 @@ def problem_rank(problem_id):
         sort_parameter = 'time'
         submissions = sorted(submissions, key=lambda x: x.time_msecs if x.time_msecs is not None else 0)
 
-    in_exam = problem_in_exam(problem_id)
+    in_exam = problem_in_exam(problem.id)
 
-    return render_template('problem_rank.html', Problem_ID=problem_id, Title=ProblemManager.get_title(problem_id),
+    return render_template('problem_rank.html', Problem_ID=problem.id, Title=problem.title,
                            submissions=submissions, Sorting=sort_parameter,
                            real_names=real_names, languages=languages,
                            In_Exam=in_exam)
 
 
-@web.route('/problem/<int:problem_id>/discuss', methods=['GET', 'POST'])
+@web.route('/problem/<problem:problem>/discuss', methods=['GET', 'POST'])
 @require_logged_in
-def discuss(problem_id):
+def discuss(problem: Problem):
     if request.method == 'GET':
-        in_exam = problem_in_exam(problem_id)
+        in_exam = problem_in_exam(problem.id)
 
         if in_exam:  # Problem in Contest or Homework and Current User is NOT administrator
-            return render_template('problem_discussion.html', Problem_ID=problem_id,
-                                   Title=ProblemManager.get_title(problem_id), Blocked=True,
+            return render_template('problem_discussion.html', Problem_ID=problem.id,
+                                   Title=problem.title, Blocked=True,
                                    In_Exam=True)  # Discussion Closed
-        data = DiscussManager.get_discuss_for_problem(problem_id)
+        data = problem.discussions
         discussions = []
         for ele in data:
             tmp = [ele.id, ele.user.username, ele.data, readable_time(ele.created_at)]
             # tmp[4]: editable
             tmp.append(ele.user_id == g.user.user_id or g.user.privilege >= Privilege.SUPER)
             discussions.append(tmp)
-        return render_template('problem_discussion.html', Problem_ID=problem_id,
-                               Title=ProblemManager.get_title(problem_id), Discuss=discussions,
+        return render_template('problem_discussion.html', Problem_ID=problem.id,
+                               Title=problem.title, Discuss=discussions,
                                In_Exam=False)
     else:
         try:
@@ -571,8 +540,8 @@ def discuss(problem_id):
             action = form.get('action')  # post, edit, delete
             if action == 'post':
                 text = form.get('text')
-                if g.is_admin:
-                    DiscussManager.add_discuss(problem_id, g.user, text)
+                if ProblemManager.can_write(problem):
+                    DiscussManager.add_discuss(problem.id, g.user, text)
                     return ReturnCode.SUC
                 else:
                     print('Access Denied in Discuss: Add')
@@ -583,7 +552,7 @@ def discuss(problem_id):
                 if discussion is None:
                     return ReturnCode.ERR_PERMISSION_DENIED
                 text = form.get('text')
-                if g.user.id == discussion.user_id or g.is_admin:
+                if g.user.id == discussion.user_id or ProblemManager.can_write(problem):
                     discussion.data = text
                     return ReturnCode.SUC
                 else:
@@ -594,7 +563,7 @@ def discuss(problem_id):
                 discussion = DiscussManager.get_discussion(discuss_id)
                 if discussion is None:
                     return ReturnCode.ERR_PERMISSION_DENIED
-                if g.user.id == discussion.user_id or g.is_admin:
+                if g.user.id == discussion.user_id or ProblemManager.can_write(problem):
                     DiscussManager.delete_discuss(discussion)
                     return ReturnCode.SUC
                 else:
@@ -666,7 +635,7 @@ def status():
         if g.is_admin:
             real_name_map[submission] = RealnameManager.query_realname(submission.user.student_id)
         show_links[submission] = (
-            g.is_admin or (
+            ProblemManager.can_read(submission.problem) or (
                 # user's own problem: username == ele['Username']
                 # shared problems are always banned if exam_visible_problems is None (this means user in exam)
                 (g.user.user_id == submission.user_id or (exam_visible_problems is None and submission.public))
@@ -687,8 +656,6 @@ def code_old(run_id):
     detail = OldJudgeManager.query_judge(run_id)
     if detail is None:
         abort(NOT_FOUND)
-    if not is_code_visible(detail.user_id, detail.problem_id, detail.public):
-        abort(FORBIDDEN)
     else:
         friendly_name = detail.user.friendly_name
         problem_title = detail.problem.title
@@ -715,16 +682,11 @@ def code_compat():
         abort(NOT_FOUND)
     return redirect(f'/OnlineJudge/code/{submit_id}/')
 
-@web.route('/code/<int:submission_id>/')
+@web.route('/code/<submission:submission>/')
 @require_logged_in
-def code(submission_id):
-    if submission_id <= OldJudgeManager.max_id():
-        return code_old(submission_id)
-    submission = JudgeManager.get_submission(submission_id)
-    if submission is None:
-        abort(NOT_FOUND)
-    if not is_code_visible(submission.user_id, submission.problem_id, submission.public):
-        abort(FORBIDDEN)
+def code(submission: JudgeRecordV2):
+    if submission.id <= OldJudgeManager.max_id():
+        return code_old(submission.id)
 
     details = deserialize(submission.details) if submission.details is not None else None
     if details is None and submission.status == JudgeStatus.judging:
@@ -742,10 +704,7 @@ def code(submission_id):
         'Bucket': S3Config.Buckets.submissions,
         'Key': JudgeManager.key_from_submission_id(submission.id),
     }, ExpiresIn=60)
-    abortable = submission.status in \
-        (JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging) and \
-        (g.is_admin or submission.user_id == g.user.id)
-    show_score = not abortable and submission.status not in \
+    show_score = not g.can_abort and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
     real_name = None if not g.is_admin else RealnameManager.query_realname(submission.user.student_id)
     return render_template('judge_detail.html',
@@ -753,40 +712,30 @@ def code(submission_id):
                            real_name=real_name,
                            code_url=code_url,
                            details=details,
-                           abortable=abortable,
                            show_score=show_score)
 
-@web.route('/code/<int:submit_id>/void', methods=['POST'])
-def mark_void(submit_id):
-    if not g.is_admin:
+@web.route('/code/<submission:submission>/void', methods=['POST'])
+def mark_void(submission: JudgeRecordV2):
+    if not g.can_write:
         abort(FORBIDDEN)
-    try:
-        JudgeManager.mark_void(submit_id)
-    except NotFoundException:
-        abort(NOT_FOUND)
+    JudgeManager.mark_void(submission)
     return redirect('.', SEE_OTHER)
 
 
-@web.route('/code/<int:submit_id>/rejudge', methods=['POST'])
-def rejudge(submit_id):
-    if not g.is_admin:
+@web.route('/code/<submission:submission>/rejudge', methods=['POST'])
+def rejudge(submission: JudgeRecordV2):
+    if not g.can_write:
         abort(FORBIDDEN)
-    try:
-        JudgeManager.rejudge(submit_id)
-    except NotFoundException:
-        abort(NOT_FOUND)
+    JudgeManager.rejudge(submission)
     return redirect('.', SEE_OTHER)
 
 
-@web.route('/code/<int:submit_id>/abort', methods=['POST'])
+@web.route('/code/<submission:submission>/abort', methods=['POST'])
 @require_logged_in
-def abort_judge(submit_id):
-    submission = JudgeManager.get_submission(submit_id)
-    if submission is None:
-        abort(NOT_FOUND)
-    if submission.user_id != g.user.id and not g.is_admin:
+def abort_judge(submission: JudgeRecordV2):
+    if not g.can_abort:
         abort(FORBIDDEN)
-    JudgeManager.abort_judge(submit_id)
+    JudgeManager.abort_judge(submission)
     return redirect('.', SEE_OTHER)
 
 
@@ -830,15 +779,11 @@ def contest(contest_id):
 def homework(contest_id):
     return redirect(f'/OnlineJudge/problemset/{contest_id}')
 
-@web.route('/problemset/<int:contest_id>')
+@web.route('/problemset/<contest:contest>')
 @require_logged_in
-def problemset(contest_id):
-    contest = ContestManager.get_contest(contest_id)
-    if contest is None:
-        abort(NOT_FOUND)
-
-    problems = ContestManager.list_problem_for_contest(contest_id)
-    problems_visible = g.is_admin or g.time >= contest.start_time
+def problemset(contest: Contest):
+    problems = ContestManager.list_problem_for_contest(contest.id)
+    problems_visible = g.time >= contest.start_time or ContestManager.can_read(contest)
     data = ContestManager.get_board_view(contest)
     contest_status = ContestManager.get_status(contest)
 
@@ -857,12 +802,9 @@ def problemset(contest_id):
     )
 
 
-@web.route('/problemset/<int:contest_id>/join', methods=['POST'])
-def problemset_join(contest_id):
-    if g.user is None:
-        abort(UNAUTHORIZED)
-    contest = ContestManager.get_contest(contest_id)
-    if contest is None or g.time > contest.end_time:
+@web.route('/problemset/<contest:contest>/join', methods=['POST'])
+def problemset_join(contest: Contest):
+    if g.time > contest.end_time:
         abort(BAD_REQUEST)
     if contest.type == ContestType.EXAM:
         exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(g.user)
@@ -870,7 +812,7 @@ def problemset_join(contest_id):
             abort(BAD_REQUEST)
     if g.user not in contest.players:
         contest.players.add(g.user)
-    return redirect(f'/OnlineJudge/problemset/{contest_id}')
+    return redirect(f'/OnlineJudge/problemset/{contest.id}')
 
 
 @web.route('/profile', methods=['GET', 'POST'])
@@ -940,6 +882,56 @@ def favicon():
     return send_from_directory(os.path.join(web.root_path, 'static'), 'favicon.ico',
                                mimetype='image/vnd.microsoft.icon')
 
+
+class ModelConverter(BaseConverter):
+    def get(self, model_id: int):
+        raise NotImplementedError
+
+    def to_python(self, value: str):
+        setup_appcontext()
+        if g.user is None:
+            abort(not_logged_in())
+        try:
+            model_id = int(value)
+        except ValueError:
+            abort(BAD_REQUEST)
+        model = self.get(model_id)
+        return model
+
+    def to_url(self, value) -> str:
+        return str(value.id)
+
+class ProblemConverter(ModelConverter):
+    def get(self, model_id: int) -> Problem:
+        problem = ProblemManager.get_problem(model_id)
+        if not ProblemManager.can_show(problem):
+            abort(NOT_FOUND)
+        g.can_read = ProblemManager.can_read(problem)
+        g.can_write = ProblemManager.can_write(problem)
+        return problem
+
+class SubmissionConverter(ModelConverter):
+    def get(self, model_id: int) -> JudgeRecordV2:
+        submission = JudgeManager.get_submission(model_id)
+        if not JudgeManager.can_show(submission):
+            abort(NOT_FOUND)
+        g.can_write = JudgeManager.can_write(submission)
+        g.can_abort = JudgeManager.can_abort(submission)
+        return submission
+
+class ContestConverter(ModelConverter):
+    def get(self, model_id: int) -> Contest:
+        contest = ContestManager.get_contest(model_id)
+        if contest is None:
+            abort(NOT_FOUND)
+        g.can_read = ContestManager.can_read(contest)
+        g.can_write = ContestManager.can_write(contest)
+        return contest
+
+
 oj = Flask('WEB')
+oj.url_map.converters['problem'] = ProblemConverter
+oj.url_map.converters['submission'] = SubmissionConverter
+oj.url_map.converters['contest'] = ContestConverter
 oj.register_blueprint(web, url_prefix='/OnlineJudge')
 oj.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400

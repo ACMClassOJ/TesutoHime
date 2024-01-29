@@ -18,19 +18,15 @@
             <li class="nav-item">
             <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ ID }}">评测状态</a>
             </li>
-            {% if not In_Exam -%}
             <li class="nav-item">
                 <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/discuss">讨论</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/rank">排行榜</a>
             </li>
-            {% endif %}
-            {% if g.is_admin %}
             <li class="nav-item">
                 <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ ID }}/admin"> 管理 </a>
             </li>
-            {% endif %}
         </ul>
     </h1>
     <div class="nav-wrapper">
@@ -59,9 +55,7 @@
     <div class="tab-content" id="main_tab_content">
         <div class="tab-pane fade show active" id="overview_tab" role="tabpanel" aria-labelledby="overview_tab-tab">
             <h3>基本信息</h3>
-            <form action="/OnlineJudge/admin/problem" method="POST" id="form-overview">
-                {{ g.csrf() }}
-                <input type="hidden" name="id" value="{{ ID }}">
+            <form id="form-overview">
                 <div class="form-row">
                     <div class="form-group col-md-3">
                         <label for="iptTitle">题目标题</label>
@@ -158,7 +152,6 @@
 
         <div class="tab-pane fade" id="description_tab" role="tabpanel" aria-labelledby="description_tab-tab">
             <form id="form-description">
-                <input type="hidden" name="id" value="{{ ID }}">
                 <div>
                     <label for="iptDescription">题目描述</label>
                     <div class="init_editormd" id="iptDescription">
@@ -211,15 +204,7 @@
             <hr>
             <h3>
                 下载数据压缩包
-                <form class="float-right ml-auto" id="formDataZipDownload" action="/OnlineJudge/admin/data_download" method="post">
-                    {{ g.csrf() }}
-                    <div class="form-row">
-                        <input type="hidden" name="id" value="{{ ID }}">
-                        <div class="d-flex mb-3 pr-1">
-                            <button class="btn btn-outline-primary mt-auto" type="submit">点击下载</button>
-                        </div>
-                    </div>
-                </form>
+                <a href="/OnlineJudge/admin/problem/{{ ID }}/data-zip" class="btn btn-outline-primary float-right ml-auto mt-auto">点击下载</a>
             </h3>
         </div>
 
@@ -256,7 +241,7 @@
             {% else %}
             <p>当前有 {{ submission_count }} 次提交，您确定要取消所有这些提交的成绩吗？请在下方文本框中输入题目编号以确认：</p>
             {% endif %}
-            <form id="form-void" action="/OnlineJudge/admin/disable_judge" method="POST">
+            <form id="form-void" action="/OnlineJudge/admin/mark-void" method="POST">
                 {{ g.csrf() }}
                 <div class="form-row">
                     <input type="hidden" name="type" value="by_problem_id">
@@ -276,7 +261,7 @@
             <hr>
             <h3>终止评测全部提交</h3>
             <p>如果想终止评测单份提交，请进入代码页面，点击代码上方的「终止评测」按钮。</p>
-            <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
+            <form id="form-abort" action="/OnlineJudge/admin/abort-judge" method="POST">
                 {{ g.csrf() }}
                 <div class="form-row">
                     <input type="hidden" name="type" value="by_problem_id">
@@ -442,5 +427,5 @@ window.problemId = {{ ID }}
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240120"></script>
+<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240129"></script>
 {% endblock %}

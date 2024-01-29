@@ -108,6 +108,7 @@ $(function () {
         $("#iptEndTime").val(new Date(2030, 0, 1, 0, 0, 0, 0).toISOString().replace(/\..+$|Z/, ''));
         $("#iptContestType").selectpicker("val", "0");
         const contestId = $("#iptContestID").val()
+        // TODO: fix response convention
         $.ajax({
             dataType: "text",
             url: `/OnlineJudge/api/contest/${contestId}`,

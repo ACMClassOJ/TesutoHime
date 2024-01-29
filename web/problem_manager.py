@@ -1,13 +1,14 @@
 from datetime import datetime
 from http.client import BAD_REQUEST
 from typing import List, Optional
-from typing_extensions import TypeGuard
 
 from flask import abort, g
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import func, select
+from typing_extensions import TypeGuard
 
 from commons.models import ContestProblem, JudgeRecordV2, Problem
-from web.const import Privilege, language_info
+from web.const import PrivilegeType, language_info
+from web.user_manager import UserManager
 from web.utils import db
 
 FAR_FUTURE_TIME = datetime(9999, 12, 31, 8, 42, 42)
@@ -26,53 +27,16 @@ class ProblemManager:
         return problem_id
 
     @staticmethod
-    def modify_problem_description(problem_id: int, description: str, problem_input: str, problem_output: str,
-                                   example_input: str, example_output: str, data_range: str):
-        stmt = update(Problem).where(Problem.id == problem_id) \
-            .values(description=description,
-                    input=problem_input,
-                    output=problem_output,
-                    example_input=example_input,
-                    example_output=example_output,
-                    data_range=data_range)
-        db.execute(stmt)
+    def hide_problem(problem: Problem):
+        problem.release_time = FAR_FUTURE_TIME
 
     @staticmethod
-    def modify_problem(problem_id: int, title: str, release_time: datetime, problem_type: int):
-        stmt = update(Problem).where(Problem.id == problem_id) \
-            .values(title=title,
-                    release_time=release_time,
-                    problem_type=problem_type)
-        db.execute(stmt)
-
-    @staticmethod
-    def hide_problem(problem_id: int):
-        stmt = update(Problem).where(Problem.id == problem_id) \
-            .values(release_time=FAR_FUTURE_TIME)
-        db.execute(stmt)
-
-    @staticmethod
-    def show_problem(problem_id: int):
-        stmt = update(Problem).where(Problem.id == problem_id) \
-            .values(release_time=g.time)
-        db.execute(stmt)
+    def show_problem(problem: Problem):
+        problem.release_time = g.time
 
     @staticmethod
     def get_problem(problem_id: int) -> Optional[Problem]:
         return db.get(Problem, problem_id)
-
-    @staticmethod
-    def modify_problem_limit(problem_id: int, limit: str):
-        stmt = update(Problem) \
-            .where(Problem.id == problem_id) \
-            .values(limits=limit)
-        db.execute(stmt)
-
-    @staticmethod
-    def get_title(problem_id: int) -> str:
-        stmt = select(Problem.title).where(Problem.id == problem_id)
-        data = db.scalar(stmt)
-        return data if data is not None else ""
 
     @staticmethod
     def languages_accepted(problem: Problem) -> List[str]:
@@ -85,31 +49,33 @@ class ProblemManager:
         return default_languages
 
     @staticmethod
-    def set_languages_accepted(problem_id: int, languages: Optional[List[str]]):
-        stmt = update(Problem) \
-            .values(languages_accepted=languages) \
-            .where(Problem.id == problem_id)
-        db.execute(stmt)
-
-    @staticmethod
     def get_max_id() -> int:
         stmt = select(func.max(Problem.id)).where(Problem.id < 11000)
         data = db.scalar(stmt)
         return data if data is not None else 0
 
     @staticmethod
-    def should_show(problem: Optional[Problem]) -> TypeGuard[Problem]:
+    def can_show(problem: Optional[Problem]) -> TypeGuard[Problem]:
         return problem is not None and \
-            (problem.release_time <= g.time or g.is_admin)
+            (problem.release_time <= g.time or \
+                UserManager.get_problem_privilege(g.user, problem) >= PrivilegeType.readonly)
 
     @staticmethod
-    def delete_problem(problem_id: int):
+    def can_read(problem: Problem) -> bool:
+        return UserManager.get_problem_privilege(g.user, problem) >= PrivilegeType.readonly
+
+    @staticmethod
+    def can_write(problem: Problem) -> bool:
+        return UserManager.get_problem_privilege(g.user, problem) >= PrivilegeType.owner
+
+    @staticmethod
+    def delete_problem(problem: Problem):
         submission_count = db.scalar(select(func.count())
-                                     .where(JudgeRecordV2.problem_id == problem_id))
+                                     .where(JudgeRecordV2.problem_id == problem.id))
         contest_count = db.scalar(select(func.count())
-                                  .where(ContestProblem.problem_id == problem_id))
+                                  .where(ContestProblem.problem_id == problem.id))
         assert submission_count is not None
         assert contest_count is not None
         if submission_count > 0 or contest_count > 0:
             abort(BAD_REQUEST)
-        db.execute(delete(Problem).where(Problem.id == problem_id))
+        db.delete(problem)

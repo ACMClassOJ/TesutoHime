@@ -1,14 +1,17 @@
 from http.client import NOT_FOUND
 from typing import List, Optional
+from typing_extensions import TypeGuard
 from urllib.parse import urljoin
 
 import requests
-from flask import abort
+from flask import abort, g
 from sqlalchemy.orm import defer, selectinload
 
 from commons.models import JudgeRecordV2, JudgeRunnerV2, JudgeStatus, User
 from web.config import S3Config, SchedulerConfig
+from web.contest_manager import ContestManager
 from web.old_judge_manager import OldJudgeManager
+from web.problem_manager import ProblemManager
 from web.utils import db, s3_internal
 
 
@@ -44,6 +47,34 @@ class JudgeManager:
                 rec.message = str(e)
                 rec.score = 0
 
+    @staticmethod
+    def can_show(submission: Optional[JudgeRecordV2]) -> TypeGuard[JudgeRecordV2]:
+        if submission is None:
+            return False
+
+        if ProblemManager.can_read(submission.problem):
+            return True
+
+        # exam first
+        exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(g.user)
+
+        if exam_id != -1 and is_exam_started:
+            # if the user is in a running exam, he can only see his own problems in exam.
+            return submission.user_id == g.user.id and ContestManager.check_problem_in_contest(exam_id, submission.problem_id)
+        else:
+            # otherwise, the user can see his own and shared problems
+            return submission.user_id == g.user.id or submission.public
+
+    @staticmethod
+    def can_write(submission: JudgeRecordV2) -> bool:
+        return ProblemManager.can_write(submission.problem)
+
+    @classmethod
+    def can_abort(cls, submission: JudgeRecordV2) -> bool:
+        return submission.status in \
+            (JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging) and \
+            (submission.user_id == g.user.id or cls.can_write(submission))
+
 
     @staticmethod
     def problem_judge_foreach(callback, problem_id):
@@ -67,15 +98,12 @@ class JudgeManager:
         submission.score = 0
 
     @staticmethod
-    def rejudge(id):
-        submission = db.get(JudgeRecordV2, id)
-        if submission is None:
-            raise NotFoundException()
+    def rejudge(submission: JudgeRecordV2):
         # to avoid blocking judge queue too much,
         # use '_rejudge' as rate limit group
         JudgeManager.schedule_judge(
             submission.problem_id,
-            id,
+            submission.id,
             submission.language,
             '_rejudge',
         )

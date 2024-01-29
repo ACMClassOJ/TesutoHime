@@ -230,7 +230,7 @@
                     评测机仍有可能返回评测结果，此时 Voided 状态将被真实的评测记录覆盖。若想中断评测，请使用终止评测 (abort) 功能。
                     因此，建议在如下情况使用此功能：需要作废一条已经出了结果的评测记录。
                 </p>
-                <form id="formDisableJudge" action="/OnlineJudge/admin/disable_judge" method="POST">
+                <form id="formDisableJudge" action="/OnlineJudge/admin/mark-void" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_judge_id">
@@ -245,7 +245,7 @@
                 </form>
                 <hr>
                 <h3>批量题目取消成绩</h3>
-                <form id="formDisableJudge2" action="/OnlineJudge/admin/disable_judge" method="POST">
+                <form id="formDisableJudge2" action="/OnlineJudge/admin/mark-void" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_problem_id">
@@ -262,7 +262,7 @@
                 <hr>
                 <h3>批量终止评测</h3>
                 <p>若指定的评测记录还在评测中，则将其状态设置为 Aborted (已测完的点不受影响)，使评测机终止评测任务，并判零分。</p>
-                <form id="form-abort" action="/OnlineJudge/admin/abort_judge" method="POST">
+                <form id="form-abort" action="/OnlineJudge/admin/abort-judge" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_judge_id">
@@ -277,7 +277,7 @@
                 </form>
                 <hr>
                 <h3>批量题目终止评测</h3>
-                <form id="form-abort-2" action="/OnlineJudge/admin/abort_judge" method="POST">
+                <form id="form-abort-2" action="/OnlineJudge/admin/abort-judge" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_problem_id">

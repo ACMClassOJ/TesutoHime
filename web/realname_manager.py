@@ -8,6 +8,7 @@ from sqlalchemy import select
 class RealnameManager:
     @staticmethod
     def add_student(student_id, real_name):
+        # TODO: course
         rr = RealnameReference(student_id=student_id, real_name=real_name)
         db.add(rr)
 

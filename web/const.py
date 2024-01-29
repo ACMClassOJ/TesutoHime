@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import IntEnum
 from typing import Optional
 
 
@@ -112,6 +113,12 @@ class Privilege:
     NORMAL = 0
     ADMIN = 1
     SUPER = 2
+
+
+class PrivilegeType(IntEnum):
+    no_privilege = 0
+    readonly = 1
+    owner = 2
 
 
 class ContestType:

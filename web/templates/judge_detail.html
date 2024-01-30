@@ -13,8 +13,7 @@
     <div class="card card-body">
         <h1>评测详情 {{ submission.id }}</h1>
         
-        {% from 'component/status_table.html' import status_table -%}
-        {{ status_table([submission], { submission: real_name }, { submission: False }, show_time=submission.time_msecs != None, show_memory=submission.memory_bytes != None, show_score=show_score) }}
+        {{ status_table([submission], { submission.user.student_id: real_name }, { submission: False }, show_time=submission.time_msecs != None, show_memory=submission.memory_bytes != None, show_score=show_score) }}
 
         {% if details != None -%}
         <div class="row">

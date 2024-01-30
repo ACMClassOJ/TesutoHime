@@ -4,7 +4,7 @@
 		<thead>
 			<tr>
 				<th>编号</th>
-				<th class="status-list__user">用户昵称{% if g.is_admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
+				<th class="status-list__user">昵称{% if g.is_admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
 				<th class="status-list__problem">题目</th>
 				<th><span class="mr-2">评测状态</span><a href="/OnlineJudge/about">?</a></th>
 				{%- if show_time %}
@@ -30,9 +30,8 @@
 				{% else -%}
 				<span>{{ submission.user.friendly_name }}</span>
 				{%- endif %}
-				{% if g.is_admin -%}
-				<span class="text-black-50 float-right"><small>{{ real_name_map[submission] }}</small></span>
-				{%- endif %}
+			  {%- from 'component/real_name.html' import display_real_name -%}
+				<span class="text-black-50 float-right"><small>{{ display_real_name(real_name_map[submission.user.student_id]) }}</small></span>
 			</td>
 			<td class="status-list__problem">
 				<a href="/OnlineJudge/problem/{{ submission.problem_id }}">{{ submission.problem_id }}. {{ submission.problem.title }}</a>

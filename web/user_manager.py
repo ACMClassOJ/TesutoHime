@@ -132,6 +132,21 @@ class UserManager:
         return db.scalar(stmt)
 
     @classmethod
+    def is_some_admin(cls, user: User) -> bool:
+        cached = cls._privileges_cache_get(user, 'someadmin')
+        if cached is not None:
+            return cached == 't'
+
+        stmt = select(Enrollment.id) \
+            .where(Enrollment.user_id == user.id) \
+            .where(Enrollment.admin) \
+            .limit(1)
+        is_some_admin = db.scalar(stmt) is not None
+
+        cls._privileges_cache_set(user, 'someadmin', None, 't' if is_some_admin else 'f')
+        return is_some_admin
+
+    @classmethod
     def has_site_owner_tag(cls, user: User) -> bool:
         cached = cls._privileges_cache_get(user, 'siteowner')
         if cached is not None:
@@ -177,12 +192,15 @@ class UserManager:
         if cached is not None:
             return getattr(PrivilegeType, cached)
 
-        courses = set(g.course for g in contest.groups)
         priv = PrivilegeType.no_privilege
-        for c in courses:
-            priv = max(priv, cls.get_course_privilege(user, c))
-            if priv == PrivilegeType.owner:
-                break
+        if cls.has_site_owner_tag(user):
+            priv = PrivilegeType.owner
+        else:
+            courses = set(g.course for g in contest.groups)
+            for c in courses:
+                priv = max(priv, cls.get_course_privilege(user, c))
+                if priv == PrivilegeType.owner:
+                    break
 
         cls._privileges_cache_set(user, 'contest', contest.id, priv.name)
         return priv
@@ -205,7 +223,7 @@ class UserManager:
         if priv != PrivilegeType.owner:
             priv = max(priv, cls.get_course_privilege(user, problem.course))
 
-        cls._privileges_cache_set(user, 'course', problem.id, priv.name)
+        cls._privileges_cache_set(user, 'problem', problem.id, priv.name)
         return priv
 
     @classmethod

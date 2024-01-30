@@ -107,14 +107,14 @@ def problem_in_exam(problem_id):
     if exam_id == -1 or is_exam_started == False:
         return False
 
-    return not g.is_admin and ContestManager.check_problem_in_contest(exam_id, problem_id)
+    return ContestManager.check_problem_in_contest(exam_id, problem_id)
 
 
 def setup_appcontext():
     g.db = SqlSession()
     g.time = datetime.now()
     g.user = SessionManager.current_user()
-    g.is_admin = g.user is not None and g.user.privilege >= Privilege.ADMIN
+    g.is_admin = g.user is not None and UserManager.is_some_admin(g.user)
     g.utils = utils
     g.consts = consts
 
@@ -454,7 +454,6 @@ def set_status(submission_id):
     check_scheduler_auth()
     status = request.get_data(as_text=True)
     if status not in ('compiling', 'judging'):
-        print(status)
         abort(BAD_REQUEST)
     JudgeManager.set_status(submission_id, status)
     return ''
@@ -488,13 +487,15 @@ def problem_rank(problem: Problem):
     sort_parameter = request.args.get('sort')
 
     submissions = JudgeManager.list_accepted_submissions(problem.id)
-    real_names = {}
+    real_name_map = {}
     languages = {}
     for submission in submissions:
-        if g.is_admin:
-            real_names[submission] = RealnameManager.query_realname(submission.user.student_id)
+        stuid = submission.user.student_id
+        if stuid not in real_name_map:
+            real_name_map[stuid] = RealnameManager.query_realname_for_user(stuid, g.user)
         languages[submission] = 'Unknown' if submission.language not in language_info \
             else language_info[submission.language].name
+    has_real_name = any(len(real_name_map[x]) > 0 for x in real_name_map)
 
     if sort_parameter == 'memory':
         submissions = sorted(submissions, key=lambda x: x.memory_bytes if x.memory_bytes is not None else 0)
@@ -508,7 +509,8 @@ def problem_rank(problem: Problem):
 
     return render_template('problem_rank.html', Problem_ID=problem.id, Title=problem.title,
                            submissions=submissions, Sorting=sort_parameter,
-                           real_names=real_names, languages=languages,
+                           real_name_map=real_name_map, has_real_name=has_real_name,
+                           languages=languages,
                            In_Exam=in_exam)
 
 
@@ -527,7 +529,7 @@ def discuss(problem: Problem):
         for ele in data:
             tmp = [ele.id, ele.user.username, ele.data, readable_time(ele.created_at)]
             # tmp[4]: editable
-            tmp.append(ele.user_id == g.user.user_id or g.user.privilege >= Privilege.SUPER)
+            tmp.append(ele.user_id == g.user.id or g.user.privilege >= Privilege.SUPER)
             discussions.append(tmp)
         return render_template('problem_discussion.html', Problem_ID=problem.id,
                                Title=problem.title, Discuss=discussions,
@@ -544,7 +546,6 @@ def discuss(problem: Problem):
                     DiscussManager.add_discuss(problem.id, g.user, text)
                     return ReturnCode.SUC
                 else:
-                    print('Access Denied in Discuss: Add')
                     return ReturnCode.ERR_PERMISSION_DENIED
             if action == 'edit':
                 discuss_id = int(form.get('discuss_id'))
@@ -556,7 +557,6 @@ def discuss(problem: Problem):
                     discussion.data = text
                     return ReturnCode.SUC
                 else:
-                    print('Access Denied in Discuss: Edit')
                     return ReturnCode.ERR_PERMISSION_DENIED
             if action == 'delete':
                 discuss_id = int(form.get('discuss_id'))
@@ -567,7 +567,6 @@ def discuss(problem: Problem):
                     DiscussManager.delete_discuss(discussion)
                     return ReturnCode.SUC
                 else:
-                    print('Access Dined in Discuss: Delete')
                     return ReturnCode.ERR_PERMISSION_DENIED
             else:  # what happened?
                 return ReturnCode.ERR_BAD_DATA
@@ -621,28 +620,13 @@ def status():
     query = query.limit(limit).offset(offset)
     submissions = query.all()
 
-    exam_id, is_exam_started = ContestManager.get_unfinished_exam_info_for_player(g.user)
-    # if not None, only problems in here are visible to user
-    exam_visible_problems = None
-
-    # only change the visibility when the exam started
-    if exam_id != -1 and is_exam_started:
-        exam_visible_problems = ContestManager.list_problem_for_contest(exam_id)
-
     real_name_map = {}
     show_links = {}
     for submission in submissions:
-        if g.is_admin:
-            real_name_map[submission] = RealnameManager.query_realname(submission.user.student_id)
-        show_links[submission] = (
-            ProblemManager.can_read(submission.problem) or (
-                # user's own problem: username == ele['Username']
-                # shared problems are always banned if exam_visible_problems is None (this means user in exam)
-                (g.user.user_id == submission.user_id or (exam_visible_problems is None and submission.public))
-                # and exam visible check for problems
-                and (exam_visible_problems is None or submission.problem_id in exam_visible_problems)
-            )
-        )
+        if submission.user.student_id not in real_name_map:
+            real_name_map[submission.user.student_id] = \
+                RealnameManager.query_realname_for_user(submission.user.student_id, g.user)
+        show_links[submission] = JudgeManager.can_show(submission)
     return render_template('status.html', pages=gen_page(page, max_page),
                            submissions=submissions,
                            real_name_map=real_name_map,
@@ -706,7 +690,7 @@ def code(submission: JudgeRecordV2):
     }, ExpiresIn=60)
     show_score = not g.can_abort and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
-    real_name = None if not g.is_admin else RealnameManager.query_realname(submission.user.student_id)
+    real_name = RealnameManager.query_realname_for_user(submission.user.student_id, g.user)
     return render_template('judge_detail.html',
                            submission=submission,
                            real_name=real_name,
@@ -785,6 +769,9 @@ def problemset(contest: Contest):
     problems = ContestManager.list_problem_for_contest(contest.id)
     problems_visible = g.time >= contest.start_time or ContestManager.can_read(contest)
     data = ContestManager.get_board_view(contest)
+    student_ids = set(x['student_id'] for x in data)
+    real_name_map = dict((s, RealnameManager.query_realname_for_contest_user(s, contest.id, g.user)) for s in student_ids)
+    has_real_name = any(len(real_name_map[s]) > 0 for s in real_name_map)
     contest_status = ContestManager.get_status(contest)
 
     time_elapsed = (g.time - contest.start_time).total_seconds()
@@ -798,6 +785,7 @@ def problemset(contest: Contest):
         status=contest_status,
         percentage=percentage,
         problems_visible=problems_visible,
+        has_real_name=has_real_name,
         data=data,
     )
 
@@ -892,11 +880,9 @@ class ModelConverter(BaseConverter):
         if g.user is None:
             abort(not_logged_in())
         try:
-            model_id = int(value)
+            return self.get(int(value))
         except ValueError:
             abort(BAD_REQUEST)
-        model = self.get(model_id)
-        return model
 
     def to_url(self, value) -> str:
         return str(value.id)

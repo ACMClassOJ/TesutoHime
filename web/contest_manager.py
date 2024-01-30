@@ -85,22 +85,22 @@ class ContestManager:
         return UserManager.get_contest_privilege(g.user, contest) >= PrivilegeType.owner
 
 
-    @staticmethod
-    def get_unfinished_exam_info_for_player(user: User) -> Tuple[int, bool]:
+    @classmethod
+    def get_unfinished_exam_info_for_player(cls, user: User) -> Tuple[int, bool]:
         """
             return exam_id, is_exam_started
         """
         j = join(Contest, ContestPlayer, ContestPlayer.contest_id == Contest.id)
-        stmt = select(Contest.id, Contest.start_time) \
+        stmt = select(Contest) \
             .select_from(j) \
             .where(Contest.type == ContestType.EXAM) \
             .where(g.time <= Contest.end_time) \
             .where(ContestPlayer.user_id == user.id) \
-            .order_by(Contest.id.desc()) \
-            .limit(1)
-        data = db.execute(stmt).first()
-        if data is not None:
-            return data[0], (g.time >= data[1])
+            .order_by(Contest.id.desc())
+        data = db.scalars(stmt).all()
+        for contest in data:
+            if not cls.can_read(contest):
+                return contest.id, g.time >= contest.start_time
         return -1, False
 
     @staticmethod
@@ -180,7 +180,6 @@ class ContestManager:
                         'accepted': False,
                     } for _ in problems
                 ],
-                'realname': RealnameManager.query_realname(user.student_id),
                 'student_id': user.student_id,
                 'username': user.username,
             } for user in players
@@ -209,7 +208,7 @@ class ContestManager:
             rank = user_id_to_num[user_id]
             problem_index = problem_to_num[problem_id]
             user_data = data[rank]
-            problem = user_data['problems'][problem_index]
+            problem = user_data['problems'][problem_index]  # type: ignore
 
             if problem['accepted'] == True:
                 continue
@@ -224,7 +223,7 @@ class ContestManager:
 
             if is_ac:
                 problem['accepted'] = True
-                user_data['ac_count'] += 1
+                user_data['ac_count'] += 1  # type: ignore
                 user_data['penalty'] += (int((submit_time - start_time).total_seconds()) + submit_count * 1200) // 60
 
             if status in [JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging]:

@@ -44,7 +44,7 @@
                     <tr>
                         {% if contest.ranked %}<th>排名</th>{% endif %}
                         <th>昵称{% if g.is_admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
-                        {% if g.is_admin -%}<th>实名</th>{%- endif %}
+                        {% if has_real_name -%}<th>实名</th>{%- endif %}
                         {% if problems_visible -%}
                         {% for problem in problems -%}
                             <th><a href="/OnlineJudge/problem/{{ problem }}" class="problem-link" target="_blank">{{ problem }}</a></th>
@@ -68,8 +68,8 @@
                                 <span>{{ player['friendly_name'] }}</span>
                                 {%- endif %}
                             </td>
-                            {% if g.is_admin -%}
-                                <td>{{ player['realname'] }}</td>
+                            {% if has_real_name -%}
+                                <td>{{ display_real_name(real_name_map[player['student_id']]) }}</td>
                             {%- endif %}
                             {% if problems_visible -%}
                             {% for problem in player.problems -%}

@@ -40,7 +40,7 @@
                 <tr>
                     <th><span>#</span></th>
                     <th><span>昵称</span></th>
-                    {% if g.is_admin -%}
+                    {% if has_real_name -%}
                     <th><span>实名</span></th>
                     {%- endif %}
                     <th>
@@ -83,8 +83,8 @@
                     {{ submission.user.friendly_name }}
                 {%- endif %}
                 </td>
-                {% if g.is_admin -%}
-                <td>{{ real_names[submission] }}</td>
+                {% if has_real_name -%}
+                <td>{{ display_real_name(real_name_map[submission.user.student_id]) }}</td>
                 {%- endif %}
 
                 {%- if submission.time_msecs != None -%}

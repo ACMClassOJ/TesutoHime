@@ -21,8 +21,10 @@ from werkzeug.routing import BaseConverter
 
 import commons.task_typing
 import web.const as consts
+from web.course_manager import CourseManager
 import web.utils as utils
-from commons.models import Contest, JudgeRecordV2, JudgeStatus, Problem, User
+from commons.models import (Contest, Course, JudgeRecordV2, JudgeStatus,
+                            Problem, User)
 from commons.task_typing import ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
 from web.admin import admin
@@ -380,8 +382,8 @@ def problem_detail(problem: Problem):
 @web.route('/problem/<problem:problem>/admin', methods=['GET', 'POST'])
 @require_logged_in
 def problem_admin(problem: Problem):
-    if not ProblemManager.can_write(problem):
-        abort(NOT_FOUND)
+    if not g.can_write:
+        abort(FORBIDDEN)
 
     if request.method == 'POST':
         action = request.form['action']
@@ -392,8 +394,9 @@ def problem_admin(problem: Problem):
         elif action == 'delete':
             if request.form['confirm'] != str(problem.id):
                 abort(BAD_REQUEST)
+            course_id = problem.course_id
             ProblemManager.delete_problem(problem)
-            return redirect('/OnlineJudge/admin/')
+            return redirect(f'/OnlineJudge/course/{course_id}/admin')
         else:
             abort(BAD_REQUEST)
 
@@ -492,7 +495,7 @@ def problem_rank(problem: Problem):
     for submission in submissions:
         stuid = submission.user.student_id
         if stuid not in real_name_map:
-            real_name_map[stuid] = RealnameManager.query_realname_for_user(stuid, g.user)
+            real_name_map[stuid] = RealnameManager.query_realname_for_current_user(stuid)
         languages[submission] = 'Unknown' if submission.language not in language_info \
             else language_info[submission.language].name
     has_real_name = any(len(real_name_map[x]) > 0 for x in real_name_map)
@@ -625,7 +628,7 @@ def status():
     for submission in submissions:
         if submission.user.student_id not in real_name_map:
             real_name_map[submission.user.student_id] = \
-                RealnameManager.query_realname_for_user(submission.user.student_id, g.user)
+                RealnameManager.query_realname_for_current_user(submission.user.student_id)
         show_links[submission] = JudgeManager.can_show(submission)
     return render_template('status.html', pages=gen_page(page, max_page),
                            submissions=submissions,
@@ -690,7 +693,7 @@ def code(submission: JudgeRecordV2):
     }, ExpiresIn=60)
     show_score = not g.can_abort and submission.status not in \
         (JudgeStatus.void, JudgeStatus.aborted)
-    real_name = RealnameManager.query_realname_for_user(submission.user.student_id, g.user)
+    real_name = RealnameManager.query_realname_for_current_user(submission.user.student_id)
     return render_template('judge_detail.html',
                            submission=submission,
                            real_name=real_name,
@@ -770,7 +773,7 @@ def problemset(contest: Contest):
     problems_visible = g.time >= contest.start_time or ContestManager.can_read(contest)
     data = ContestManager.get_board_view(contest)
     student_ids = set(x['student_id'] for x in data)
-    real_name_map = dict((s, RealnameManager.query_realname_for_contest_user(s, contest.id, g.user)) for s in student_ids)
+    real_name_map = dict((s, RealnameManager.query_realname_for_contest(s, contest)) for s in student_ids)
     has_real_name = any(len(real_name_map[s]) > 0 for s in real_name_map)
     contest_status = ContestManager.get_status(contest)
 
@@ -801,6 +804,23 @@ def problemset_join(contest: Contest):
     if g.user not in contest.players:
         contest.players.add(g.user)
     return redirect(f'/OnlineJudge/problemset/{contest.id}')
+
+
+@web.route('/course/<course:course>/')
+def course(course: Course):
+    raise NotImplementedError
+
+@web.route('/course/<course:course>/admin', methods=['GET', 'POST'])
+def course_admin(course: Course):
+    if not g.can_write:
+        abort(FORBIDDEN)
+
+    if request.method == 'POST':
+        form = request.form
+        course.name = form['name']
+        course.description = form['description']
+
+    return render_template('course_admin.html', course=course)
 
 
 @web.route('/profile', methods=['GET', 'POST'])
@@ -914,10 +934,20 @@ class ContestConverter(ModelConverter):
         g.can_write = ContestManager.can_write(contest)
         return contest
 
+class CourseConverter(ModelConverter):
+    def get(self, model_id: int) -> Course:
+        course = CourseManager.get_course(model_id)
+        if course is None:
+            abort(NOT_FOUND)
+        g.can_read = CourseManager.can_read(course)
+        g.can_write = CourseManager.can_write(course)
+        return course
+
 
 oj = Flask('WEB')
 oj.url_map.converters['problem'] = ProblemConverter
 oj.url_map.converters['submission'] = SubmissionConverter
 oj.url_map.converters['contest'] = ContestConverter
+oj.url_map.converters['course'] = CourseConverter
 oj.register_blueprint(web, url_prefix='/OnlineJudge')
 oj.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400

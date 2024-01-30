@@ -16,12 +16,13 @@ FAR_FUTURE_TIME = datetime(9999, 12, 31, 8, 42, 42)
 
 class ProblemManager:
     @staticmethod
-    def add_problem() -> int:
+    def add_problem(course_id: int) -> int:
         problem_id = ProblemManager.get_max_id() + 1
         problem = Problem(
             id=problem_id,
             title='新建题目',
             release_time=FAR_FUTURE_TIME,
+            course_id=course_id,
         )
         db.add(problem)
         return problem_id

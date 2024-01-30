@@ -1,6 +1,10 @@
 {% macro display_real_name(real_names) -%}
+{%- if isinstance(real_names, list) -%}
 {%- if real_names | length > 0 -%}
 <!-- TODO -->
 {{ real_names[0].real_name }}
+{%- endif -%}
+{%- elif real_names != None -%}
+{{ real_names.real_name }}
 {%- endif -%}
 {%- endmacro -%}

@@ -30,7 +30,7 @@
         </ul>
     </h1>
     <div class="nav-wrapper">
-        <ul class="nav nav-pills nav-fill flex-column flex-md-row" id="main_tab" role="tablist">
+        <ul class="nav nav-pills nav-fill flex-column flex-md-row" role="tablist">
             <li class="nav-item">
                 <a class="nav-link mb-sm-2 mb-md-0 active" data-toggle="tab" href="#overview_tab" role="tab" aria-controls="overview_tab" aria-selected="true">基本信息</a>
             </li>
@@ -52,7 +52,7 @@
         </ul>
     </div>
     <hr>
-    <div class="tab-content" id="main_tab_content">
+    <div class="tab-content">
         <div class="tab-pane fade show active" id="overview_tab" role="tabpanel" aria-labelledby="overview_tab-tab">
             <h3>基本信息</h3>
             <form id="form-overview">
@@ -79,6 +79,7 @@
                 </div>
             </form>
             <h3>题目状态</h3>
+            <p>所属课程：<a href="/OnlineJudge/course/{{ problem.course_id }}">{{ problem.course.name }}</a></p>
             <div class="mb-2">
                 <span>发布状态：</span>
                 {% if problem.release_time < g.time -%}

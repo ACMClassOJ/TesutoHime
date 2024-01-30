@@ -2,6 +2,7 @@ from datetime import datetime
 from functools import wraps
 from http.client import (BAD_REQUEST, FORBIDDEN, NO_CONTENT,
                          REQUEST_ENTITY_TOO_LARGE, SEE_OTHER)
+from typing import List
 from urllib.parse import urljoin
 from uuid import uuid4
 
@@ -10,15 +11,16 @@ from flask import (Blueprint, abort, g, make_response, redirect,
                    render_template, request)
 from requests.exceptions import RequestException
 
-from commons.models import Problem
+from commons.models import Course, Group, Problem
 from web.config import S3Config, SchedulerConfig
 from web.const import Privilege, ReturnCode, String
 from web.contest_manager import ContestManager
+from web.course_manager import CourseManager
 from web.judge_manager import JudgeManager, NotFoundException
 from web.problem_manager import ProblemManager
 from web.realname_manager import RealnameManager
 from web.user_manager import UserManager
-from web.utils import generate_s3_public_url
+from web.utils import db, generate_s3_public_url
 
 admin = Blueprint('admin', __name__, static_folder='static')
 
@@ -86,13 +88,37 @@ def user_manager():
         return ReturnCode.ERR_BAD_DATA
 
 
-# problem
+# course
 
-@admin.route('/problem-create', methods=['post'])
-@require_admin
-def problem_create():
-    problem_id = ProblemManager.add_problem()
+@admin.route('/course/<course:course>/problem', methods=['post'])
+def problem_create(course: Course):
+    if not g.can_write:
+        abort(FORBIDDEN)
+    problem_id = ProblemManager.add_problem(course.id)
     return redirect(f'/OnlineJudge/problem/{problem_id}/admin', SEE_OTHER)
+
+@admin.route('/course/<course:course>/realname', methods=['post'])
+def add_realname(course: Course):
+    if not g.can_write:
+        abort(FORBIDDEN)
+
+    data = [line.split(',') for line in request.form['data'].strip().splitlines()]
+    for line in data:
+        groups: List[Group] = []
+        if len(line) > 2:
+            group_names = [x.strip() for x in line[2].split('|')]
+            for group_name in group_names:
+                group = CourseManager.get_group_by_name(course, group_name)
+                if group is None:
+                    db.rollback()
+                    return { 'e': -1, 'msg': f'分组 {repr(group_name)} 不存在' }
+                groups.append(group)
+        RealnameManager.add_student(line[0], line[1], course, groups)
+
+    return ReturnCode.SUC_ADD_REALNAME
+
+
+# problem
 
 def reads_problem(func):
     @wraps(func)
@@ -309,18 +335,3 @@ def pic_upload():
         'ContentLength': length,
         'ContentType': type,
     }, ExpiresIn=3600)
-
-
-@admin.route('/add_realname', methods=['POST'])
-@require_admin
-def add_realname():
-    student_id = request.form['student_id']
-    student_id_list = student_id.strip().splitlines()
-    year_course_name = request.form['year_course_name']
-    year_course_name_list = year_course_name.strip().splitlines()
-    try:
-        for i in range(0, len(student_id_list)):
-            RealnameManager.add_student(student_id_list[i], year_course_name_list[i])
-        return ReturnCode.SUC_ADD_REALNAME
-    except RequestException:
-        return ReturnCode.ERR_BAD_DATA

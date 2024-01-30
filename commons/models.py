@@ -4,7 +4,8 @@ from typing import List, Optional, Set
 
 from sqlalchemy import ARRAY, BigInteger, Computed
 from sqlalchemy import Enum as SqlEnum
-from sqlalchemy import ForeignKey, Index, Text, func, text
+from sqlalchemy import ForeignKey, Index, Integer, Text, func, text
+from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing_extensions import Annotated
 
@@ -49,11 +50,8 @@ class User(UseTimestamps, Base):
         passive_deletes=True,
         back_populates='players',
     )
-    courses: Mapped[Set['Course']] = relationship(
-        secondary='enrollment',
-        passive_deletes=True,
-        back_populates='users',
-    )
+    enrollments: Mapped[Set['Enrollment']] = relationship(back_populates='user')
+    courses: AssociationProxy[Set['Course']] = association_proxy('enrollments', 'course')
 
 user_fk = Annotated[int, mapped_column(ForeignKey(User.id), index=True)]
 
@@ -86,13 +84,11 @@ class Course(UseTimestamps, Base):
     term_id: Mapped[Optional[term_fk]]
     term: Mapped[Optional[Term]] = relationship(back_populates='courses')
 
-    problems: Mapped[Set['Problem']] = relationship(back_populates='course')
     groups: Mapped[Set['Group']] = relationship(back_populates='course')
-    users: Mapped[Set[User]] = relationship(
-        secondary='enrollment',
-        passive_deletes=True,
-        back_populates='courses',
-    )
+    enrollments: Mapped[Set['Enrollment']] = relationship(back_populates='course')
+    users: AssociationProxy[Set[User]] = association_proxy('enrollments', 'user')
+    problems: Mapped[Set['Problem']] = relationship(back_populates='course')
+    contests: Mapped[Set['Contest']] = relationship(back_populates='course')
 
 course_fk = Annotated[int, mapped_column(ForeignKey(Course.id), index=True)]
 
@@ -103,7 +99,9 @@ class Enrollment(UseTimestamps, Base):
 
     id: Mapped[intpk]
     user_id: Mapped[user_fk]
+    user: Mapped[User] = relationship(back_populates='enrollments')
     course_id: Mapped[course_fk]
+    course: Mapped[Course] = relationship(back_populates='enrollments')
     admin: Mapped[bool] = mapped_column(server_default=text('false'))
 
 class Group(UseTimestamps, Base):
@@ -114,11 +112,6 @@ class Group(UseTimestamps, Base):
     course_id: Mapped[course_fk]
     course: Mapped[Course] = relationship(back_populates='groups')
 
-    contests: Mapped[Set['Contest']] = relationship(
-        secondary='contest_group',
-        passive_deletes=True,
-        back_populates='groups',
-    )
     realname_references: Mapped[Set['RealnameReference']] = relationship(
         secondary='group_realname_reference',
         passive_deletes=True,
@@ -206,12 +199,20 @@ class ProblemPrivilege(UseTimestamps, Base):
 class Contest(UseTimestamps, Base):
     id: Mapped[intpk]
     name: Mapped[str]
+    description: Mapped[str] = mapped_column(server_default='')
+
     start_time: Mapped[datetime]
     end_time: Mapped[datetime]
     type: Mapped[int] = mapped_column(index=True)
     ranked: Mapped[bool]
     rank_penalty: Mapped[bool]
     rank_partial_score: Mapped[bool]
+
+    course_id: Mapped[course_fk]
+    course: Mapped[Course] = relationship(back_populates='contests')
+    group_ids: Mapped[Optional[List[int]]] = mapped_column(ARRAY(Integer))
+    completion_criteria: Mapped[Optional[int]]
+    allowed_languages: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text))
 
     players: Mapped[Set[User]] = relationship(
         secondary='contest_player',
@@ -220,11 +221,6 @@ class Contest(UseTimestamps, Base):
     )
     problems: Mapped[Set[Problem]] = relationship(
         secondary='contest_problem',
-        passive_deletes=True,
-        back_populates='contests',
-    )
-    groups: Mapped[Set[Group]] = relationship(
-        secondary='contest_group',
         passive_deletes=True,
         back_populates='contests',
     )
@@ -241,11 +237,6 @@ class ContestProblem(UseTimestamps, Base):
     id: Mapped[intpk]
     contest_id: Mapped[contest_fk]
     problem_id: Mapped[problem_fk]
-
-class ContestGroup(UseTimestamps, Base):
-    id: Mapped[intpk]
-    contest_id: Mapped[contest_fk]
-    group_id: Mapped[group_fk]
 
 
 class Discussion(UseTimestamps, Base):

@@ -153,10 +153,8 @@ class UserManager:
             return cached == 't'
 
         has_site_owner_tag = False
-        for c in user.courses:
-            enrollment = cls.get_enrollment(user, c)
-            assert enrollment is not None
-            if enrollment.admin and c.tag is not None and c.tag.site_owner:
+        for e in user.enrollments:
+            if e.admin and e.course.tag is not None and e.course.tag.site_owner:
                 has_site_owner_tag = True
                 break
 
@@ -176,10 +174,9 @@ class UserManager:
         elif cls.has_site_owner_tag(user):
             priv = PrivilegeType.owner
         else:
-            for c in user.courses:
-                if c.tag_id == course.tag_id:
-                    enrollment = cls.get_enrollment(user, c)
-                    if enrollment is not None and enrollment.admin:
+            for e in user.enrollments:
+                if e.course.tag_id == course.tag_id:
+                    if e.admin:
                         priv = PrivilegeType.readonly
                         break
 
@@ -196,11 +193,7 @@ class UserManager:
         if cls.has_site_owner_tag(user):
             priv = PrivilegeType.owner
         else:
-            courses = set(g.course for g in contest.groups)
-            for c in courses:
-                priv = max(priv, cls.get_course_privilege(user, c))
-                if priv == PrivilegeType.owner:
-                    break
+            priv = max(priv, cls.get_course_privilege(user, contest.course))
 
         cls._privileges_cache_set(user, 'contest', contest.id, priv.name)
         return priv
@@ -233,11 +226,9 @@ class UserManager:
             return [int(x) for x in cached.split(',') if x != '']
 
         tag_ids = set()
-        for c in user.courses:
-            enrollment = cls.get_enrollment(user, c)
-            assert enrollment is not None
-            if enrollment.admin:
-                tag_ids.add(c.tag_id)
+        for e in user.enrollments:
+            if e.admin:
+                tag_ids.add(e.course.tag_id)
         stmt = select(Course.id).where(Course.tag_id.in_(tag_ids))
         course_ids = [x for x in db.scalars(stmt)]
 

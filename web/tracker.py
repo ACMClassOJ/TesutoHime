@@ -18,7 +18,7 @@ class Tracker:
         everything['Time'] = readable_time(datetime.now())
         if g.user is not None:
             everything['Username'] = g.user.username
-            everything['Realname'] = RealnameManager.query_realname(g.user.student_id)
+            everything['Realname'] = RealnameManager.query_realname_for_logs(g.user.student_id)
         everything['url'] = '/'.join(request.url.split('/')[4:])
         everything['post_args'] = request.form.copy()
         if 'password' in everything['post_args']:

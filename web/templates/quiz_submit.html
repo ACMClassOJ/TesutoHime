@@ -3,9 +3,13 @@
 {% set page='测验' %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/katex.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
+{{ render_styles() }}
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
+<style>
+    .problem-title > .rendered, .problem-title > .rendered > p, .problem-title > .rendered > div:not(.code-wrapper) {
+        display: inline;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -46,9 +50,38 @@
     <div class="card card-body">
         <form method="post" id="quiz_submit_form">
             {{ g.csrf() }}
-            <input type="hidden" name="problem_id" value="{{ Problem_ID }}">
             <input type="hidden" name="lang" value="quiz">
-            <div id="quiz_rendering"></div>
+            <div id="quiz_rendering">
+                {%- if success -%}
+
+                {%- for problem in quiz -%}
+                <p class="problem-title">{{ problem['id'] }}. {{ render(problem['title']) }}</p>
+                {%- if problem['type'] == 'SELECT' -%}
+                {% for option in problem['options'] -%}
+                <div class="custom-control custom-radio">
+                    <input
+                        id="{{ problem['id'] }}__{{ option['value'] }}"
+                        name="{{ problem['id'] }}"
+                        class="custom-control-input"
+                        value="{{ option['value'] }}"
+                        type="radio"
+                    >
+                    <label class="custom-control-label" for="{{ problem['id'] }}__{{ option['value'] }}">
+                        {{ render(option['text']) }}
+                    </label>
+                </div>
+                {%- endfor -%}
+                {%- elif problem['type'] == 'FILL' -%}
+                <div>
+                    <textarea class="form-control" rows="1" name = "{{ problem['id'] }}"></textarea>
+                </div>
+                {%- endif -%}
+                {%- endfor -%}
+
+                {%- else -%}
+                <p>错误：无法获取填选题数据</p>
+                {%- endif -%}
+            </div>
             <hr>
             <input type="submit" class="btn btn-block btn-primary" value="提交">
         </form>
@@ -56,11 +89,5 @@
 {% endblock %}
 
 {% block script %}
-    <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'lib/purify.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'lib/katex.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'lib/auto-render.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/quiz_submit.js') }}"></script>
+{{ render_scripts() }}
 {% endblock %}

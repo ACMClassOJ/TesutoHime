@@ -9,7 +9,6 @@ from uuid import uuid4
 import requests
 from flask import (Blueprint, abort, g, make_response, redirect,
                    render_template, request)
-from requests.exceptions import RequestException
 
 from commons.models import Course, Group, Problem
 from web.config import S3Config, SchedulerConfig
@@ -111,7 +110,7 @@ def add_realname(course: Course):
                 group = CourseManager.get_group_by_name(course, group_name)
                 if group is None:
                     db.rollback()
-                    return { 'e': -1, 'msg': f'分组 {repr(group_name)} 不存在' }
+                    return { 'e': 400, 'msg': f'分组 {repr(group_name)} 不存在' }
                 groups.append(group)
         RealnameManager.add_student(line[0], line[1], course, groups)
 
@@ -158,18 +157,17 @@ def problem_description(problem: Problem):
     form = request.json
     if form is None:
         abort(BAD_REQUEST)
-    problem.description = form['description']
-    problem.input = form['input']
-    problem.output = form['output']
-    problem.example_input = form['example_input']
-    problem.example_output = form['example_output']
-    problem.data_range = form['data_range']
+    for row in 'description', 'input', 'output', 'example_input', 'example_output', 'data_range':
+        data = form.get(row, None)
+        if data == 'None' or data == '':
+            data = None
+        setattr(problem, row, data)
     return make_response('', NO_CONTENT)
 
 @admin.route('/problem/<problem:problem>/limit', methods=['put'])
 @writes_problem
 def problem_limit(problem: Problem):
-    problem.limits = request.data.decode()
+    problem.limits = request.json
     return make_response('', NO_CONTENT)
 
 @admin.route('/problem/<problem:problem>/upload-url')

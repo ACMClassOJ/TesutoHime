@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% set page='班级列表' %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="card card-body">
+        <h1>班级列表</h1>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>班级名称</th>
+                    <th>标签</th>
+                    <th>学期</th>
+                    <th><!-- 加入 --></th>
+                </tr>
+                </thead>
+                {% for course in courses -%}
+                    <tr>
+                        <td>{{ course.id }}</td>
+                        <td><a href="/OnlineJudge/course/{{ course.id }}">{{ course.name }}</a></td>
+                        <td>
+                            {%- if course.tag_id != None -%}
+                            <a href="/OnlineJudge/course/tag/{{ course.tag.id }}">{{ course.tag.name }}</a>
+                            {%- endif -%}
+                        </td>
+                        <td>
+                            {%- if course.term_id != None -%}
+                            <a href="/OnlineJudge/course/term/{{ course.term.id }}">{{ course.term.name }}</a>
+                            {%- endif -%}
+                        </td>
+                        <td>
+                            {%- if g.user in course.users -%}
+                            <button disabled class="btn btn-primary btn-sm">已加入</button>
+                            {%- elif can_join(course) -%}
+                            <form action="/OnlineJudge/course/{{ course.id }}/join" method="POST">
+                                {{ g.csrf() }}
+                                <button type="submit" class="btn btn-primary btn-sm">加入</button>
+                            </form>
+                            {%- endif -%}
+                        </td>
+                    </tr>
+                {%- endfor %}
+            </table>
+        </div>
+        {{ page_switcher(pages, args) }}
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
+{% endblock %}

@@ -173,7 +173,7 @@ class UserManager:
             priv = PrivilegeType.owner
         elif cls.has_site_owner_tag(user):
             priv = PrivilegeType.owner
-        else:
+        elif course.tag_id is not None:
             for e in user.enrollments:
                 if e.course.tag_id == course.tag_id:
                     if e.admin:
@@ -225,15 +225,19 @@ class UserManager:
         if cached is not None:
             return [int(x) for x in cached.split(',') if x != '']
 
+        course_ids = set()
         tag_ids = set()
         for e in user.enrollments:
             if e.admin:
-                tag_ids.add(e.course.tag_id)
+                if e.course.tag_id is not None:
+                    tag_ids.add(e.course.tag_id)
+                course_ids.add(e.course.id)
         stmt = select(Course.id).where(Course.tag_id.in_(tag_ids))
-        course_ids = [x for x in db.scalars(stmt)]
+        for x in db.scalars(stmt):
+            course_ids.add(x)
 
         cls._privileges_cache_set(user, 'rcid', None, ','.join(str(x) for x in course_ids))
-        return course_ids
+        return list(course_ids)
 
     @classmethod
     def flush_privileges(cls, user: User):

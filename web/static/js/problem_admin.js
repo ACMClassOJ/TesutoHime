@@ -192,7 +192,7 @@ $(() => {
         fetch(`/OnlineJudge/admin/problem/${problemId}/limit`, {
             method: 'put',
             headers: {
-                'Content-Type': 'text/plain',
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify(limit),
         }).then(res => {

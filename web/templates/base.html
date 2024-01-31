@@ -1,6 +1,7 @@
 {%- from 'component/page_switcher.html' import page_switcher -%}
 {%- from 'component/status_table.html' import status_table -%}
 {%- from 'component/real_name.html' import display_real_name -%}
+{%- from 'component/render.html' import render, render_styles, render_scripts -%}
 <!DOCTYPE html>
 <html class="han-init" lang="zh-CN">
 
@@ -11,10 +12,10 @@
     <title>{{ page }} · ACMOJ</title>
     <link rel="shortcut icon" href="/OnlineJudge/favicon.ico">
     <link href="{{ url_for('.static', filename = 'lib/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('.static', filename = 'argon.min.css') }}?v=20231109" rel="stylesheet"> 
-    <link href="{{ url_for('.static', filename = 'lib/han.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('.static', filename = 'styles.css') }}?v=20240101-1" rel="stylesheet"> 
-    <link href="{{ url_for('.static', filename = 'dark.css') }}?v=20231114" rel="stylesheet"> {% block head %}{% endblock %}
+    <link href="{{ url_for('.static', filename = 'argon.min.css') }}?v=20231109" rel="stylesheet">
+    <link href="{{ url_for('.static', filename = 'lib/han.min.css') }}" rel="stylesheet"> {% block head %}{% endblock %}
+    <link href="{{ url_for('.static', filename = 'styles.css') }}?v=20240131" rel="stylesheet">
+    <link href="{{ url_for('.static', filename = 'dark.css') }}?v=20231114" rel="stylesheet">
 </head>
 
 <body class="bg-secondary">
@@ -40,6 +41,7 @@
                 </div>
                 <ul class="navbar-nav" style="line-height: 1;">
                     <li class="nav-item"><a href="/OnlineJudge/problem" class="nav-link">题库</a></li>
+                    <li class="nav-item"><a href="/OnlineJudge/course" class="nav-link">班级</a></li>
                     <li class="nav-item"><a href="/OnlineJudge/contest" class="nav-link">比赛</a></li>
                     <li class="nav-item"><a href="/OnlineJudge/homework" class="nav-link">作业</a></li>
                     <li class="nav-item"><a href="/OnlineJudge/status" class="nav-link">评测状态</a></li>

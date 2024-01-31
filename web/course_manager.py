@@ -17,6 +17,10 @@ class CourseManager:
         return db.get(Course, course_id)
 
     @staticmethod
+    def can_join(course: Course) -> bool:
+        return course.term is None or g.time <= course.term.end_time
+
+    @staticmethod
     def can_read(course: Course) -> bool:
         return UserManager.get_course_privilege(g.user, course) >= PrivilegeType.readonly
 

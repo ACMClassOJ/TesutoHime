@@ -28,6 +28,7 @@
             <thead>
                 <tr>
                     <th>编号</th>
+                    <th>班级</th>
                     <th>{{ type_zh }}名称</th>
                     <th>开始时间</th>
                     <th>结束时间</th>
@@ -39,6 +40,7 @@
             {% set status = get_status(contest) %}
             <tr {% if contest.id in user_contests %} class="contest--participant" {% elif status=='Going On' %} class="contest--running" {% elif status=='Pending' %} class="contest--pending" {% endif %}>
                 <td>{{ contest.id }}</td>
+                <td><a href="/OnlineJudge/course/{{ contest.course.id }}">{{ contest.course.name }}</a></td>
                 <td><a href="/OnlineJudge/problemset/{{ contest.id }}">{{ contest.name }}</a></td>
                 <td>{{ g.utils.readable_time(contest.start_time) }}</td>
                 <td>{{ g.utils.readable_time(contest.end_time) }}</td>

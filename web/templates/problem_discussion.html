@@ -1,8 +1,6 @@
 {% extends 'base.html' %} {% set page='讨论区' %} {% block head %}
-<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/katex.min.css') }}">
-<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
+{{ render_styles() }}
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/editor.md/css/editormd.min.css') }}"> 
-<link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
 {% endblock %} {% block content %}
 <div class="card card-body mb-3">
     <div class="row mx-md-1">
@@ -22,7 +20,7 @@
     <div class="card card-body mb-2 pb-2">
         <p class="mb-2">{{ row[1] }}<small class="text-muted float-right">{{ row[3] }}</small></p>
         <hr class="mt-0 mb-4">
-        <div class="md-render" {% if row[4] %}id="discuss{{ row[0] }}" {% endif %}>{{ row[2]|safe }}</div>
+        <div {% if row[4] %}id="discuss{{ row[0] }}" {% endif %}>{{ render(row[2]) }}</div>
         {% if row[4] -%}
         <hr class="my-2 ">
         <div class="btn-group ml-auto mb-0">
@@ -45,11 +43,7 @@
     </form>
 </div>
 {% endif %} {% endblock %} {% block script %}
-<script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/katex.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/auto-render.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
+{{ render_scripts() }}
 <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
 
 <script>
@@ -169,21 +163,6 @@
     }
 
     $(function() {
-        $(".md-render").each(function(_, e) {
-            $(e).html(marked($(e).html()));
-        });
-        renderMathInElement($("#divDiscuss")[0], {
-            delimiters: [{
-                left: "$$",
-                right: "$$",
-                display: true
-            }, {
-                left: "$",
-                right: "$",
-                display: false
-            }]
-        });
-        hljs.initHighlighting();
         let editor = editormd("editor", {
             width: "100%",
             height: 400,

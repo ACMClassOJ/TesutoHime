@@ -422,7 +422,7 @@ async def judge_quiz(quiz: List[QuizProblem], answer: Dict[str, str]):
         return TestpointJudgeResult(id, 'accepted', 'Accepted', 1.0)
     def wa(id):
         return TestpointJudgeResult(id, 'wrong_answer', 'Wrong Answer')
-    correct = dict((x.id, x.answer == answer.get(x.id, None)) for x in quiz)
+    correct = dict((x.id, x.type == 'SELECT' and x.answer == answer.get(x.id, None)) for x in quiz)
     testpoints = [ac(id) if correct[id] else wa(id) for id in correct]
     result: Literal['accepted', 'wrong_answer'] = \
         'accepted' if all(correct[id] for id in correct) else 'wrong_answer'

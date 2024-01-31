@@ -21,24 +21,15 @@ $(function() {
         }
     });
 
-    var submit_options = {
-        beforeSerialize: function() {
-            const el = document.querySelector('#lang')
-            if (el.value == 'autodetect') {
-                const languagesAllowed = Array.from(el.options).map(x => x.value).filter(x => x != 'autodetect')
-                const code = document.querySelector('#code').value
-                el.value = detectLangage(code, languagesAllowed)
-            }
-        },
-        beforeSubmit: function() {
-            $("input").attr("disabled", "disabled");
-        },
-        success: function(response_text) {
-            $("input").removeAttr("disabled");
-            location = `/OnlineJudge/code/${response_text}`
-        },
-    };
-    $("#problem_submit_form").ajaxForm(submit_options);
+    const form = document.getElementById('problem-submit-form')
+    form.addEventListener('submit', function () {
+        const el = document.querySelector('#lang')
+        if (el.value == 'autodetect') {
+            const languagesAllowed = Array.from(el.options).map(x => x.value).filter(x => x != 'autodetect')
+            const code = document.querySelector('#code').value
+            el.value = detectLangage(code, languagesAllowed)
+        }
+    })
 
     document.getElementById('submit-button').removeAttribute('disabled')
 });

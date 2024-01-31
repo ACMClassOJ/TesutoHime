@@ -45,18 +45,8 @@ class RealnameManager:
     def _can_read_criteria(user: User):
         if UserManager.has_site_owner_tag(user):
             return True
-        student_enrollment = aliased(Enrollment)
-        user_enrollment = aliased(Enrollment)
-        student_course = aliased(Course)
-        user_course = aliased(Course)
-        return select(student_enrollment.id) \
-            .join(student_course) \
-            .join(user_course, user_course.tag_id == student_course.tag_id) \
-            .join(user_enrollment) \
-            .where(RealnameReference.course_id == student_enrollment.course_id) \
-            .where(user_enrollment.user_id == user.id) \
-            .where(user_enrollment.admin) \
-            .exists()
+        rcids = UserManager.get_readable_course_ids(user)
+        return RealnameReference.course_id.in_(rcids)
 
     @classmethod
     def query_realname_for_contest(cls, student_id: str, contest: Contest) -> Optional[RealnameReference]:
@@ -70,7 +60,6 @@ class RealnameManager:
 
     @classmethod
     def query_realname_for_current_user(cls, student_id: str) -> Sequence[RealnameReference]:
-        # TODO: measure DB perf
         stmt = select(RealnameReference) \
             .where(RealnameReference.student_id == student_id) \
             .where(cls._can_read_criteria(g.user)) \

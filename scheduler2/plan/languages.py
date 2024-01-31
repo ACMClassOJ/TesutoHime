@@ -5,6 +5,8 @@ from commons.task_typing import CompileSourceVerilog, CompileTaskPlan, JudgePlan
 
 # A bunch of heuristics; really ugly but there's no other choice.
 def languages_accepted(plan: JudgePlan) -> Optional[List[str]]:
+    if plan.quiz is not None:
+        return ['quiz']
     languages = None
     has_compile_or_run = False
     if plan.compile is not None:

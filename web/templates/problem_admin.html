@@ -82,7 +82,7 @@
             <p>所属课程：<a href="/OnlineJudge/course/{{ problem.course_id }}">{{ problem.course.name }}</a></p>
             <div class="mb-2">
                 <span>发布状态：</span>
-                {% if problem.release_time < g.time -%}
+                {% if problem.release_time <= g.time -%}
                     <span class="text-green mr-2">已发布</span>
                     <form method="POST" class="d-inline-flex">
                         {{ g.csrf() }}
@@ -176,7 +176,7 @@
                     </div>
                     <label for="iptDataRange">数据范围</label>
                     <div class="init_editormd" id="iptDataRange">
-                        <textarea name="range" style="display: none"></textarea>
+                        <textarea name="data_range" style="display: none"></textarea>
                     </div>
                 </div>
                 <div class="float-right d-flex mb-3 ml-auto pr-1">
@@ -428,5 +428,5 @@ window.problemId = {{ ID }}
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240129"></script>
+<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240131"></script>
 {% endblock %}

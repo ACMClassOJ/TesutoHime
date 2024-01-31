@@ -42,6 +42,7 @@ class WebConfig:
     Problems_Each_Page = 20               #题库界面每页显示多少题目
     Block_Register = False                #暂停OJ注册
     Contests_Each_Page = 20               #比赛页面每页显示多少比赛
+    Courses_Each_Page = 20
 
 class NewsConfig:
     feed = 'https://acm.sjtu.edu.cn/OnlineJudge/blog/index.json'

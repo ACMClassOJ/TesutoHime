@@ -1,10 +1,11 @@
 from datetime import datetime
 from enum import Enum, auto
-from typing import List, Optional, Set
+from typing import Any, List, Optional, Set
 
 from sqlalchemy import ARRAY, BigInteger, Computed
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy import ForeignKey, Index, Integer, Text, func, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing_extensions import Annotated
@@ -166,7 +167,7 @@ class Problem(UseTimestamps, Base):
     example_input: Mapped[Optional[str]]
     example_output: Mapped[Optional[str]]
     data_range: Mapped[Optional[str]]
-    limits: Mapped[Optional[str]]
+    limits: Mapped[Optional[Any]] = mapped_column(JSONB)
 
     release_time: Mapped[datetime]
     problem_type: Mapped[int] = mapped_column(server_default=text('0'))

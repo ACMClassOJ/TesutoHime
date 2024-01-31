@@ -94,7 +94,8 @@ async def load_config(ctx: ParseContext):
                 msg = f'cannot read {problem_config_filename}: {e}'
                 raise InvalidProblemException(msg)
             for problem in quiz['problems']:
-                problem['options'] = [QuizOption(**x) for x in problem['options']]
+                if 'options' in problem:
+                    problem['options'] = [QuizOption(**x) for x in problem['options']]
             ctx.plan.quiz = [QuizProblem(**x) for x in quiz['problems']]
         ctx.cfg = ProblemConfig(**cfg)
         ctx.testpoint_count = len(ctx.cfg.Details)

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% set page=course.name %}
+
+{% block head %}
+{{ render_styles() }}
+{% endblock %}
+
+{% block content %}
+<div class="card card-body">
+    <h1 class="title-nav">
+        <span class="title-nav__title">{{ course.name }}</span>
+        <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/course/{{ course.id }}">班级</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}/contest">比赛</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}/homework">作业</a>
+            </li>
+            {% if g.can_write %}
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}/admin"> 管理 </a>
+            </li>
+            {% endif %}
+        </ul>
+    </h1>
+    <hr>
+    <div>
+        {%- if course.description != '' -%}
+        <div>{{ render(course.description) }} </div>
+        {%- endif -%}
+    </div>
+</div>
+<br>
+{% endblock %}
+
+{% block script %}
+{{ render_scripts() }}
+<script src="{{ url_for('.static', filename = 'js/course.js') }}?v=20240131"></script>
+{% endblock %}

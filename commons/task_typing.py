@@ -269,10 +269,10 @@ class QuizOption:
 @dataclass
 class QuizProblem:
     id: str
-    type: Literal['SELECT']
+    type: Literal['SELECT', 'FILL']
     title: str
-    answer: str
-    options: List
+    answer: Optional[str] = None
+    options: Optional[List[QuizOption]] = None
 
 
 DEFAULT_GROUP = 'default'

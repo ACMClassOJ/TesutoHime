@@ -21,7 +21,6 @@ from werkzeug.routing import BaseConverter
 
 import commons.task_typing
 import web.const as consts
-from web.course_manager import CourseManager
 import web.utils as utils
 from commons.models import (Contest, Course, JudgeRecordV2, JudgeStatus,
                             Problem, User)
@@ -34,6 +33,7 @@ from web.config import (JudgeConfig, LoginConfig, ProblemConfig,
 from web.const import (ContestType, Privilege, ReturnCode, language_info,
                        runner_status_info)
 from web.contest_manager import ContestManager
+from web.course_manager import CourseManager
 from web.csrf import setup_csrf
 from web.discuss_manager import DiscussManager
 from web.judge_manager import JudgeManager
@@ -249,28 +249,6 @@ def get_code():
     return detail.code
 
 
-@web.route('/api/quiz', methods=['POST'])
-def get_quiz():
-    if g.user is None:
-        return ReturnCode.ERR_USER_NOT_LOGGED_IN
-    problem_id = request.form.get('problem_id')
-    if problem_id is None:
-        return ReturnCode.ERR_BAD_DATA
-    if not str(problem_id).isdigit():  # bad argument
-        return ReturnCode.ERR_BAD_DATA
-    problem_id = int(problem_id)
-    problem = ProblemManager.get_problem(problem_id)
-    if not ProblemManager.can_show(problem):
-        return ReturnCode.ERR_BAD_DATA
-    if problem.problem_type != 1:
-        return ReturnCode.ERR_PROBLEM_NOT_QUIZ
-    quiz_json = QuizManager.get_json_from_data_service_by_id(QuizTempDataConfig, problem_id)
-    if quiz_json['e'] == 0:
-        for i in quiz_json["problems"]:
-            i["answer"] = ""
-    return json.dumps(quiz_json)
-
-
 @web.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -375,7 +353,7 @@ def problem_list():
 @require_logged_in
 def problem_detail(problem: Problem):
     in_exam = problem_in_exam(problem.id)
-    return render_template('problem_details.html', ID=problem.id, Title=problem.title,
+    return render_template('problem_details.html', problem=problem,
                            In_Exam=in_exam)
 
 
@@ -421,7 +399,16 @@ def problem_submit(problem: Problem):
                                    Problem_ID=problem.id, Title=title, In_Exam=in_exam,
                                    languages_accepted=languages_accepted)
         elif problem_type == 1:
-            return render_template('quiz_submit.html', Problem_ID=problem.id, Title=title, In_Exam=in_exam)
+            quiz_json = QuizManager.get_json_from_data_service_by_id(QuizTempDataConfig, problem.id)
+            success = quiz_json['e'] == 0
+            if success:
+                for i in quiz_json['problems']:
+                    i['answer'] = ''
+
+            return render_template('quiz_submit.html', Problem_ID=problem.id,
+                                   Title=problem.title, In_Exam=in_exam,
+                                   success=success,
+                                   quiz=quiz_json['problems'] if success else None)
     else:
         public = bool(request.form.get('shared', 0))  # 0 or 1
         lang_request_str = str(request.form.get('lang'))
@@ -443,7 +430,7 @@ def problem_submit(problem: Problem):
             problem_id=problem.id,
             code=user_code,
         )
-        return str(submission_id)
+        return redirect(f'/OnlineJudge/code/{submission_id}/')
 
 
 def check_scheduler_auth():
@@ -774,7 +761,7 @@ def problemset(contest: Contest):
     data = ContestManager.get_board_view(contest)
     student_ids = set(x['student_id'] for x in data)
     real_name_map = dict((s, RealnameManager.query_realname_for_contest(s, contest)) for s in student_ids)
-    has_real_name = any(len(real_name_map[s]) > 0 for s in real_name_map)
+    has_real_name = any(real_name_map[s] is not None for s in real_name_map)
     contest_status = ContestManager.get_status(contest)
 
     time_elapsed = (g.time - contest.start_time).total_seconds()
@@ -789,6 +776,7 @@ def problemset(contest: Contest):
         percentage=percentage,
         problems_visible=problems_visible,
         has_real_name=has_real_name,
+        real_name_map=real_name_map,
         data=data,
     )
 
@@ -805,10 +793,39 @@ def problemset_join(contest: Contest):
         contest.players.add(g.user)
     return redirect(f'/OnlineJudge/problemset/{contest.id}')
 
+@web.route('/course')
+@require_logged_in
+def course_list():
+    page = request.args.get('page')
+    page = int(page) if page else 1
+
+    limit = WebConfig.Courses_Each_Page
+    offset = (page - 1) * limit
+    query = sa.select(Course)
+    count: int = db.scalar(sa.select(sa.func.count()).select_from(query))  # type: ignore
+    max_page = ceil(count / limit)
+    courses = db.scalars(
+        query
+        .order_by(Course.id.asc())
+        .limit(limit).offset(offset)
+    ).all()
+
+    return render_template('course_list.html', courses=courses,
+                           can_join=CourseManager.can_join,
+                           pages=gen_page(page, max_page),
+                           args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
 
 @web.route('/course/<course:course>/')
 def course(course: Course):
-    raise NotImplementedError
+    return render_template('course.html', course=course)
+
+@web.route('/course/<course:course>/join', methods=['POST'])
+def course_join(course: Course):
+    if not CourseManager.can_join(course):
+        abort(BAD_REQUEST)
+    if g.user not in course.users:
+        course.users.add(g.user)
+    return redirect(f'/OnlineJudge/course/{course.id}/')
 
 @web.route('/course/<course:course>/admin', methods=['GET', 'POST'])
 def course_admin(course: Course):

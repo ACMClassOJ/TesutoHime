@@ -8,54 +8,33 @@ from flask import g
 from sqlalchemy import delete, func, join, select, update
 from sqlalchemy.orm import defer
 
-from commons.models import (Contest, ContestPlayer, ContestProblem,
+from commons.models import (Contest, ContestPlayer, ContestProblem, Course,
                             JudgeRecordV2, JudgeStatus, User)
-from web.const import ContestType, PrivilegeType
+from web.const import FAR_FUTURE_TIME, ContestType, PrivilegeType
 from web.contest_cache import ContestCache
-from web.realname_manager import RealnameManager
 from web.user_manager import UserManager
 from web.utils import db
 
 
 class ContestManager:
     @staticmethod
-    def create_contest(id: int, name: str, start_time: datetime, end_time: datetime, contest_type: int,
-                       ranked: bool, rank_penalty: bool, rank_partial_score: bool):
-        contest = Contest(id=id,
-                          name=name,
-                          start_time=start_time,
-                          end_time=end_time,
-                          type=contest_type,
-                          ranked=ranked,
-                          rank_penalty=rank_penalty,
-                          rank_partial_score=rank_partial_score)
+    def create_contest(course: Course) -> Contest:
+        contest = Contest(name='新建比赛',
+                          start_time=datetime.now(),
+                          end_time=FAR_FUTURE_TIME,
+                          type=ContestType.CONTEST,
+                          ranked=True,
+                          rank_penalty=False,
+                          rank_partial_score=True,
+                          course_id=course.id)
         db.add(contest)
+        db.flush()
+        return contest
 
     @staticmethod
-    def modify_contest(contest_id: int, new_name: str, new_start_time: datetime, new_end_time: datetime,
-                       new_contest_type: int,
-                       ranked: bool, rank_penalty: bool, rank_partial_score: bool):
-        stmt = update(Contest).where(Contest.id == contest_id).values(
-            name=new_name,
-            start_time=new_start_time,
-            end_time=new_end_time,
-            type=new_contest_type,
-            ranked=ranked,
-            rank_penalty=rank_penalty,
-            rank_partial_score=rank_partial_score
-        )
-        db.execute(stmt)
-
-    @staticmethod
-    def delete_contest(contest_id: int):
-        db.execute(delete(Contest).where(Contest.id == contest_id))
-
-    @staticmethod
-    def add_problem_to_contest(contest_id: int, problem_id: int):
-        db.add(ContestProblem(
-            contest_id=contest_id,
-            problem_id=problem_id,
-        ))
+    def delete_contest(contest: Contest):
+        db.delete(contest)
+        db.flush()
 
     @staticmethod
     def delete_problem_from_contest(contest_id: int, problem_id: int):
@@ -187,14 +166,16 @@ class ContestManager:
         user_id_to_num = dict((user.id, i) for i, user in enumerate(players))
         problem_to_num = dict((problem, i) for i, problem in enumerate(problems))
 
-        submits: List[JudgeRecordV2] = db \
+        query = db \
             .query(JudgeRecordV2) \
             .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
             .where(JudgeRecordV2.problem_id.in_(problems)) \
             .where(JudgeRecordV2.user_id.in_([x.id for x in players])) \
             .where(JudgeRecordV2.created_at >= start_time) \
-            .where(JudgeRecordV2.created_at < end_time) \
-            .all()
+            .where(JudgeRecordV2.created_at < end_time)
+        if contest.allowed_languages is not None:
+            query = query.where(JudgeRecordV2.language.in_(contest.allowed_languages))
+        submits = query.all()
         for submit in submits:
             user_id = submit.user_id
             problem_id = submit.problem_id

@@ -13,10 +13,12 @@
         <form class="form-group input-group" method="get" id="status_serach">
             <input class="form-control input-group" type="text" name="keyword" id="keyword" placeholder="关键字" value="{{ args["keyword"] if "keyword" in args and args["keyword"] }}">
             <select class="form-control selectpicker" name="status" id="status" data-style="form-control font-weight-normal border-grey shadow-none">
-                <option value="All" {{ "selected" if "status" in args and args["status"]=="All" }}>All</option>
-                <option value="Pending" {{ "selected" if "status" in args and args["status"]=="Pending" }}>Pending</option>
-                <option value="Going On" {{ "selected" if "status" in args and args["status"]=="Going On" }}>Going On</option>
-                <option value="Finished" {{ "selected" if "status" in args and args["status"]=="Finished" }}>Finished</option>
+                {{ option_list({
+                    'All': 'All',
+                    'Pending': 'Pending',
+                    'Going On': 'Going On',
+                    'Finished': 'Finished',
+                }, args['status'] if 'status' in args else 'All') }}
             </select>
             <div class="input-group-append">
                 <button class="btn btn-outline-primary">搜索</button>

@@ -30,7 +30,7 @@
 				{% else -%}
 				<span>{{ submission.user.friendly_name }}</span>
 				{%- endif %}
-			  {%- from 'component/real_name.html' import display_real_name -%}
+			  {%- from 'component/util.html' import display_real_name -%}
 				<span class="text-black-50 float-right"><small>{{ display_real_name(real_name_map[submission.user.student_id]) }}</small></span>
 			</td>
 			<td class="status-list__problem">

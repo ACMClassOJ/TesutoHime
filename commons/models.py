@@ -85,11 +85,11 @@ class Course(UseTimestamps, Base):
     term_id: Mapped[Optional[term_fk]]
     term: Mapped[Optional[Term]] = relationship(back_populates='courses')
 
-    groups: Mapped[Set['Group']] = relationship(back_populates='course')
+    groups: Mapped[List['Group']] = relationship(back_populates='course', order_by='Group.id')
     enrollments: Mapped[Set['Enrollment']] = relationship(back_populates='course')
     users: AssociationProxy[Set[User]] = association_proxy('enrollments', 'user')
     problems: Mapped[Set['Problem']] = relationship(back_populates='course')
-    contests: Mapped[Set['Contest']] = relationship(back_populates='course')
+    contests: Mapped[List['Contest']] = relationship(back_populates='course', order_by='Contest.id')
 
 course_fk = Annotated[int, mapped_column(ForeignKey(Course.id), index=True)]
 
@@ -220,8 +220,9 @@ class Contest(UseTimestamps, Base):
         passive_deletes=True,
         back_populates='contests',
     )
-    problems: Mapped[Set[Problem]] = relationship(
+    problems: Mapped[List[Problem]] = relationship(
         secondary='contest_problem',
+        order_by='ContestProblem.id',
         passive_deletes=True,
         back_populates='contests',
     )

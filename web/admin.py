@@ -93,8 +93,15 @@ def user_manager():
 def problem_create(course: Course):
     if not g.can_write:
         abort(FORBIDDEN)
-    problem_id = ProblemManager.add_problem(course.id)
-    return redirect(f'/OnlineJudge/problem/{problem_id}/admin', SEE_OTHER)
+    problem = ProblemManager.create_problem(course)
+    return redirect(f'/OnlineJudge/problem/{problem.id}/admin', SEE_OTHER)
+
+@admin.route('/course/<course:course>/contest', methods=['post'])
+def contest_create(course: Course):
+    if not g.can_write:
+        abort(FORBIDDEN)
+    contest = ContestManager.create_contest(course)
+    return redirect(f'/OnlineJudge/problemset/{contest.id}/admin', SEE_OTHER)
 
 @admin.route('/course/<course:course>/realname', methods=['post'])
 def add_realname(course: Course):
@@ -257,36 +264,7 @@ def contest_manager():
         abort(BAD_REQUEST)
     try:
         op = int(form[String.TYPE])
-        if op == 0:
-            ContestManager.create_contest(int(form[String.CONTEST_ID]), form[String.CONTEST_NAME],
-                                          datetime.fromisoformat(form[String.START_TIME]),
-                                          datetime.fromisoformat(form[String.END_TIME]),
-                                          int(form[String.CONTEST_TYPE]),
-                                          form[String.CONTEST_RANKED],
-                                          form[String.CONTEST_RANK_PENALTY],
-                                          form[String.CONTEST_RANK_PARTIAL_SCORE])
-            return ReturnCode.SUC_ADD_CONTEST
-        elif op == 1:
-            ContestManager.modify_contest(int(form[String.CONTEST_ID]), form.get(String.CONTEST_NAME, None),
-                                          datetime.fromisoformat(form[String.START_TIME]),
-                                          datetime.fromisoformat(form[String.END_TIME]),
-                                          int(form.get(String.CONTEST_TYPE, None)),
-                                          form[String.CONTEST_RANKED],
-                                          form[String.CONTEST_RANK_PENALTY],
-                                          form[String.CONTEST_RANK_PARTIAL_SCORE])
-            return ReturnCode.SUC_MOD_CONTEST
-        elif op == 2:
-            ContestManager.delete_contest(int(form[String.CONTEST_ID]))
-            return ReturnCode.SUC_DEL_CONTEST
-        elif op == 3:
-            for problemId in form[String.CONTEST_PROBLEM_IDS]:
-                ContestManager.add_problem_to_contest(int(form[String.CONTEST_ID]), int(problemId))
-            return ReturnCode.SUC_ADD_PROBLEMS_TO_CONTEST
-        elif op == 4:
-            for problemId in form[String.CONTEST_PROBLEM_IDS]:
-                ContestManager.delete_problem_from_contest(int(form[String.CONTEST_ID]), int(problemId))
-            return ReturnCode.SUC_DEL_PROBLEMS_FROM_CONTEST
-        elif op == 5:
+        if op == 5:
             for username in form[String.CONTEST_USERNAMES]:
                 user = UserManager.get_user(username)
                 if user is not None:

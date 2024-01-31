@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from enum import IntEnum
 from typing import Optional
 
@@ -125,6 +126,9 @@ class ContestType:
     CONTEST = 0
     HOMEWORK = 1
     EXAM = 2
+
+
+FAR_FUTURE_TIME = datetime(9999, 12, 31, 8, 42, 42)
 
 
 @dataclass

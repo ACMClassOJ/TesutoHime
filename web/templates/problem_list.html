@@ -19,9 +19,7 @@
                        value="{{ args["problem_name_keyword"] if "problem_name_keyword" in args }}">
                 <select class="form-control selectpicker" name="problem_type" id="problem_type"
                         data-style="form-control font-weight-normal border-grey shadow-none">
-                    <option value="-1" {{ "selected" if "problem_type" in args and args["problem_type"]=="-1" }}>所有</option>
-                    <option value="0" {{ "selected" if "problem_type" in args and args["problem_type"]=="0" }}>代码题</option>
-                    <option value="1" {{ "selected" if "problem_type" in args and args["problem_type"]=="1" }}>填选题</option>
+                    {{ option_list({ '-1': '所有', '0': '代码题', '1': '填选题' }, args['problem_type'] if 'problem_type' in args else '-1') }}
                 </select>
                 <div class="input-group-append">
                     <button class="btn btn-outline-primary">搜索</button>

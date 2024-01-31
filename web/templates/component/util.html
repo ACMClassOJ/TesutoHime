@@ -1,3 +1,15 @@
+{%- macro display_real_name(real_names) -%}
+{%- if real_names is sequence -%}
+{%- if real_names | length > 0 -%}
+<!-- TODO -->
+{{ real_names[0].real_name }}
+{%- endif -%}
+{%- elif real_names != None -%}
+{{ real_names.real_name }}
+{%- endif -%}
+{%- endmacro -%}
+
+
 {%- macro render(text) -%}
 <noscript><span class="markdown-fallback" title="启用 JavaScript 以获得更好的显示效果。">{{ text }}</span></noscript>
 <script language="text/markdown">{{ text | tojson }}</script>
@@ -16,4 +28,16 @@
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'js/render.js') }}?v=20240131"></script>
+{%- endmacro -%}
+
+
+{%- macro option_list(options, current) -%}
+{%- for k in options -%}
+<option value="{{ k }}"{{ ' selected' if current == k }}>{{ options[k] }}</option>
+{%- endfor -%}
+{%- endmacro -%}
+
+
+{%- macro datetime_local(d) -%}
+{{ d.isoformat(timespec='minutes') }}
 {%- endmacro -%}

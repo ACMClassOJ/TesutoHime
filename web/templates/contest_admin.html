@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% set page=contest.name %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="card card-body" id="main">
+    <h1 class="title-nav">
+        <span class="title-nav__title">{{ contest.id }}. {{ contest.name }}</span>
+        <span class="title-nav__nav btn-group--title-nav">
+            <a href="/OnlineJudge/problemset/{{ contest.id }}" class="btn btn-outline-primary">返回比赛</a>
+        </span>
+    </h1>
+    <hr>
+
+    <h3>基本信息</h3>
+    <p>所属课程：<a href="/OnlineJudge/course/{{ contest.course.id }}">{{ contest.course.name }}</a> <a href="/OnlineJudge/course/{{ contest.course.id }}/admin" class="btn btn-sm btn-outline-primary ml-2">管理</a></p>
+    <form method="POST">
+        {{ g.csrf() }}
+        <input type="hidden" name="action" value="edit">
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label for="contest-name">比赛名称</label>
+                <input class="form-control" type="text" name="name" id="contest-name" required value="{{ contest.name }}">
+            </div>
+            <div class="form-group col-md-3">
+                <label for="start-time">起始时间 (YYYY-MM-DDThh:mm:ss)</label>
+                <input class="form-control" type="datetime-local" name="start_time" id="start-time" required value="{{ datetime_local(contest.start_time) }}">
+            </div>
+            <div class="form-group col-md-3">
+                <label for="end-time">结束时间 (YYYY-MM-DDThh:mm:ss)</label>
+                <input class="form-control" type="datetime-local" name="end_time" id="end-time" required value="{{ datetime_local(contest.end_time) }}">
+            </div>
+            <div class="form-group col-md-3">
+                <label for="contest-type">比赛类型</label>
+                <select class="form-control selectpicker" name="type" id="contest-type"
+                        data-style="form-control font-weight-normal border-grey shadow-none">
+                    {{ option_list({ 0: '比赛', 1: '作业', 2: '考试，适合用于机考的比赛，同时只能参加一场' }, contest.type) }}
+                </select>
+            </div>
+        </div>
+        <div>
+            <label for="contest-description">比赛描述</label>
+        </div>
+        <div>
+            <textarea class="form-control mb-3" rows="5" id="contest-description" name="description">{{ contest.description }}</textarea>
+        </div>
+        <div class="form-row">
+            <label class="col-md-2">排名设置</label>
+        </div>
+        <div class="form-row">
+            <div class="col-md-2">
+                <div class="custom-control custom-checkbox mb-3">
+                    <input class="custom-control-input" name="ranked" id="ranked" type="checkbox"{{ ' checked' if contest.ranked }}>
+                    <label class="custom-control-label" for="ranked">显示排名</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="custom-control custom-checkbox mb-3">
+                    <input class="custom-control-input" name="rank_penalty" id="rank-penalty" type="checkbox"{{ ' checked' if contest.rank_penalty }}>
+                    <label class="custom-control-label" for="rank-penalty">计算罚时</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="custom-control custom-checkbox mb-3">
+                    <input class="custom-control-input" name="rank_partial_score" id="rank-partial-score" type="checkbox"{{ ' checked' if contest.rank_partial_score }}>
+                    <label class="custom-control-label" for="rank-partial-score">计算部分分</label>
+                </div>
+            </div>
+        </div>
+        <div class="float-right d-flex mb-3 ml-auto">
+            <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
+        </div>
+    </form>
+    <hr>
+
+    <h3 class="mb-3">题目</h3>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>题目名称</th>
+                    <th>发布时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for problem in contest.problems -%}
+                <tr>
+                    <td>{{ problem.id }}</td>
+                    <td><a href="/OnlineJudge/problem/{{ problem.id }}" target="_blank">{{ problem.title }}</a></td>
+                    <td>{{ g.utils.readable_time(problem.release_time) }}</td>
+                    <td>
+                        <form method="post" action="/OnlineJudge/problemset/{{ contest.id }}/problem/remove" class="d-inline">
+                            {{ g.csrf() }}
+                            <input type="hidden" name="id" value="{{ problem.id }}">
+                            <span class="btn-group">
+                                <a href="/OnlineJudge/problem/{{ problem.id }}/admin" class="btn btn-outline-primary btn-sm">管理</a>
+                                <button type="submit" class="btn btn-outline-primary btn-sm" onclick="return confirm('确认删除题目吗？')">删除</button>
+                            </span>
+                        </form>
+                    </td>
+                </tr>
+            {%- endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <details>
+            <summary>批量添加/删除题目</summary>
+            <form method="post">
+                {{ g.csrf() }}
+                <div class="form-group">
+                    <label for="problem-ids">题号（回车分隔）</label>
+                    <textarea class="form-control" name="id" id="problem-ids" rows="5"></textarea>
+                </div>
+                <div class="float-right d-flex mb-3 ml-auto btn-group">
+                    <button class="btn btn-outline-primary mt-auto" type="submit" formaction="/OnlineJudge/problemset/{{ contest.id }}/problem/add">添加题目</button>
+                    <button class="btn btn-outline-primary mt-auto" type="submit" formaction="/OnlineJudge/problemset/{{ contest.id }}/problem/remove" onclick="return confirm('确认删除这些题目吗？')">删除题目</button>
+                </div>
+            </form>
+        </details>
+    </div>
+    <hr>
+
+    <h3>作业要求</h3>
+    <style>
+        #requirement-count, #requirement-score {
+            display: none;
+        }
+        #main:has(#rank-partial-score) #requirement-general {
+            display: none;
+        }
+        #main:has(#rank-partial-score:checked) #requirement-score {
+            display: initial;
+        }
+        #main:has(#rank-partial-score:not(:checked)) #requirement-count {
+            display: initial;
+        }
+    </style>
+    <form method="post">
+        {{ g.csrf() }}
+        <input type="hidden" name="action" value="requirements">
+        <div class="mb-3">
+            <label for="completion-criteria" id="requirement-count">至少完成的题目数</label>
+            <label for="completion-criteria" id="requirement-score">至少完成的分数</label>
+            <label for="completion-criteria" id="requirement-general">至少完成的题目数/分数</label>
+            <input class="form-control" type="number" name="completion_criteria" id="completion-criteria" value="{{ contest.completion_criteria }}">
+        </div>
+        <div class="form-row">
+            <label class="col-md-2">允许使用的语言</label>
+        </div>
+        <div class="form-row">
+            {% for key in g.consts.language_info -%}
+            <div class="col-md-2">
+                <div class="custom-control custom-checkbox mb-3">
+                    <input class="custom-control-input" name="lang-{{ key }}" id="lang-{{ key }}" type="checkbox"{{ ' checked' if contest.allowed_languages == None or key in contest.allowed_languages }}>
+                    <label class="custom-control-label" for="lang-{{ key }}">{{ g.consts.language_info[key].name }}</label>
+                </div>
+            </div>
+            {%- endfor %}
+        </div>
+        <div class="float-right d-flex mb-3 ml-auto">
+            <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
+        </div>
+    </form>
+    <hr>
+
+    {%- if contest.course.groups | length > 0 -%}
+    <h3>人员与分组</h3>
+    <style>
+        #allgroups-container:has(#allgroups:checked) ~ * {
+            display: none;
+        }
+    </style>
+    <form method="post">
+        {{ g.csrf() }}
+        <input type="hidden" name="action" value="groups">
+        <p>作业/比赛限定于以下分组：</p>
+        <div class="form-row">
+            <div class="col-md-2" id="allgroups-container">
+                <div class="custom-control custom-checkbox mb-3">
+                    <input class="custom-control-input" name="all" id="allgroups" type="checkbox"{{ ' checked' if contest.group_ids == None }}>
+                    <label class="custom-control-label" for="allgroups">全部分组/无分组</label>
+                </div>
+            </div>
+            {% for group in contest.course.groups -%}
+            <div class="col-md-2">
+                <div class="custom-control custom-checkbox mb-3">
+                    <input class="custom-control-input" name="group-{{ group.id }}" id="group-{{ group.id }}" type="checkbox"{{ ' checked' if contest.group_ids == None or group.id in contest.group_ids }}>
+                    <label class="custom-control-label" for="group-{{ group.id }}">{{ group.name }}</label>
+                </div>
+            </div>
+            {%- endfor %}
+        </div>
+        <div class="float-right d-flex mb-3 ml-auto">
+            <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
+        </div>
+    </form>
+    <hr>
+    {%- endif -%}
+
+    <h3>删除比赛</h3>
+    <p>删除比赛将会不可逆地从数据库中删除比赛相关的所有信息，但不会删除提交的代码。如您确认要删除比赛，请在下方文本框中输入比赛编号以确认：</p>
+    <form method="POST">
+        {{ g.csrf() }}
+        <div class="form-row d-flex">
+            <input type="hidden" name="action" value="delete">
+            <div class="col-md-3">
+                <input class="form-control" type="text" name="confirm" pattern="{{ contest.id }}" required>
+            </div>
+            <button class="btn btn-outline-primary ml-3" type="submit">删除比赛</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'js/contest_admin.js') }}?v=20240131"></script>
+{% endblock %}

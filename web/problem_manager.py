@@ -6,26 +6,25 @@ from flask import abort, g
 from sqlalchemy import func, select
 from typing_extensions import TypeGuard
 
-from commons.models import ContestProblem, JudgeRecordV2, Problem
-from web.const import PrivilegeType, language_info
+from commons.models import ContestProblem, Course, JudgeRecordV2, Problem
+from web.const import PrivilegeType, language_info, FAR_FUTURE_TIME
 from web.user_manager import UserManager
 from web.utils import db
-
-FAR_FUTURE_TIME = datetime(9999, 12, 31, 8, 42, 42)
 
 
 class ProblemManager:
     @staticmethod
-    def add_problem(course_id: int) -> int:
+    def create_problem(course: Course) -> Problem:
         problem_id = ProblemManager.get_max_id() + 1
         problem = Problem(
             id=problem_id,
             title='新建题目',
             release_time=FAR_FUTURE_TIME,
-            course_id=course_id,
+            course_id=course.id,
         )
         db.add(problem)
-        return problem_id
+        db.flush()
+        return problem
 
     @staticmethod
     def hide_problem(problem: Problem):

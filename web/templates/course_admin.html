@@ -1,203 +1,158 @@
 {% extends "base.html" %}
 
-{% set page="课程管理" %}
+{% set page=course.name %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
 {% endblock %}
 
 {% block content %}
-    <div class="card card-body">
-        <h1 class="title-nav">
-            <span class="title-nav__title">课程管理</span>
-            <ul class="title-nav__nav nav nav-pills flex-column flex-md-row" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0 active" id="overview-tab-btn" data-toggle="tab" href="#overview-tab" role="tab" aria-controls="overview-tab" aria-selected="true">基本信息</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" id="problem-tab-btn" data-toggle="tab" href="#problem-tab" role="tab" aria-controls="problem-tab" aria-selected="false">题目</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" id="contest-tab_btn" data-toggle="tab" href="#contest-tab" role="tab" aria-controls="contest-tab" aria-selected="false">比赛与作业</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" id="realname-tab_btn" data-toggle="tab" href="#realname-tab" role="tab" aria-controls="realname-tab" aria-selected="false">实名</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" id="document-tab_btn" data-toggle="tab" href="#document-tab" role="tab" aria-controls="document-tab" aria-selected="false">文档</a>
-                </li>
-            </ul>
-        </h1>
-        <hr>
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="overview-tab" role="tabpanel" aria-labelledby="overview-tab-btn">
-                <h3>基本信息</h3>
-                <form id="form-overview" class="clearfix" method="post">
-                    {{ g.csrf() }}
-                    <div class="form-group">
-                        <label for="course-name">课程名称</label>
-                        <input class="form-control" type="text" name="name" id="course-name" value="{{ course.name }}">
+<div class="card card-body">
+    <h1 class="title-nav">
+        <span class="title-nav__title">{{ course.name }}</span>
+        <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}">班级</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}/contest">比赛</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}/homework">作业</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/course/{{ course.id }}/admin">管理</a>
+            </li>
+        </ul>
+    </h1>
+    <div class="nav-wrapper">
+        <ul class="nav nav-pills nav-fill flex-column flex-md-row" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0 active" id="overview-tab-btn" data-toggle="tab" href="#overview-tab" role="tab" aria-controls="overview-tab" aria-selected="true">基本信息</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" id="problem-tab-btn" data-toggle="tab" href="#problem-tab" role="tab" aria-controls="problem-tab" aria-selected="false">题目</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" id="contest-tab_btn" data-toggle="tab" href="#contest-tab" role="tab" aria-controls="contest-tab" aria-selected="false">比赛与作业</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" id="realname-tab_btn" data-toggle="tab" href="#realname-tab" role="tab" aria-controls="realname-tab" aria-selected="false">实名</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link mb-sm-2 mb-md-0" id="document-tab_btn" data-toggle="tab" href="#document-tab" role="tab" aria-controls="document-tab" aria-selected="false">文档</a>
+            </li>
+        </ul>
+    </div>
+    <hr>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="overview-tab" role="tabpanel" aria-labelledby="overview-tab-btn">
+            <h3>基本信息</h3>
+            <form id="form-overview" class="clearfix" method="post">
+                {{ g.csrf() }}
+                <div class="form-group">
+                    <label for="course-name">课程名称</label>
+                    <input class="form-control" type="text" name="name" id="course-name" value="{{ course.name }}">
+                </div>
+                <div>
+                    <label for="course-description">课程描述</label>
+                </div>
+                <textarea class="form-control mb-3" rows="5" id="course-description" name="description">{{ course.description }}</textarea>
+                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                    <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
+                </div>
+            </form>
+        </div>
+
+
+        <div class="tab-pane fade" id="problem-tab" role="tabpanel" aria-labelledby="problem-tab-btn">
+            <h3>管理已有题目</h3>
+            <form id="form-jump-problem">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="problem-id">题目 ID</label>
+                        <input class="form-control" type="number" id="problem-id" required>
                     </div>
-                    <div>
-                        <label for="course-description">课程描述</label>
+                    <div class="d-flex mb-3 pr-1">
+                        <button type="submit" class="btn btn-outline-primary mt-auto">跳转</button>
                     </div>
-                    <textarea class="form-control mb-3" rows="5" id="course-description" name="description">{{ course.description }}</textarea>
+                </div>
+            </form>
+            <hr>
+            <h3>新建题目</h3>
+            <p>请勿连续多次点击此按钮。</p>
+            <form action="/OnlineJudge/admin/course/{{ course.id }}/problem" method="POST">
+                {{ g.csrf() }}
+                <button type="submit" class="btn btn-outline-primary" onclick="setTimeout(() => this.disabled = true)">新建题目</button>
+            </form>
+        </div>
+
+
+        <div class="tab-pane fade" id="contest-tab" role="tabpanel" aria-labelledby="contest-tab-btn">
+            <h3 class="mb-3">管理已有比赛/作业</h3>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>编号</th>
+                            <th>名称</th>
+                            <th>开始时间</th>
+                            <th>结束时间</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    {% for contest in course.contests | reverse -%}
+                    <tr>
+                        <td>{{ contest.id }}</td>
+                        <td><a href="/OnlineJudge/problemset/{{ contest.id }}">[{{ ['比赛', '作业', '考试'][contest.type] }}] {{ contest.name }}</a></td>
+                        <td>{{ g.utils.readable_time(contest.start_time) }}</td>
+                        <td>{{ g.utils.readable_time(contest.end_time) }}</td>
+                        <td><a href="/OnlineJudge/problemset/{{ contest.id }}/admin" class="btn btn-sm btn-primary">管理</a></td>
+                    </tr>
+                    {%- endfor %}
+                </table>
+                {{ page_switcher(pages, args) }}
+            </div>
+            <h3>新建比赛/作业</h3>
+            <p>请勿连续多次点击此按钮。</p>
+            <form action="/OnlineJudge/admin/course/{{ course.id }}/contest" method="POST">
+                {{ g.csrf() }}
+                <button type="submit" class="btn btn-outline-primary" onclick="setTimeout(() => this.disabled = true)">新建比赛</button>
+            </form>
+        </div>
+
+        <div class="tab-pane fade" id="realname-tab" role="tabpanel" aria-labelledby="realname-tab-btn">
+            <h3>批量添加实名信息</h3>
+            <p>每行一条信息，格式为「学号,姓名,分组（可不填）」。请使用半角（西文）逗号。一位同学可以有多个分组，以竖线「|」分隔。</p>
+            <form id="formRealname" action="/OnlineJudge/admin/course/{{ course.id }}/realname" method="POST">
+                {{ g.csrf() }}
+                <input type="hidden" name="action" value="add">
+                <textarea class="form-control mb-3" rows="5" name="data" placeholder="523030910000,张三"></textarea>
+                <div class="form-row">
                     <div class="float-right d-flex mb-3 ml-auto pr-1">
-                        <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
+                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddRealname">添加实名信息</button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
+        </div>
 
 
-            <div class="tab-pane fade" id="contest-tab" role="tabpanel" aria-labelledby="contest-tab-btn">
-                <form id="formContest">
-                    <div class="form-row">
-                        <div class="form-group col-md-3">
-                            <label for="iptContestID"> 比赛ID <span class="badge" id="iptContestStatusBadge"></span></label>
-                            <input class="form-control" type="number" name="contest_id" id="iptContestID">
-                        </div>
-                        <div class="float-right d-flex mb-3 ml-auto pr-1">
-                            <button class="btn btn-outline-primary mt-auto" type="button" id="btnGoToContestPage"> 跳转到比赛详情页面 </button>
-                            <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetContestAutoIncreseID"> 获取最新空比赛ID </button>
-                            <button class="btn btn-outline-primary mt-auto" type="button" id="btnGetContestDetails"> 查看比赛情况 </button>
-                        </div>
-                    </div>
-                    <div id="divContestHidden">
-                        <div class="form-row">
-                            <div class="form-group col-md-3">
-                                <label for="iptContestName"> 比赛名称 </label>
-                                <input class="form-control" type="text" name="name" id="iptContestName" required>
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="iptStartTime"> 起始时间 (YYYY-MM-DDThh:mm:ss) </label>
-                                <input class="form-control" type="datetime-local" name="start_time" id="iptStartTime">
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="iptEndTime"> 结束时间 (YYYY-MM-DDThh:mm:ss) </label>
-                                <input class="form-control" type="datetime-local" name="end_time" id="iptEndTime">
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="iptContestType"> 比赛类型 </label>
-                                <select class="form-control selectpicker" name="contest_type" id="iptContestType"
-                                        data-style="form-control font-weight-normal border-grey shadow-none">
-                                    <option value="0">比赛</option>
-                                    <option value="1">作业</option>
-                                    <option value="2">考试，适合用于机考的比赛，同时只能参加一场</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <label class="col-md-2">排名设置</label>
-                        </div>
-                        <div class="form-row">
-                            <div class="col-md-2">
-                                <div class="custom-control custom-checkbox mb-3">
-                                    <input class="custom-control-input" name="ranked" id="iptRanked" type="checkbox" checked>
-                                    <label class="custom-control-label" for="iptRanked">显示排名</label>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="custom-control custom-checkbox mb-3">
-                                    <input class="custom-control-input" name="rank_penalty" id="iptRankPenalty" type="checkbox">
-                                    <label class="custom-control-label" for="iptRankPenalty">计算罚时</label>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="custom-control custom-checkbox mb-3">
-                                    <input class="custom-control-input" name="rank_partial_score" id="iptRankPartialScore" type="checkbox" checked>
-                                    <label class="custom-control-label" for="iptRankPartialScore">计算部分分</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="float-right d-flex mb-3 ml-auto pr-1">
-                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnCreateContest"> 创建比赛 </button>
-                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyContest"> 修改比赛 </button>
-                                <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveContest" onclick="return confirm('确认要删除吗？');"> 删除比赛 </button>
-                                <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowProblemList"> 修改比赛题号列表 </button>
-                                <button class="btn btn-outline-primary mt-auto" type="button" id="btnShowUserList"> 修改参赛学生列表 </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-row" id="divContestProblemListHidden">
-                        <div class="form-group col-md-3">
-                            <label for="iptContestProblemId"> 题号（回车分隔） </label>
-                            <textarea class="form-control" name="id" id="iptContestProblemId"></textarea>
-                        </div>
-                        <div class="float-right d-flex mb-3 ml-auto pr-1">
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddProblemToContest"> 添加题号 </button>
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveProblemFromContest" onclick="return confirm('确认要删除吗？');"> 删除题号 </button>
-                        </div>
-                    </div>
-                    <div class="form-row" id="divContestUserListHidden">
-                        <div class="form-group col-md-3">
-                            <label for="iptContestStudentUsername"> 参赛学生用户名（回车分隔，不能有空行）（注意这是用户名，不是学号或用户昵称，用户名可通过点击各列表中的昵称显示） </label>
-                            <textarea class="form-control" name="username" id="iptContestStudentUsername"></textarea>
-                        </div>
-                        <div class="float-right d-flex mb-3 ml-auto pr-1">
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUserToContest"> 添加用户 </button>
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnRemoveUserFromContest" onclick="return confirm('确认要删除吗？');"> 删除用户 </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-
-            <div class="tab-pane fade" id="problem-tab" role="tabpanel" aria-labelledby="problem-tab-btn">
-                <h3>管理已有题目</h3>
-                <form id="form-jump-problem">
-                    <div class="form-row">
-                        <div class="form-group col-md-3">
-                            <label for="problem-id">题目 ID</label>
-                            <input class="form-control" type="number" id="problem-id" required>
-                        </div>
-                        <div class="d-flex mb-3 pr-1">
-                            <button type="submit" class="btn btn-outline-primary mt-auto">跳转</button>
-                        </div>
-                    </div>
-                </form>
-                <hr>
-                <h3>新建题目</h3>
-                <p>请勿连续多次点击此按钮。</p>
-                <form action="/OnlineJudge/admin/course/{{ course.id }}/problem" method="POST">
-                    {{ g.csrf() }}
-                    <div class="form-row">
-                        <button type="submit" class="btn btn-outline-primary" onclick="setTimeout(() => this.disabled = true)">新建题目</button>
-                    </div>
-                </form>
-            </div>
-
-
-            <div class="tab-pane fade" id="realname-tab" role="tabpanel" aria-labelledby="realname-tab-btn">
-                <h3>批量添加实名信息</h3>
-                <p>每行一条信息，格式为「学号,姓名,分组（可不填）」。请使用半角（西文）逗号。一位同学可以有多个分组，以竖线「|」分隔。</p>
-                <form id="formRealname" action="/OnlineJudge/admin/course/{{ course.id }}/realname" method="POST">
-                    {{ g.csrf() }}
-                    <input type="hidden" name="action" value="add">
-                    <textarea class="form-control mb-3" rows="5" name="data" placeholder="523030910000,张三"></textarea>
-                    <div class="form-row">
-                        <div class="float-right d-flex mb-3 ml-auto pr-1">
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddRealname">添加实名信息</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-
-            <div class="tab-pane fade" id="document-tab" role="tabpanel" aria-labelledby="document-tab-btn">
-                <h3>管理员文档</h3>
-                <ul>
-                    <li><a href="/OnlineJudge/admin/admin-doc">管理界面使用指南</a></li>
-                    <li><a href="/OnlineJudge/admin/problem-format-doc">题面格式规范</a></li>
-                    <li><a href="/OnlineJudge/admin/data-doc">数据格式规范</a></li>
-                    <li><a href="/OnlineJudge/admin/package-sample">数据包样例</a></li>
-                </ul>
-            </div>
+        <div class="tab-pane fade" id="document-tab" role="tabpanel" aria-labelledby="document-tab-btn">
+            <h3>管理员文档</h3>
+            <ul>
+                <li><a href="/OnlineJudge/admin/admin-doc">管理界面使用指南</a></li>
+                <li><a href="/OnlineJudge/admin/problem-format-doc">题面格式规范</a></li>
+                <li><a href="/OnlineJudge/admin/data-doc">数据格式规范</a></li>
+                <li><a href="/OnlineJudge/admin/package-sample">数据包样例</a></li>
+            </ul>
         </div>
     </div>
+</div>
 {% endblock %}
+
 {% block script %}
-    <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/course_admin.js') }}?v=20240129"></script>
+<script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'js/course_admin.js') }}?v=20240129"></script>
 {% endblock %}

@@ -754,7 +754,6 @@ def homework(contest_id):
     return redirect(f'/OnlineJudge/problemset/{contest_id}')
 
 @web.route('/problemset/<contest:contest>')
-@require_logged_in
 def problemset(contest: Contest):
     problems = ContestManager.list_problem_for_contest(contest.id)
     problems_visible = g.time >= contest.start_time or ContestManager.can_read(contest)
@@ -780,6 +779,86 @@ def problemset(contest: Contest):
         data=data,
     )
 
+@web.route('/problemset/<contest:contest>/admin', methods=['GET', 'POST'])
+def problemset_admin(contest: Contest):
+    if not g.can_write:
+        abort(FORBIDDEN)
+
+    if request.method == 'POST':
+        form = request.form
+        action = form['action']
+        if action == 'edit':
+            contest.name = form['name']
+            contest.description = form.get('description', '')
+            contest.start_time = datetime.fromisoformat(form['start_time'])
+            contest.end_time = datetime.fromisoformat(form['end_time'])
+            contest.type = int(form['type'])
+            contest.ranked = form.get('ranked', 'off') == 'on'
+            contest.rank_penalty = form.get('rank_penalty', 'off') == 'on'
+            contest.rank_partial_score = form.get('rank_partial_score', 'off') == 'on'
+        elif action == 'delete':
+            if request.form['confirm'] != str(contest.id):
+                abort(BAD_REQUEST)
+            course_id = contest.course_id
+            ContestManager.delete_contest(contest)
+            return redirect(f'/OnlineJudge/course/{course_id}/admin')
+        elif action == 'requirements':
+            cc_str = form.get('completion_criteria', '')
+            cc = None if cc_str == '' else int(cc_str)
+            contest.completion_criteria = cc
+
+            languages = []
+            for lang in language_info:
+                if form.get(f'lang-{lang}', 'off') == 'on':
+                    languages.append(lang)
+            contest.allowed_languages = None if len(languages) == len(language_info) else languages
+        elif action == 'groups':
+            # TODO: recompute membership
+            if form.get('all', 'off') == 'on':
+                contest.group_ids = None
+            else:
+                gs = []
+                for group in contest.course.groups:
+                    if form.get(f'group-{group.id}', 'off') == 'on':
+                        gs.append(group.id)
+                contest.group_ids = gs
+        else:
+            abort(BAD_REQUEST)
+
+    return render_template('contest_admin.html', contest=contest)
+
+@web.route('/problemset/<contest:contest>/problem/add', methods=['POST'])
+def problemset_problem_add(contest: Contest):
+    if not g.can_write:
+        abort(FORBIDDEN)
+
+    try:
+        ids = [int(x) for x in request.form['id'].strip().splitlines()]
+    except ValueError as e:
+        abort(BAD_REQUEST, e)
+    for problem_id in ids:
+        problem = ProblemManager.get_problem(problem_id)
+        if problem is None:
+            db.rollback()
+            abort(BAD_REQUEST, f'题目 {problem_id} 不存在')
+        if problem not in contest.problems:
+            contest.problems.append(problem)
+
+    return redirect(f'/OnlineJudge/problemset/{contest.id}/admin')
+
+@web.route('/problemset/<contest:contest>/problem/remove', methods=['POST'])
+def problemset_problem_remove(contest: Contest):
+    if not g.can_write:
+        abort(FORBIDDEN)
+
+    try:
+        ids = [int(x) for x in request.form['id'].strip().splitlines()]
+    except ValueError as e:
+        abort(BAD_REQUEST, e)
+    for problem_id in ids:
+        ContestManager.delete_problem_from_contest(contest.id, problem_id)
+
+    return redirect(f'/OnlineJudge/problemset/{contest.id}/admin')
 
 @web.route('/problemset/<contest:contest>/join', methods=['POST'])
 def problemset_join(contest: Contest):

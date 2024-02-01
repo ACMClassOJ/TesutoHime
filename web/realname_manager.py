@@ -4,10 +4,8 @@ from typing import List, Optional, Sequence
 
 from flask import g
 from sqlalchemy import select
-from sqlalchemy.orm import aliased
 
-from commons.models import (Contest, Course, Enrollment, Group,
-                            RealnameReference, User)
+from commons.models import Contest, Course, Group, RealnameReference, User
 from web.user_manager import UserManager
 from web.utils import db
 

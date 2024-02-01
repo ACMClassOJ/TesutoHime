@@ -2,6 +2,12 @@ h1 {
     margin: 1rem 0;
 }
 
+.form-text {
+    margin-top: .25rem;
+    font-size: .875em;
+    color: var(--bs-secondary-color);
+}
+
 #homework, #contest, .status-list {
     white-space: nowrap;
 }
@@ -247,4 +253,8 @@ h-hws[hidden] {
 
 .markdown-fallback {
     white-space: pre-wrap;
+}
+
+.realname-group.badge {
+    font-size: 0.66rem;
 }

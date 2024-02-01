@@ -62,7 +62,7 @@
                     </tr>
                     </thead>
                     {% for player in data -%}
-                        <tr>
+                        <tr class="{{ 'player--external' if player['is_external'] }}">
                             {% if contest.ranked %}<td>{{ player['rank'] }}</td>{% endif %}
                             <td>
                                 {% if g.is_admin -%}

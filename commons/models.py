@@ -46,13 +46,18 @@ class User(UseTimestamps, Base):
     password: Mapped[str]
     privilege: Mapped[int]
 
-    contests: Mapped[Set['Contest']] = relationship(
+    external_contests: Mapped[Set['Contest']] = relationship(
         secondary='contest_player',
         passive_deletes=True,
-        back_populates='players',
+        back_populates='external_players',
     )
     enrollments: Mapped[Set['Enrollment']] = relationship(back_populates='user')
     courses: AssociationProxy[Set['Course']] = association_proxy('enrollments', 'course')
+    realname_references: Mapped[Set['RealnameReference']] = relationship(
+        primaryjoin='foreign(User.student_id) == RealnameReference.student_id',
+        uselist=True,
+        viewonly=True,
+    )
 
 user_fk = Annotated[int, mapped_column(ForeignKey(User.id), index=True)]
 
@@ -87,7 +92,9 @@ class Course(UseTimestamps, Base):
 
     groups: Mapped[List['Group']] = relationship(back_populates='course', order_by='Group.id')
     enrollments: Mapped[Set['Enrollment']] = relationship(back_populates='course')
+    admin_enrollments: Mapped[Set['Enrollment']] = relationship(primaryjoin='and_(Course.id == Enrollment.course_id, Enrollment.admin)', viewonly=True)
     users: AssociationProxy[Set[User]] = association_proxy('enrollments', 'user')
+    realname_references: Mapped[List['RealnameReference']] = relationship(back_populates='course', order_by='RealnameReference.id')
     problems: Mapped[Set['Problem']] = relationship(back_populates='course')
     contests: Mapped[List['Contest']] = relationship(back_populates='course', order_by='Contest.id')
 
@@ -105,7 +112,18 @@ class Enrollment(UseTimestamps, Base):
     course: Mapped[Course] = relationship(back_populates='enrollments')
     admin: Mapped[bool] = mapped_column(server_default=text('false'))
 
+    realname_reference: Mapped[Optional['RealnameReference']] = relationship(
+        secondary='user',
+        primaryjoin='and_(Enrollment.course_id == RealnameReference.course_id, Enrollment.user_id == User.id)',
+        secondaryjoin='User.student_id == RealnameReference.student_id',
+        viewonly=True,
+    )
+
 class Group(UseTimestamps, Base):
+    __table_args__ = (
+        Index('ix_group_course_id_name', 'course_id', 'name', unique=True),
+    )
+
     id: Mapped[intpk]
     name: Mapped[str]
     description: Mapped[str] = mapped_column(server_default='')
@@ -119,7 +137,7 @@ class Group(UseTimestamps, Base):
         back_populates='groups',
     )
 
-group_fk = Annotated[int, mapped_column(ForeignKey(Group.id), index=True)]
+group_fk = Annotated[int, mapped_column(ForeignKey(Group.id, ondelete='CASCADE'), index=True)]
 
 class RealnameReference(UseTimestamps, Base):
     __table_args__ = (
@@ -130,15 +148,21 @@ class RealnameReference(UseTimestamps, Base):
     student_id: Mapped[str] = mapped_column(index=True)
     real_name: Mapped[str]
     course_id: Mapped[course_fk]
-    course: Mapped[Course] = relationship()
+    course: Mapped[Course] = relationship(back_populates='realname_references')
 
     groups: Mapped[Set[Group]] = relationship(
         secondary='group_realname_reference',
         passive_deletes=True,
         back_populates='realname_references',
     )
+    enrollments: Mapped[Set[Enrollment]] = relationship(
+        secondary='user',
+        primaryjoin='and_(Enrollment.course_id == RealnameReference.course_id, User.student_id == RealnameReference.student_id)',
+        secondaryjoin='User.id == Enrollment.user_id',
+        viewonly=True,
+    )
 
-realname_reference_fk = Annotated[int, mapped_column(ForeignKey(RealnameReference.id), index=True)]
+realname_reference_fk = Annotated[int, mapped_column(ForeignKey(RealnameReference.id, ondelete='CASCADE'), index=True)]
 
 class GroupRealnameReference(UseTimestamps, Base):
     __table_args__ = (
@@ -215,10 +239,10 @@ class Contest(UseTimestamps, Base):
     completion_criteria: Mapped[Optional[int]]
     allowed_languages: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text))
 
-    players: Mapped[Set[User]] = relationship(
+    external_players: Mapped[Set[User]] = relationship(
         secondary='contest_player',
         passive_deletes=True,
-        back_populates='contests',
+        back_populates='external_contests',
     )
     problems: Mapped[List[Problem]] = relationship(
         secondary='contest_problem',
@@ -227,7 +251,7 @@ class Contest(UseTimestamps, Base):
         back_populates='contests',
     )
 
-contest_fk = Annotated[int, mapped_column(ForeignKey(Contest.id), index=True)]
+contest_fk = Annotated[int, mapped_column(ForeignKey(Contest.id, ondelete='CASCADE'), index=True)]
 
 
 class ContestPlayer(UseTimestamps, Base):

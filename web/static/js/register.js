@@ -18,7 +18,7 @@ $(function(){
 		{
 			swal("Success", ret_json['msg'], "success");
 			setTimeout(function(){
-				window.location.replace("/OnlineJudge/");
+				location = '/OnlineJudge/login'
 			},500);
 		}
 	});

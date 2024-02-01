@@ -1,11 +1,11 @@
 __all__ = ('CourseManager',)
 
-from typing import Optional
+from typing import Optional, Sequence
 
 from flask import g
 from sqlalchemy import select
 
-from commons.models import Course, Group
+from commons.models import Course, Group, RealnameReference, User
 from web.const import PrivilegeType
 from web.user_manager import UserManager
 from web.utils import db
@@ -27,6 +27,27 @@ class CourseManager:
     @staticmethod
     def can_write(course: Course) -> bool:
         return UserManager.get_course_privilege(g.user, course) >= PrivilegeType.owner
+
+
+    @classmethod
+    def get_enrolled_courses(cls, user: User) -> Sequence[Course]:
+        return [rr.course for rr in cls.get_enrolled_realname_references(user)]
+
+    @staticmethod
+    def get_enrolled_realname_references(user: User) -> Sequence[RealnameReference]:
+        return [e.realname_reference for e in user.enrollments if e.realname_reference is not None]
+
+
+    @staticmethod
+    def get_group(group_id: int) -> Optional[Group]:
+        return db.get(Group, group_id)
+
+    @classmethod
+    def get_group_in_course(cls, course: Course, group_id: int) -> Optional[Group]:
+        group = cls.get_group(group_id)
+        if group is None or group.course_id != course.id:
+            return None
+        return group
 
     @staticmethod
     def get_group_by_name(course: Course, group_name: str) -> Optional[Group]:

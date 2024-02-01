@@ -22,8 +22,8 @@ from werkzeug.routing import BaseConverter
 import commons.task_typing
 import web.const as consts
 import web.utils as utils
-from commons.models import (Contest, Course, JudgeRecordV2, JudgeStatus,
-                            Problem, User)
+from commons.models import (Contest, Course, Enrollment, Group, JudgeRecordV2,
+                            JudgeStatus, Problem, RealnameReference, User)
 from commons.task_typing import ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
 from web.admin import admin
@@ -187,14 +187,6 @@ def index2():
     return redirect('/')
 
 
-@web.route('/api/problem-id-autoinc')
-def get_problem_id_autoinc():
-    return str(ProblemManager.get_max_id() + 1)
-
-@web.route('/api/contest-id-autoinc')
-def get_contest_id_autoinc():
-    return str(ContestManager.get_max_id() + 1)
-
 @web.route('/api/problem/<problem:problem>/description')
 def get_problem_description(problem: Problem):
     data = {
@@ -211,23 +203,6 @@ def get_problem_description(problem: Problem):
         'Limits': str(problem.limits),
     }
     return json.dumps(data)
-
-@web.route('/api/contest/<contest:contest>')
-def get_contest_detail(contest):
-    if not g.can_read:
-        abort(FORBIDDEN)
-    data = {
-        'ID': contest.id,
-        'Name': contest.name,
-        'Start_Time': contest.start_time.isoformat(),
-        'End_Time': contest.end_time.isoformat(),
-        'Type': contest.type,
-        'Ranked': contest.ranked,
-        'Rank_Penalty': contest.rank_penalty,
-        'Rank_Partial_Score': contest.rank_partial_score,
-    }
-    return json.dumps(data)
-
 
 @web.route('/api/code', methods=['POST'])
 def get_code():
@@ -718,7 +693,7 @@ def contest_list_generic(type, type_zh):
     contest_id = request.args.get(f'{type}_id')
     if contest_id is not None:
         return redirect(f'/OnlineJudge/problemset/{contest_id}')
-    user_contests = UserManager.list_contest_ids(g.user)
+    user_contests = ContestManager.get_contests_for_user(g.user)
 
     page = request.args.get('page')
     page = int(page) if page is not None else 1
@@ -805,13 +780,20 @@ def problemset_admin(contest: Contest):
         elif action == 'requirements':
             cc_str = form.get('completion_criteria', '')
             cc = None if cc_str == '' else int(cc_str)
+            if cc is not None:
+                if contest.rank_partial_score:
+                    valid = cc >= 0
+                else:
+                    valid = 0 <= cc <= len(contest.problems)
+                if not valid:
+                    abort(BAD_REQUEST, f'完成条件为负或超过题目总数')
             contest.completion_criteria = cc
 
             languages = []
             for lang in language_info:
                 if form.get(f'lang-{lang}', 'off') == 'on':
                     languages.append(lang)
-            contest.allowed_languages = None if len(languages) == len(language_info) else languages
+            contest.allowed_languages = None if len(languages) == len(language_info) or len(languages) == 0 else languages
         elif action == 'groups':
             # TODO: recompute membership
             if form.get('all', 'off') == 'on':
@@ -825,7 +807,26 @@ def problemset_admin(contest: Contest):
         else:
             abort(BAD_REQUEST)
 
-    return render_template('contest_admin.html', contest=contest)
+    scores = ContestManager.get_scores(contest)
+    # problem id -> (try count, ac count)
+    problem_stats = dict((problem.id, { 'try': 0, 'ac': 0 }) for problem in contest.problems)
+    completion_stats = { 'total': 0, 'completed': 0 }
+    for player in scores:
+        if player['is_external']:
+            continue
+        if contest.completion_criteria is not None:
+            completion_stats['total'] += 1
+            if ContestManager.user_has_completed(contest, player):
+                completion_stats['completed'] += 1
+        for problem in player['problems']:
+            if problem['count'] > 0:
+                problem_stats[problem['id']]['try'] += 1
+            if problem['accepted']:
+                problem_stats[problem['id']]['ac'] += 1
+
+    return render_template('contest_admin.html', contest=contest,
+                           problem_stats=problem_stats,
+                           completion_stats=completion_stats)
 
 @web.route('/problemset/<contest:contest>/problem/add', methods=['POST'])
 def problemset_problem_add(contest: Contest):
@@ -868,8 +869,8 @@ def problemset_join(contest: Contest):
         exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(g.user)
         if exam_id != -1:
             abort(BAD_REQUEST)
-    if g.user not in contest.players:
-        contest.players.add(g.user)
+    if g.user not in contest.external_players:
+        contest.external_players.add(g.user)
     return redirect(f'/OnlineJudge/problemset/{contest.id}')
 
 @web.route('/course')
@@ -903,7 +904,8 @@ def course_join(course: Course):
     if not CourseManager.can_join(course):
         abort(BAD_REQUEST)
     if g.user not in course.users:
-        course.users.add(g.user)
+        db.add(Enrollment(user_id=g.user.id, course_id=course.id))
+        db.flush()
     return redirect(f'/OnlineJudge/course/{course.id}/')
 
 @web.route('/course/<course:course>/admin', methods=['GET', 'POST'])
@@ -911,12 +913,151 @@ def course_admin(course: Course):
     if not g.can_write:
         abort(FORBIDDEN)
 
+    tab = request.args.get('tab', 'overview')
+    expand_group = request.args.get('group', None)
     if request.method == 'POST':
         form = request.form
-        course.name = form['name']
-        course.description = form['description']
+        action = form['action']
+        if action == 'edit':
+            course.name = form['name']
+            course.description = form['description']
+        elif action == 'realname-create':
+            data = [line.split(',') for line in request.form['data'].strip().splitlines()]
+            for line in data:
+                groups: List[Group] = []
+                if len(line) > 2:
+                    group_names = [x.strip() for x in line[2].split('|')]
+                    for group_name in group_names:
+                        group = CourseManager.get_group_by_name(course, group_name)
+                        if group is None:
+                            db.rollback()
+                            return abort(BAD_REQUEST, f'分组 {repr(group_name)} 不存在')
+                        groups.append(group)
+                rr = RealnameManager.query_realname_for_course(line[0], course.id)
+                if rr is not None:
+                    for e in rr.enrollments:
+                        if e.admin:
+                            abort(BAD_REQUEST, f'不能修改课程管理员 {repr(e.user.username)} 的实名信息')
+                RealnameManager.add_student(line[0], line[1], course, groups)
+            tab = 'realname'
+        elif action == 'realname-delete':
+            rr_id = int(form['id'])
+            rr = db.get(RealnameReference, rr_id)
+            if rr is None or rr.course_id != course.id:
+                abort(BAD_REQUEST)
+            for e in rr.enrollments:
+                if e.admin:
+                    abort(BAD_REQUEST, f'不能删除课程管理员 {repr(e.user.username)} 的实名信息')
+            db.delete(rr)
+            db.flush()
+            tab = 'realname'
+        elif action == 'problem-create':
+            problem = ProblemManager.create_problem(course)
+            return redirect(f'/OnlineJudge/problem/{problem.id}/admin', SEE_OTHER)
+        elif action == 'contest-create':
+            contest = ContestManager.create_contest(course)
+            return redirect(f'/OnlineJudge/problemset/{contest.id}/admin', SEE_OTHER)
+        elif action == 'group-create':
+            name = form['name']
+            if CourseManager.get_group_by_name(course, name) != None:
+                abort(BAD_REQUEST, f'分组 {repr(name)} 已存在')
+            group = Group(name=name,
+                          description=form.get('description', ''),
+                          course_id=course.id)
+            db.add(group)
+            db.flush()
+            tab = 'group'
+            expand_group = str(group.id)
+        elif action == 'group-edit':
+            group = CourseManager.get_group_in_course(course, int(form['id']))
+            if group is None:
+                abort(BAD_REQUEST)
+            name = form['name']
+            existing_group = CourseManager.get_group_by_name(course, name)
+            if existing_group is not None and existing_group != group:
+                abort(BAD_REQUEST, f'分组 {repr(name)} 已存在')
+            group.name = name
+            group.description = form['description']
+            tab = 'group'
+            expand_group = str(group.id)
+        elif action == 'group-delete':
+            group = CourseManager.get_group_in_course(course, int(form['id']))
+            if group is None:
+                abort(BAD_REQUEST)
+            db.delete(group)
+            db.flush()
+            tab = 'group'
+        elif action == 'user-delete':
+            usernames = form['data'].strip().splitlines()
+            for username in usernames:
+                user = UserManager.get_user_by_username(username)
+                if user is None:
+                    db.rollback()
+                    abort(BAD_REQUEST, f'用户 {repr(username)} 不存在')
+                enrollment = UserManager.get_enrollment(user, course)
+                if enrollment is None:
+                    continue
+                if enrollment.admin:
+                    db.rollback()
+                    abort(BAD_REQUEST, f'用户 {repr(username)} 是课程管理员，请先移除管理权限')
+                db.delete(enrollment)
+                db.flush()
+            tab = 'user'
+        elif action == 'user-demote':
+            enrollment = db.get(Enrollment, int(form['id']))
+            if enrollment is None or not enrollment.admin or enrollment.course_id != course.id:
+                abort(BAD_REQUEST)
+            enrollment.admin = False
+            UserManager.flush_privileges(enrollment.user)
+            tab = 'user'
+        elif action == 'user-promote':
+            usernames = form['data'].strip().splitlines()
+            for username in usernames:
+                user = UserManager.get_user_by_username(username)
+                if user is None:
+                    db.rollback()
+                    abort(BAD_REQUEST, f'用户 {repr(username)} 不存在')
+                enrollment = UserManager.get_enrollment(user, course)
+                if enrollment is None:
+                    db.rollback()
+                    abort(BAD_REQUEST, f'用户 {repr(username)} 未报名课程')
+                if enrollment.realname_reference is None:
+                    db.rollback()
+                    abort(BAD_REQUEST, f'用户 {repr(username)} 未添加实名信息')
+                enrollment.admin = True
+                UserManager.flush_privileges(user)
+            tab = 'user'
+        else:
+            abort(BAD_REQUEST, f'Unknown action {action}')
 
-    return render_template('course_admin.html', course=course)
+    return render_template('course_admin.html', course=course, tab=tab, expand_group=expand_group)
+
+@web.route('/course/<course:course>/group/<int:group_id>/<action>', methods=['POST'])
+def course_group_edit(course, group_id, action):
+    if not g.can_write:
+        abort(FORBIDDEN)
+
+    group = CourseManager.get_group_in_course(course, group_id)
+    if group is None:
+        abort(BAD_REQUEST)
+
+    data = request.form['data'].strip().splitlines()
+    realname_references = [RealnameManager.query_realname_for_course(x, course.id) for x in data]
+    for id, rr in zip(data, realname_references):
+        if rr is None:
+            abort(BAD_REQUEST, f'学号 {repr(id)} 没有对应的实名信息')
+    realname_references: List[RealnameReference]
+    if action == 'add':
+        for rr in realname_references:
+            group.realname_references.add(rr)
+    elif action == 'remove':
+        for rr in realname_references:
+            group.realname_references.remove(rr)
+    else:
+        abort(NOT_FOUND)
+
+    db.flush()
+    return redirect(f'/OnlineJudge/course/{course.id}/admin?tab=group&group={group.id}')
 
 
 @web.route('/profile', methods=['GET', 'POST'])

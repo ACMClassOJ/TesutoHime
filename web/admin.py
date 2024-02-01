@@ -2,7 +2,6 @@ from datetime import datetime
 from functools import wraps
 from http.client import (BAD_REQUEST, FORBIDDEN, NO_CONTENT,
                          REQUEST_ENTITY_TOO_LARGE, SEE_OTHER)
-from typing import List
 from urllib.parse import urljoin
 from uuid import uuid4
 
@@ -10,16 +9,13 @@ import requests
 from flask import (Blueprint, abort, g, make_response, redirect,
                    render_template, request)
 
-from commons.models import Course, Group, Problem
+from commons.models import Problem
 from web.config import S3Config, SchedulerConfig
 from web.const import Privilege, ReturnCode, String
-from web.contest_manager import ContestManager
-from web.course_manager import CourseManager
 from web.judge_manager import JudgeManager, NotFoundException
 from web.problem_manager import ProblemManager
-from web.realname_manager import RealnameManager
 from web.user_manager import UserManager
-from web.utils import db, generate_s3_public_url
+from web.utils import generate_s3_public_url
 
 admin = Blueprint('admin', __name__, static_folder='static')
 
@@ -85,43 +81,6 @@ def user_manager():
         return ReturnCode.ERR_BAD_DATA
     except TypeError:
         return ReturnCode.ERR_BAD_DATA
-
-
-# course
-
-@admin.route('/course/<course:course>/problem', methods=['post'])
-def problem_create(course: Course):
-    if not g.can_write:
-        abort(FORBIDDEN)
-    problem = ProblemManager.create_problem(course)
-    return redirect(f'/OnlineJudge/problem/{problem.id}/admin', SEE_OTHER)
-
-@admin.route('/course/<course:course>/contest', methods=['post'])
-def contest_create(course: Course):
-    if not g.can_write:
-        abort(FORBIDDEN)
-    contest = ContestManager.create_contest(course)
-    return redirect(f'/OnlineJudge/problemset/{contest.id}/admin', SEE_OTHER)
-
-@admin.route('/course/<course:course>/realname', methods=['post'])
-def add_realname(course: Course):
-    if not g.can_write:
-        abort(FORBIDDEN)
-
-    data = [line.split(',') for line in request.form['data'].strip().splitlines()]
-    for line in data:
-        groups: List[Group] = []
-        if len(line) > 2:
-            group_names = [x.strip() for x in line[2].split('|')]
-            for group_name in group_names:
-                group = CourseManager.get_group_by_name(course, group_name)
-                if group is None:
-                    db.rollback()
-                    return { 'e': 400, 'msg': f'分组 {repr(group_name)} 不存在' }
-                groups.append(group)
-        RealnameManager.add_student(line[0], line[1], course, groups)
-
-    return ReturnCode.SUC_ADD_REALNAME
 
 
 # problem
@@ -252,42 +211,6 @@ def mark_void():
 @admin.route('/abort-judge', methods=['POST'])
 def abort_judge():
     return problem_admin_api(JudgeManager.abort_judge, ReturnCode.SUC_ABORT_JUDGE)
-
-
-# contest
-
-@admin.route('/contest', methods=['post'])
-@require_admin
-def contest_manager():
-    form = request.json
-    if form is None:
-        abort(BAD_REQUEST)
-    try:
-        op = int(form[String.TYPE])
-        if op == 5:
-            for username in form[String.CONTEST_USERNAMES]:
-                user = UserManager.get_user(username)
-                if user is not None:
-                    ContestManager.add_player_to_contest(int(form[String.CONTEST_ID]), user)
-                else:
-                    return ReturnCode.ERR_ADDS_USER_TO_CONTEST
-            return ReturnCode.SUC_ADD_USERS_TO_CONTEST
-        elif op == 6:
-            contest_id = int(form[String.CONTEST_ID])
-            contest = ContestManager.get_contest(contest_id)
-            if contest is None:
-                return ReturnCode.ERR_DEL_USERS_FROM_CONTEST
-            for username in form[String.CONTEST_USERNAMES]:
-                user = UserManager.get_user(username)
-                if user is not None:
-                    contest.players.remove(user)
-            return ReturnCode.SUC_DEL_USERS_FROM_CONTEST
-        else:
-            return ReturnCode.ERR_BAD_DATA
-    except KeyError:
-        return ReturnCode.ERR_BAD_DATA
-    except TypeError:
-        return ReturnCode.ERR_BAD_DATA
 
 
 # misc

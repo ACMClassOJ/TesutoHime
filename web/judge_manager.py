@@ -1,17 +1,18 @@
 from http.client import NOT_FOUND
 from typing import List, Optional
-from typing_extensions import TypeGuard
 from urllib.parse import urljoin
 
 import requests
 from flask import abort, g
 from sqlalchemy.orm import defer, selectinload
+from typing_extensions import TypeGuard
 
 from commons.models import JudgeRecordV2, JudgeRunnerV2, JudgeStatus, User
 from web.config import S3Config, SchedulerConfig
 from web.contest_manager import ContestManager
 from web.old_judge_manager import OldJudgeManager
 from web.problem_manager import ProblemManager
+from web.user_manager import UserManager
 from web.utils import db, s3_internal
 
 
@@ -53,6 +54,8 @@ class JudgeManager:
             return False
 
         if ProblemManager.can_read(submission.problem):
+            return True
+        if UserManager.user_enrolled_in_some_course_that_i_manage(submission.user, g.user):
             return True
 
         # exam first

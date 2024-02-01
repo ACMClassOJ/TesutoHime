@@ -5,11 +5,12 @@ from functools import cmp_to_key
 from typing import List, Optional, Sequence, Set, Tuple
 
 from flask import g
-from sqlalchemy import delete, func, join, select, update
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import defer
 
-from commons.models import (Contest, ContestPlayer, ContestProblem, Course,
-                            JudgeRecordV2, JudgeStatus, User)
+from commons.models import (Contest, ContestProblem, Course, Enrollment,
+                            GroupRealnameReference, JudgeRecordV2, JudgeStatus,
+                            RealnameReference, User)
 from web.const import FAR_FUTURE_TIME, ContestType, PrivilegeType
 from web.contest_cache import ContestCache
 from web.user_manager import UserManager
@@ -44,10 +45,6 @@ class ContestManager:
         db.execute(stmt)
 
     @staticmethod
-    def add_player_to_contest(contest_id: int, user: User):
-        db.add(ContestPlayer(contest_id=contest_id, user_id=user.id))
-
-    @staticmethod
     def check_problem_in_contest(contest_id: int, problem_id: int):
         stmt = select(func.count()) \
             .where(ContestProblem.contest_id == contest_id) \
@@ -69,12 +66,9 @@ class ContestManager:
         """
             return exam_id, is_exam_started
         """
-        j = join(Contest, ContestPlayer, ContestPlayer.contest_id == Contest.id)
-        stmt = select(Contest) \
-            .select_from(j) \
+        stmt = cls._get_implicit_contests_query(user) \
             .where(Contest.type == ContestType.EXAM) \
             .where(g.time <= Contest.end_time) \
-            .where(ContestPlayer.user_id == user.id) \
             .order_by(Contest.id.desc())
         data = db.scalars(stmt).all()
         for contest in data:
@@ -126,24 +120,59 @@ class ContestManager:
         return data
 
     @staticmethod
+    def _get_implicit_players(contest: Contest) -> Sequence[User]:
+        stmt = select(RealnameReference) \
+            .where(RealnameReference.course_id == contest.course_id)
+        if contest.group_ids is not None:
+            stmt = stmt.where(select(GroupRealnameReference)
+                              .where(GroupRealnameReference.realname_reference_id == RealnameReference.id)
+                              .where(GroupRealnameReference.group_id.in_(contest.group_ids))
+                              .exists())
+        return [e.user for rr in db.scalars(stmt) for e in rr.enrollments if not e.admin]
+
+    @classmethod
+    def get_players(cls, contest: Contest) -> Set[User]:
+        return set(contest.external_players).union(cls._get_implicit_players(contest))
+
+    @staticmethod
+    def _get_implicit_contests_query(user: User):
+        # TODO: DB perf
+        return select(Contest) \
+            .join(Enrollment, Enrollment.course_id == Contest.course_id) \
+            .where(Enrollment.user_id == user.id) \
+            .where(~Enrollment.admin) \
+            .join(RealnameReference, RealnameReference.course_id == Contest.course_id) \
+            .where(RealnameReference.student_id == user.student_id) \
+            .where(or_(Contest.group_ids == None,
+                       select(GroupRealnameReference.id)
+                       .where(GroupRealnameReference.realname_reference_id == RealnameReference.id)
+                       .where(GroupRealnameReference.group_id == func.any(Contest.group_ids))
+                       .exists()))
+
+    @classmethod
+    def _get_implicit_contests(cls, user: User) -> Sequence[Contest]:
+        return list(db.scalars(cls._get_implicit_contests_query(user)))
+
+    @classmethod
+    def get_contests_for_user(cls, user: User) -> Set[Contest]:
+        return set(user.external_contests).union(cls._get_implicit_contests(user))
+
+    @staticmethod
     def get_contest(contest_id: int) -> Optional[Contest]:
         return db.get(Contest, contest_id)
 
-    @staticmethod
-    def get_max_id() -> int:
-        data = db.scalar(select(func.max(Contest.id)))
-        return int(data) if data is not None else 0
-
-    @staticmethod
-    def get_scores(contest: Contest) -> List[dict]:
-        start_time: datetime = contest.start_time
-        end_time = contest.end_time
-        problems = ContestManager.list_problem_for_contest(contest.id)
-        players: Set[User] = contest.players
-
+    @classmethod
+    def get_scores(cls, contest: Contest) -> List[dict]:
         data = ContestCache.get(contest.id)
         if data is not None:
             return data
+
+        start_time = contest.start_time
+        end_time = contest.end_time
+        problems = cls.list_problem_for_contest(contest.id)
+        external_players = set(contest.external_players)
+        implicit_players = set(cls._get_implicit_players(contest))
+        players = external_players.union(implicit_players)
 
         data = [
             {
@@ -153,14 +182,16 @@ class ContestManager:
                 'friendly_name': user.friendly_name,
                 'problems': [
                     {
+                        'id': problem,
                         'score': 0,
                         'count': 0,
                         'pending_count': 0,
                         'accepted': False,
-                    } for _ in problems
+                    } for problem in problems
                 ],
                 'student_id': user.student_id,
                 'username': user.username,
+                'is_external': user not in implicit_players,
             } for user in players
         ]
         user_id_to_num = dict((user.id, i) for i, user in enumerate(players))
@@ -220,16 +251,28 @@ class ContestManager:
         return data
 
     @staticmethod
-    def get_board_view(contest: Contest) -> List[dict]:
-        scores = ContestManager.get_scores(contest)
+    def user_has_completed(contest: Contest, scores: dict) -> bool:
+        if contest.completion_criteria is None:
+            return False
+        if contest.rank_partial_score:
+            return scores['score'] >= contest.completion_criteria
+        else:
+            return scores['ac_count'] >= contest.completion_criteria
+
+    @classmethod
+    def get_board_view(cls, contest: Contest) -> List[dict]:
+        scores = cls.get_scores(contest)
         if not contest.ranked:
             return sorted(scores, key=lambda x: x['friendly_name'])
 
         key = 'score' if contest.rank_partial_score else 'ac_count'
         scores.sort(key=cmp_to_key(
             lambda x, y: y[key] - x[key] if x[key] != y[key] else x['penalty'] - y['penalty']))  # type: ignore
+        current_rank = 1
         for i, player in enumerate(scores):
-            player['rank'] = i + 1
+            player['rank'] = current_rank
+            if not player['is_external']:
+                current_rank += 1
             if i > 0 and player[key] == scores[i - 1][key]:
                 if contest.rank_penalty:
                     if player['penalty'] != scores[i - 1]['penalty']:

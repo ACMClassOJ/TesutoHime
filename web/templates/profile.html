@@ -7,12 +7,23 @@
         <h1>修改信息</h1>
         <form id="profile-form">
             <div class="form-group">
+                <label for="iptUsername">用户名</label>
+                <input class="form-control" type="text" id="iptUsername" value="{{ g.user.username }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="iptStudentId">学号</label>
+                <input class="form-control" type="text" id="iptStudentId" value="{{ g.user.student_id }}" readonly>
+                <div class="form-text">
+                    如果注册时使用的学号有误，请注册一个新的用户。
+                </div>
+            </div>
+            <div class="form-group">
                 <label for="iptFriendlyName">新昵称</label>
-                <input class="form-control" type="text" name="friendly_name" id="iptFriendlyName" maxlength="32">
+                <input class="form-control" type="text" name="friendly_name" id="iptFriendlyName" maxlength="32" value="{{ g.user.friendly_name }}">
             </div>
             <div class="form-group">
                 <label for="iptPassword">新密码</label>
-                <input class="form-control" type="password" name="password" minlength="6" maxlength="128" id="iptPassword" autocomplete="new-password">
+                <input class="form-control" type="password" name="password" minlength="6" maxlength="128" id="iptPassword" autocomplete="new-password" placeholder="不更改密码请留空">
             </div>
             <div class="form-group">
                 <label for="iptRepeatPassword">重复密码</label>

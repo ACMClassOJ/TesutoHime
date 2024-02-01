@@ -85,6 +85,8 @@
                     <th>编号</th>
                     <th>题目名称</th>
                     <th>发布时间</th>
+                    <th>提交人数</th>
+                    <th>通过人数</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -94,13 +96,15 @@
                     <td>{{ problem.id }}</td>
                     <td><a href="/OnlineJudge/problem/{{ problem.id }}" target="_blank">{{ problem.title }}</a></td>
                     <td>{{ g.utils.readable_time(problem.release_time) }}</td>
+                    <td><a href="/OnlineJudge/status?problem_id={{ problem.id }}" class="d-block">{{ problem_stats[problem.id]['try'] }}</a></td>
+                    <td><a href="/OnlineJudge/status?problem_id={{ problem.id }}&status=accepted" class="d-block">{{ problem_stats[problem.id]['ac'] }}</a></td>
                     <td>
                         <form method="post" action="/OnlineJudge/problemset/{{ contest.id }}/problem/remove" class="d-inline">
                             {{ g.csrf() }}
                             <input type="hidden" name="id" value="{{ problem.id }}">
                             <span class="btn-group">
                                 <a href="/OnlineJudge/problem/{{ problem.id }}/admin" class="btn btn-outline-primary btn-sm">管理</a>
-                                <button type="submit" class="btn btn-outline-primary btn-sm" onclick="return confirm('确认删除题目吗？')">删除</button>
+                                <button type="submit" class="btn btn-outline-primary btn-sm" onclick="return confirm('确认从比赛中移除题目吗？')">移除</button>
                             </span>
                         </form>
                     </td>
@@ -111,7 +115,7 @@
     </div>
     <div>
         <details>
-            <summary>批量添加/删除题目</summary>
+            <summary>批量添加/移除题目</summary>
             <form method="post">
                 {{ g.csrf() }}
                 <div class="form-group">
@@ -120,7 +124,7 @@
                 </div>
                 <div class="float-right d-flex mb-3 ml-auto btn-group">
                     <button class="btn btn-outline-primary mt-auto" type="submit" formaction="/OnlineJudge/problemset/{{ contest.id }}/problem/add">添加题目</button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit" formaction="/OnlineJudge/problemset/{{ contest.id }}/problem/remove" onclick="return confirm('确认删除这些题目吗？')">删除题目</button>
+                    <button class="btn btn-outline-primary mt-auto" type="submit" formaction="/OnlineJudge/problemset/{{ contest.id }}/problem/remove" onclick="return confirm('确认移除这些题目吗？')">移除题目</button>
                 </div>
             </form>
         </details>
@@ -128,6 +132,9 @@
     <hr>
 
     <h3>作业要求</h3>
+    {%- if contest.completion_criteria != None -%}
+    <p>共 {{ completion_stats['total'] }} 人需完成，有 {{ completion_stats['completed'] }} 人已完成。</p>
+    {%- endif -%}
     <style>
         #requirement-count, #requirement-score {
             display: none;
@@ -150,6 +157,7 @@
             <label for="completion-criteria" id="requirement-score">至少完成的分数</label>
             <label for="completion-criteria" id="requirement-general">至少完成的题目数/分数</label>
             <input class="form-control" type="number" name="completion_criteria" id="completion-criteria" value="{{ contest.completion_criteria }}">
+            <div class="form-text">如无需统计完成情况，请留空或清空。</div>
         </div>
         <div class="form-row">
             <label class="col-md-2">允许使用的语言</label>

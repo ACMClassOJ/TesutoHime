@@ -8,8 +8,8 @@ from argon2.exceptions import VerificationError
 from flask import g
 from sqlalchemy import func, select, update
 
-from commons.models import (Contest, ContestPlayer, Course, Enrollment,
-                            Problem, ProblemPrivilege, User)
+from commons.models import (Contest, Course, Enrollment, Problem,
+                            ProblemPrivilege, User)
 from web.config import RedisConfig
 from web.const import PrivilegeType
 from web.utils import db, redis_connect
@@ -89,12 +89,6 @@ class UserManager:
     @staticmethod
     def has_user(username: str) -> bool:
         return UserManager.get_user_by_username(username) is not None
-
-    @staticmethod
-    def list_contest_ids(user: User) -> Sequence[int]:
-        stmt = select(ContestPlayer.contest_id) \
-            .where(ContestPlayer.user_id == user.id)
-        return db.scalars(stmt).all()
 
     redis = redis_connect()
 
@@ -238,6 +232,15 @@ class UserManager:
 
         cls._privileges_cache_set(user, 'rcid', None, ','.join(str(x) for x in course_ids))
         return list(course_ids)
+
+    @classmethod
+    def user_enrolled_in_some_course_that_i_manage(cls, other: User, me: User) -> bool:
+        stmt = select(func.count(Enrollment.id)) \
+            .where(Enrollment.user_id == other.id) \
+            .where(Enrollment.course_id.in_(cls.get_readable_course_ids(me)))
+        count = db.scalar(stmt)
+        assert count is not None
+        return count > 0
 
     @classmethod
     def flush_privileges(cls, user: User):

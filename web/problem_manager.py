@@ -13,9 +13,9 @@ from web.utils import db
 
 
 class ProblemManager:
-    @staticmethod
-    def create_problem(course: Course) -> Problem:
-        problem_id = ProblemManager.get_max_id() + 1
+    @classmethod
+    def create_problem(cls, course: Course) -> Problem:
+        problem_id = cls.get_max_id() + 1
         problem = Problem(
             id=problem_id,
             title='新建题目',

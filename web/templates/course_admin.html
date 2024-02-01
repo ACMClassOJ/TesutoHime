@@ -27,30 +27,35 @@
     </h1>
     <div class="nav-wrapper">
         <ul class="nav nav-pills nav-fill flex-column flex-md-row" role="tablist">
+            {%- set tabs = {
+                'overview': '基本信息',
+                'problem': '题目',
+                'contest': '比赛与作业',
+                'group': '分组',
+                'realname': '实名',
+                'user': '成员',
+                'document': '文档',
+            } -%}
+            {%- for tabname in tabs -%}
+            {%- set active = tabname == tab -%}
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0 active" id="overview-tab-btn" data-toggle="tab" href="#overview-tab" role="tab" aria-controls="overview-tab" aria-selected="true">基本信息</a>
+                <a class="nav-link mb-sm-2 mb-md-0{{ ' active' if active }}" id="{{ tabname }}-tab-btn" data-toggle="tab" href="#{{ tabname }}-tab" role="tab" aria-controls="{{ tabname }}-tab" aria-selected="{{ 'true' if active else 'false' }}">{{ tabs[tabname] }}</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" id="problem-tab-btn" data-toggle="tab" href="#problem-tab" role="tab" aria-controls="problem-tab" aria-selected="false">题目</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" id="contest-tab_btn" data-toggle="tab" href="#contest-tab" role="tab" aria-controls="contest-tab" aria-selected="false">比赛与作业</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" id="realname-tab_btn" data-toggle="tab" href="#realname-tab" role="tab" aria-controls="realname-tab" aria-selected="false">实名</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" id="document-tab_btn" data-toggle="tab" href="#document-tab" role="tab" aria-controls="document-tab" aria-selected="false">文档</a>
-            </li>
+            {%- endfor -%}
         </ul>
     </div>
     <hr>
+    {%- macro begintab(name) -%}
+        class="tab-pane fade{{ ' show active' if name == tab }}" id="{{ name }}-tab" role="tabpanel" aria-labelledby="{{ name }}-tab-btn"
+    {%- endmacro -%}
+
 
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="overview-tab" role="tabpanel" aria-labelledby="overview-tab-btn">
+        <div {{ begintab('overview') }}>
             <h3>基本信息</h3>
             <form id="form-overview" class="clearfix" method="post">
                 {{ g.csrf() }}
+                <input type="hidden" name="action" value="edit">
                 <div class="form-group">
                     <label for="course-name">课程名称</label>
                     <input class="form-control" type="text" name="name" id="course-name" value="{{ course.name }}">
@@ -59,14 +64,14 @@
                     <label for="course-description">课程描述</label>
                 </div>
                 <textarea class="form-control mb-3" rows="5" id="course-description" name="description">{{ course.description }}</textarea>
-                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                <div class="float-right d-flex mb-3 ml-auto">
                     <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
                 </div>
             </form>
         </div>
 
 
-        <div class="tab-pane fade" id="problem-tab" role="tabpanel" aria-labelledby="problem-tab-btn">
+        <div {{ begintab('problem') }}>
             <h3>管理已有题目</h3>
             <form id="form-jump-problem">
                 <div class="form-row">
@@ -74,7 +79,7 @@
                         <label for="problem-id">题目 ID</label>
                         <input class="form-control" type="number" id="problem-id" required>
                     </div>
-                    <div class="d-flex mb-3 pr-1">
+                    <div class="d-flex mb-3">
                         <button type="submit" class="btn btn-outline-primary mt-auto">跳转</button>
                     </div>
                 </div>
@@ -82,14 +87,15 @@
             <hr>
             <h3>新建题目</h3>
             <p>请勿连续多次点击此按钮。</p>
-            <form action="/OnlineJudge/admin/course/{{ course.id }}/problem" method="POST">
+            <form method="POST">
                 {{ g.csrf() }}
+                <input type="hidden" name="action" value="problem-create">
                 <button type="submit" class="btn btn-outline-primary" onclick="setTimeout(() => this.disabled = true)">新建题目</button>
             </form>
         </div>
 
 
-        <div class="tab-pane fade" id="contest-tab" role="tabpanel" aria-labelledby="contest-tab-btn">
+        <div {{ begintab('contest') }}>
             <h3 class="mb-3">管理已有比赛/作业</h3>
             <div class="table-responsive">
                 <table class="table table-striped table-bordered table-hover">
@@ -112,33 +118,268 @@
                     </tr>
                     {%- endfor %}
                 </table>
-                {{ page_switcher(pages, args) }}
             </div>
+            <hr>
             <h3>新建比赛/作业</h3>
             <p>请勿连续多次点击此按钮。</p>
-            <form action="/OnlineJudge/admin/course/{{ course.id }}/contest" method="POST">
+            <form method="POST">
                 {{ g.csrf() }}
+                <input type="hidden" name="action" value="contest-create">
                 <button type="submit" class="btn btn-outline-primary" onclick="setTimeout(() => this.disabled = true)">新建比赛</button>
             </form>
         </div>
 
-        <div class="tab-pane fade" id="realname-tab" role="tabpanel" aria-labelledby="realname-tab-btn">
-            <h3>批量添加实名信息</h3>
+
+        <div {{ begintab('group') }}>
+            <h3>分组</h3>
+            {%- for group in course.groups -%}
+            <details{{ ' open' if expand_group == group.id | string }}>
+                <summary>{{ group.name }}</summary>
+                <h4>编辑分组信息</h4>
+                <div class="clearfix">
+                    <form method="POST">
+                        {{ g.csrf() }}
+                        <input type="hidden" name="action" value="group-edit">
+                        <input type="hidden" name="id" value="{{ group.id }}">
+                        <div class="form-group">
+                            <label for="group-name-{{ group.id }}">分组名称</label>
+                            <input class="form-control" type="text" name="name" id="group-name-{{ group.id }}" value="{{ group.name }}">
+                        </div>
+                        <div>
+                            <label for="group-description-{{ group.id }}">分组描述</label>
+                        </div>
+                        <textarea class="form-control mb-3" rows="5" id="group-description-{{ group.id }}" name="description">{{ group.description }}</textarea>
+                        <div class="float-right d-flex mb-3 ml-auto">
+                            <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
+                        </div>
+                    </form>
+                    <form method="POST" onsubmit="return confirm('确认要删除分组吗？')">
+                        {{ g.csrf() }}
+                        <input type="hidden" name="action" value="group-delete">
+                        <input type="hidden" name="id" value="{{ group.id }}">
+                        <button class="btn btn-outline-primary mt-auto float-right mb-3 mr-2" type="submit">删除</button>
+                    </form>
+                </div>
+                <h4>分组学生列表</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>学号</th>
+                                <th>姓名</th>
+                                <th>分组</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        {% for rr in group.realname_references -%}
+                        <tr class="{%- for group in rr.groups -%}group-{{ group.id }} {% endfor -%}">
+                            <td>{{ rr.student_id }}</td>
+                            <td>{{ rr.real_name }}</td>
+                            <td>{{ ', '.join(rr.groups | map(attribute='name')) }}</td>
+                            <td>
+                                <form method="POST" action="/OnlineJudge/course/{{ course.id }}/group/{{ group.id }}/remove" class="d-inline">
+                                    {{ g.csrf() }}
+                                    <input type="hidden" name="data" value="{{ rr.student_id }}">
+                                    <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('确认从分组中移除学生？')">移除</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {%- endfor %}
+                    </table>
+                </div>
+                <h4>编辑分组内学生</h4>
+                <div class="clearfix">
+                    <form method="POST">
+                        {{ g.csrf() }}
+                        <div>
+                            <label for="group-student-{{ group.id }}">需要添加/移除的学号，每行一个学号；学号需存在对应的实名信息</label>
+                        </div>
+                        <textarea class="form-control mb-3" rows="5" id="group-student-{{ group.id }}" name="data"></textarea>
+                        <div class="float-right d-flex mb-3 ml-auto">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" formaction="/OnlineJudge/course/{{ course.id }}/group/{{ group.id }}/add">添加学生</button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit" formaction="/OnlineJudge/course/{{ course.id }}/group/{{ group.id }}/remove" onclick="return confirm('确定要移除学生？')">移除学生</button>
+                        </div>
+                    </form>
+                </div>
+            </details>
+            {%- endfor -%}
+            <details class="clearfix">
+                <summary>创建新分组</summary>
+                <form method="POST">
+                    {{ g.csrf() }}
+                    <input type="hidden" name="action" value="group-create">
+                    <div class="form-group">
+                        <label for="group-name-new">分组名称</label>
+                        <input class="form-control" type="text" name="name" id="group-name-new" required>
+                    </div>
+                    <div>
+                        <label for="group-description-new">分组描述</label>
+                    </div>
+                    <textarea class="form-control mb-3" rows="5" id="group-description-new" name="description"></textarea>
+                    <div class="float-right d-flex mb-3 ml-auto">
+                        <button class="btn btn-outline-primary mt-auto" type="submit">创建分组</button>
+                    </div>
+                </form>
+            </details>
+        </div>
+
+
+        <div {{ begintab('realname') }}>
+            <h3 class="mb-3">实名信息</h3>
+            {%- if course.groups | length > 0 -%}
+            <style>
+                #group-filter {
+                    display: none;
+                }
+                #group-filter:has(input) {
+                    display: flex;
+                }
+                #group-filter:has(#toggle-allgroups) + div tbody tr {
+                    display: none;
+                }
+                #toggle-allgroups-container:has(#toggle-allgroups:checked) ~ * {
+                    display: none;
+                }
+                {% for group in course.groups -%}
+                #group-filter:has(#toggle-group-{{ group.id }}:checked) + div .group-{{ group.id }} {
+                    display: table-row;
+                }
+                {%- endfor %}
+                #group-filter:has(#toggle-allgroups:checked) + div tbody tr {
+                    display: table-row;
+                }
+            </style>
+            <div class="form-row">
+                <label class="col-md-2">显示以下分组：</label>
+            </div>
+            <div class="form-row" id="group-filter">
+                <div class="col-md-2" id="toggle-allgroups-container">
+                    <div class="custom-control custom-checkbox mb-3">
+                        <input class="custom-control-input" id="toggle-allgroups" type="checkbox" checked>
+                        <label class="custom-control-label" for="toggle-allgroups">全部分组/无分组</label>
+                    </div>
+                </div>
+                {% for group in course.groups -%}
+                <div class="col-md-2">
+                    <div class="custom-control custom-checkbox mb-3">
+                        <input class="custom-control-input" id="toggle-group-{{ group.id }}" type="checkbox" checked>
+                        <label class="custom-control-label" for="toggle-group-{{ group.id }}">{{ group.name }}</label>
+                    </div>
+                </div>
+                {%- endfor %}
+            </div>
+            {%- endif -%}
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>学号</th>
+                            <th>姓名</th>
+                            <th>用户名</th>
+                            {%- if course.groups | length > 0 -%}
+                            <th>分组</th>
+                            {%- endif -%}
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    {% for rr in course.realname_references -%}
+                    <tr class="{%- for group in rr.groups -%}group-{{ group.id }} {% endfor -%}">
+                        <td>{{ rr.student_id }}</td>
+                        <td>{{ rr.real_name }}</td>
+                        <td>{{ ', '.join(rr.enrollments | map(attribute='user') | map(attribute='username')) }}{{ '未加入' if rr.enrollments | length == 0 }}</td>
+                        {%- if course.groups | length > 0 -%}
+                        <td>{{ ', '.join(rr.groups | map(attribute='name')) }}</td>
+                        {%- endif -%}
+                        <td>
+                            <form method="POST" class="d-inline">
+                                {{ g.csrf() }}
+                                <input type="hidden" name="action" value="realname-delete">
+                                <input type="hidden" name="id" value="{{ rr.id }}">
+                                <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('确认删除实名信息吗？')">删除</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {%- endfor %}
+                </table>
+            </div>
+            <hr>
+            <h3>批量添加/修改实名信息</h3>
             <p>每行一条信息，格式为「学号,姓名,分组（可不填）」。请使用半角（西文）逗号。一位同学可以有多个分组，以竖线「|」分隔。</p>
-            <form id="formRealname" action="/OnlineJudge/admin/course/{{ course.id }}/realname" method="POST">
+            <p>为便于 OJ 的管理，请勿修改或删除班级管理员的实名信息。</p>
+            <form method="POST">
                 {{ g.csrf() }}
-                <input type="hidden" name="action" value="add">
+                <input type="hidden" name="action" value="realname-create">
                 <textarea class="form-control mb-3" rows="5" name="data" placeholder="523030910000,张三"></textarea>
                 <div class="form-row">
-                    <div class="float-right d-flex mb-3 ml-auto pr-1">
-                        <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddRealname">添加实名信息</button>
+                    <div class="float-right d-flex mb-3 ml-auto">
+                        <button class="btn btn-outline-primary mt-auto" type="submit">添加实名信息</button>
                     </div>
                 </div>
             </form>
         </div>
 
 
-        <div class="tab-pane fade" id="document-tab" role="tabpanel" aria-labelledby="document-tab-btn">
+        <div {{ begintab('user') }}>
+            <h3>移除课程成员</h3>
+            <p>管理员不能手动向课程添加成员用户，所有学生需自行报名。如有批量添加用户的需求，请联系 OJ 运维组。</p>
+            <p>您可以使用此表单批量移除课程成员。每行一个用户名（用户名不是学号，也不是昵称）。</p>
+            <form method="POST" onsubmit="return confirm('确定要移除成员？')">
+                {{ g.csrf() }}
+                <input type="hidden" name="action" value="user-delete">
+                <textarea class="form-control mb-3" rows="5" name="data"></textarea>
+                <div class="form-row">
+                    <div class="float-right d-flex mb-3 ml-auto">
+                        <button class="btn btn-outline-primary mt-auto" type="submit">移除成员</button>
+                    </div>
+                </div>
+            </form>
+            <hr>
+            <h3 class="mb-3">课程管理员</h3>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>实名</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    {% for e in course.admin_enrollments -%}
+                    <tr>
+                        <td>{{ e.user.username }}</td>
+                        <td>{{ e.realname_reference.real_name if e.realname_reference != None }}</td>
+                        <td>
+                            {%- if e.user != g.user -%}
+                            <form method="POST" class="d-inline">
+                                {{ g.csrf() }}
+                                <input type="hidden" name="action" value="user-demote">
+                                <input type="hidden" name="id" value="{{ e.id }}">
+                                <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('确认去除管理权限吗？')">除权</button>
+                            </form>
+                            {%- endif -%}
+                        </td>
+                    </tr>
+                    {%- endfor %}
+                </table>
+            </div>
+            <hr>
+            <h3>添加管理员</h3>
+            <p>请在下方输入待添加管理员的用户名，一行一个用户名。用户名不是学号或昵称。</p>
+            <p>在添加管理员之前，请先给管理员添加实名信息，并作为学生加入本课程。</p>
+            <form method="POST" onsubmit="return confirm('确定要添加管理员？')">
+                {{ g.csrf() }}
+                <input type="hidden" name="action" value="user-promote">
+                <textarea class="form-control mb-3" rows="5" name="data"></textarea>
+                <div class="form-row">
+                    <div class="float-right d-flex mb-3 ml-auto">
+                        <button class="btn btn-outline-primary mt-auto" type="submit">添加管理员</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+
+        <div {{ begintab('document') }}>
             <h3>管理员文档</h3>
             <ul>
                 <li><a href="/OnlineJudge/admin/admin-doc">管理界面使用指南</a></li>

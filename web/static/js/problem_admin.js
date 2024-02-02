@@ -114,7 +114,7 @@ $(() => {
         },
         error: () => alert('无法获取题面，请刷新重试'),
     })
-    document.getElementById('description-tab-link').addEventListener('click', () => setTimeout(reloadDescription, 500))
+    document.getElementById('description-tab-btn').addEventListener('click', () => setTimeout(reloadDescription, 500))
 
     setInterval(function() {
         $('.markdown-body').each(function() {

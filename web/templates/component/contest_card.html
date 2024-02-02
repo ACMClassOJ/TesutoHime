@@ -1,4 +1,4 @@
-{%- macro contest_card(status, show_course_name = True) -%}
+{%- macro contest_card(status, show_course_name = True, show_type = True) -%}
 {%- from 'component/util.html' import render -%}
 {%- set contest = status['contest'] -%}
 {%- set (class_, icon, status_text) = {
@@ -10,39 +10,49 @@
   'near-end': ('warning', 'stopwatch', '即将结束'),
 }[status['status']] -%}
 {%- set contest_type = [ '比赛', '作业', '考试' ][contest.type] -%}
+{%- set time_elapsed = (g.time - contest.start_time).total_seconds() -%}
+{%- set time_overall = (contest.end_time - contest.start_time).total_seconds() -%}
+{%- set percentage = (((100 * time_elapsed / time_overall) | int, 0) | max, 100) | min -%}
 <a class="card card--contest mb-3 border-{{ class_ }}" href="/OnlineJudge/problemset/{{ contest.id }}">
-  <div class="card-header">
-    <span>{{ contest_type }}{% if show_course_name %} &middot; {{ contest.course.name }}{% endif %}</span>
-    <span class="float-right">
-      <span class="card--contest__time mr-2">{{ g.utils.readable_time_minutes(contest.start_time) }} &ndash; {{ g.utils.readable_time_minutes(contest.end_time) }}</span>
-      <span class="card--contest__status font-weight-bold text-{{ class_ if class_ != 'secondary' }}"><i class="fa fa-{{ icon }}"></i> {{ status_text }}</span>
-    </span>
+  <div class="card-header" style="--progress: {{ percentage }}%">
+    {%- if show_type -%}
+    <div>
+      <span class=card--contest__type"">{{ contest_type }}{% if show_course_name %} &middot; {{ contest.course.name }}{% endif %}</span>
+      <span class="card--contest__status text-{{ class_ if class_ != 'secondary' }}"><i class="fa fa-{{ icon }}"></i> {{ status_text }}</span>
+    </div>
+    {%- endif -%}
+    <div>
+      <span class="card--contest__time mr-2">{{ g.utils.readable_time_minutes(contest.start_time) }}&ndash;{{ g.utils.readable_time_minutes(contest.end_time) }}</span>
+      {%- if not show_type -%}
+      <span class="card--contest__status text-{{ class_ if class_ != 'secondary' }}"><i class="fa fa-{{ icon }}"></i> {{ status_text }}</span>
+      {%- endif -%}
+    </div>
   </div>
   <div class="card-body">
-    <h5 class="mb-0">
+    <div class="mb-0 card--contest__name">
       {{ contest.name }}
-      <span class="float-right mt--1 z-index-100">
+      <span class="float-right z-index-100">
         {%- if status['enrolled'] -%}
         {%- if status['is-external'] and g.time <= contest.end_time -%}
         <form action="/OnlineJudge/problemset/{{ contest.id }}/quit" method="POST" onsubmit="return confirm('确认要退出{{ contest_type }}吗？')">
           {{ g.csrf() }}
-          <button type="submit" class="btn btn-outline-primary">退出</button>
+          <button type="submit" class="btn btn-outline-primary btn-sm">退出</button>
         </form>
         {%- else -%}
-        <button disabled class="btn btn-outline-primary">已加入</button>
+        <button disabled class="btn btn-outline-primary btn-sm">已加入</button>
         {%- endif -%}
         {%- elif status['reason-cannot-join'] == None -%}
         <form action="/OnlineJudge/problemset/{{ contest.id }}/join" method="POST">
           {{ g.csrf() }}
-          <button type="submit" class="btn btn-primary">报名</button>
+          <button type="submit" class="btn btn-primary btn-sm">报名</button>
         </form>
         {%- elif status['reason-cannot-join'] == 'in-exam' -%}
-        <button disabled class="btn btn-outline-primary">已在考试中</button>
+        <button disabled class="btn btn-outline-primary btn-sm">已在考试中</button>
         {%- endif -%}
       </span>
-    </h5>
+    </div>
     {%- if status['completion'] | length > 0 -%}
-    <p class="card-text">{{ status['completion'] }}</p>
+    <div class="card-text">{{ status['completion'] }}</div>
     {%- endif -%}
     {%- if contest.description != '' -%}
     <div class="card--contest__description mt-2">{{ render(contest.description) }}</div>

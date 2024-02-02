@@ -70,6 +70,12 @@
                     <label class="custom-control-label" for="rank-partial-score">计算部分分</label>
                 </div>
             </div>
+            <div class="col-md-2">
+                <div class="custom-control custom-checkbox mb-3">
+                    <input class="custom-control-input" name="rank_all_users" id="rank-all-users" type="checkbox"{{ ' checked' if contest.rank_all_users }}>
+                    <label class="custom-control-label" for="rank-all-users">排名时无视是否报名</label>
+                </div>
+            </div>
         </div>
         <div class="float-right d-flex mb-3 ml-auto">
             <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>

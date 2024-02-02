@@ -44,8 +44,8 @@
                 <td>{{ contest.id }}</td>
                 <td><a href="/OnlineJudge/course/{{ contest.course.id }}">{{ contest.course.name }}</a></td>
                 <td><a href="/OnlineJudge/problemset/{{ contest.id }}">{{ contest.name }}</a></td>
-                <td>{{ g.utils.readable_time(contest.start_time) }}</td>
-                <td>{{ g.utils.readable_time(contest.end_time) }}</td>
+                <td>{{ g.utils.readable_time_minutes(contest.start_time) }}</td>
+                <td>{{ g.utils.readable_time_minutes(contest.end_time) }}</td>
                 <td>{{ status }}</td>
                 <td>
                     {%- set reason = reason_cannot_join(contest) -%}

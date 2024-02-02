@@ -203,6 +203,7 @@ class Problem(UseTimestamps, Base):
         back_populates='problems',
     )
     discussions: Mapped[Set['Discussion']] = relationship()
+    privileges: Mapped[Set['ProblemPrivilege']] = relationship(back_populates='problem')
 
 problem_fk = Annotated[int, mapped_column(ForeignKey(Problem.id), index=True)]
 
@@ -216,7 +217,7 @@ class ProblemPrivilege(UseTimestamps, Base):
     user_id: Mapped[user_fk]
     user: Mapped[User] = relationship()
     problem_id: Mapped[problem_fk]
-    problem: Mapped[Problem] = relationship()
+    problem: Mapped[Problem] = relationship(back_populates='privileges')
     privilege: Mapped[ProblemPrivilegeType] = mapped_column(SqlEnum(ProblemPrivilegeType))
     comment: Mapped[str] = mapped_column(server_default='')
 
@@ -236,6 +237,8 @@ class Contest(UseTimestamps, Base):
     course_id: Mapped[course_fk]
     course: Mapped[Course] = relationship(back_populates='contests')
     group_ids: Mapped[Optional[List[int]]] = mapped_column(ARRAY(Integer))
+    rank_all_users: Mapped[bool] = mapped_column(server_default=text('false'))
+
     completion_criteria: Mapped[Optional[int]]
     allowed_languages: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text))
 

@@ -334,8 +334,10 @@ class ContestManager:
         return data
 
     @staticmethod
-    def user_has_completed_by_scores(contest: Contest, scores: dict) -> bool:
+    def user_has_completed_by_scores(contest: Contest, scores: Optional[dict]) -> bool:
         if contest.completion_criteria is None:
+            return False
+        if scores is None:
             return False
         if contest.rank_partial_score:
             return scores['score'] >= contest.completion_criteria
@@ -354,10 +356,13 @@ class ContestManager:
     def get_board_view(cls, contest: Contest) -> List[dict]:
         scores = cls.get_scores(contest)
         if not contest.ranked:
-            implicit_players = filter(lambda x: not x['is_external'], scores)
-            external_players = filter(lambda x: x['is_external'], scores)
             key_func = lambda x: x['friendly_name']
-            return sorted(implicit_players, key=key_func) + sorted(external_players, key=key_func)
+            if contest.rank_all_users:
+                return sorted(scores, key=key_func)
+            else:
+                implicit_players = filter(lambda x: not x['is_external'], scores)
+                external_players = filter(lambda x: x['is_external'], scores)
+                return sorted(implicit_players, key=key_func) + sorted(external_players, key=key_func)
 
         key = 'score' if contest.rank_partial_score else 'ac_count'
         scores.sort(key=cmp_to_key(
@@ -365,7 +370,7 @@ class ContestManager:
         current_rank = 1
         for i, player in enumerate(scores):
             player['rank'] = current_rank
-            if not player['is_external']:
+            if not player['is_external'] or contest.rank_all_users:
                 current_rank += 1
             if i > 0 and player[key] == scores[i - 1][key]:
                 if contest.rank_penalty:

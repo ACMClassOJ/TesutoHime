@@ -23,7 +23,7 @@ import commons.task_typing
 import web.const as consts
 import web.utils as utils
 from commons.models import (Contest, Course, CourseTag, Enrollment, Group,
-                            JudgeRecordV2, JudgeStatus, Problem,
+                            JudgeRecordV2, JudgeStatus, Problem, ProblemPrivilege, ProblemPrivilegeType,
                             RealnameReference, Term, User)
 from commons.task_typing import ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
@@ -182,7 +182,7 @@ def index():
     suggestions = None
     if g.user is not None:
         contests = ContestManager.get_contests_for_user(g.user)
-        suggestions = ContestManager.suggest_contests(contests)
+        suggestions = ContestManager.suggest_contests(list(contests))
     return render_template('index.html', news=NewsManager.get_news(),
                            suggestions=suggestions)
 
@@ -343,6 +343,7 @@ def problem_admin(problem: Problem):
     if not g.can_write:
         abort(FORBIDDEN)
 
+    tab = request.args.get('tab', 'overview')
     if request.method == 'POST':
         action = request.form['action']
         if action == 'hide':
@@ -355,14 +356,41 @@ def problem_admin(problem: Problem):
             course_id = problem.course_id
             ProblemManager.delete_problem(problem)
             return redirect(f'/OnlineJudge/course/{course_id}/admin', SEE_OTHER)
+        elif action == 'priv-add':
+            username = request.form['username']
+            user = UserManager.get_user_by_username(username)
+            if user is None:
+                abort(BAD_REQUEST, f'用户 {repr(username)} 不存在')
+            priv_type_str = request.form['privilege']
+            if priv_type_str == 'readonly':
+                priv_type = ProblemPrivilegeType.readonly
+            elif priv_type_str == 'owner':
+                priv_type = ProblemPrivilegeType.owner
+            else:
+                abort(BAD_REQUEST, f'未知权限类型 {repr(priv_type_str)}')
+            comment = request.form['comment']
+            db.add(ProblemPrivilege(user_id=user.id, problem_id=problem.id,
+                                    privilege=priv_type, comment=comment))
+            db.flush()
+            UserManager.flush_privileges(user)
+            tab = 'privileges'
+        elif action == 'priv-remove':
+            priv = db.get(ProblemPrivilege, int(request.form['id']))
+            user = priv.user
+            if priv.problem != problem:
+                abort(BAD_REQUEST)
+            db.delete(priv)
+            db.flush()
+            UserManager.flush_privileges(user)
+            tab = 'privileges'
         else:
             abort(BAD_REQUEST)
 
     submission_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem.id).count()
     ac_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem.id).where(JudgeRecordV2.status == JudgeStatus.accepted).count()
 
-    return render_template('problem_admin.html', ID=problem.id, Title=problem.title,
-                           problem=problem,
+    return render_template('problem_admin.html', problem=problem,
+                           current_tab=tab,
                            submission_count=submission_count, ac_count=ac_count)
 
 
@@ -777,6 +805,7 @@ def problemset_admin(contest: Contest):
             contest.ranked = form.get('ranked', 'off') == 'on'
             contest.rank_penalty = form.get('rank_penalty', 'off') == 'on'
             contest.rank_partial_score = form.get('rank_partial_score', 'off') == 'on'
+            contest.rank_all_users = form.get('rank_all_users', 'off') == 'on'
         elif action == 'delete':
             if request.form['confirm'] != str(contest.id):
                 abort(BAD_REQUEST)
@@ -818,7 +847,7 @@ def problemset_admin(contest: Contest):
     problem_stats = dict((problem.id, { 'try': 0, 'ac': 0 }) for problem in contest.problems)
     completion_stats = { 'total': 0, 'completed': 0 }
     for player in scores:
-        if player['is_external']:
+        if player['is_external'] and not contest.rank_all_users:
             continue
         if contest.completion_criteria is not None:
             completion_stats['total'] += 1
@@ -943,7 +972,8 @@ def course_contest_list_generic(course: Course, type: str):
     statuses = [ContestManager.get_status_for_card(c, c in contests_enrolled) for c in contests]
 
     return render_template('course_contest_list.html', type=type,
-                           course=course, contests=statuses)
+                           course=course, contests=statuses,
+                           show_type=type != 'homework')
 
 @web.route('/course/<course:course>/contest')
 def course_contest_list(course: Course):
@@ -1084,7 +1114,8 @@ def course_admin(course: Course):
         else:
             abort(BAD_REQUEST, f'Unknown action {action}')
 
-    return render_template('course_admin.html', course=course, tab=tab, expand_group=expand_group)
+    return render_template('course_admin.html', course=course, current_tab=tab,
+                           expand_group=expand_group)
 
 @web.route('/course/<course:course>/group/<int:group_id>/<action>', methods=['POST'])
 def course_group_edit(course, group_id, action):

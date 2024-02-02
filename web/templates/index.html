@@ -19,9 +19,11 @@
     {%- set contests = suggestions[type] -%}
     {%- if contests | length > 0 -%}
     <h4 class="mb-3">{{ { 'in-progress': '正在进行', 'future': '即将开始', 'past': '刚刚结束' }[type] }}</h4>
-    {%- for contest in contests -%}
-    {{ contest_card(contest, show_course_name=False) }}
-    {%- endfor -%}
+    <div class="contest-card-group">
+        {%- for contest in contests -%}
+        {{ contest_card(contest) }}
+        {%- endfor -%}
+    </div>
     <hr>
     {%- endif -%}
     {%- endfor -%}
@@ -62,4 +64,8 @@
      --><a class="mr-2" href="https://stats.uptimerobot.com/NB3PWFZGAk">OJ 炸了吗</a>
     </p>
 </div>
+{% endblock %}
+
+{% block script %}
+{{ render_scripts() }}
 {% endblock %}

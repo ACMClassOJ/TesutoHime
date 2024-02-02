@@ -11,7 +11,7 @@ html .card,
 html .problemset-progress {
   background-color: #1e1e1e !important;
 }
-html .card {
+html .card:not([class*="border-"]) {
   border: none;
 }
 
@@ -622,6 +622,13 @@ pre {
 
 html .contributor-card {
   border-color: rgba(255, 255, 255, 0.25);
+}
+
+html body a.card.card--contest:focus,
+html body a.card.card--contest:active,
+html body a.card.card--contest:hover {
+  box-shadow: none;
+  background-color: #333333 !important;
 }
 
 }

@@ -8,6 +8,10 @@ h1 {
     color: var(--bs-secondary-color);
 }
 
+body .card-header {
+    background-color: rgba(198.58731577387132, 217.3915438492475, 236.19577192462373, 0.1595385882352941);
+}
+
 .z-index-100 {
     z-index: 100;
 }
@@ -171,14 +175,90 @@ h1 {
 .table-hover tbody tr.contest--pending:hover {
     background-color: rgba(0, 0, 0, 0.1);
 }
-body a.card--contest {
+html body a.card--contest {
     color: inherit;
+    transition: cubic-bezier(.4,0,.2,1) .2s;
+    transition-property: box-shadow, background-color;
+}
+html body a.card--contest:hover,
+html body a.card--contest:active,
+html body a.card--contest:focus {
+    box-shadow: 0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12);
 }
 .card--contest .card-header {
+    font-size: 0.9rem;
     padding: .5rem 1rem;
+    position: relative;
+}
+.border-primary {
+    --border-color: #e77c8e;
+}
+.border-secondary {
+    --border-color: #f4f5f7;
+}
+.border-success {
+    --border-color: #2dce89;
+}
+.border-info {
+    --border-color: #11cdef;
+}
+.border-warning {
+    --border-color: #fb6340;
+}
+.border-danger {
+    --border-color: #f5365c;
+}
+.border-light {
+    --border-color: #adb5bd;
+}
+.border-dark {
+    --border-color: #212529;
+}
+.border-default {
+    --border-color: #172b4d;
+}
+.border-grey {
+    --border-color: #cad1d7;
+}
+.card--contest .card-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    display: block;
+    background-color: #e77c8e;
+    background-color: var(--border-color);
+    height: 1px;
+    width: var(--progress);
+    left: 0;
+}
+.card--contest .card-text {
+    font-size: 0.9rem;
+}
+.card--contest .card--contest__name {
+    font-size: 1.1rem;
+}
+.card--contest .card--contest__status {
+    font-weight: bold;
+    display: block;
+    float: right;
+}
+.card--contest .card--contest__description {
+    max-height: 1.5em;
+    overflow: hidden;
 }
 .card--contest .card-body {
-    padding: 1rem;
+    padding: .75rem 1rem;
+}
+@media (min-width: 992px) {
+    .contest-card-group {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    .card--contest {
+        width: calc(50% - 0.5rem);
+        height: fit-content;
+    }
 }
 
 @media (max-width: 767.98px) {

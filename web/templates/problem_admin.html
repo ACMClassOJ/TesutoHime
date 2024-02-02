@@ -1,61 +1,56 @@
-{% extends 'base.html' %} {% set page=Title %} {% block head %}
+{% extends 'base.html' %}
+
+{% set page=problem.title %}
+
+{% block head %}
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/katex.min.css') }}">
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/editor.md/css/editormd.min.css') }}"> 
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
-{% endblock %} {% block content %}
+{% endblock %}
+
+{% block content %}
 <div class="card card-body">
     <h1 class="title-nav">
-        <span class="title-nav__title"><span id="problem_id">{{ ID }}</span>. <span id="problem-title">{{ Title }}</span></span>
+        <span class="title-nav__title"><span id="problem_id">{{ problem.id }}</span>. <span id="problem-title">{{ problem.title }}</span></span>
         <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}">题面</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ problem.id }}">题面</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/submit">提交</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ problem.id }}/submit">提交</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ ID }}">评测状态</a>
+            <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ problem.id }}">评测状态</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/discuss">讨论</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ problem.id }}/discuss">讨论</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ ID }}/rank">排行榜</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ problem.id }}/rank">排行榜</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ ID }}/admin"> 管理 </a>
+                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ problem.id }}/admin"> 管理 </a>
             </li>
         </ul>
     </h1>
-    <div class="nav-wrapper">
-        <ul class="nav nav-pills nav-fill flex-column flex-md-row" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0 active" data-toggle="tab" href="#overview_tab" role="tab" aria-controls="overview_tab" aria-selected="true">基本信息</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" id="description-tab-link" data-toggle="tab" href="#description_tab" role="tab" aria-controls="description_tab" aria-selected="false">题面</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" data-toggle="tab" href="#data_zip_tab" role="tab" aria-controls="data_zip_tab" aria-selected="false">数据 (Zip)</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" data-toggle="tab" href="#data_tab" role="tab" aria-controls="data_tab" aria-selected="false">数据 (GUI)</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" data-toggle="tab" href="#judge_tab" role="tab" aria-controls="judge_tab" aria-selected="false">评测</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" data-toggle="tab" href="#pic_tab" role="tab" aria-controls="pic_tab" aria-selected="false">图床</a>
-            </li>
-        </ul>
-    </div>
+    {{
+        nav_tab_list({
+            'overview': '基本信息',
+            'privileges': '权限',
+            'description': '题面',
+            'data-zip': '数据（zip）',
+            'data-gui': '数据（GUI）',
+            'judge': '评测',
+            'pic': '图床',
+        }, current_tab)
+    }}
     <hr>
 
 
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="overview_tab" role="tabpanel" aria-labelledby="overview_tab-tab">
+        <div {{ begin_tab('overview') }}>
             <h3>基本信息</h3>
             <form id="form-overview">
                 <div class="form-row">
@@ -144,7 +139,7 @@
                 <div class="form-row d-flex">
                     <input type="hidden" name="action" value="delete">
                     <div class="col-md-3">
-                        <input class="form-control" type="text" name="confirm" pattern="{{ ID }}" required>
+                        <input class="form-control" type="text" name="confirm" pattern="{{ problem.id }}" required>
                     </div>
                     <button class="btn btn-outline-primary ml-3" type="submit">删除题目</button>
                 </div>
@@ -152,7 +147,76 @@
             {% endif %}
         </div>
 
-        <div class="tab-pane fade" id="description_tab" role="tabpanel" aria-labelledby="description_tab-tab">
+        <div {{ begin_tab('privileges') }}>
+            <h3>题目权限</h3>
+            <p>此处的权限设置不适用于本班级的管理员；本班级的管理员无需特殊授权即可管理题目。</p>
+            <p>如果您希望其他人在本问题上取得更高权限，您可以在此处进行赋权或除权。额外权限分为两种：</p>
+            <ul>
+                <li><strong>只读权限</strong>：在发布时间之前查看问题；下载题目数据包；查看本题目下任意用户提交的代码及评测状态。</li>
+                <li><strong>完整权限</strong>：对题目拥有完整权限。</li>
+            </ul>
+            <hr>
+            {%- if problem.privileges | length > 0 -%}
+            <h3>权限列表</h3>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>权限类型</th>
+                            <th>备注</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {%- for priv in problem.privileges -%}
+                        <tr>
+                              <td>{{ priv.user.username }}</td>
+                              <td>{{ { 'owner': '完整', 'readonly': '只读' }[priv.privilege.name] }}</td>
+                              <td>{{ priv.comment }}</td>
+                              <td>
+                                  <form method="POST" onsubmit="return confirm('确定移除管理权限？')">
+                                      {{ g.csrf() }}
+                                      <input type="hidden" name="action" value="priv-remove">
+                                      <input type="hidden" name="id" value="{{ priv.id }}">
+                                      <button type="submit" class="btn btn-primary btn-sm">除权</button>
+                                  </form>
+                              </td>
+                        </tr>
+                        {%- endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <hr>
+            {%- endif -%}
+            <h3>赋予权限</h3>
+            <form method="POST" onsubmit="return confirm('确定赋予管理权限？')">
+                {{ g.csrf() }}
+                <input type="hidden" name="action" value="priv-add">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="priv-username">用户名</label>
+                        <input class="form-control" type="text" name="username" id="priv-username" required>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="priv-type">权限类型</label>
+                        <select class="form-control selectpicker" name="privilege" id="priv-type"
+                                data-style="form-control font-weight-normal border-grey shadow-none" required>
+                            {{ option_list({ 'readonly': '只读权限', 'owner': '完整权限' }, 'readonly') }}
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="priv-comment">备注</label>
+                        <input class="form-control" type="text" name="comment" id="priv-comment">
+                    </div>
+                    <div class="float-right d-flex mb-3 ml-auto">
+                        <button class="btn btn-outline-primary mt-auto" type="submit">赋予权限</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div {{ begin_tab('description') }}>
             <form id="form-description">
                 <div>
                     <label for="iptDescription">题目描述</label>
@@ -186,10 +250,10 @@
             </form>
         </div>
 
-        <div class="tab-pane fade" id="data_zip_tab" role="tabpanel" aria-labelledby="data_zip_tab-tab">
+        <div {{ begin_tab('data-zip') }}>
             <h3>上传数据压缩包</h3>
             <form id="formDataZipUpload">
-                <input type="hidden" name="id" value="{{ ID }}">
+                <input type="hidden" name="id" value="{{ problem.id }}">
                 <div class="form-row">
                     <div class="form-group custom-file col-md-3 mb-3">
                         <div style="position: relative">
@@ -206,11 +270,11 @@
             <hr>
             <h3>
                 下载数据压缩包
-                <a href="/OnlineJudge/admin/problem/{{ ID }}/data-zip" class="btn btn-outline-primary float-right ml-auto mt-auto">点击下载</a>
+                <a href="/OnlineJudge/admin/problem/{{ problem.id }}/data-zip" class="btn btn-outline-primary float-right ml-auto mt-auto">点击下载</a>
             </h3>
         </div>
 
-        <div class="tab-pane fade" id="judge_tab" role="tabpanel" aria-labelledby="judge_tab-tab">
+        <div {{ begin_tab('judge') }}>
             <h3>重测全部提交</h3>
             <p>如果想重测单份代码，请进入代码页面，点击代码上方的「重测」按钮。</p>
             {% if submission_count < 30 %}
@@ -223,14 +287,14 @@
                 <input type="hidden" name="type" value="by_problem_id">
                 <div class="form-row">
                     {% if submission_count < 30 %}
-                    <input type="hidden" name="problem_id" value="{{ ID }}">
+                    <input type="hidden" name="problem_id" value="{{ problem.id }}">
                     {% else %}
                     <div class="col-md-3">
-                        <input class="form-control" type="text" name="problem_id" pattern="{{ ID }}" required>
+                        <input class="form-control" type="text" name="problem_id" pattern="{{ problem.id }}" required>
                     </div>
                     {% endif %}
                     <div class="d-flex mb-3 pr-1">
-                        <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要重测所有 {{ ID }}. {{ problem.title }} 的评测吗？')">全部重测</button>
+                        <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要重测所有 {{ problem.id }}. {{ problem.title }} 的评测吗？')">全部重测</button>
                     </div>
                 </div>
             </form>
@@ -248,14 +312,14 @@
                 <div class="form-row">
                     <input type="hidden" name="type" value="by_problem_id">
                     {% if submission_count < 30 %}
-                    <input type="hidden" name="problem_id" value="{{ ID }}">
+                    <input type="hidden" name="problem_id" value="{{ problem.id }}">
                     {% else %}
                     <div class="col-md-3">
-                        <input class="form-control" type="text" name="problem_id" pattern="{{ ID }}" required>
+                        <input class="form-control" type="text" name="problem_id" pattern="{{ problem.id }}" required>
                     </div>
                     {% endif %}
                     <div class="d-flex mb-3 pr-1">
-                        <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要取消所有 {{ ID }}. {{ problem.title }} 评测的成绩吗？')">全部取消成绩</button>
+                        <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要取消所有 {{ problem.id }}. {{ problem.title }} 评测的成绩吗？')">全部取消成绩</button>
                     </div>
                 </div>
             </form>
@@ -267,15 +331,15 @@
                 {{ g.csrf() }}
                 <div class="form-row">
                     <input type="hidden" name="type" value="by_problem_id">
-                    <input type="hidden" name="problem_id" value="{{ ID }}">
+                    <input type="hidden" name="problem_id" value="{{ problem.id }}">
                     <div class="d-flex mb-3 pr-1">
-                        <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要终止所有 {{ ID }}. {{ problem.title }} 的评测？')">全部终止评测</button>
+                        <button class="btn btn-outline-primary mt-auto" type="submit" onclick="return confirm('确定要终止所有 {{ problem.id }}. {{ problem.title }} 的评测？')">全部终止评测</button>
                     </div>
                 </div>
             </form>
         </div>
 
-        <div class="tab-pane fade" id="pic_tab" role="tabpanel" aria-labelledby="pic_tab-tab">
+        <div {{ begin_tab('pic') }}>
             <h3>上传图片到 ACM OJ 图床</h3>
             <form id="formPicUpload" enctype="multipart/form-data">
                 <div class="form-row">
@@ -290,10 +354,10 @@
             </form>
         </div>
 
-        <div class="tab-pane fade" id="data_tab" role="tabpanel" aria-labelledby="data_tab-tab">
+        <div {{ begin_tab('data-gui') }}>
             <form id="formData">
                 <div class="form-row">
-                    <input type="hidden" name="id" value="{{ ID }}">
+                    <input type="hidden" name="id" value="{{ problem.id }}">
                     <div class="form-group col-md-3 mb-3">
                         <label for="iptCompileTime"> 编译时长限制 (ms) </label>
                         <input class="form-control" type="number" name="time" id="iptCompileTime" value="30000">
@@ -415,10 +479,11 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-{% endblock %} {% block script %}
+{% block script %}
 <script>
-window.problemId = {{ ID }}
+window.problemId = {{ problem.id }}
 </script>
 <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/jszip.min.js') }}"></script>

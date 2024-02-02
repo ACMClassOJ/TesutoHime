@@ -28,9 +28,9 @@
         </ul>
     </h1>
     <hr>
-    <div>
+    <div class="contest-card-group">
         {%- for contest in contests -%}
-        {{ contest_card(contest, show_course_name=False) }}
+        {{ contest_card(contest, show_course_name=False, show_type=show_type) }}
         {%- endfor -%}
     </div>
 </div>

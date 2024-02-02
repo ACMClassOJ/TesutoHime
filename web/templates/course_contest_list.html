@@ -12,13 +12,13 @@
         <span class="title-nav__title">{{ course.name }}</span>
         <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/course/{{ course.id }}">班级</a>
+                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}">班级</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}/contest">比赛</a>
+                <a class="nav-link mb-sm-2 mb-md-0{{ ' active' if type == 'contest' }}" href="/OnlineJudge/course/{{ course.id }}/contest">比赛</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}/homework">作业</a>
+            <a class="nav-link mb-sm-2 mb-md-0{{ ' active' if type == 'homework' }}" href="/OnlineJudge/course/{{ course.id }}/homework">作业</a>
             </li>
             {% if g.can_write %}
             <li class="nav-item">
@@ -29,20 +29,8 @@
     </h1>
     <hr>
     <div>
-        {%- if course.description != '' -%}
-        <h3>班级简介</h3>
-        <div>{{ render(course.description) }} </div>
-        {%- endif -%}
-
-        {%- for type in 'in-progress', 'future', 'past' -%}
-        {%- set contests = suggestions[type] -%}
-        {%- if contests | length > 0 -%}
-        <hr>
-        <h3 class="mb-3">{{ { 'in-progress': '正在进行', 'future': '即将开始', 'past': '刚刚结束' }[type] }}</h3>
         {%- for contest in contests -%}
         {{ contest_card(contest, show_course_name=False) }}
-        {%- endfor -%}
-        {%- endif -%}
         {%- endfor -%}
     </div>
 </div>

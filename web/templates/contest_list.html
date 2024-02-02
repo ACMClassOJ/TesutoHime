@@ -48,13 +48,21 @@
                 <td>{{ g.utils.readable_time(contest.end_time) }}</td>
                 <td>{{ status }}</td>
                 <td>
-                    {% if exam_id != -1 and contest.type == 2 and exam_id != contest.id -%}
-                    <button disabled class="btn btn-primary btn-sm">已于考试中</button>
-                    {%- elif contest in user_contests -%}
+                    {%- set reason = reason_cannot_join(contest) -%}
+                    {%- if contest in user_contests -%}
+                    {%- if contest not in implicit_contests and g.time < contest.end_time -%}
+                    <form action="/OnlineJudge/problemset/{{ contest.id }}/quit" method="POST" onsubmit="return confirm('确认要退出{{ type_zh }}吗？')">
+                        {{ g.csrf() }}
+                        <button type="submit" class="btn btn-outline-primary btn-sm">退出</button>
+                    </form>
+                    {%- else -%}
                     <button disabled class="btn btn-primary btn-sm">已报名</button>
-                    {% elif g.time > contest.end_time -%}
+                    {%- endif -%}
+                    {%- elif reason_cannot_join == 'in-exam' -%}
+                    <button disabled class="btn btn-primary btn-sm">已于考试中</button>
+                    {%- elif reason_cannot_join == 'ended' -%}
                     <!-- <button disabled class="btn btn-primary btn-sm">报名</button> -->
-                    {% else -%}
+                    {%- else -%}
                     <form action="/OnlineJudge/problemset/{{ contest.id }}/join" method="POST">
                         {{ g.csrf() }}
                         <button type="submit" class="btn btn-primary btn-sm">报名</button>

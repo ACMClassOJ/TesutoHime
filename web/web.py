@@ -22,16 +22,16 @@ from werkzeug.routing import BaseConverter
 import commons.task_typing
 import web.const as consts
 import web.utils as utils
-from commons.models import (Contest, Course, Enrollment, Group, JudgeRecordV2,
-                            JudgeStatus, Problem, RealnameReference, User)
+from commons.models import (Contest, Course, CourseTag, Enrollment, Group,
+                            JudgeRecordV2, JudgeStatus, Problem,
+                            RealnameReference, Term, User)
 from commons.task_typing import ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
 from web.admin import admin
 from web.config import (JudgeConfig, LoginConfig, ProblemConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
-from web.const import (ContestType, Privilege, ReturnCode, language_info,
-                       runner_status_info)
+from web.const import Privilege, ReturnCode, language_info, runner_status_info
 from web.contest_manager import ContestManager
 from web.course_manager import CourseManager
 from web.csrf import setup_csrf
@@ -179,7 +179,12 @@ def require_logged_in(func):
 
 @web.route('/')
 def index():
-    return render_template('index.html', news=NewsManager.get_news())
+    suggestions = None
+    if g.user is not None:
+        contests = ContestManager.get_contests_for_user(g.user)
+        suggestions = ContestManager.suggest_contests(contests)
+    return render_template('index.html', news=NewsManager.get_news(),
+                           suggestions=suggestions)
 
 
 @web.route('/index.html')
@@ -251,7 +256,7 @@ def logout():
     if g.user is None:
         return redirect('/OnlineJudge/')
     SessionManager.logout()
-    ret = make_response(redirect('/OnlineJudge/'))
+    ret = make_response(redirect('/OnlineJudge/', SEE_OTHER))
     ret.delete_cookie(SessionManager.session_cookie_name)
     return ret
 
@@ -349,7 +354,7 @@ def problem_admin(problem: Problem):
                 abort(BAD_REQUEST)
             course_id = problem.course_id
             ProblemManager.delete_problem(problem)
-            return redirect(f'/OnlineJudge/course/{course_id}/admin')
+            return redirect(f'/OnlineJudge/course/{course_id}/admin', SEE_OTHER)
         else:
             abort(BAD_REQUEST)
 
@@ -405,7 +410,7 @@ def problem_submit(problem: Problem):
             problem_id=problem.id,
             code=user_code,
         )
-        return redirect(f'/OnlineJudge/code/{submission_id}/')
+        return redirect(f'/OnlineJudge/code/{submission_id}/', SEE_OTHER)
 
 
 def check_scheduler_auth():
@@ -693,7 +698,8 @@ def contest_list_generic(type, type_zh):
     contest_id = request.args.get(f'{type}_id')
     if contest_id is not None:
         return redirect(f'/OnlineJudge/problemset/{contest_id}')
-    user_contests = ContestManager.get_contests_for_user(g.user)
+    implicit_contests = ContestManager._get_implicit_contests(g.user)
+    user_contests = set(implicit_contests).union(g.user.external_contests)
 
     page = request.args.get('page')
     page = int(page) if page is not None else 1
@@ -703,12 +709,12 @@ def contest_list_generic(type, type_zh):
     count, contests = ContestManager.list_contest(type_ids, page, WebConfig.Contests_Each_Page, keyword=keyword, status=status)
 
     max_page = ceil(count / WebConfig.Contests_Each_Page)
-    # here exam_id is an *arbitary* unfinished exam in which the player is in
-    exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(g.user)
 
     return render_template('contest_list.html', contests=contests,
                            get_status=ContestManager.get_status,
-                           user_contests=user_contests, exam_id=exam_id,
+                           reason_cannot_join=ContestManager.reason_cannot_join,
+                           implicit_contests=implicit_contests,
+                           user_contests=user_contests,
                            type=type, type_zh=type_zh,
                            pages=gen_page(page, max_page),
                            args=dict(filter(lambda e: e[0] != 'page' and e[0] != 'all', request.args.items())))
@@ -776,7 +782,7 @@ def problemset_admin(contest: Contest):
                 abort(BAD_REQUEST)
             course_id = contest.course_id
             ContestManager.delete_contest(contest)
-            return redirect(f'/OnlineJudge/course/{course_id}/admin')
+            return redirect(f'/OnlineJudge/course/{course_id}/admin', SEE_OTHER)
         elif action == 'requirements':
             cc_str = form.get('completion_criteria', '')
             cc = None if cc_str == '' else int(cc_str)
@@ -816,7 +822,7 @@ def problemset_admin(contest: Contest):
             continue
         if contest.completion_criteria is not None:
             completion_stats['total'] += 1
-            if ContestManager.user_has_completed(contest, player):
+            if ContestManager.user_has_completed_by_scores(contest, player):
                 completion_stats['completed'] += 1
         for problem in player['problems']:
             if problem['count'] > 0:
@@ -845,7 +851,7 @@ def problemset_problem_add(contest: Contest):
         if problem not in contest.problems:
             contest.problems.append(problem)
 
-    return redirect(f'/OnlineJudge/problemset/{contest.id}/admin')
+    return redirect(f'/OnlineJudge/problemset/{contest.id}/admin', SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/problem/remove', methods=['POST'])
 def problemset_problem_remove(contest: Contest):
@@ -859,30 +865,35 @@ def problemset_problem_remove(contest: Contest):
     for problem_id in ids:
         ContestManager.delete_problem_from_contest(contest.id, problem_id)
 
-    return redirect(f'/OnlineJudge/problemset/{contest.id}/admin')
+    return redirect(f'/OnlineJudge/problemset/{contest.id}/admin', SEE_OTHER)
+
+@web.route('/problemset/<contest:contest>/quit', methods=['POST'])
+def problemset_quit(contest: Contest):
+    if g.time >= contest.end_time:
+        abort(BAD_REQUEST, '比赛已结束')
+    if g.user in contest.external_players:
+        contest.external_players.remove(g.user)
+    return redirect(f'/OnlineJudge/problemset/{contest.id}', SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/join', methods=['POST'])
 def problemset_join(contest: Contest):
-    if g.time > contest.end_time:
+    if not ContestManager.can_join(contest):
         abort(BAD_REQUEST)
-    if contest.type == ContestType.EXAM:
-        exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(g.user)
-        if exam_id != -1:
-            abort(BAD_REQUEST)
     if g.user not in contest.external_players:
         contest.external_players.add(g.user)
-    return redirect(f'/OnlineJudge/problemset/{contest.id}')
+    return redirect(f'/OnlineJudge/problemset/{contest.id}', SEE_OTHER)
 
-@web.route('/course')
 @require_logged_in
-def course_list():
+def course_list_generic(title: str, description: str, query,
+                        show_tag: bool = True,
+                        show_term: bool = True):
     page = request.args.get('page')
     page = int(page) if page else 1
 
     limit = WebConfig.Courses_Each_Page
     offset = (page - 1) * limit
-    query = sa.select(Course)
-    count: int = db.scalar(sa.select(sa.func.count()).select_from(query))  # type: ignore
+    count = db.scalar(sa.select(sa.func.count()).select_from(query.subquery()))
+    assert count is not None
     max_page = ceil(count / limit)
     courses = db.scalars(
         query
@@ -891,13 +902,56 @@ def course_list():
     ).all()
 
     return render_template('course_list.html', courses=courses,
+                           title=title,
+                           description=description,
+                           show_tag=show_tag,
+                           show_term=show_term,
                            can_join=CourseManager.can_join,
                            pages=gen_page(page, max_page),
                            args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
 
+@web.route('/course')
+def course_list():
+    return course_list_generic('班级列表', '', sa.select(Course))
+
+@web.route('/course/tag/<int:tag_id>')
+def course_list_tag(tag_id):
+    tag = db.get(CourseTag, tag_id)
+    if tag is None: abort(NOT_FOUND)
+    stmt = sa.select(Course).where(Course.tag_id == tag_id)
+    return course_list_generic(tag.name, '', stmt, show_tag=False)
+
+@web.route('/course/term/<int:term_id>')
+def course_list_term(term_id):
+    term = db.get(Term, term_id)
+    if term is None: abort(NOT_FOUND)
+    stmt = sa.select(Course).where(Course.term_id == term_id)
+    return course_list_generic(f'{term.name} 班级列表', '', stmt, show_term=False)
+
 @web.route('/course/<course:course>/')
 def course(course: Course):
-    return render_template('course.html', course=course)
+    suggestions = ContestManager.suggest_contests(course.contests)
+
+    return render_template('course.html', course=course,
+                           suggestions=suggestions)
+
+def course_contest_list_generic(course: Course, type: str):
+    type_ids = [0, 2] if type == 'contest' else [1]
+    contests = list(filter(lambda c: c.type in type_ids, course.contests))
+    contests.sort(key=lambda c: c.end_time, reverse=True)
+    contests_enrolled = ContestManager.get_contests_for_user(g.user)
+    statuses = [ContestManager.get_status_for_card(c, c in contests_enrolled) for c in contests]
+
+    return render_template('course_contest_list.html', type=type,
+                           course=course, contests=statuses)
+
+@web.route('/course/<course:course>/contest')
+def course_contest_list(course: Course):
+    return course_contest_list_generic(course, 'contest')
+
+@web.route('/course/<course:course>/homework')
+def course_homework_list(course: Course):
+    return course_contest_list_generic(course, 'homework')
 
 @web.route('/course/<course:course>/join', methods=['POST'])
 def course_join(course: Course):
@@ -906,7 +960,7 @@ def course_join(course: Course):
     if g.user not in course.users:
         db.add(Enrollment(user_id=g.user.id, course_id=course.id))
         db.flush()
-    return redirect(f'/OnlineJudge/course/{course.id}/')
+    return redirect(f'/OnlineJudge/course/{course.id}/', SEE_OTHER)
 
 @web.route('/course/<course:course>/admin', methods=['GET', 'POST'])
 def course_admin(course: Course):
@@ -939,7 +993,7 @@ def course_admin(course: Course):
                         if e.admin:
                             abort(BAD_REQUEST, f'不能修改课程管理员 {repr(e.user.username)} 的实名信息')
                 RealnameManager.add_student(line[0], line[1], course, groups)
-            tab = 'realname'
+            tab = 'user'
         elif action == 'realname-delete':
             rr_id = int(form['id'])
             rr = db.get(RealnameReference, rr_id)
@@ -950,7 +1004,7 @@ def course_admin(course: Course):
                     abort(BAD_REQUEST, f'不能删除课程管理员 {repr(e.user.username)} 的实名信息')
             db.delete(rr)
             db.flush()
-            tab = 'realname'
+            tab = 'user'
         elif action == 'problem-create':
             problem = ProblemManager.create_problem(course)
             return redirect(f'/OnlineJudge/problem/{problem.id}/admin', SEE_OTHER)
@@ -1057,7 +1111,7 @@ def course_group_edit(course, group_id, action):
         abort(NOT_FOUND)
 
     db.flush()
-    return redirect(f'/OnlineJudge/course/{course.id}/admin?tab=group&group={group.id}')
+    return redirect(f'/OnlineJudge/course/{course.id}/admin?tab=group&group={group.id}', SEE_OTHER)
 
 
 @web.route('/profile', methods=['GET', 'POST'])

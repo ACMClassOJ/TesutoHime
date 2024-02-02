@@ -28,7 +28,7 @@ def check_csrf():
     if request.headers.get('X-Acmoj-Is-Csrf', 'yes') != 'yes':
         return
     if request.form.get(csrf_input_name) != g.csrf_token:
-        abort(BAD_REQUEST)
+        abort(BAD_REQUEST, 'CSRF 检查无法通过，请在浏览器中启用 Cookies。')
 
 def set_csrf_cookies(resp: Response) -> Response:
     if 'should_set_csrf' in g:

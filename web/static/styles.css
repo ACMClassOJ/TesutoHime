@@ -8,6 +8,10 @@ h1 {
     color: var(--bs-secondary-color);
 }
 
+.z-index-100 {
+    z-index: 100;
+}
+
 #homework, #contest, .status-list {
     white-space: nowrap;
 }
@@ -93,6 +97,9 @@ h1 {
         display: inline-block;
         float: none;
     }
+    .problemset-course {
+        text-align: center;
+    }
 }
 
 .problemset-title {
@@ -124,6 +131,18 @@ h1 {
     margin-bottom: 0;
     border-radius: 0;
 }
+.player--external .player-name::after {
+    content: '*';
+}
+.player--external .player-rank {
+    opacity: 0.5;
+}
+.player--external .player-rank::before {
+    content: '(';
+}
+.player--external .player-rank::after {
+    content: ')';
+}
 
 .contest--participant {
     background-color: #fdf5e6;
@@ -151,6 +170,15 @@ h1 {
 }
 .table-hover tbody tr.contest--pending:hover {
     background-color: rgba(0, 0, 0, 0.1);
+}
+body a.card--contest {
+    color: inherit;
+}
+.card--contest .card-header {
+    padding: .5rem 1rem;
+}
+.card--contest .card-body {
+    padding: 1rem;
 }
 
 @media (max-width: 767.98px) {
@@ -256,5 +284,6 @@ h-hws[hidden] {
 }
 
 .realname-group.badge {
+    margin-left: 0.4em;
     font-size: 0.66rem;
 }

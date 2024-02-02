@@ -17,7 +17,7 @@
     <hr>
 
     <h3>基本信息</h3>
-    <p>所属课程：<a href="/OnlineJudge/course/{{ contest.course.id }}">{{ contest.course.name }}</a> <a href="/OnlineJudge/course/{{ contest.course.id }}/admin" class="btn btn-sm btn-outline-primary ml-2">管理</a></p>
+    <p>所属班级：<a href="/OnlineJudge/course/{{ contest.course.id }}">{{ contest.course.name }}</a> <a href="/OnlineJudge/course/{{ contest.course.id }}/admin" class="btn btn-sm btn-outline-primary ml-2">管理</a></p>
     <form method="POST">
         {{ g.csrf() }}
         <input type="hidden" name="action" value="edit">

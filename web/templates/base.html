@@ -1,6 +1,6 @@
-{%- from 'component/page_switcher.html' import page_switcher -%}
 {%- from 'component/status_table.html' import status_table -%}
-{%- from 'component/util.html' import display_real_name, render, render_styles, render_scripts, option_list, datetime_local -%}
+{%- from 'component/util.html' import page_switcher, display_real_name, render, render_styles, render_scripts, option_list, datetime_local -%}
+{%- from 'component/contest_card.html' import contest_card -%}
 
 <!DOCTYPE html>
 <html class="han-init" lang="zh-CN">
@@ -14,7 +14,7 @@
     <link href="{{ url_for('.static', filename = 'lib/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('.static', filename = 'argon.min.css') }}?v=20231109" rel="stylesheet">
     <link href="{{ url_for('.static', filename = 'lib/han.min.css') }}" rel="stylesheet"> {% block head %}{% endblock %}
-    <link href="{{ url_for('.static', filename = 'styles.css') }}?v=20240131" rel="stylesheet">
+    <link href="{{ url_for('.static', filename = 'styles.css') }}?v=20240202" rel="stylesheet">
     <link href="{{ url_for('.static', filename = 'dark.css') }}?v=20231114" rel="stylesheet">
 </head>
 

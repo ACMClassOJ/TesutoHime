@@ -1,8 +1,8 @@
 __all__ = ('ContestManager',)
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import cmp_to_key
-from typing import List, Optional, Sequence, Set, Tuple
+from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 from flask import g
 from sqlalchemy import delete, func, or_, select
@@ -11,7 +11,7 @@ from sqlalchemy.orm import defer
 from commons.models import (Contest, ContestProblem, Course, Enrollment,
                             GroupRealnameReference, JudgeRecordV2, JudgeStatus,
                             RealnameReference, User)
-from web.const import FAR_FUTURE_TIME, ContestType, PrivilegeType
+from web.const import ContestType, PrivilegeType
 from web.contest_cache import ContestCache
 from web.user_manager import UserManager
 from web.utils import db
@@ -20,9 +20,10 @@ from web.utils import db
 class ContestManager:
     @staticmethod
     def create_contest(course: Course) -> Contest:
+        end_time = datetime.now() if course.term is None else course.term.end_time
         contest = Contest(name='新建比赛',
                           start_time=datetime.now(),
-                          end_time=FAR_FUTURE_TIME,
+                          end_time=end_time,
                           type=ContestType.CONTEST,
                           ranked=True,
                           rank_penalty=False,
@@ -51,6 +52,18 @@ class ContestManager:
             .where(ContestProblem.problem_id == problem_id)
         return db.scalar(stmt) != 0
 
+
+    @staticmethod
+    def reason_cannot_join(contest: Contest) -> Optional[str]:
+        if g.time > contest.end_time: return 'ended'
+        if contest.type == ContestType.EXAM:
+            exam_id, _ = ContestManager.get_unfinished_exam_info_for_player(g.user)
+            if exam_id != -1: return 'in-exam'
+        return None
+
+    @classmethod
+    def can_join(cls, contest: Contest) -> bool:
+        return cls.reason_cannot_join(contest) is None
 
     @staticmethod
     def can_read(contest: Contest):
@@ -162,6 +175,76 @@ class ContestManager:
         return db.get(Contest, contest_id)
 
     @classmethod
+    def suggest_contests(cls, contests: Sequence[Contest]) -> Dict[str, List[dict]]:
+        maxdelta = timedelta(3)
+        suggested_contests: Dict[str, List[Contest]] = { 'in-progress': [], 'future': [], 'past': [] }
+        for contest in contests:
+            if contest.start_time <= g.time <= contest.end_time:
+                suggested_contests['in-progress'].append(contest)
+            elif contest.start_time - maxdelta <= g.time <= contest.start_time:
+                suggested_contests['future'].append(contest)
+            elif contest.end_time <= g.time <= contest.end_time + maxdelta:
+                suggested_contests['past'].append(contest)
+
+        suggested_contests['in-progress'].sort(key=lambda c: c.end_time)
+        suggested_contests['future'].sort(key=lambda c: c.start_time)
+        suggested_contests['past'].sort(key=lambda c: c.end_time, reverse=True)
+
+        user_contests = cls.get_contests_for_user(g.user)
+        suggestion: Dict[str, List[dict]] = { 'in-progress': [], 'future': [], 'past': [] }
+        for k in suggested_contests:
+            for contest in suggested_contests[k]:
+                status = cls.get_status_for_card(contest, contest in user_contests)
+                suggestion[k].append(status)
+
+        return suggestion
+
+    @classmethod
+    def get_status_for_card(cls, contest: Contest, is_enrolled: bool) -> dict:
+        completion_criteria = ''
+        future = g.time < contest.start_time
+        scores = cls.get_user_scores(contest, g.user)
+        if contest.completion_criteria is not None:
+            if contest.rank_partial_score:
+                completion_criteria = f'需得到 {contest.completion_criteria} 分'
+                if is_enrolled and not future and scores is not None:
+                    completion_criteria += f'，已得到 {scores["score"]} 分'
+            else:
+                completion_criteria = f'需完成 {contest.completion_criteria} 题'
+                if is_enrolled and not future and scores is not None:
+                    completion_criteria += f'，已完成 {scores["ac_count"]} 题'
+
+        retval = {
+            'contest': contest,
+            'status': '',
+            'completion': completion_criteria,
+            'enrolled': is_enrolled,
+            'is-external': True if scores is None else scores['is_external'],
+            'reason-cannot-join': cls.reason_cannot_join(contest),
+        }
+        if future:
+            retval['status'] = 'future'
+            return retval
+        not_completed = False
+        if contest.completion_criteria is not None and is_enrolled:
+            if cls.user_has_completed_by_scores(contest, scores):
+                retval['status'] = 'completed'
+                return retval
+            not_completed = True
+        if contest.end_time < g.time:
+            retval['status'] = 'past-not-completed' if not_completed else 'past'
+            return retval
+        maxdelta = min(
+            (contest.end_time - contest.start_time) / 5,
+            timedelta(2),
+        )
+        if contest.end_time - maxdelta <= g.time:
+            retval['status'] = 'near-end'
+        else:
+            retval['status'] = 'in-progress'
+        return retval
+
+    @classmethod
     def get_scores(cls, contest: Contest) -> List[dict]:
         data = ContestCache.get(contest.id)
         if data is not None:
@@ -251,7 +334,7 @@ class ContestManager:
         return data
 
     @staticmethod
-    def user_has_completed(contest: Contest, scores: dict) -> bool:
+    def user_has_completed_by_scores(contest: Contest, scores: dict) -> bool:
         if contest.completion_criteria is None:
             return False
         if contest.rank_partial_score:
@@ -260,10 +343,21 @@ class ContestManager:
             return scores['ac_count'] >= contest.completion_criteria
 
     @classmethod
+    def get_user_scores(cls, contest: Contest, user: User) -> Optional[dict]:
+        scores_all = cls.get_scores(contest)
+        for scores in scores_all:
+            if scores['username'] == user.username:
+                return scores
+        return None
+
+    @classmethod
     def get_board_view(cls, contest: Contest) -> List[dict]:
         scores = cls.get_scores(contest)
         if not contest.ranked:
-            return sorted(scores, key=lambda x: x['friendly_name'])
+            implicit_players = filter(lambda x: not x['is_external'], scores)
+            external_players = filter(lambda x: x['is_external'], scores)
+            key_func = lambda x: x['friendly_name']
+            return sorted(implicit_players, key=key_func) + sorted(external_players, key=key_func)
 
         key = 'score' if contest.rank_partial_score else 'ac_count'
         scores.sort(key=cmp_to_key(

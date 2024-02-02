@@ -24,8 +24,9 @@
             </div>
         </div>
         <div class="card-body">
+            <div class="problemset-course"><a href="/OnlineJudge/course/{{ contest.course.id }}">{{ contest.course.name }}</a></div>
             <h1 class="problemset-title title-nav">
-                <span class="title-nav__title">{{ contest.id }}. {{ contest.name }}</span>
+                <span class="title-nav__title">{{ contest.name }}</span>
                 <span class="title-nav__nav btn-group--title-nav">
                     {%- if problems_visible and problems | length > 2 -%}
                     <button class="btn btn-outline-primary" id="open-all">打开所有题目</button>
@@ -41,7 +42,7 @@
             {%- if contest.description != '' -%}
             <div>{{ render(contest.description) }}</div>
             {%- endif -%}
-            <div class="table-responsive">
+            <div class="table-responsive" id="contest-table-wrapper">
                 <table class="table table-striped table-bordered table-hover" id="contest">
                     <thead>
                     <tr>
@@ -63,8 +64,8 @@
                     </thead>
                     {% for player in data -%}
                         <tr class="{{ 'player--external' if player['is_external'] }}">
-                            {% if contest.ranked %}<td>{{ player['rank'] }}</td>{% endif %}
-                            <td>
+                            {% if contest.ranked %}<td class="player-rank">{{ player['rank'] }}</td>{% endif %}
+                            <td class="player-name">
                                 {% if g.is_admin -%}
                                 <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ player['username'] }}">{{ player['friendly_name'] }}</span>
                                 {% else -%}
@@ -122,6 +123,23 @@
                     {%- endfor %}
                 </table>
             </div>
+            <div id="toggle-external-container">
+                <div class="custom-control custom-checkbox mt-2 mb-3 ml-1">
+                    <input class="custom-control-input" id="toggle-external" type="checkbox" checked>
+                    <label class="custom-control-label" for="toggle-external">显示非正式选手</label>
+                </div>
+            </div>
+            <style>
+                #toggle-external-container {
+                    display: none;
+                }
+                #toggle-external-container:has(input) {
+                    display: block;
+                }
+                #contest-table-wrapper:has(+ #toggle-external-container #toggle-external:not(:checked)) .player--external {
+                    display: none;
+                }
+            </style>
         </div>
     </div>
 {% endblock %}
@@ -159,6 +177,12 @@
             link.click()
         }
     })
+
+    const externalEl = document.querySelector('#toggle-external')
+    externalEl.addEventListener('change', () => {
+        localStorage.showExternal = String(externalEl.checked)
+    })
+    externalEl.checked = localStorage.showExternal !== 'false'
 
 {% if g.can_read %}
     $(function(){

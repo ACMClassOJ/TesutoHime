@@ -1,3 +1,26 @@
+{% macro page_switcher(pages, args) -%}
+<nav>
+	<ul class="pagination justify-content-center">
+		{% for text, index, display in pages -%}
+			{%- if display == 1 -%}
+				<li class="page-item active">
+					<a class="page-link btn-light" href="javascript:void(0)"> {{ text }} </a>
+				</li>
+			{%- elif display != -1 -%}
+				<li class="page-item">
+					<a class="page-link btn-light" href="?page={{ index }}
+					{%- for arg in args.items() -%}
+						&{{ arg[0] }}={{ arg[1] }}
+					{%- endfor -%}
+					"> {{ text }} </a>
+				</li>
+			{%- endif -%}
+		{%- endfor %}
+	</ul>
+</nav>
+{%- endmacro %}
+
+
 {%- macro _display_real_name(real_name) -%}
 <span class="realname" title="班级：{{ real_name.course.name }}">{{ real_name.real_name }}</span>
 {%- for group in real_name.groups -%}

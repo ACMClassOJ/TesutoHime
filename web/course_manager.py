@@ -1,6 +1,6 @@
 __all__ = ('CourseManager',)
 
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Tuple
 
 from flask import g
 from sqlalchemy import select
@@ -28,6 +28,15 @@ class CourseManager:
     def can_write(course: Course) -> bool:
         return UserManager.get_course_privilege(g.user, course) >= PrivilegeType.owner
 
+
+    @staticmethod
+    def is_enrolled(user: User, course: Course) -> Tuple[bool, bool]:
+        '''
+        returns (is enrolled, is self-enrolled (i.e. observer))
+        '''
+        enrollment = UserManager.get_enrollment(user, course)
+        if enrollment is None: return (False, False)
+        return (True, enrollment.realname_reference is None)
 
     @classmethod
     def get_enrolled_courses(cls, user: User) -> Sequence[Course]:

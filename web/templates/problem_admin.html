@@ -74,13 +74,13 @@
                             {{ option_list({ 0: '代码题', 1: '填选题' }, problem.problem_type) }}
                         </select>
                     </div>
-                    <div class="float-right d-flex mb-3 ml-auto pr-1">
+                    <div class="float-right d-flex mb-3 ml-auto">
                         <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
                     </div>
                 </div>
             </form>
             <h3>题目状态</h3>
-            <p>所属课程：<a href="/OnlineJudge/course/{{ problem.course_id }}">{{ problem.course.name }}</a> <a href="/OnlineJudge/course/{{ problem.course.id }}/admin" class="btn btn-sm btn-outline-primary ml-2">管理</a></p>
+            <p>所属班级：<a href="/OnlineJudge/course/{{ problem.course_id }}">{{ problem.course.name }}</a> <a href="/OnlineJudge/course/{{ problem.course.id }}/admin" class="btn btn-sm btn-outline-primary ml-2">管理</a></p>
             <div class="mb-2">
                 <span>发布状态：</span>
                 {% if problem.release_time <= g.time -%}
@@ -180,7 +180,7 @@
                         <textarea name="data_range" style="display: none"></textarea>
                     </div>
                 </div>
-                <div class="float-right d-flex mb-3 ml-auto pr-1">
+                <div class="float-right d-flex mb-3 ml-auto">
                     <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
                 </div>
             </form>

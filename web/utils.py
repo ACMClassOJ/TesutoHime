@@ -46,6 +46,9 @@ def readable_time(time) -> str:
         time = datetime.fromtimestamp(time)
     return time.strftime('%Y-%m-%d %H:%M:%S')
 
+def readable_time_minutes(time: datetime) -> str:
+    return time.strftime('%Y-%m-%d %H:%M')
+
 def readable_lang_v1(lang: int) -> str:
     # Get the readable language name.
     lang_str = {

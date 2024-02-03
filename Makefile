@@ -7,6 +7,9 @@ USER_DOCS = \
 .PHONY: all
 all: judger2-sandbox-targets user-docs
 
+.PHONY: judger2
+judger2: judger2-sandbox-targets judger2-checker
+
 .PHONY: help
 help:
 	@echo 'Usage: make [target]'
@@ -15,8 +18,11 @@ help:
 	@echo '  all                      Build all targets.'
 	@echo '  user-docs                Build user documents.'
 	@echo '  judger2-sandbox-targets  Build sandbox tools.'
+	@echo '  judger2-checker          Build checker.'
+	@echo '  judger2                  Build all judger2 targets.'
 	@echo '  clean                    Remove all generated files.'
 	@echo '  clean-docs               Remove all generated user documents.'
+	@echo '  clean-judger2            Remove all generated judger2 files.'
 	@echo '  help                     Show this help message.'
 	@echo '  install                  Install systemd service files.'
 
@@ -64,9 +70,17 @@ docs/user/%.html: docs/user/%.html.raw
 judger2-sandbox-targets:
 	$(MAKE) -C judger2/sandbox
 
+.PHONY: judger2-checker
+judger2-checker:
+	judger2/checker/scripts/build
+
 .PHONY: clean
-clean: clean-docs
+clean: clean-docs clean-judger2
+
+.PHONY: clean-judger2
+clean-judger2:
 	$(MAKE) -C judger2/sandbox clean
+	judger2/checker/scripts/clean
 
 .PHONY: clean-docs
 clean-docs:

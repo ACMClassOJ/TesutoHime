@@ -2,5 +2,7 @@
 
 set -e
 
+cd "$(dirname "$0")/.."
+
 rm -f checker
 rm -rf build

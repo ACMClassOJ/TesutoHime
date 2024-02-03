@@ -1,5 +1,8 @@
 #include <iostream>
 
+#ifndef TESUTO_HIME_JUDGER_CHECKER_ARGUMENTS_H_
+#define TESUTO_HIME_JUDGER_CHECKER_ARGUMENTS_H_
+
 struct Argument {
     bool valid = false;
     bool isHelp = false;
@@ -11,3 +14,5 @@ struct Argument {
 };
 
 Argument ParseArgument(int argc, char** argv);
+
+#endif //TESUTO_HIME_JUDGER_CHECKER_ARGUMENTS_H_

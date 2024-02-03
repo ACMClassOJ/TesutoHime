@@ -138,6 +138,7 @@ bool SetAsHelp(Argument& args) {
         return false;
     }
     args.isHelp = true;
+    args.valid = true;
     return true;
 }
 

@@ -43,6 +43,8 @@ async def compile(task: CompileTask) -> CompileLocalResult:
             )
 
         # copy supplementary files
+        # This part should be done after the prepare stage in order to copy
+        # the supplementary files to the correct directory (e.g, git repo).
         try:
             await copy_supplementary_files(task.supplementary_files, cwd)
         except FileConflictException as e:
@@ -107,7 +109,6 @@ async def prepare_cpp(
     source: CompileSourceCpp,
     limits: ResourceUsage,
 ) -> StageResult:
-    """return whether the operation is successful"""
     main_file = (await ensure_cached(source.main)).path
     code_file = cwd / cxx_file_name
     copy2(main_file, code_file)

@@ -45,6 +45,8 @@ vim runner.yml
 ```sh
 cd /path/to/TesutoHime/judger2/sandbox
 make
+cd ../checker
+scripts/build
 ```
 
 如果你的 git 版本严格低于 2.38.0, [则需要设置全局 git 配置][git]:
@@ -70,7 +72,7 @@ python3 -m judger2.main
 
 配置 [logrotate]: 向 `/etc/logrotate.d/ojrunner` 中写入以下内容
 
-```
+```text
 /var/log/oj/runner/*.log {
   daily
   missingok
@@ -84,7 +86,7 @@ python3 -m judger2.main
 
 在评测任务较多时，遇到过 linux namespaces 分配超出限制的情况，表现为 nsjail 返回 255 (clone3(2) 返回 ENOSPC)。这本是不应该的，但是不知道为什么会发生。可以提高限制来避免遇到问题：
 
-```
+```sh
 echo 1073741824 | sudo tee /proc/sys/user/max_*_namespaces
 ```
 

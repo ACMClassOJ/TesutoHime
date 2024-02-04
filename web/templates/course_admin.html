@@ -33,8 +33,9 @@
             'group': '分组',
             'user': '成员',
             'document': '文档',
-        }, current_tab)
+        }, 'overview')
     }}
+    {{ show_alert() }}
     <hr>
 
 
@@ -121,7 +122,7 @@
         <div {{ begin_tab('group') }}>
             <h3>分组</h3>
             {%- for group in course.groups -%}
-            <details{{ ' open' if expand_group == group.id | string }}>
+            <details{{ ' open' if g.expand_group == group.id | string }}>
                 <summary>{{ group.name }}</summary>
                 <h4>编辑分组信息</h4>
                 <div class="clearfix">

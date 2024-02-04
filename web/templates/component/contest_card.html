@@ -5,7 +5,7 @@
   'future': ('info', 'clock', '未开始'),
   'completed': ('success', 'check-circle', '已完成'),
   'past-not-completed': ('danger', 'exclamation', '未完成'),
-  'past': ('secondary', 'calendar-check', '已结束'),
+  'past': ('ended', 'calendar-check', '已结束'),
   'in-progress': ('primary', 'spinner', '正在进行'),
   'near-end': ('warning', 'stopwatch', '即将结束'),
 }[status['status']] -%}
@@ -18,13 +18,13 @@
     {%- if show_type -%}
     <div>
       <span class=card--contest__type"">{{ contest_type }}{% if show_course_name %} &middot; {{ contest.course.name }}{% endif %}</span>
-      <span class="card--contest__status text-{{ class_ if class_ != 'secondary' }}"><i class="fa fa-{{ icon }}"></i> {{ status_text }}</span>
+      <span class="card--contest__status text-{{ class_ }}"><i class="fa fa-{{ icon }}"></i> {{ status_text }}</span>
     </div>
     {%- endif -%}
     <div>
       <span class="card--contest__time mr-2">{{ g.utils.readable_time_minutes(contest.start_time) }}&ndash;{{ g.utils.readable_time_minutes(contest.end_time) }}</span>
       {%- if not show_type -%}
-      <span class="card--contest__status text-{{ class_ if class_ != 'secondary' }}"><i class="fa fa-{{ icon }}"></i> {{ status_text }}</span>
+      <span class="card--contest__status text-{{ class_ }}"><i class="fa fa-{{ icon }}"></i> {{ status_text }}</span>
       {%- endif -%}
     </div>
   </div>

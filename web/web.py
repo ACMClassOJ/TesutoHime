@@ -176,6 +176,26 @@ def require_logged_in(func):
         return func(*args, **kwargs)
     return wrapped
 
+def set_tab(tab):
+    g.current_tab = tab
+
+def alert_success(content):
+    g.alert = { 'type': 'success', 'content': content }
+
+class AlertFail(Exception): pass
+def alert_fail(content):
+    g.alert = { 'type': 'danger', 'content': content }
+    raise AlertFail
+
+def ignore_alert_fail(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except AlertFail:
+            pass
+    return wrapped
+
 
 @web.route('/')
 def index():
@@ -337,60 +357,69 @@ def problem_detail(problem: Problem):
                            In_Exam=in_exam)
 
 
+@ignore_alert_fail
+def process_problem_admin(problem: Problem):
+    action = request.form['action']
+    if action == 'hide':
+        set_tab('overview')
+        ProblemManager.hide_problem(problem)
+        alert_success('已取消发布')
+    elif action == 'show':
+        set_tab('overview')
+        ProblemManager.show_problem(problem)
+        alert_success('已发布题目')
+    elif action == 'delete':
+        set_tab('overview')
+        if request.form['confirm'] != str(problem.id):
+            alert_fail('输入的题号不正确')
+        course_id = problem.course_id
+        ProblemManager.delete_problem(problem)
+        return redirect(f'/OnlineJudge/course/{course_id}/admin', SEE_OTHER)
+    elif action == 'priv-add':
+        set_tab('privileges')
+        username = request.form['username']
+        user = UserManager.get_user_by_username(username)
+        if user is None:
+            alert_fail(f'用户 {repr(username)} 不存在')
+        priv_type_str = request.form['privilege']
+        if priv_type_str == 'readonly':
+            priv_type = ProblemPrivilegeType.readonly
+        elif priv_type_str == 'owner':
+            priv_type = ProblemPrivilegeType.owner
+        else:
+            alert_fail(f'未知权限类型 {repr(priv_type_str)}')
+        comment = request.form['comment']
+        db.add(ProblemPrivilege(user_id=user.id, problem_id=problem.id,
+                                privilege=priv_type, comment=comment))
+        db.flush()
+        UserManager.flush_privileges(user)
+        alert_success('已赋予权限')
+    elif action == 'priv-remove':
+        set_tab('privileges')
+        priv = db.get(ProblemPrivilege, int(request.form['id']))
+        user = priv.user
+        if priv.problem != problem:
+            abort(BAD_REQUEST)
+        db.delete(priv)
+        db.flush()
+        UserManager.flush_privileges(user)
+        alert_success('已移除权限')
+    else:
+        abort(BAD_REQUEST)
+
 @web.route('/problem/<problem:problem>/admin', methods=['GET', 'POST'])
 @require_logged_in
 def problem_admin(problem: Problem):
     if not g.can_write:
         abort(FORBIDDEN)
 
-    tab = request.args.get('tab', 'overview')
     if request.method == 'POST':
-        action = request.form['action']
-        if action == 'hide':
-            ProblemManager.hide_problem(problem)
-        elif action == 'show':
-            ProblemManager.show_problem(problem)
-        elif action == 'delete':
-            if request.form['confirm'] != str(problem.id):
-                abort(BAD_REQUEST)
-            course_id = problem.course_id
-            ProblemManager.delete_problem(problem)
-            return redirect(f'/OnlineJudge/course/{course_id}/admin', SEE_OTHER)
-        elif action == 'priv-add':
-            username = request.form['username']
-            user = UserManager.get_user_by_username(username)
-            if user is None:
-                abort(BAD_REQUEST, f'用户 {repr(username)} 不存在')
-            priv_type_str = request.form['privilege']
-            if priv_type_str == 'readonly':
-                priv_type = ProblemPrivilegeType.readonly
-            elif priv_type_str == 'owner':
-                priv_type = ProblemPrivilegeType.owner
-            else:
-                abort(BAD_REQUEST, f'未知权限类型 {repr(priv_type_str)}')
-            comment = request.form['comment']
-            db.add(ProblemPrivilege(user_id=user.id, problem_id=problem.id,
-                                    privilege=priv_type, comment=comment))
-            db.flush()
-            UserManager.flush_privileges(user)
-            tab = 'privileges'
-        elif action == 'priv-remove':
-            priv = db.get(ProblemPrivilege, int(request.form['id']))
-            user = priv.user
-            if priv.problem != problem:
-                abort(BAD_REQUEST)
-            db.delete(priv)
-            db.flush()
-            UserManager.flush_privileges(user)
-            tab = 'privileges'
-        else:
-            abort(BAD_REQUEST)
+        process_problem_admin(problem)
 
     submission_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem.id).count()
     ac_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem.id).where(JudgeRecordV2.status == JudgeStatus.accepted).count()
 
     return render_template('problem_admin.html', problem=problem,
-                           current_tab=tab,
                            submission_count=submission_count, ac_count=ac_count)
 
 
@@ -788,59 +817,67 @@ def problemset(contest: Contest):
         data=data,
     )
 
+@ignore_alert_fail
+def process_problemset_admin(contest: Contest):
+    form = request.form
+    action = form['action']
+    if action == 'edit':
+        contest.name = form['name']
+        contest.description = form.get('description', '')
+        contest.start_time = datetime.fromisoformat(form['start_time'])
+        contest.end_time = datetime.fromisoformat(form['end_time'])
+        contest.type = int(form['type'])
+        contest.ranked = form.get('ranked', 'off') == 'on'
+        contest.rank_penalty = form.get('rank_penalty', 'off') == 'on'
+        contest.rank_partial_score = form.get('rank_partial_score', 'off') == 'on'
+        contest.rank_all_users = form.get('rank_all_users', 'off') == 'on'
+        alert_success('已编辑比赛')
+    elif action == 'delete':
+        if request.form['confirm'] != str(contest.id):
+            alert_fail('输入的比赛编号不正确')
+        course_id = contest.course_id
+        ContestManager.delete_contest(contest)
+        return redirect(f'/OnlineJudge/course/{course_id}/admin', SEE_OTHER)
+    elif action == 'requirements':
+        cc_str = form.get('completion_criteria', '')
+        cc = None if cc_str == '' else int(cc_str)
+        if cc is not None:
+            if contest.rank_partial_score:
+                if cc < 0:
+                    alert_fail('要求完成的分数不能为负数')
+            else:
+                if cc < 0:
+                    alert_fail('要求完成的题目数不能为负数')
+                if cc > len(contest.problems):
+                    alert_fail('要求完成的题目数不能超过题目总数')
+        contest.completion_criteria = cc
+
+        languages = []
+        for lang in language_info:
+            if form.get(f'lang-{lang}', 'off') == 'on':
+                languages.append(lang)
+        contest.allowed_languages = None if len(languages) == len(language_info) or len(languages) == 0 else languages
+        alert_success('已更改作业要求')
+    elif action == 'groups':
+        if form.get('all', 'off') == 'on':
+            contest.group_ids = None
+        else:
+            gs = []
+            for group in contest.course.groups:
+                if form.get(f'group-{group.id}', 'off') == 'on':
+                    gs.append(group.id)
+            contest.group_ids = gs
+        alert_success('已更改分组')
+    else:
+        abort(BAD_REQUEST)
+
 @web.route('/problemset/<contest:contest>/admin', methods=['GET', 'POST'])
 def problemset_admin(contest: Contest):
     if not g.can_write:
         abort(FORBIDDEN)
 
     if request.method == 'POST':
-        form = request.form
-        action = form['action']
-        if action == 'edit':
-            contest.name = form['name']
-            contest.description = form.get('description', '')
-            contest.start_time = datetime.fromisoformat(form['start_time'])
-            contest.end_time = datetime.fromisoformat(form['end_time'])
-            contest.type = int(form['type'])
-            contest.ranked = form.get('ranked', 'off') == 'on'
-            contest.rank_penalty = form.get('rank_penalty', 'off') == 'on'
-            contest.rank_partial_score = form.get('rank_partial_score', 'off') == 'on'
-            contest.rank_all_users = form.get('rank_all_users', 'off') == 'on'
-        elif action == 'delete':
-            if request.form['confirm'] != str(contest.id):
-                abort(BAD_REQUEST)
-            course_id = contest.course_id
-            ContestManager.delete_contest(contest)
-            return redirect(f'/OnlineJudge/course/{course_id}/admin', SEE_OTHER)
-        elif action == 'requirements':
-            cc_str = form.get('completion_criteria', '')
-            cc = None if cc_str == '' else int(cc_str)
-            if cc is not None:
-                if contest.rank_partial_score:
-                    valid = cc >= 0
-                else:
-                    valid = 0 <= cc <= len(contest.problems)
-                if not valid:
-                    abort(BAD_REQUEST, f'完成条件为负或超过题目总数')
-            contest.completion_criteria = cc
-
-            languages = []
-            for lang in language_info:
-                if form.get(f'lang-{lang}', 'off') == 'on':
-                    languages.append(lang)
-            contest.allowed_languages = None if len(languages) == len(language_info) or len(languages) == 0 else languages
-        elif action == 'groups':
-            # TODO: recompute membership
-            if form.get('all', 'off') == 'on':
-                contest.group_ids = None
-            else:
-                gs = []
-                for group in contest.course.groups:
-                    if form.get(f'group-{group.id}', 'off') == 'on':
-                        gs.append(group.id)
-                contest.group_ids = gs
-        else:
-            abort(BAD_REQUEST)
+        process_problemset_admin(contest)
 
     scores = ContestManager.get_scores(contest)
     # problem id -> (try count, ac count)
@@ -1005,130 +1042,142 @@ def course_quit(course: Course):
     db.delete(enrollment)
     return redirect(f'/OnlineJudge/course/{course.id}/', SEE_OTHER)
 
+@ignore_alert_fail
+def process_course_admin(course: Course):
+    form = request.form
+    action = form['action']
+    if action == 'edit':
+        set_tab('overview')
+        course.name = form['name']
+        course.description = form['description']
+        alert_success('已编辑基本信息')
+    elif action == 'realname-create':
+        set_tab('user')
+        data = [line.split(',') for line in request.form['data'].strip().splitlines()]
+        for line in data:
+            groups: List[Group] = []
+            if len(line) > 2:
+                group_names = [x.strip() for x in line[2].split('|')]
+                for group_name in group_names:
+                    group = CourseManager.get_group_by_name(course, group_name)
+                    if group is None:
+                        db.rollback()
+                        return alert_fail(f'分组 {repr(group_name)} 不存在')
+                    groups.append(group)
+            rr = RealnameManager.query_realname_for_course(line[0], course.id)
+            if rr is not None:
+                for e in rr.enrollments:
+                    if e.admin:
+                        alert_fail(f'不能修改课程管理员 {repr(e.user.username)} 的实名信息')
+            RealnameManager.add_student(line[0], line[1], course, groups)
+        alert_success('编辑实名信息成功')
+    elif action == 'realname-delete':
+        set_tab('user')
+        rr_id = int(form['id'])
+        rr = db.get(RealnameReference, rr_id)
+        if rr is None or rr.course_id != course.id:
+            abort(BAD_REQUEST)
+        for e in rr.enrollments:
+            if e.admin:
+                alert_fail(f'不能删除课程管理员 {repr(e.user.username)} 的实名信息')
+        db.delete(rr)
+        db.flush()
+        alert_success('已删除实名信息')
+    elif action == 'problem-create':
+        problem = ProblemManager.create_problem(course)
+        return redirect(f'/OnlineJudge/problem/{problem.id}/admin', SEE_OTHER)
+    elif action == 'contest-create':
+        contest = ContestManager.create_contest(course)
+        return redirect(f'/OnlineJudge/problemset/{contest.id}/admin', SEE_OTHER)
+    elif action == 'group-create':
+        set_tab('group')
+        name = form['name']
+        if CourseManager.get_group_by_name(course, name) != None:
+            alert_fail(f'分组 {repr(name)} 已存在')
+        group = Group(name=name,
+                      description=form.get('description', ''),
+                      course_id=course.id)
+        db.add(group)
+        db.flush()
+        g.expand_group = str(group.id)
+        alert_success('已添加分组')
+    elif action == 'group-edit':
+        set_tab('group')
+        group = CourseManager.get_group_in_course(course, int(form['id']))
+        if group is None:
+            abort(BAD_REQUEST)
+        name = form['name']
+        existing_group = CourseManager.get_group_by_name(course, name)
+        if existing_group is not None and existing_group != group:
+            abort(BAD_REQUEST, f'分组 {repr(name)} 已存在')
+        group.name = name
+        group.description = form['description']
+        g.expand_group = str(group.id)
+        alert_success('修改分组成功')
+    elif action == 'group-delete':
+        set_tab('group')
+        group = CourseManager.get_group_in_course(course, int(form['id']))
+        if group is None:
+            alert_fail('分组不存在')
+        db.delete(group)
+        db.flush()
+        alert_success('已删除分组')
+    elif action == 'user-delete':
+        set_tab('user')
+        usernames = form['data'].strip().splitlines()
+        for username in usernames:
+            user = UserManager.get_user_by_username(username)
+            if user is None:
+                db.rollback()
+                alert_fail(f'用户 {repr(username)} 不存在')
+            enrollment = UserManager.get_enrollment(user, course)
+            if enrollment is None:
+                continue
+            if enrollment.admin:
+                db.rollback()
+                alert_fail(f'用户 {repr(username)} 是课程管理员，请先移除管理权限')
+            db.delete(enrollment)
+            db.flush()
+        alert_success('已移除用户')
+    elif action == 'user-demote':
+        set_tab('user')
+        enrollment = db.get(Enrollment, int(form['id']))
+        if enrollment is None or not enrollment.admin or enrollment.course_id != course.id:
+            abort(BAD_REQUEST)
+        enrollment.admin = False
+        UserManager.flush_privileges(enrollment.user)
+        alert_success('已移除权限')
+    elif action == 'user-promote':
+        set_tab('user')
+        usernames = form['data'].strip().splitlines()
+        for username in usernames:
+            user = UserManager.get_user_by_username(username)
+            if user is None:
+                db.rollback()
+                alert_fail(f'用户 {repr(username)} 不存在')
+            enrollment = UserManager.get_enrollment(user, course)
+            if enrollment is None:
+                db.rollback()
+                alert_fail(f'用户 {repr(username)} 未报名课程')
+            if enrollment.realname_reference is None:
+                db.rollback()
+                alert_fail(f'用户 {repr(username)} 未添加实名信息')
+            enrollment.admin = True
+            UserManager.flush_privileges(user)
+        alert_success('已添加权限')
+    else:
+        abort(BAD_REQUEST, f'Unknown action {action}')
+
 @web.route('/course/<course:course>/admin', methods=['GET', 'POST'])
 def course_admin(course: Course):
     if not g.can_write:
         abort(FORBIDDEN)
 
-    tab = request.args.get('tab', 'overview')
-    expand_group = request.args.get('group', None)
+    g.expand_group = request.args.get('group', None)
     if request.method == 'POST':
-        form = request.form
-        action = form['action']
-        if action == 'edit':
-            course.name = form['name']
-            course.description = form['description']
-        elif action == 'realname-create':
-            data = [line.split(',') for line in request.form['data'].strip().splitlines()]
-            for line in data:
-                groups: List[Group] = []
-                if len(line) > 2:
-                    group_names = [x.strip() for x in line[2].split('|')]
-                    for group_name in group_names:
-                        group = CourseManager.get_group_by_name(course, group_name)
-                        if group is None:
-                            db.rollback()
-                            return abort(BAD_REQUEST, f'分组 {repr(group_name)} 不存在')
-                        groups.append(group)
-                rr = RealnameManager.query_realname_for_course(line[0], course.id)
-                if rr is not None:
-                    for e in rr.enrollments:
-                        if e.admin:
-                            abort(BAD_REQUEST, f'不能修改课程管理员 {repr(e.user.username)} 的实名信息')
-                RealnameManager.add_student(line[0], line[1], course, groups)
-            tab = 'user'
-        elif action == 'realname-delete':
-            rr_id = int(form['id'])
-            rr = db.get(RealnameReference, rr_id)
-            if rr is None or rr.course_id != course.id:
-                abort(BAD_REQUEST)
-            for e in rr.enrollments:
-                if e.admin:
-                    abort(BAD_REQUEST, f'不能删除课程管理员 {repr(e.user.username)} 的实名信息')
-            db.delete(rr)
-            db.flush()
-            tab = 'user'
-        elif action == 'problem-create':
-            problem = ProblemManager.create_problem(course)
-            return redirect(f'/OnlineJudge/problem/{problem.id}/admin', SEE_OTHER)
-        elif action == 'contest-create':
-            contest = ContestManager.create_contest(course)
-            return redirect(f'/OnlineJudge/problemset/{contest.id}/admin', SEE_OTHER)
-        elif action == 'group-create':
-            name = form['name']
-            if CourseManager.get_group_by_name(course, name) != None:
-                abort(BAD_REQUEST, f'分组 {repr(name)} 已存在')
-            group = Group(name=name,
-                          description=form.get('description', ''),
-                          course_id=course.id)
-            db.add(group)
-            db.flush()
-            tab = 'group'
-            expand_group = str(group.id)
-        elif action == 'group-edit':
-            group = CourseManager.get_group_in_course(course, int(form['id']))
-            if group is None:
-                abort(BAD_REQUEST)
-            name = form['name']
-            existing_group = CourseManager.get_group_by_name(course, name)
-            if existing_group is not None and existing_group != group:
-                abort(BAD_REQUEST, f'分组 {repr(name)} 已存在')
-            group.name = name
-            group.description = form['description']
-            tab = 'group'
-            expand_group = str(group.id)
-        elif action == 'group-delete':
-            group = CourseManager.get_group_in_course(course, int(form['id']))
-            if group is None:
-                abort(BAD_REQUEST)
-            db.delete(group)
-            db.flush()
-            tab = 'group'
-        elif action == 'user-delete':
-            usernames = form['data'].strip().splitlines()
-            for username in usernames:
-                user = UserManager.get_user_by_username(username)
-                if user is None:
-                    db.rollback()
-                    abort(BAD_REQUEST, f'用户 {repr(username)} 不存在')
-                enrollment = UserManager.get_enrollment(user, course)
-                if enrollment is None:
-                    continue
-                if enrollment.admin:
-                    db.rollback()
-                    abort(BAD_REQUEST, f'用户 {repr(username)} 是课程管理员，请先移除管理权限')
-                db.delete(enrollment)
-                db.flush()
-            tab = 'user'
-        elif action == 'user-demote':
-            enrollment = db.get(Enrollment, int(form['id']))
-            if enrollment is None or not enrollment.admin or enrollment.course_id != course.id:
-                abort(BAD_REQUEST)
-            enrollment.admin = False
-            UserManager.flush_privileges(enrollment.user)
-            tab = 'user'
-        elif action == 'user-promote':
-            usernames = form['data'].strip().splitlines()
-            for username in usernames:
-                user = UserManager.get_user_by_username(username)
-                if user is None:
-                    db.rollback()
-                    abort(BAD_REQUEST, f'用户 {repr(username)} 不存在')
-                enrollment = UserManager.get_enrollment(user, course)
-                if enrollment is None:
-                    db.rollback()
-                    abort(BAD_REQUEST, f'用户 {repr(username)} 未报名课程')
-                if enrollment.realname_reference is None:
-                    db.rollback()
-                    abort(BAD_REQUEST, f'用户 {repr(username)} 未添加实名信息')
-                enrollment.admin = True
-                UserManager.flush_privileges(user)
-            tab = 'user'
-        else:
-            abort(BAD_REQUEST, f'Unknown action {action}')
+        process_course_admin(course)
 
-    return render_template('course_admin.html', course=course, current_tab=tab,
-                           expand_group=expand_group)
+    return render_template('course_admin.html', course=course)
 
 @web.route('/course/<course:course>/group/<int:group_id>/<action>', methods=['POST'])
 def course_group_edit(course, group_id, action):

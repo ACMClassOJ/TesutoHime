@@ -74,7 +74,8 @@
 
 
 {%- set current_tab_remember = namespace(t=None) -%}
-{%- macro nav_tab_list(tabs, current_tab) -%}
+{%- macro nav_tab_list(tabs, default_tab) -%}
+{%- set current_tab = request.args.get('tab', default_tab) if 'current_tab' not in g else g.current_tab -%}
 {%- set current_tab_remember.t = current_tab -%}
 <div class="nav-wrapper">
   <ul class="nav nav-pills nav-fill flex-column flex-md-row" role="tablist">
@@ -90,4 +91,10 @@
 
 {%- macro begin_tab(name) -%}
 class="tab-pane fade{{ ' show active' if name == current_tab_remember.t }}" id="{{ name }}-tab" role="tabpanel" aria-labelledby="{{ name }}-tab-btn"
+{%- endmacro -%}
+
+{%- macro show_alert() -%}
+{%- if 'alert' in g and g.alert != None -%}
+<div class="alert alert-{{ g.alert['type'] }}" role="alert">{{ g.alert['content'] }}</div>
+{%- endif -%}
 {%- endmacro -%}

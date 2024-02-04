@@ -46,3 +46,24 @@ def setup_log():
     setup_tracker(None, LogConfig.Syslog_Path, LogConfig.Max_Bytes, LogConfig.Backup_Count, logging.INFO, True)
 
 tracker = Tracker()
+
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+import time
+
+@event.listens_for(Engine, "before_cursor_execute")
+def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    conn.info.setdefault("query_start_time", []).append(time.time())
+
+
+seen_slow_statements = set()
+
+@event.listens_for(Engine, "after_cursor_execute")
+def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    total = time.time() - conn.info["query_start_time"].pop(-1)
+    if total > 0.1:  # 100 ms
+        statement_str = str(statement)
+        if statement_str not in seen_slow_statements:
+            seen_slow_statements.add(statement_str)
+            tracker.syslog.info(f'SQL statement took {total} seconds')
+            tracker.syslog.info(statement_str)

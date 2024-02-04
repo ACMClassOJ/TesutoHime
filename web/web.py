@@ -926,7 +926,7 @@ def course_list_generic(title: str, description: str, query,
     max_page = ceil(count / limit)
     courses = db.scalars(
         query
-        .order_by(Course.id.asc())
+        .order_by(Course.id.desc())
         .limit(limit).offset(offset)
     ).all()
 
@@ -936,6 +936,7 @@ def course_list_generic(title: str, description: str, query,
                            show_tag=show_tag,
                            show_term=show_term,
                            can_join=CourseManager.can_join,
+                           get_enrollment=UserManager.get_enrollment,
                            pages=gen_page(page, max_page),
                            args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
 
@@ -948,7 +949,7 @@ def course_list_tag(tag_id):
     tag = db.get(CourseTag, tag_id)
     if tag is None: abort(NOT_FOUND)
     stmt = sa.select(Course).where(Course.tag_id == tag_id)
-    return course_list_generic(tag.name, '', stmt, show_tag=False)
+    return course_list_generic(f'{tag.name} 班级列表', '', stmt, show_tag=False)
 
 @web.route('/course/term/<int:term_id>')
 def course_list_term(term_id):
@@ -990,6 +991,18 @@ def course_join(course: Course):
     if g.user not in course.users:
         db.add(Enrollment(user_id=g.user.id, course_id=course.id))
         db.flush()
+    return redirect(f'/OnlineJudge/course/{course.id}/', SEE_OTHER)
+
+@web.route('/course/<course:course>/quit', methods=['POST'])
+def course_quit(course: Course):
+    if not CourseManager.can_join(course):
+        abort(BAD_REQUEST)
+    enrollment = db.get(Enrollment, int(request.form['id']))
+    if enrollment is None or enrollment.realname_reference is not None:
+        abort(BAD_REQUEST)
+    if enrollment.user_id != g.user.id or enrollment.course_id != course.id:
+        abort(BAD_REQUEST)
+    db.delete(enrollment)
     return redirect(f'/OnlineJudge/course/{course.id}/', SEE_OTHER)
 
 @web.route('/course/<course:course>/admin', methods=['GET', 'POST'])

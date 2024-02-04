@@ -11,7 +11,7 @@ from sqlalchemy import func, select, update
 from commons.models import (Contest, Course, Enrollment, Problem,
                             ProblemPrivilege, User)
 from web.config import RedisConfig
-from web.const import PrivilegeType
+from web.const import Privilege, PrivilegeType
 from web.utils import db, redis_connect
 
 password_hasher = PasswordHasher()
@@ -142,6 +142,9 @@ class UserManager:
 
     @classmethod
     def has_site_owner_tag(cls, user: User) -> bool:
+        if user.privilege == Privilege.SUPER:
+            return True
+
         cached = cls._privileges_cache_get(user, 'siteowner')
         if cached is not None:
             return cached == 't'

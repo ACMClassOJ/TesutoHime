@@ -28,11 +28,15 @@
         </ul>
     </h1>
     <hr>
+    {%- if contests | length > 0 -%}
     <div class="contest-card-group">
         {%- for contest in contests -%}
         {{ contest_card(contest, show_course_name=False, show_type=show_type) }}
         {%- endfor -%}
     </div>
+    {%- else -%}
+    <div>暂无{{ { 'contest': '比赛', 'homework': '作业' }[type] }}</div>
+    {%- endif -%}
 </div>
 <br>
 {% endblock %}

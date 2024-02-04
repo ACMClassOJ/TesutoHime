@@ -113,7 +113,8 @@
             {% else %}
             <p>题目在以下比赛/作业中使用：</p>
             <ul>
-                {% for contest in problem.contests %}
+                {%- set contests = problem.contests | list | sort(attribute='id') -%}
+                {% for contest in contests %}
                 <li><a href="/OnlineJudge/problemset/{{ contest.id }}">
                     [{{ [ '比赛', '作业', '考试' ][contest.type] }}]
                     {{ contest.id }}.

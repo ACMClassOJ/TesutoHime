@@ -42,8 +42,17 @@
                     </td>
                     {%- endif -%}
                     <td>
-                        {%- if g.user in course.users -%}
+                        {%- set enrollment = get_enrollment(g.user, course) -%}
+                        {%- if enrollment != None -%}
+                        {%- if enrollment.realname_reference != None -%}
                         <button disabled class="btn btn-primary btn-sm">已加入</button>
+                        {%- elif can_join(course) -%}
+                        <form action="/OnlineJudge/course/{{ course.id }}/quit" method="POST">
+                            {{ g.csrf() }}
+                            <input type="hidden" name="id" value="{{ enrollment.id }}">
+                            <button type="submit" class="btn btn-outline-primary btn-sm">退出</button>
+                        </form>
+                        {%- endif -%}
                         {%- elif can_join(course) -%}
                         <form action="/OnlineJudge/course/{{ course.id }}/join" method="POST">
                             {{ g.csrf() }}

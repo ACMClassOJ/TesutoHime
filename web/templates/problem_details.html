@@ -159,18 +159,6 @@
         {%- endif -%}
     </div>
 </div>
-<br>
-<div class="row">
-    <div class="btn-group m-auto">
-        <a href="/OnlineJudge/problem/{{ problem.id }}/submit" class="btn btn-primary"> 提交 </a>
-        <a href="/OnlineJudge/status?problem_id={{ problem.id }}" class="btn btn-info"> 评测状态 </a> {% if not In_Exam -%}
-        <a href="/OnlineJudge/problem/{{ problem.id }}/discuss" class="btn btn-success"> 讨论 </a>
-        <a href="/OnlineJudge/problem/{{ problem.id }}/rank" class="btn btn-light"> 排行榜 </a> {%- endif %}
-        {% if g.is_can_read %}
-        <a href="/OnlineJudge/admin/problem/{{ problem.id }}/data-zip" class="btn btn-warning"> 下载本题数据 </a>
-        {%- endif %}
-    </div>
-</div>
 {% endblock %}
 
 {% block script %}

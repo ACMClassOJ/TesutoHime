@@ -33,6 +33,8 @@
         <h3>班级简介</h3>
         <div>{{ render(course.description) }} </div>
         <hr>
+        {%- else -%}
+        <div>班级暂无介绍</div>
         {%- endif -%}
 
         {%- set separator = namespace(t=False) -%}

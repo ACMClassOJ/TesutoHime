@@ -7,7 +7,7 @@ from http.client import (BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR,
                          NOT_FOUND, OK, REQUEST_ENTITY_TOO_LARGE, SEE_OTHER,
                          UNAUTHORIZED)
 from math import ceil
-from typing import List, Optional
+from typing import List, NoReturn, Optional
 from urllib.parse import quote, urlencode, urljoin
 from uuid import uuid4
 
@@ -23,7 +23,8 @@ import commons.task_typing
 import web.const as consts
 import web.utils as utils
 from commons.models import (Contest, Course, CourseTag, Enrollment, Group,
-                            JudgeRecordV2, JudgeStatus, Problem, ProblemPrivilege, ProblemPrivilegeType,
+                            JudgeRecordV2, JudgeStatus, Problem,
+                            ProblemPrivilege, ProblemPrivilegeType,
                             RealnameReference, Term, User)
 from commons.task_typing import ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
@@ -179,11 +180,11 @@ def require_logged_in(func):
 def set_tab(tab):
     g.current_tab = tab
 
-def alert_success(content):
+def alert_success(content: str):
     g.alert = { 'type': 'success', 'content': content }
 
 class AlertFail(Exception): pass
-def alert_fail(content):
+def alert_fail(content: str) -> NoReturn:
     g.alert = { 'type': 'danger', 'content': content }
     raise AlertFail
 
@@ -364,7 +365,7 @@ def process_problem_admin(problem: Problem):
         set_tab('overview')
         problem.title = request.form['title']
         problem.release_time = datetime.fromisoformat(request.form['time'])
-        problem.problem_type = request.form['problem_type']
+        problem.problem_type = int(request.form['problem_type'])
         problem.allow_public_submissions = request.form['allow_public_submissions'] == 'true'
         alert_success('编辑基本信息成功')
     elif action == 'hide':
@@ -404,6 +405,8 @@ def process_problem_admin(problem: Problem):
     elif action == 'priv-remove':
         set_tab('privileges')
         priv = db.get(ProblemPrivilege, int(request.form['id']))
+        if priv is None:
+            abort(BAD_REQUEST)
         user = priv.user
         if priv.problem != problem:
             abort(BAD_REQUEST)
@@ -454,6 +457,7 @@ def problem_submit(problem: Problem):
                                    quiz=quiz_json['problems'] if success else None)
     else:
         public = bool(request.form.get('shared', 0))  # 0 or 1
+        in_exam = problem_in_exam(problem.id)
         if in_exam or not problem.allow_public_submissions:
             public = False
         lang_request_str = str(request.form.get('lang'))

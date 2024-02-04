@@ -360,7 +360,14 @@ def problem_detail(problem: Problem):
 @ignore_alert_fail
 def process_problem_admin(problem: Problem):
     action = request.form['action']
-    if action == 'hide':
+    if action == 'edit':
+        set_tab('overview')
+        problem.title = request.form['title']
+        problem.release_time = datetime.fromisoformat(request.form['time'])
+        problem.problem_type = request.form['problem_type']
+        problem.allow_public_submissions = request.form['allow_public_submissions'] == 'true'
+        alert_success('编辑基本信息成功')
+    elif action == 'hide':
         set_tab('overview')
         ProblemManager.hide_problem(problem)
         alert_success('已取消发布')
@@ -427,15 +434,14 @@ def problem_admin(problem: Problem):
 @require_logged_in
 def problem_submit(problem: Problem):
     if request.method == 'GET':
-        title = problem.title
-        problem_type = problem.problem_type
         in_exam = problem_in_exam(problem.id)
-        if problem_type == 0:
+        if problem.problem_type == 0:
             languages_accepted = ProblemManager.languages_accepted(problem)
             return render_template('problem_submit.html',
-                                   Problem_ID=problem.id, Title=title, In_Exam=in_exam,
+                                   Problem_ID=problem.id, In_Exam=in_exam,
+                                   problem=problem,
                                    languages_accepted=languages_accepted)
-        elif problem_type == 1:
+        elif problem.problem_type == 1:
             quiz_json = QuizManager.get_json_from_data_service_by_id(QuizTempDataConfig, problem.id)
             success = quiz_json['e'] == 0
             if success:
@@ -448,6 +454,8 @@ def problem_submit(problem: Problem):
                                    quiz=quiz_json['problems'] if success else None)
     else:
         public = bool(request.form.get('shared', 0))  # 0 or 1
+        if in_exam or not problem.allow_public_submissions:
+            public = False
         lang_request_str = str(request.form.get('lang'))
         if lang_request_str == 'quiz':
             user_code: Optional[str] = json.dumps(request.form.to_dict())

@@ -151,25 +151,6 @@ $(() => {
         })
     })
 
-    $('#form-overview').submit(function (e) {
-        e.preventDefault()
-        e.stopPropagation()
-        const data = $(this).serializeObject()
-        fetch(`/OnlineJudge/admin/problem/${problemId}`, {
-            method: 'put',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        }).then(res => {
-            if (!res.ok) {
-                swal(`Error ${res.status}`, res.statusText, 'error')
-            } else {
-                swal('Success', '', 'success')
-            }
-        })
-    })
-
 
     // data-gui
     function extract_limit() {

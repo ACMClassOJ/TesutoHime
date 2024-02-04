@@ -53,7 +53,9 @@
     <div class="tab-content">
         <div {{ begin_tab('overview') }}>
             <h3>基本信息</h3>
-            <form id="form-overview">
+            <form method="POST" class="clearfix">
+                {{ g.csrf() }}
+                <input type="hidden" name="action" value="edit">
                 <div class="form-row">
                     <div class="form-group col-md-3">
                         <label for="iptTitle">题目标题</label>
@@ -70,9 +72,16 @@
                             {{ option_list({ 0: '代码题', 1: '填选题' }, problem.problem_type) }}
                         </select>
                     </div>
-                    <div class="float-right d-flex mb-3 ml-auto">
-                        <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
+                    <div class="form-group col-md-3">
+                        <label for="allow-public-submissions">允许公开代码</label>
+                        <select class="form-control selectpicker" name="allow_public_submissions" id="allow-public-submissions"
+                                data-style="form-control font-weight-normal border-grey shadow-none">
+                            {{ option_list({ 'true': '允许', 'false': '不允许' }, 'true' if problem.allow_public_submissions else 'false') }}
+                        </select>
                     </div>
+                </div>
+                <div class="float-right d-flex mb-3 ml-auto">
+                    <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
                 </div>
             </form>
             <h3>题目状态</h3>

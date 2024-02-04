@@ -101,22 +101,6 @@ def writes_problem(func):
         return func(problem, *args, **kwargs)
     return wrapped
 
-@admin.route('/problem/<problem:problem>', methods=['put'])
-@writes_problem
-def problem_info(problem: Problem):
-    form = request.json
-    if form is None:
-        abort(BAD_REQUEST)
-    try:
-        problem.title = form['title']
-        problem.release_time = datetime.fromisoformat(form['time'])
-        problem.problem_type = form['problem_type']
-        return make_response('', NO_CONTENT)
-    except KeyError:
-        abort(BAD_REQUEST)
-    except ValueError:
-        abort(BAD_REQUEST)
-
 @admin.route('/problem/<problem:problem>/description', methods=['put'])
 @writes_problem
 def problem_description(problem: Problem):

@@ -9,7 +9,7 @@
 {% block content %}
     <div class="card card-body">
         <h1 class="title-nav">
-            <span class="title-nav__title">{{ Problem_ID }}. {{ Title }}</span>
+            <span class="title-nav__title">{{ Problem_ID }}. {{ problem.title }}</span>
             <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
                 <li class="nav-item">
                     <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}">题面</a>
@@ -61,7 +61,7 @@
             {%- endif %}
             <div class="row mx-0">
                 <label for="code">代码</label>
-                {% if not In_Exam -%}
+                {% if not In_Exam and problem.allow_public_submissions -%}
                     <div class="form-group ml-auto">
                         <div class="custom-control custom-switch">
                             <input class="custom-control-input" type="checkbox" name="shared" id="shared"

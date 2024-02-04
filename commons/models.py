@@ -196,6 +196,7 @@ class Problem(UseTimestamps, Base):
     release_time: Mapped[datetime]
     problem_type: Mapped[int] = mapped_column(server_default=text('0'))
     languages_accepted: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text))
+    allow_public_submissions: Mapped[bool] = mapped_column(server_default=text('true'))
 
     contests: Mapped[Set['Contest']] = relationship(
         secondary='contest_problem',

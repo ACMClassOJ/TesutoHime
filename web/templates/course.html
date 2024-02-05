@@ -32,19 +32,14 @@
         {%- if course.description != '' -%}
         <h3>班级简介</h3>
         <div>{{ render(course.description) }} </div>
-        <hr>
         {%- else -%}
         <div>班级暂无介绍</div>
         {%- endif -%}
 
-        {%- set separator = namespace(t=False) -%}
         {%- for type in 'in-progress', 'future', 'past' -%}
         {%- set contests = suggestions[type] -%}
         {%- if contests | length > 0 -%}
-        {%- if separator.t -%}
         <hr>
-        {%- endif -%}
-        {%- set separator.t = True -%}
         <h3 class="mb-3">{{ { 'in-progress': '正在进行', 'future': '即将开始', 'past': '刚刚结束' }[type] }}</h3>
         <div class="contest-card-group">
             {%- for contest in contests -%}

@@ -58,9 +58,9 @@
                     {%- else -%}
                     <button disabled class="btn btn-primary btn-sm">已报名</button>
                     {%- endif -%}
-                    {%- elif reason_cannot_join == 'in-exam' -%}
+                    {%- elif reason == 'in-exam' -%}
                     <button disabled class="btn btn-primary btn-sm">已于考试中</button>
-                    {%- elif reason_cannot_join == 'ended' -%}
+                    {%- elif reason == 'ended' -%}
                     <!-- <button disabled class="btn btn-primary btn-sm">报名</button> -->
                     {%- else -%}
                     <form action="/OnlineJudge/problemset/{{ contest.id }}/join" method="POST">

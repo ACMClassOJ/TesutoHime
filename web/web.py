@@ -202,7 +202,7 @@ def ignore_alert_fail(func):
 def index():
     suggestions = None
     if g.user is not None:
-        contests = ContestManager.get_contests_for_user(g.user)
+        contests = ContestManager.get_contests_for_user(g.user, True)
         suggestions = ContestManager.suggest_contests(list(contests))
     return render_template('index.html', news=NewsManager.get_news(),
                            suggestions=suggestions)
@@ -424,7 +424,9 @@ def problem_admin(problem: Problem):
         abort(FORBIDDEN)
 
     if request.method == 'POST':
-        process_problem_admin(problem)
+        resp = process_problem_admin(problem)
+        if resp is not None:
+            return resp
 
     submission_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem.id).count()
     ac_count = db.query(JudgeRecordV2.id).where(JudgeRecordV2.problem_id == problem.id).where(JudgeRecordV2.status == JudgeStatus.accepted).count()
@@ -767,7 +769,7 @@ def contest_list_generic(type, type_zh):
     contest_id = request.args.get(f'{type}_id')
     if contest_id is not None:
         return redirect(f'/OnlineJudge/problemset/{contest_id}')
-    implicit_contests = ContestManager._get_implicit_contests(g.user)
+    implicit_contests = ContestManager.get_implicit_contests(g.user)
     user_contests = set(implicit_contests).union(g.user.external_contests)
 
     page = request.args.get('page')
@@ -889,7 +891,9 @@ def problemset_admin(contest: Contest):
         abort(FORBIDDEN)
 
     if request.method == 'POST':
-        process_problemset_admin(contest)
+        resp = process_problemset_admin(contest)
+        if resp is not None:
+            return resp
 
     scores = ContestManager.get_scores(contest)
     # problem id -> (try count, ac count)
@@ -1187,7 +1191,9 @@ def course_admin(course: Course):
 
     g.expand_group = request.args.get('group', None)
     if request.method == 'POST':
-        process_course_admin(course)
+        resp = process_course_admin(course)
+        if resp is not None:
+            return resp
 
     return render_template('course_admin.html', course=course)
 

@@ -220,6 +220,12 @@ html body a.card--contest:focus {
 .border-grey {
     --border-color: #cad1d7;
 }
+.alert.alert-success {
+    background-color: rgba(0, 195.5965909090909, 111.5625, 0.6901960784313725);
+}
+.alert.alert-danger {
+    background-color: rgba(244.86491320391158, 40.896291432632275, 81.43663861698592, 0.7893370980392157);
+}
 .card--contest .card-header::after {
     content: '';
     position: absolute;

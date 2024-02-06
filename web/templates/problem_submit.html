@@ -41,6 +41,7 @@
             </ul>
         </h1>
         <hr>
+        {% if languages_accepted | length > 0 -%}
         <form method="post" id="problem-submit-form">
             {{ g.csrf() }}
             {% if languages_accepted | length > 1 -%}
@@ -54,8 +55,6 @@
                     {%- endfor -%}
                 </select>
             </div>
-            {%- elif languages_accepted | length == 0 -%}
-            <p><strong>题目配置错误：不允许任何语言提交</strong></p>
             {%- else -%}
             <input type="hidden" id="lang" name="lang" value="{{ languages_accepted[0] }}">
             {%- endif %}
@@ -78,6 +77,9 @@
             </noscript>
             <input type="submit" disabled id="submit-button" class="btn btn-block btn-primary" value="提交评测">
         </form>
+        {%- else -%}
+        <p>此题目暂时无法评测。</p>
+        {%- endif -%}
     </div>
 {% endblock %}
 

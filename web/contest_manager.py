@@ -156,7 +156,7 @@ class ContestManager:
             .where(True if include_admin else (~Enrollment.admin)) \
             .join(RealnameReference, RealnameReference.course_id == Contest.course_id) \
             .where(RealnameReference.student_id == user.student_id) \
-            .where(or_(Contest.group_ids == None,
+            .where(True if include_admin else or_(Contest.group_ids == None,
                        select(GroupRealnameReference.id)
                        .where(GroupRealnameReference.realname_reference_id == RealnameReference.id)
                        .where(GroupRealnameReference.group_id == func.any(Contest.group_ids))

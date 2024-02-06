@@ -15,10 +15,10 @@ async def process_problem(problem_id):
     try:
         plan = await read_file(s3_buckets.problems, plan_key(problem_id))
         plan = deserialize(plan)
+        languages = languages_accepted(plan)
     except ClientError:
         print(f'Unable to get judge plan for problem {problem_id}')
-        return
-    languages = languages_accepted(plan)
+        languages = []
     stmt = update(Problem) \
         .where(Problem.id == problem_id) \
         .values(languages_accepted=languages)

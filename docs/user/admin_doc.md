@@ -1,6 +1,6 @@
 # 管理界面使用指南
 
-by cong258258，LauYeeYu，Alan-Liang，更新于 2024.2.8
+*By cong258258，LauYeeYu，Alan-Liang，更新于 2024.2.8。*
 
 ## 班级管理
 

@@ -1,6 +1,6 @@
 # 数据格式规范
 
-by cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.6.29
+*By cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.6.29。*
 
 **请注意：输出文件大于 256 MiB 时会报错 (File size limit exceeded)，请确保题目的标准答案不会超过 256 MiB。**
 

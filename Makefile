@@ -3,9 +3,9 @@ USER_DOCS = \
 	web/templates/problem_format_doc.html \
 	web/templates/data_doc.html \
 	web/templates/package_sample.html \
-	web/templates/account_and_profile.html \
-	web/templates/classes_contests_homework_and_exams.html \
-	web/templates/view_submit_and_judge_problems.html \
+	web/templates/account_and_profile_doc.html \
+	web/templates/classes_contests_homework_and_exams_doc.html \
+	web/templates/view_submit_and_judge_problems_doc.html \
 	web/templates/docs_overview.html
 
 .PHONY: all
@@ -61,21 +61,21 @@ web/templates/package_sample.html: docs/user/package_sample.html
 	@echo "</div>" >> '$@'
 	@echo "{% endblock %}" >> '$@'
 
-web/templates/account_and_profile.html: docs/user/account_and_profile.html
+web/templates/account_and_profile_doc.html: docs/user/account_and_profile.html
 	@echo "{% extends 'base.html' %} {% set page='账户和个人信息文档' %} {% block content %}" > '$@'
 	@echo "<div class=\"card card-body\">" >> '$@'
 	@cat $< >> '$@'
 	@echo "</div>" >> '$@'
 	@echo "{% endblock %}" >> '$@'
 
-web/templates/classes_contests_homework_and_exams.html: docs/user/classes_contests_homework_and_exams.html
+web/templates/classes_contests_homework_and_exams_doc.html: docs/user/classes_contests_homework_and_exams.html
 	@echo "{% extends 'base.html' %} {% set page='班级、比赛、作业与考试文档' %} {% block content %}" > '$@'
 	@echo "<div class=\"card card-body\">" >> '$@'
 	@cat $< >> '$@'
 	@echo "</div>" >> '$@'
 	@echo "{% endblock %}" >> '$@'
 
-web/templates/view_submit_and_judge_problems.html: docs/user/view_submit_and_judge_problems.html
+web/templates/view_submit_and_judge_problems_doc.html: docs/user/view_submit_and_judge_problems.html
 	@echo "{% extends 'base.html' %} {% set page='查看、提交及评测题目文档' %} {% block content %}" > '$@'
 	@echo "<div class=\"card card-body\">" >> '$@'
 	@cat $< >> '$@'

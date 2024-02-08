@@ -11,28 +11,19 @@
 <p>题目首页上会显示题目的基本信息，包括题目名称、题目描述、输入输出格式、样例输入输出、数据范围等。</p>
 <h2 id="提交题目">提交题目</h2>
 <p>在题目页面上，点击「提交」按钮，在输入框中输入代码，然后点击「提交」按钮即可提交代码。</p>
-<p>ACM Class OnlineJudge
-会自动识别提交方式。通常情况下，自动识别会准确判断提交的语言，但是有时候会出现错误。如果出现错误，可以手动选择语言。</p>
-<p>对于一般的题目（非提交 C++ 头文件、不限定 Verilog 等），ACM Class
-OnlineJudge 支持的提交方式为 C++、Git 仓库、Python。</p>
+<p>ACM Class OnlineJudge 会自动识别提交方式。通常情况下，自动识别会准确判断提交的语言，但是有时候会出现错误。如果出现错误，可以手动选择语言。</p>
+<p>对于一般的题目（非提交 C++ 头文件、不限定 Verilog 等），ACM Class OnlineJudge 支持的提交方式为 C++、Git 仓库、Python。</p>
 <p>如果题目限定提交头文件，那么提交方式只有 C++。</p>
 <p>如果题目限定提交 Verilog，那么提交方式只有 Verilog。</p>
 <p>如果题目评测方式为「自定义评测」，那么提交方式为纯文本。</p>
-<p>如果题目评测点包含内存检查 (valgrind)，那么提交方式为 C++ 和 Git
-仓库。</p>
-<p>提交后，浏览器会自动跳转到提交详情页面，你的代码会自动评测（具体见<a
-href="#评测方式">评测方式</a>），评测结果会显示在提交页面上。评测过程中会显示当前已经评测完成的数据点的情况。在完成评测前，可以随时终止评测。</p>
+<p>如果题目评测点包含内存检查 (valgrind)，那么提交方式为 C++ 和 Git 仓库。</p>
+<p>提交后，浏览器会自动跳转到提交详情页面，你的代码会自动评测（具体见<a href="#评测方式">评测方式</a>），评测结果会显示在提交页面上。评测过程中会显示当前已经评测完成的数据点的情况。在完成评测前，可以随时终止评测。</p>
 <h2 id="评测方式">评测方式</h2>
 <p>对于一般的评测，会经历三个阶段：编译、运行、检查。（可能会有一些阶段被省略）</p>
-<p>在编译阶段，会根据题目指定的评测方式以及您的提交方式进行编译，具体编译流程请看<a
-href="#编译流程">编译流程</a>部分。此阶段的错误将会被显示为 Compile
-Error。（有一些情况不会经历编译阶段，如无需编译的语言、特殊提交方式等）</p>
-<p>在运行阶段，会根据题目指定的方式运行之前编译好的代码。评测详情显示的评测点的运行时长、内存占用、文件占用信息都是这个阶段运行的结果。如果此阶段程序意外退出，会显示
-Runtime Error。如果此阶段程序运行超时，会显示 Time Limit Exceeded。</p>
+<p>在编译阶段，会根据题目指定的评测方式以及您的提交方式进行编译，具体编译流程请看<a href="#编译流程">编译流程</a>部分。此阶段的错误将会被显示为 Compile Error。（有一些情况不会经历编译阶段，如无需编译的语言、特殊提交方式等）</p>
+<p>在运行阶段，会根据题目指定的方式运行之前编译好的代码。评测详情显示的评测点的运行时长、内存占用、文件占用信息都是这个阶段运行的结果。如果此阶段程序意外退出，会显示 Runtime Error。如果此阶段程序运行超时，会显示 Time Limit Exceeded。</p>
 <p>在检查阶段，会根据题目指定的方式检查运行的结果。</p>
-<p><strong>敬请注意：在每个阶段中，为保证评测不会影响服务器的正常运行，评测均会在沙箱里面完成（沙箱会限制文件系统、运行
-CPU
-数、运行时长等参数），因此环境可能和您的本地环境有所不同。</strong></p>
+<p><strong>敬请注意：在每个阶段中，为保证评测不会影响服务器的正常运行，评测均会在沙箱里面完成（沙箱会限制文件系统、运行 CPU 数、运行时长等参数），因此环境可能和您的本地环境有所不同。</strong></p>
 <h3 id="编译流程">编译流程</h3>
 <h4 id="c-编译流程">C++ 编译流程</h4>
 <p>对于 C++ 提交，我们会使用类似下面的指令进行编译：</p>
@@ -40,37 +31,24 @@ CPU
 <h4 id="git-编译流程">Git 编译流程</h4>
 <p>对于 Git 编译，我们首先会使用类似下面的指令复制仓库：</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone <span class="op">&lt;</span>repo_url<span class="op">&gt;</span> . <span class="at">--depth</span> 1 <span class="at">--recurse-submodules</span> <span class="at">--shallow-submodules</span> <span class="at">--no-local</span></span></code></pre></div>
-<p>然后检查是否有 <code>CMakeLists.txt</code>
-文件，如果则有运行（没有则会显示一条警告信息）</p>
+<p>然后检查是否有 <code>CMakeLists.txt</code> 文件，如果则有运行（没有则会显示一条警告信息）</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> .</span></code></pre></div>
-<p>最后检查是否有
-<code>GNUmakefile</code>/<code>makefile</code>/<code>Makefile</code>
-中任意一个文件（如果之前运行了 cmake，则为生成的
-<code>Makefile</code>），如果有则运行（没有则会显示一条警告信息）</p>
+<p>最后检查是否有 <code>GNUmakefile</code>/<code>makefile</code>/<code>Makefile</code> 中任意一个文件（如果之前运行了 cmake，则为生成的 <code>Makefile</code>），如果有则运行（没有则会显示一条警告信息）</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span></code></pre></div>
-<p>这个过程完成后，我们会将项目根目录的 <code>code</code>
-文件作为编译结果。</p>
+<p>这个过程完成后，我们会将项目根目录的 <code>code</code> 文件作为编译结果。</p>
 <h4 id="verilog-编译流程">Verilog 编译流程</h4>
 <p>对于 Verilog 编译，我们会使用类似下面的指令进行编译：</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">iverlog</span> answer.v <span class="at">-o</span> code</span></code></pre></div>
 <h2 id="查看评测详情">查看评测详情</h2>
 <p>在「评测详情」列表中，找到需要查看的提交，点击提交的「评测状态」或「语言」栏即可跳转到提交详情。</p>
 <p>评测详情页面上会显示提交的代码以及每个评测点的评测详情（包括评测结果、运行时长、内存占用、文件占用、评测时的提示信息）等信息。如果有编译时的提示信息，也会显示在提交代码上方。</p>
-<p>对于 Git
-提交，为了方便助教验证提交，我们会额外记录一些信息。包括：</p>
+<p>对于 Git 提交，为了方便助教验证提交，我们会额外记录一些信息。包括：</p>
 <ul>
-<li>参与评测的提交所对应的 commit hash，助教可以根据这个 commit hash
-找到对应的提交；</li>
-<li>如果在编译过程中没有使用 cmake 或
-make，则分别会显示一条警告信息。（具体请见 <a href="#git-编译流程">Git
-编译流程</a>部分）</li>
+<li>参与评测的提交所对应的 commit hash，助教可以根据这个 commit hash 找到对应的提交；</li>
+<li>如果在编译过程中没有使用 cmake 或 make，则分别会显示一条警告信息。（具体请见 <a href="#git-编译流程">Git 编译流程</a>部分）</li>
 </ul>
 <h2 id="评测结果">评测结果</h2>
 <table>
-<colgroup>
-<col style="width: 62%" />
-<col style="width: 37%" />
-</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: center;">评测结果</th>
@@ -112,8 +90,7 @@ make，则分别会显示一条警告信息。（具体请见 <a href="#git-编�
 </tr>
 <tr class="odd">
 <td style="text-align: center;">Runtime Error</td>
-<td>运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、程序返回值不为
-0、除以 0 等。</td>
+<td>运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、程序返回值不为 0、除以 0 等。</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">Time Limit Exceed</td>

@@ -93,7 +93,7 @@ web/static/argon.min.css: web/static/argon.css
 	postcss --use cssnano -o web/static/argon.min.css --no-map web/static/argon.css
 
 docs/user/%.html: docs/user/%.md
-	pandoc '$<' -t html -o '$@'
+	pandoc '$<' -t html -o '$@' --columns=2147483647
 	sed -i \
 		-e 's/admin_doc.md/admin-doc/g' \
 		-e 's/data_doc.md/data-doc/g' \

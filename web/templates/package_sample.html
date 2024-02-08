@@ -2,10 +2,7 @@
 <div class="card card-body">
 <h1 id="数据包样例">数据包样例</h1>
 <p><em>By LauYeeYu，更新于 2023.3.15。</em></p>
-<p><em>警告：错误的 json
-将会导致各种意料之外的错误，因此在编辑时请务必确保格式符合！除非对 json
-非常了解，或必须自定义 json，否则强烈建议使用数据 (GUI) 标签页下的下载
-json 功能。</em></p>
+<p><em>警告：错误的 json 将会导致各种意料之外的错误，因此在编辑时请务必确保格式符合！除非对 json 非常了解，或必须自定义 json，否则强烈建议使用数据 (GUI) 标签页下的下载 json 功能。</em></p>
 <ul>
 <li><a href="#spj-0">SPJ 0</a></li>
 <li><a href="#spj-1">SPJ 1</a></li>
@@ -17,14 +14,8 @@ json 功能。</em></p>
 <li><a href="#verilog">Verilog</a></li>
 </ul>
 <h2 id="spj-0">SPJ 0</h2>
-<p>题号为 1 的普通题目共 4
-个测试点，测试程序由提交者给出，测试点将检查测试程序在测试点输入
-(<code>*.in</code>) 下的输出与所给出的标准输出 (<code>*.out</code>)
-是否一致。</p>
-<p>其中，1 和 3、2 和 4 的输入输出均是一样的，但 1、2
-测试点无需内存泄漏检查，3、4
-测试点需要内存泄漏检查。为了节约时间，建议将 1、2 的测试点分别设置为
-3、4 测试点的依赖。</p>
+<p>题号为 1 的普通题目共 4 个测试点，测试程序由提交者给出，测试点将检查测试程序在测试点输入 (<code>*.in</code>) 下的输出与所给出的标准输出 (<code>*.out</code>) 是否一致。</p>
+<p>其中，1 和 3、2 和 4 的输入输出均是一样的，但 1、2 测试点无需内存泄漏检查，3、4 测试点需要内存泄漏检查。为了节约时间，建议将 1、2 的测试点分别设置为 3、4 测试点的依赖。</p>
 <p>数据包结构如下：</p>
 <pre class="plain"><code>1.zip
 └── 1
@@ -39,8 +30,7 @@ json 功能。</em></p>
     ├── config.json
     └── solution.cpp</code></pre>
 <h2 id="config.json">config.json</h2>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Groups&quot;</span><span class="fu">:</span><span class="ot">[</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;GroupID&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
@@ -113,8 +103,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="
 <span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;SPJ&quot;</span><span class="fu">:</span> <span class="dv">0</span></span>
 <span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h2 id="spj-1">SPJ 1</h2>
-<p>题号为 2 的 SPJ 题目共 2 个测试点，由 <code>spj.cpp</code>
-分析用户的输出结果后给出分数。</p>
+<p>题号为 2 的 SPJ 题目共 2 个测试点，由 <code>spj.cpp</code> 分析用户的输出结果后给出分数。</p>
 <p>数据包结构如下：</p>
 <pre class="plain"><code>2.zip
 └── 2
@@ -126,8 +115,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="
     ├── solution.cpp
     └── spj.cpp</code></pre>
 <h3 id="spj.cpp">spj.cpp</h3>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> argc<span class="op">,</span> <span class="dt">char</span> <span class="op">*</span>argv<span class="op">[])</span> <span class="op">{</span></span>
@@ -146,8 +134,7 @@ class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb4-1"><a href="#c
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 id="config.json-1">config.json</h3>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Groups&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;GroupID&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
@@ -188,8 +175,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="
 <span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;SPJ&quot;</span><span class="fu">:</span> <span class="dv">1</span></span>
 <span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h2 id="spj-2">SPJ 2</h2>
-<p>题号为 3 的 SPJ 题目共 2 个测试点，由 <code>*.cpp</code>
-结合用户的输入文件（视作 <code>src.hpp</code>）运行并输出得分。</p>
+<p>题号为 3 的 SPJ 题目共 2 个测试点，由 <code>*.cpp</code> 结合用户的输入文件（视作 <code>src.hpp</code>）运行并输出得分。</p>
 <p>数据包结构如下：</p>
 <pre class="plain"><code>3.zip
 └── 3
@@ -198,10 +184,8 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="
     ├── config.json
     └── solution.hpp</code></pre>
 <h3 id="cpp2.cpp">1.cpp/2.cpp</h3>
-<p><em>注：如果所有测试点的 C++ 代码都相同，可以只提供一个
-<code>main.cpp</code> 文件。</em></p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
+<p><em>注：如果所有测试点的 C++ 代码都相同，可以只提供一个 <code>main.cpp</code> 文件。</em></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;src.hpp&quot;</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -215,8 +199,7 @@ class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb7-1"><a href="#c
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 id="config.json-2">config.json</h3>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb8"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Groups&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;GroupID&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
@@ -257,9 +240,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="
 <span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;SPJ&quot;</span><span class="fu">:</span> <span class="dv">2</span></span>
 <span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h2 id="spj-3">SPJ 3</h2>
-<p>题号为 4 的 SPJ 题目共 2 个测试点，由 <code>*.cpp</code>
-结合用户的输入文件（视作
-<code>src.hpp</code>）运行并输出，然后再与标准答案进行比较。</p>
+<p>题号为 4 的 SPJ 题目共 2 个测试点，由 <code>*.cpp</code> 结合用户的输入文件（视作 <code>src.hpp</code>）运行并输出，然后再与标准答案进行比较。</p>
 <p>数据包结构如下：</p>
 <pre class="plain"><code>4.zip
 └── 4
@@ -272,8 +253,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="
     ├── config.json
     └── solution.hpp</code></pre>
 <h3 id="config.json-3">config.json</h3>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb10"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Groups&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;GroupID&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
@@ -314,9 +294,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href=
 <span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;SPJ&quot;</span><span class="fu">:</span> <span class="dv">3</span></span>
 <span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h2 id="spj-4">SPJ 4</h2>
-<p>题号为 5 的 SPJ 题目共 2 个测试点，由 <code>*.cpp</code>
-结合用户的输入文件（视作 <code>src.hpp</code>）运行并输出，由
-<code>spj.cpp</code> 根据输出结果给出分数。</p>
+<p>题号为 5 的 SPJ 题目共 2 个测试点，由 <code>*.cpp</code> 结合用户的输入文件（视作 <code>src.hpp</code>）运行并输出，由 <code>spj.cpp</code> 根据输出结果给出分数。</p>
 <p>数据包结构如下：</p>
 <pre class="plain"><code>5.zip
 └── 5
@@ -330,8 +308,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href=
     ├── solution.hpp
     └── spj.cpp</code></pre>
 <h3 id="spj.cpp-1">spj.cpp</h3>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
+<div class="sourceCode" id="cb12"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> argc<span class="op">,</span> <span class="dt">char</span> <span class="op">*</span>argv<span class="op">[])</span> <span class="op">{</span></span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FILE</span> <span class="op">*</span>input <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">1</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的输入文件</span></span>
@@ -349,8 +326,7 @@ class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb12-1"><a href="#
 <span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
 <span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 id="config.json-4">config.json</h3>
-<div class="sourceCode" id="cb13"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb13"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Groups&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;GroupID&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
@@ -391,8 +367,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href=
 <span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;SPJ&quot;</span><span class="fu">:</span> <span class="dv">4</span></span>
 <span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h2 id="spj-5">SPJ 5</h2>
-<p>题号为 6 的 SPJ 题目共 2 个测试点，由 <code>spj.cpp</code>
-根据用户输入给出分数。</p>
+<p>题号为 6 的 SPJ 题目共 2 个测试点，由 <code>spj.cpp</code> 根据用户输入给出分数。</p>
 <p>数据包结构如下：</p>
 <pre class="plain"><code>6.zip
 └── 6
@@ -404,8 +379,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href=
     ├── solution.hpp
     └── spj.cpp</code></pre>
 <h3 id="spj.cpp-2">spj.cpp</h3>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
+<div class="sourceCode" id="cb15"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> argc<span class="op">,</span> <span class="dt">char</span> <span class="op">*</span>argv<span class="op">[])</span> <span class="op">{</span></span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FILE</span> <span class="op">*</span>input <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">1</span><span class="op">],</span> <span class="st">&quot;r&quot;</span><span class="op">);</span> <span class="co">// 题目的输入文件</span></span>
@@ -423,8 +397,7 @@ class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb15-1"><a href="#
 <span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
 <span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 id="config.json-5">config.json</h3>
-<div class="sourceCode" id="cb16"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb16"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Groups&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;GroupID&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
@@ -465,8 +438,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href=
 <span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;SPJ&quot;</span><span class="fu">:</span> <span class="dv">5</span></span>
 <span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h2 id="文件共享">文件共享</h2>
-<p>题号为 6 的 SPJ 题目共 4 个测试点。其中，第 1 个测试点单独进行，第
-2、3、4 个测试点共享文件，且需要按照顺序进行。最多只允许 20 个文件。</p>
+<p>题号为 6 的 SPJ 题目共 4 个测试点。其中，第 1 个测试点单独进行，第 2、3、4 个测试点共享文件，且需要按照顺序进行。最多只允许 20 个文件。</p>
 <p>数据包结构如下：</p>
 <pre class="plain"><code>6.zip
 └── 6
@@ -481,8 +453,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href=
     ├── config.json
     └── solution.cpp</code></pre>
 <h3 id="config.json-6">config.json</h3>
-<div class="sourceCode" id="cb18"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb18"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Groups&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;GroupID&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
@@ -546,9 +517,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href=
 <span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Scorer&quot;</span><span class="fu">:</span> <span class="dv">0</span></span>
 <span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h2 id="verilog">Verilog</h2>
-<p>题号为 7 的 Verilog 题目共 2 个测试点，由 <code>*.v</code>
-结合用户的输入文件（视作
-<code>answer.v</code>）运行并输出，然后再与标准答案进行比较。</p>
+<p>题号为 7 的 Verilog 题目共 2 个测试点，由 <code>*.v</code> 结合用户的输入文件（视作 <code>answer.v</code>）运行并输出，然后再与标准答案进行比较。</p>
 <p>数据包结构如下：</p>
 <pre class="plain"><code>7.zip
 └── 7
@@ -558,8 +527,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href=
     ├── 2.out
     └── config.json</code></pre>
 <h3 id="config.json-7">config.json</h3>
-<div class="sourceCode" id="cb20"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb20"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Groups&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;GroupID&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>

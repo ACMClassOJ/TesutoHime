@@ -2,7 +2,10 @@ USER_DOCS = \
 	web/templates/admin_doc.html \
 	web/templates/problem_format_doc.html \
 	web/templates/data_doc.html \
-	web/templates/package_sample.html
+	web/templates/package_sample.html \
+	web/templates/account_and_profile.html \
+	web/templates/classes_contests_homework_and_exams.html \
+	web/templates/view_submit_and_judge_problems.html
 
 .PHONY: all
 all: judger2-sandbox-targets user-docs
@@ -57,14 +60,41 @@ web/templates/package_sample.html: docs/user/package_sample.html
 	@echo "</div>" >> '$@'
 	@echo "{% endblock %}" >> '$@'
 
+web/templates/account_and_profile.html: docs/user/account_and_profile.html
+	@echo "{% extends 'base.html' %} {% set page='账户和个人信息文档' %} {% block content %}" > '$@'
+	@echo "<div class=\"card card-body\">" >> '$@'
+	@cat $< >> '$@'
+	@echo "</div>" >> '$@'
+	@echo "{% endblock %}" >> '$@'
+
+web/templates/classes_contests_homework_and_exams.html: docs/user/classes_contests_homework_and_exams.html
+	@echo "{% extends 'base.html' %} {% set page='班级、比赛、作业与考试文档' %} {% block content %}" > '$@'
+	@echo "<div class=\"card card-body\">" >> '$@'
+	@cat $< >> '$@'
+	@echo "</div>" >> '$@'
+	@echo "{% endblock %}" >> '$@'
+
+web/templates/view_submit_and_judge_problems.html: docs/user/view_submit_and_judge_problems.html
+	@echo "{% extends 'base.html' %} {% set page='查看、提交及评测题目文档' %} {% block content %}" > '$@'
+	@echo "<div class=\"card card-body\">" >> '$@'
+	@cat $< >> '$@'
+	@echo "</div>" >> '$@'
+	@echo "{% endblock %}" >> '$@'
+
 web/static/argon.min.css: web/static/argon.css
 	postcss --use cssnano -o web/static/argon.min.css --no-map web/static/argon.css
 
-docs/user/%.html.raw: docs/user/%.md
+docs/user/%.html: docs/user/%.md
 	pandoc '$<' -t html -o '$@'
-
-docs/user/%.html: docs/user/%.html.raw
-	sed 's/admin_doc.md/admin-doc/g;s/data_doc.md/data-doc/g;s/package_sample.md/package-sample/g;s/problem_format_doc.md/problem-format-doc/g' $< > $@
+	sed -i \
+		-e 's/admin_doc.md/admin-doc/g' \
+		-e 's/data_doc.md/data-doc/g' \
+		-e 's/package_sample.md/package-sample/g' \
+		-e 's/problem_format_doc.md/problem-format-doc/g' \
+		-e 's/account_and_profile.md/account-and-profile/g' \
+		-e 's/classes_contests_homework_and_exams.md/classes-contests-homework-and-exams/g' \
+		-e 's/view_submit_and_judge_problems.md/view-submit-and-judge-problems/g' \
+		'$@'
 
 .PHONY: judger2-sandbox-targets
 judger2-sandbox-targets:

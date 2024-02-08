@@ -210,7 +210,7 @@ def index():
 
 @web.route('/index.html')
 def index2():
-    return redirect('/')
+    return redirect('/OnlineJudge/')
 
 
 @web.route('/api/problem/<problem:problem>/description')
@@ -1258,7 +1258,7 @@ def docs():
 
 @web.route('/docs')
 def docs2():
-    return redirect('/docs/overview')
+    return redirect('/OnlineJudge/docs/overview')
 
 
 @web.route('docs/account-and-profile')

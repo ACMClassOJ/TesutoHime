@@ -5,7 +5,8 @@ USER_DOCS = \
 	web/templates/package_sample.html \
 	web/templates/account_and_profile.html \
 	web/templates/classes_contests_homework_and_exams.html \
-	web/templates/view_submit_and_judge_problems.html
+	web/templates/view_submit_and_judge_problems.html \
+	web/templates/docs_overview.html
 
 .PHONY: all
 all: judger2-sandbox-targets user-docs
@@ -76,6 +77,13 @@ web/templates/classes_contests_homework_and_exams.html: docs/user/classes_contes
 
 web/templates/view_submit_and_judge_problems.html: docs/user/view_submit_and_judge_problems.html
 	@echo "{% extends 'base.html' %} {% set page='查看、提交及评测题目文档' %} {% block content %}" > '$@'
+	@echo "<div class=\"card card-body\">" >> '$@'
+	@cat $< >> '$@'
+	@echo "</div>" >> '$@'
+	@echo "{% endblock %}" >> '$@'
+
+web/templates/docs_overview.html: docs/user/overview.html
+	@echo "{% extends 'base.html' %} {% set page='文档' %} {% block content %}" > '$@'
 	@echo "<div class=\"card card-body\">" >> '$@'
 	@cat $< >> '$@'
 	@echo "</div>" >> '$@'

@@ -1249,6 +1249,53 @@ def profile():
             return ReturnCode.ERR_BAD_DATA
 
 
+# docs
+
+@web.route('/docs/overview')
+def docs():
+    return render_template('docs_overview.html')
+
+
+@web.route('/docs')
+def docs2():
+    return redirect('/docs/overview')
+
+
+@web.route('docs/account-and-profile')
+def account_and_profile_doc():
+    return render_template('account_and_profile_doc.html')
+
+
+@web.route('docs/classes-contests-homework-and-exams')
+def classes_contests_homework_and_exams_doc():
+    return render_template('classes_contests_homework_and_exams_doc.html')
+
+
+@web.route('docs/view-submit-and-judge-problems')
+def view_submit_and_judge_problems_doc():
+    return render_template('view_submit_and_judge_problems_doc.html')
+
+
+@web.route('/docs/admin-doc')
+def admin_doc():
+    return render_template('admin_doc.html')
+
+
+@web.route('/docs/problem-format-doc')
+def problem_format_doc():
+    return render_template('problem_format_doc.html')
+
+
+@web.route('/docs/data-doc')
+def data_doc():
+    return render_template('data_doc.html')
+
+
+@web.route('/docs/package-sample')
+def package_sample():
+    return render_template('package_sample.html')
+
+
 @web.route('/about')
 def about():
     runners = JudgeManager.list_runners()

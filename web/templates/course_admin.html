@@ -32,7 +32,6 @@
             'contest': '比赛与作业',
             'group': '分组',
             'user': '成员',
-            'document': '文档',
         }, 'overview')
     }}
     {{ show_alert() }}
@@ -356,17 +355,6 @@
                     <button class="btn btn-outline-primary mt-auto" type="submit">添加管理员</button>
                 </div>
             </form>
-        </div>
-
-
-        <div {{ begin_tab('document') }}>
-            <h3>管理员文档</h3>
-            <ul>
-                <li><a href="/OnlineJudge/admin/admin-doc">管理界面使用指南</a></li>
-                <li><a href="/OnlineJudge/admin/problem-format-doc">题面格式规范</a></li>
-                <li><a href="/OnlineJudge/admin/data-doc">数据格式规范</a></li>
-                <li><a href="/OnlineJudge/admin/package-sample">数据包样例</a></li>
-            </ul>
         </div>
     </div>
 </div>

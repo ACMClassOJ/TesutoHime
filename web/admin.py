@@ -33,25 +33,6 @@ def index():
     return render_template('admin.html')
 
 
-# docs
-
-@admin.route('/admin-doc')
-def admin_doc():
-    return render_template('admin_doc.html')
-
-@admin.route('/problem-format-doc')
-def problem_format_doc():
-    return render_template('problem_format_doc.html')
-
-@admin.route('/data-doc')
-def data_doc():
-    return render_template('data_doc.html')
-
-@admin.route('/package-sample')
-def package_sample():
-    return render_template('package_sample.html')
-
-
 # user
 
 @admin.route('/user', methods=['post'])

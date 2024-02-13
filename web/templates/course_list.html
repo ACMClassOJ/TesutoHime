@@ -26,37 +26,45 @@
             {% for course in courses -%}
                 <tr>
                     <td>{{ course.id }}</td>
-                    <td><a href="/OnlineJudge/course/{{ course.id }}">{{ course.name }}</a></td>
+                    <td><a href="{{ url_for('.course', course=course) }}">{{ course.name }}</a></td>
                     {%- if show_tag -%}
                     <td>
                         {%- if course.tag_id != None -%}
-                        <a href="/OnlineJudge/course/tag/{{ course.tag.id }}">{{ course.tag.name }}</a>
+                        <a href="{{ url_for('.course_list_tag', tag_id=course.tag.id) }}">{{ course.tag.name }}</a>
                         {%- endif -%}
                     </td>
                     {%- endif -%}
                     {%- if show_term -%}
                     <td>
                         {%- if course.term_id != None -%}
-                        <a href="/OnlineJudge/course/term/{{ course.term.id }}">{{ course.term.name }}</a>
+                        <a href="{{ url_for('.course_list_term', term_id=course.term.id) }}">{{ course.term.name }}</a>
                         {%- endif -%}
                     </td>
                     {%- endif -%}
                     <td>
                         {%- set enrollment = get_enrollment(g.user, course) -%}
+                        {%- set rr = get_realname_reference(g.user.student_id, course.id) -%}
                         {%- if enrollment != None -%}
-                        {%- if enrollment.realname_reference != None -%}
+                        {%- if rr != None -%}
                         <button disabled class="btn btn-primary btn-sm">已加入</button>
                         {%- elif can_join(course) -%}
-                        <form action="/OnlineJudge/course/{{ course.id }}/quit" method="POST">
+                        <form action="{{ url_for('.course_quit', course=course) }}" method="POST">
                             {{ g.csrf() }}
                             <input type="hidden" name="id" value="{{ enrollment.id }}">
+                            <input type="hidden" name="back" value="{{ request.full_path }}">
                             <button type="submit" class="btn btn-outline-primary btn-sm">退出</button>
                         </form>
                         {%- endif -%}
                         {%- elif can_join(course) -%}
-                        <form action="/OnlineJudge/course/{{ course.id }}/join" method="POST">
+                        <form action="{{ url_for('.course_join', course=course) }}" method="POST">
                             {{ g.csrf() }}
-                            <button type="submit" class="btn btn-primary btn-sm">加入</button>
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                {%- if rr != None -%}
+                                加入
+                                {%- else -%}
+                                旁听
+                                {%- endif -%}
+                            </button>
                         </form>
                         {%- endif -%}
                     </td>

@@ -1,4 +1,3 @@
-from datetime import datetime
 from functools import wraps
 from http.client import (BAD_REQUEST, FORBIDDEN, NO_CONTENT,
                          REQUEST_ENTITY_TOO_LARGE, SEE_OTHER)

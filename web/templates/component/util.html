@@ -74,19 +74,25 @@
 
 
 {%- set current_tab_remember = namespace(t=None) -%}
-{%- macro nav_tab_list(tabs, default_tab) -%}
+{%- macro nav_tab_list(tabs, default_tab, title_nav = False) -%}
 {%- set current_tab = request.args.get('tab', default_tab) if 'current_tab' not in g else g.current_tab -%}
 {%- set current_tab_remember.t = current_tab -%}
+{%- set classes = 'title-nav__nav' -%}
+{%- if not title_nav -%}
+{%- set classes = 'nav-fill' -%}
 <div class="nav-wrapper">
-  <ul class="nav nav-pills nav-fill flex-column flex-md-row" role="tablist">
-      {%- for tabname in tabs -%}
-      {%- set active = tabname == current_tab -%}
-      <li class="nav-item">
-        <a class="nav-link mb-sm-2 mb-md-0{{ ' active' if active }}" id="{{ tabname }}-tab-btn" data-toggle="tab" href="#{{ tabname }}-tab" role="tab" aria-controls="{{ tabname }}-tab" aria-selected="{{ 'true' if active else 'false' }}">{{ tabs[tabname] }}</a>
-      </li>
-      {%- endfor -%}
-    </ul>
+{%- endif -%}
+  <ul class="nav nav-pills flex-column flex-md-row {{ classes }}" role="tablist">
+    {%- for tabname in tabs -%}
+    {%- set active = tabname == current_tab -%}
+    <li class="nav-item">
+      <a class="nav-link mb-sm-2 mb-md-0{{ ' active' if active }}" id="{{ tabname }}-tab-btn" data-toggle="tab" href="#{{ tabname }}-tab" role="tab" aria-controls="{{ tabname }}-tab" aria-selected="{{ 'true' if active else 'false' }}">{{ tabs[tabname] }}</a>
+    </li>
+    {%- endfor -%}
+  </ul>
+{%- if not title_nav -%}
 </div>
+{%- endif -%}
 {%- endmacro -%}
 
 {%- macro begin_tab(name) -%}

@@ -5,7 +5,7 @@ from functools import cmp_to_key
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 from flask import g
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import delete, func, or_, select, true
 from sqlalchemy.orm import defer
 
 from commons.models import (Contest, ContestProblem, Course, Enrollment,
@@ -153,10 +153,10 @@ class ContestManager:
         return select(Contest) \
             .join(Enrollment, Enrollment.course_id == Contest.course_id) \
             .where(Enrollment.user_id == user.id) \
-            .where(True if include_admin else (~Enrollment.admin)) \
+            .where(true if include_admin else (~Enrollment.admin)) \
             .join(RealnameReference, RealnameReference.course_id == Contest.course_id) \
             .where(RealnameReference.student_id == user.student_id) \
-            .where(True if include_admin else or_(Contest.group_ids == None,
+            .where(true if include_admin else or_(Contest.group_ids == None,
                        select(GroupRealnameReference.id)
                        .where(GroupRealnameReference.realname_reference_id == RealnameReference.id)
                        .where(GroupRealnameReference.group_id == func.any(Contest.group_ids))

@@ -6,7 +6,7 @@
 				<th>编号</th>
 				<th class="status-list__user">昵称{% if g.is_admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
 				<th class="status-list__problem">题目</th>
-				<th><span class="mr-2">评测状态</span><a href="/OnlineJudge/about">?</a></th>
+				<th><span class="mr-2">评测状态</span><a href="{{ url_for('.about') }}#judge-status">?</a></th>
 				{%- if show_time %}
 				<th class="status-list__time">运行时间</th>
 				{%- endif %}
@@ -34,12 +34,12 @@
 				<span class="text-black-50 float-right"><small>{{ display_real_name(real_name_map[submission.user.student_id]) }}</small></span>
 			</td>
 			<td class="status-list__problem">
-				<a href="/OnlineJudge/problem/{{ submission.problem_id }}">{{ submission.problem_id }}. {{ submission.problem.title }}</a>
+				<a href="{{ url_for('.problem', problem=submission.problem_id) }}">{{ submission.problem_id }}. {{ submission.problem.title }}</a>
 			</td>
 			<td>
 				<strong>
 					{% if show_links[submission] -%}
-					<a href="/OnlineJudge/code/{{ submission.id }}/">
+					<a href="{{ url_for('.submission', submission=submission) }}">
 					{% endif -%}
 						<span class="text-{{ g.consts.judge_status_info[submission.status.name].color }}">{{ g.consts.judge_status_info[submission.status.name].name }}</span>
 					{% if show_links[submission] -%}
@@ -68,7 +68,7 @@
 			{%- endif %}
 
 			{% if show_links[submission] -%}
-			<td><a href="/OnlineJudge/code/{{ submission.id }}/">{{ g.utils.readable_lang(submission.language) }}</a></td>
+			<td><a href="{{ url_for('.submission', submission=submission) }}">{{ g.utils.readable_lang(submission.language) }}</a></td>
 			{% else -%}
 			<td>{{ g.utils.readable_lang(submission.language) }}</td>
 			{%- endif %}

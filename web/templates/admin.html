@@ -10,21 +10,35 @@
     <div class="card card-body">
         <h1 class="title-nav">
             <span class="title-nav__title">管理</span>
-            <ul class="title-nav__nav nav nav-pills flex-column flex-md-row" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" id="judge-tab-btn" data-toggle="tab" href="#judge-tab" role="tab" aria-controls="judge-tab" aria-selected="false">评测</a>
-                </li>
-                {% if g.user.privilege >= g.consts.Privilege.SUPER %}
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" id="user-tab-btn" data-toggle="tab" href="#user-tab" role="tab" aria-controls="user-tab" aria-selected="false">用户</a>
-                </li>
-                {% endif %}
-            </ul>
+            {%- set tabs = { 'problem': '题目', 'judge': '评测' } -%}
+            {%- if g.user.privilege >= g.consts.Privilege.SUPER -%}
+            {%- do tabs.update({ 'user': '用户' }) -%}
+            {%- endif -%}
+            {{ nav_tab_list(tabs, 'problem', True) }}
         </h1>
         <hr>
         <div class="tab-content">
+            <div {{ begin_tab('problem') }}>
+                <h3>管理已有题目</h3>
+                <form id="form-jump-problem">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="problem-id">题目 ID</label>
+                            <input class="form-control" type="number" id="problem-id" required>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <button type="submit" class="btn btn-outline-primary mt-auto">跳转</button>
+                        </div>
+                    </div>
+                </form>
+                <hr>
+                <h3>新建题目</h3>
+                <p>题目需要有所属的班级。请在班级管理界面的「题目」选项卡中创建题目。</p>
+            </div>
+
+
             {% if g.user.privilege >= g.consts.Privilege.SUPER %}
-            <div class="tab-pane fade" id="user-tab" role="tabpanel" aria-labelledby="user-tab-btn">
+            <div {{ begin_tab('user') }}>
                 <form id="formUser">
                     <div class="form-row">
                         <div class="form-group col-md-3">
@@ -57,7 +71,7 @@
             {% endif %}
 
 
-            <div class="tab-pane fade" id="judge-tab" role="tabpanel" aria-labelledby="judge-tab-btn">
+            <div {{ begin_tab('judge') }}>
                 <p> 
                     <strong>警告</strong>: 在评测记录多时，以下操作十分缓慢。严禁多次点击按钮，否则会导致严重性能问题。
                 </p>
@@ -165,8 +179,9 @@
         </div>
     </div>
 {% endblock %}
+
 {% block script %}
     <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=20240129"></script>
+    <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=20240213"></script>
 {% endblock %}

@@ -1,0 +1,22 @@
+{%- macro course_title(course) -%}
+<h1 class="title-nav">
+  <span class="title-nav__title">{{ course.name }}</span>
+  <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
+    {%-
+      set links = {
+        '.course': '班级',
+        '.course_contest_list': '比赛',
+        '.course_homework_list': '作业',
+      }
+    -%}
+    {%- if g.can_write -%}
+    {%- do links.update({ '.course_admin': '管理' }) -%}
+    {%- endif -%}
+    {%- for link in links -%}
+    <li class="nav-item">
+      <a class="nav-link mb-sm-2 mb-md-0{{ ' active' if request.endpoint.endswith(link) }}" href="{{ url_for(link, course=course) }}">{{ links[link] }}</a>
+    </li>
+    {%- endfor -%}
+  </ul>
+</h1>
+{%- endmacro -%}

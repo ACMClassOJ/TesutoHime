@@ -1,38 +1,8 @@
 {% extends 'base.html' %} {% set page='排行榜' %} {% block head %}
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}"> {% endblock %} {% block content %}
 <div class="card card-body">
-    <h1 class="title-nav">
-        <span class="title-nav__title">{{ Problem_ID }}. {{ Title }}</span>
-        <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}">题面</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}/submit">提交</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ Problem_ID }}">评测状态</a>
-            </li>
-            {% if not In_Exam -%}
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}/discuss">讨论</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ Problem_ID }}/rank">排行榜</a>
-            </li>
-            {% endif %}
-            {% if g.can_read %}
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/admin/problem/{{ Problem_ID }}/data-zip">下载本题数据</a>
-            </li>
-            {% endif %}
-            {% if g.can_write %}
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}/admin"> 管理 </a>
-            </li>
-            {% endif %}
-        </ul>
-    </h1>
+    {%- from 'component/problem.html' import problem_title -%}
+    {{ problem_title(problem) }}
     <hr>
     <div class="table-responsive">
         <table class="table table-striped table-bordered table-hover status-list">
@@ -44,7 +14,7 @@
                     <th><span>实名</span></th>
                     {%- endif %}
                     <th>
-                        <a class="nav-link p-0" href="/OnlineJudge/problem/{{ Problem_ID }}/rank?sort=time">
+                        <a class="nav-link p-0" href="?sort=time">
                             <span>运行时间</span>
                             <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
                             <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>
@@ -53,7 +23,7 @@
                         </a>
                     </th>
                     <th>
-                        <a class="nav-link p-0" href="/OnlineJudge/problem/{{ Problem_ID }}/rank?sort=memory">
+                        <a class="nav-link p-0" href="?sort=memory">
                             <span>内存</span>
                             <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
                             <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>
@@ -63,7 +33,7 @@
                     </th>
                     <th><span>语言</span></th>
                     <th>
-                        <a class="nav-link p-0" href="/OnlineJudge/problem/{{ Problem_ID }}/rank?sort=submit_time">
+                        <a class="nav-link p-0" href="?sort=submit_time">
                             <span>提交时间</span>
                             <span class="fa-stack" style="height: 1em;line-height: 1em;font-size: 1rem">
                             <i class="fa fa-sort-up fa-stack-1x" style="color: #ced4da"></i>
@@ -75,7 +45,7 @@
             </thead>
             {% for submission in submissions -%}
             <tr>
-                <td><a href="/OnlineJudge/code/{{ submission.id }}/">{{ loop.index }}</a></td>
+                <td><a href="{{ url_for('.submission', submission=submission) }}">{{ loop.index }}</a></td>
                 <td>
                 {% if g.is_admin -%}
                     <span data-container="body" data-toggle="popover" data-placement="left" data-content="用户名：{{ submission.user.username }}">{{ submission.user.friendly_name }}</span>

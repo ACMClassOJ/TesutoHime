@@ -12,29 +12,8 @@
 
 {% block content %}
 <div class="card card-body">
-    <h1 class="title-nav">
-        <span class="title-nav__title"><span id="problem_id">{{ problem.id }}</span>. <span id="problem-title">{{ problem.title }}</span></span>
-        <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ problem.id }}">题面</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ problem.id }}/submit">提交</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ problem.id }}">评测状态</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ problem.id }}/discuss">讨论</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ problem.id }}/rank">排行榜</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ problem.id }}/admin"> 管理 </a>
-            </li>
-        </ul>
-    </h1>
+    {%- from 'component/problem.html' import problem_title -%}
+    {{ problem_title(problem) }}
     {{
         nav_tab_list({
             'overview': '基本信息',
@@ -85,7 +64,7 @@
                 </div>
             </form>
             <h3>题目状态</h3>
-            <p>所属班级：<a href="/OnlineJudge/course/{{ problem.course_id }}">{{ problem.course.name }}</a> <a href="/OnlineJudge/course/{{ problem.course.id }}/admin" class="btn btn-sm btn-outline-primary ml-2">管理</a></p>
+            <p>所属班级：<a href="{{ url_for('.course', course=problem.course) }}">{{ problem.course.name }}</a> <a href="{{ url_for('.course_admin', course=problem.course) }}" class="btn btn-sm btn-outline-primary ml-2">管理</a></p>
             <div class="mb-2">
                 <span>发布状态：</span>
                 {% if problem.release_time <= g.time -%}
@@ -110,9 +89,9 @@
                 提交状态：
                 {% if submission_count > 0 %}
                 共
-                <a href="/OnlineJudge/status?problem_id={{ problem.id }}">{{ submission_count }} 次提交</a>，
+                <a href="{{ url_for('.status', problem_id=problem.id) }}">{{ submission_count }} 次提交</a>，
                 其中
-                <a href="/OnlineJudge/status?problem_id={{ problem.id }}&status=accepted">{{ ac_count }} 次通过</a>，
+                <a href="{{ url_for('.status', problem_id=problem.id, status='accepted') }}">{{ ac_count }} 次通过</a>，
                 正确率 {{ "%.1f" % (ac_count / submission_count * 100) }}%
                 {% else %}
                 暂无提交
@@ -125,7 +104,7 @@
             <ul>
                 {%- set contests = problem.contests | list | sort(attribute='id') -%}
                 {% for contest in contests %}
-                <li><a href="/OnlineJudge/problemset/{{ contest.id }}">
+                <li><a href="{{ url_for('.problemset', contest=contest) }}">
                     [{{ [ '比赛', '作业', '考试' ][contest.type] }}]
                     {{ contest.id }}.
                     {{ contest.name }}
@@ -281,7 +260,7 @@
             <hr>
             <h3>
                 下载数据压缩包
-                <a href="/OnlineJudge/admin/problem/{{ problem.id }}/data-zip" class="btn btn-outline-primary float-right ml-auto mt-auto">点击下载</a>
+                <a href="{{ url_for('.admin.data_download', problem=problem) }}" class="btn btn-outline-primary float-right ml-auto mt-auto">点击下载</a>
             </h3>
         </div>
 
@@ -293,7 +272,7 @@
             {% else %}
             <p>当前有 {{ submission_count }} 次提交，您确定要重测所有这些代码吗？请在下方文本框中输入题目编号以确认：</p>
             {% endif %}
-            <form id="form-rejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+            <form id="form-rejudge" action="{{ url_for('.admin.rejudge') }}" method="POST">
                 {{ g.csrf() }}
                 <input type="hidden" name="type" value="by_problem_id">
                 <div class="form-row">
@@ -318,7 +297,7 @@
             {% else %}
             <p>当前有 {{ submission_count }} 次提交，您确定要取消所有这些提交的成绩吗？请在下方文本框中输入题目编号以确认：</p>
             {% endif %}
-            <form id="form-void" action="/OnlineJudge/admin/mark-void" method="POST">
+            <form id="form-void" action="{{ url_for('.admin.mark_void') }}" method="POST">
                 {{ g.csrf() }}
                 <div class="form-row">
                     <input type="hidden" name="type" value="by_problem_id">
@@ -338,7 +317,7 @@
             <hr>
             <h3>终止评测全部提交</h3>
             <p>如果想终止评测单份提交，请进入代码页面，点击代码上方的「终止评测」按钮。</p>
-            <form id="form-abort" action="/OnlineJudge/admin/abort-judge" method="POST">
+            <form id="form-abort" action="{{ url_for('.admin.abort_judge') }}" method="POST">
                 {{ g.csrf() }}
                 <div class="form-row">
                     <input type="hidden" name="type" value="by_problem_id">

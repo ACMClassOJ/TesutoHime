@@ -37,7 +37,7 @@
                         {%- endif %}
                     </td>
                     <td>
-                        <a href="/OnlineJudge/problem/{{ Detail.problem_id }}">{{ Detail.problem_id }}. {{ problem_title }}</a>
+                        <a href="{{ url_for('.problem', problem=Detail.problem_id) }}">{{ Detail.problem_id }}. {{ problem_title }}</a>
                     </td>
                     <td>
                         <b>
@@ -240,7 +240,7 @@
                 type: "POST",
                 dataType: "text",
                 data: {submit_id: {{ Detail.id }}},
-                url: "/OnlineJudge/api/code",
+                url: "{{ url_for('.get_code') }}",
                 success: function (response_text) {
                     $("#judge_detail_code_highlighted").text(response_text);
                     hljs.initHighlighting();

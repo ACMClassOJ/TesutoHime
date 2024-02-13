@@ -13,11 +13,11 @@
 {%- set time_elapsed = (g.time - contest.start_time).total_seconds() -%}
 {%- set time_overall = (contest.end_time - contest.start_time).total_seconds() -%}
 {%- set percentage = (((100 * time_elapsed / time_overall) | int, 0) | max, 100) | min -%}
-<a class="card card--contest mb-3 border-{{ class_ }}" href="/OnlineJudge/problemset/{{ contest.id }}">
+<a class="card card--contest card--small mb-3 border-{{ class_ }}" href="{{ url_for('web.problemset', contest=contest) }}">
   <div class="card-header" style="--progress: {{ percentage }}%">
     {%- if show_type -%}
     <div>
-      <span class=card--contest__type"">{{ contest_type }}{% if show_course_name %} &middot; {{ contest.course.name }}{% endif %}</span>
+      <span class="card--contest__type">{{ contest_type }}{% if show_course_name %} &middot; {{ contest.course.name }}{% endif %}</span>
       <span class="card--contest__status text-{{ class_ }}"><i class="fa fa-{{ icon }}"></i> {{ status_text }}</span>
     </div>
     {%- endif -%}
@@ -34,15 +34,16 @@
       <span class="float-right z-index-100">
         {%- if status['enrolled'] -%}
         {%- if status['is-external'] and g.time <= contest.end_time -%}
-        <form action="/OnlineJudge/problemset/{{ contest.id }}/quit" method="POST" onsubmit="return confirm('确认要退出{{ contest_type }}吗？')">
+        <form action="{{ url_for('web.problemset_quit', contest=contest) }}" method="POST" onsubmit="return confirm('确认要退出{{ contest_type }}吗？')">
           {{ g.csrf() }}
+          <input type="hidden" name="back" value="{{ request.full_path }}">
           <button type="submit" class="btn btn-outline-primary btn-sm">退出</button>
         </form>
         {%- else -%}
         <button disabled class="btn btn-outline-primary btn-sm">已加入</button>
         {%- endif -%}
         {%- elif status['reason-cannot-join'] == None -%}
-        <form action="/OnlineJudge/problemset/{{ contest.id }}/join" method="POST">
+        <form action="{{ url_for('web.problemset_join', contest=contest) }}" method="POST">
           {{ g.csrf() }}
           <button type="submit" class="btn btn-primary btn-sm">报名</button>
         </form>

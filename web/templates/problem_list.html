@@ -37,7 +37,7 @@
                 {% for problem in problems -%}
                     <tr>
                         <th>{{ problem.id }}</th>
-                        <td><a href="/OnlineJudge/problem/{{ problem.id }}" target="_blank">{{ problem.title }}</a></td>
+                        <td><a href="{{ url_for('.problem', problem=problem) }}" target="_blank">{{ problem.title }}</a></td>
                     </tr>
                 {%- endfor %}
             </table>

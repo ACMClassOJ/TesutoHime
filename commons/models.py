@@ -2,11 +2,13 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import Any, List, Optional, Set
 
-from sqlalchemy import ARRAY, BigInteger, Computed
+from sqlalchemy import ARRAY as sa_ARRAY
+from sqlalchemy import BigInteger, Computed
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy import ForeignKey, Index, Integer, Text, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
+from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing_extensions import Annotated
 
@@ -32,6 +34,9 @@ metadata = Base.metadata  # type: ignore
 intpk = Annotated[int, mapped_column(primary_key=True)]
 bigint = Annotated[int, mapped_column(BigInteger)]
 
+def ARRAY(*args, **kwargs):
+    return MutableList.as_mutable(sa_ARRAY(*args, **kwargs))
+
 class UseTimestamps:
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
@@ -45,6 +50,8 @@ class User(UseTimestamps, Base):
     friendly_name: Mapped[str]
     password: Mapped[str]
     privilege: Mapped[int]
+
+    ignored_course_ids: Mapped[List[int]] = mapped_column(ARRAY(Integer), server_default='{}')
 
     external_contests: Mapped[Set['Contest']] = relationship(
         secondary='contest_player',
@@ -195,7 +202,7 @@ class Problem(UseTimestamps, Base):
 
     release_time: Mapped[datetime]
     problem_type: Mapped[int] = mapped_column(server_default=text('0'))
-    languages_accepted: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    languages_accepted: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text), server_default='{}')
     allow_public_submissions: Mapped[bool] = mapped_column(server_default=text('true'))
 
     contests: Mapped[Set['Contest']] = relationship(

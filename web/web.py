@@ -123,6 +123,9 @@ def setup_appcontext():
 
 @web.before_request
 def before_request():
+    if len(request.query_string) == 0 and request.full_path.endswith('?'):
+        request.full_path = request.full_path[:-1]
+
     if (request.full_path.startswith(('/OnlineJudge/static',
                                       '/OnlineJudge/api/heartBeat')) or
         request.full_path.endswith(('.js', '.css', '.ico'))):
@@ -151,14 +154,14 @@ def after_request(resp):
 def errorhandler(exc: Exception):
     if isinstance(exc, HTTPException):
         return exc
+    msg = format_exc(exc)
+    tracker.syslog.error(msg)
     if 'db' in g:
         try:
             g.db.rollback()
         except Exception as e:
             exc = e
-    if 'user' in g and g.user is not None and g.user.privilege >= Privilege.SUPER:
-        msg = format_exc(exc)
-    else:
+    if 'user' not in g or g.user is None or g.user.privilege < Privilege.SUPER:
         msg = 'We encountered an error serving your request. Please contact site maintainer.'
     resp = make_response(msg)
     resp.status_code = INTERNAL_SERVER_ERROR
@@ -200,12 +203,15 @@ def ignore_alert_fail(func):
 
 @web.route('/')
 def index():
-    suggestions = None
+    suggestions = invited_courses = None
     if g.user is not None:
         contests = ContestManager.get_contests_for_user(g.user, True)
         suggestions = ContestManager.suggest_contests(list(contests))
+        invited_courses = CourseManager.get_invited_courses(g.user)
+        invited_courses = set(c for c in invited_courses if c.id not in g.user.ignored_course_ids)
     return render_template('index.html', news=NewsManager.get_news(),
-                           suggestions=suggestions)
+                           suggestions=suggestions,
+                           invited_courses=invited_courses)
 
 
 @web.route('/index.html')
@@ -353,9 +359,7 @@ def problem_list():
 @web.route('/problem/<problem:problem>')
 @require_logged_in
 def problem(problem: Problem):
-    in_exam = problem_in_exam(problem.id)
-    return render_template('problem_details.html', problem=problem,
-                           In_Exam=in_exam)
+    return render_template('problem_details.html', problem=problem)
 
 
 @ignore_alert_fail
@@ -439,11 +443,9 @@ def problem_admin(problem: Problem):
 @require_logged_in
 def problem_submit(problem: Problem):
     if request.method == 'GET':
-        in_exam = problem_in_exam(problem.id)
         if problem.problem_type == 0:
             languages_accepted = ProblemManager.languages_accepted(problem)
             return render_template('problem_submit.html',
-                                   Problem_ID=problem.id, In_Exam=in_exam,
                                    problem=problem,
                                    languages_accepted=languages_accepted)
         elif problem.problem_type == 1:
@@ -453,14 +455,11 @@ def problem_submit(problem: Problem):
                 for i in quiz_json['problems']:
                     i['answer'] = ''
 
-            return render_template('quiz_submit.html', Problem_ID=problem.id,
-                                   Title=problem.title, In_Exam=in_exam,
-                                   success=success,
+            return render_template('quiz_submit.html', problem=problem, success=success,
                                    quiz=quiz_json['problems'] if success else None)
     else:
         public = bool(request.form.get('shared', 0))  # 0 or 1
-        in_exam = problem_in_exam(problem.id)
-        if in_exam or not problem.allow_public_submissions:
+        if g.in_exam or not problem.allow_public_submissions:
             public = False
         lang_request_str = str(request.form.get('lang'))
         if lang_request_str == 'quiz':
@@ -546,25 +545,19 @@ def problem_rank(problem: Problem):
         sort_parameter = 'time'
         submissions = sorted(submissions, key=lambda x: x.time_msecs if x.time_msecs is not None else 0)
 
-    in_exam = problem_in_exam(problem.id)
-
-    return render_template('problem_rank.html', Problem_ID=problem.id, Title=problem.title,
+    return render_template('problem_rank.html', problem=problem,
                            submissions=submissions, Sorting=sort_parameter,
                            real_name_map=real_name_map, has_real_name=has_real_name,
-                           languages=languages,
-                           In_Exam=in_exam)
+                           languages=languages)
 
 
 @web.route('/problem/<problem:problem>/discuss', methods=['GET', 'POST'])
 @require_logged_in
-def discuss(problem: Problem):
+def problem_discuss(problem: Problem):
     if request.method == 'GET':
-        in_exam = problem_in_exam(problem.id)
-
-        if in_exam:  # Problem in Contest or Homework and Current User is NOT administrator
-            return render_template('problem_discussion.html', Problem_ID=problem.id,
-                                   Title=problem.title, Blocked=True,
-                                   In_Exam=True)  # Discussion Closed
+        if g.in_exam:  # Problem in Contest or Homework and Current User is NOT administrator
+            return render_template('problem_discussion.html', problem=problem,
+                                   Blocked=True)  # Discussion Closed
         data = problem.discussions
         discussions = []
         for ele in data:
@@ -572,9 +565,8 @@ def discuss(problem: Problem):
             # tmp[4]: editable
             tmp.append(ele.user_id == g.user.id or g.user.privilege >= Privilege.SUPER)
             discussions.append(tmp)
-        return render_template('problem_discussion.html', Problem_ID=problem.id,
-                               Title=problem.title, Discuss=discussions,
-                               In_Exam=False)
+        return render_template('problem_discussion.html', problem=problem,
+                               Discuss=discussions)
     else:
         try:
             form = request.json
@@ -955,7 +947,7 @@ def problemset_quit(contest: Contest):
         abort(BAD_REQUEST, '比赛已结束')
     if g.user in contest.external_players:
         contest.external_players.remove(g.user)
-    return redirect(url_for('.problemset', contest=contest), SEE_OTHER)
+    return redirect(request.form['back'], SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/join', methods=['POST'])
 def problemset_join(contest: Contest):
@@ -990,6 +982,7 @@ def course_list_generic(title: str, description: str, query,
                            show_term=show_term,
                            can_join=CourseManager.can_join,
                            get_enrollment=UserManager.get_enrollment,
+                           get_realname_reference=RealnameManager.query_realname_for_course,
                            pages=gen_page(page, max_page),
                            args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
 
@@ -1037,6 +1030,14 @@ def course_contest_list(course: Course):
 def course_homework_list(course: Course):
     return course_contest_list_generic(course, 'homework')
 
+@web.route('/course/<course:course>/ignore', methods=['POST'])
+def course_ignore(course: Course):
+    if not CourseManager.can_join(course):
+        abort(BAD_REQUEST)
+    if course.id not in g.user.ignored_course_ids:
+        g.user.ignored_course_ids.append(course.id)
+    return redirect(url_for('.index'), SEE_OTHER)
+
 @web.route('/course/<course:course>/join', methods=['POST'])
 def course_join(course: Course):
     if not CourseManager.can_join(course):
@@ -1056,7 +1057,7 @@ def course_quit(course: Course):
     if enrollment.user_id != g.user.id or enrollment.course_id != course.id:
         abort(BAD_REQUEST)
     db.delete(enrollment)
-    return redirect(url_for('.course', course=course), SEE_OTHER)
+    return redirect(request.form['back'], SEE_OTHER)
 
 @ignore_alert_fail
 def process_course_admin(course: Course):
@@ -1349,6 +1350,7 @@ class ProblemConverter(ModelConverter):
             abort(NOT_FOUND)
         g.can_read = ProblemManager.can_read(problem)
         g.can_write = ProblemManager.can_write(problem)
+        g.in_exam = problem_in_exam(problem.id)
         return problem
 
 class SubmissionConverter(ModelConverter):
@@ -1385,4 +1387,5 @@ oj.url_map.converters['submission'] = SubmissionConverter
 oj.url_map.converters['contest'] = ContestConverter
 oj.url_map.converters['course'] = CourseConverter
 oj.register_blueprint(web, url_prefix='/OnlineJudge')
+oj.jinja_env.add_extension('jinja2.ext.do')
 oj.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400

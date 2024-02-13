@@ -1,6 +1,6 @@
 __all__ = ('CourseManager',)
 
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Sequence, Set, Tuple
 
 from flask import g
 from sqlalchemy import select
@@ -45,6 +45,18 @@ class CourseManager:
     @staticmethod
     def get_enrolled_realname_references(user: User) -> Sequence[RealnameReference]:
         return [e.realname_reference for e in user.enrollments if e.realname_reference is not None]
+
+    @classmethod
+    def get_invited_courses(cls, user: User) -> Set[Course]:
+        courses = set()
+        course_ids = set(x.course_id for x in user.enrollments)
+        for rr in user.realname_references:
+            if rr.course_id not in course_ids:
+                course = rr.course
+                if not cls.can_join(course):
+                    continue
+                courses.add(course)
+        return courses
 
 
     @staticmethod

@@ -8,25 +8,8 @@
 
 {% block content %}
 <div class="card card-body">
-    <h1 class="title-nav">
-        <span class="title-nav__title">{{ course.name }}</span>
-        <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}">班级</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0{{ ' active' if type == 'contest' }}" href="/OnlineJudge/course/{{ course.id }}/contest">比赛</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link mb-sm-2 mb-md-0{{ ' active' if type == 'homework' }}" href="/OnlineJudge/course/{{ course.id }}/homework">作业</a>
-            </li>
-            {% if g.can_write %}
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}/admin">管理</a>
-            </li>
-            {% endif %}
-        </ul>
-    </h1>
+    {%- from 'component/course.html' import course_title -%}
+    {{ course_title(course) }}
     <hr>
     {%- if contests | length > 0 -%}
     <div class="contest-card-group">

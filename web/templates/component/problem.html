@@ -1,0 +1,40 @@
+{%- macro problem_title(problem) -%}
+<h1 class="title-nav">
+  <span class="title-nav__title">{{ problem.id }}. {{ problem.title }}</span>
+  <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
+    {%-
+      set links = {
+        '.problem': '题面',
+        '.problem_submit': '提交',
+        '.status': '评测状态',
+      }
+    -%}
+    {%- if not g.in_exam -%}
+    {%-
+      do links.update({
+        '.problem_discuss': '讨论',
+        '.problem_rank': '排行榜',
+      })
+    -%}
+    {%- endif -%}
+    {%- if g.can_read -%}
+    {%- do links.update({ '.admin.data_download': '下载数据' }) -%}
+    {%- endif -%}
+    {%- if g.can_write -%}
+    {%- do links.update({ '.problem_admin': '管理' }) -%}
+    {%- endif -%}
+
+    {%- for link in links -%}
+    {%- if link == '.status' -%}
+    {%- set url = url_for('.status', problem_id=problem.id) -%}
+    {%- else -%}
+    {%- set url = url_for(link, problem=problem) -%}
+    {%- endif -%}
+    <li class="nav-item">
+      <a class="nav-link mb-sm-2 mb-md-0{{ ' active' if request.endpoint.endswith(link) }}" href="{{ url }}">{{ links[link] }}</a>
+    </li>
+    {%- endfor -%}
+  </ul>
+</h1>
+{%- endmacro -%}
+

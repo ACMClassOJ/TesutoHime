@@ -33,6 +33,41 @@
 
     {%- endif %}
 
+    {%- if invited_courses != None and invited_courses | length > 0 -%}
+    <h4 class="mb-3">待加入的班级</h4>
+    <div class="course-card-group">
+        {%- for course in invited_courses -%}
+        <a class="card card--small mb-3" href="{{ url_for('.course', course=course) }}">
+            {%- if course.term != None or course.tag != None -%}
+            <div class="card-header">
+                {%- if course.term != None -%}
+                {{ course.term.name }}
+                {%- if course.tag != None %} &middot; {% endif -%}
+                {%- endif -%}
+                {%- if course.tag != None -%}
+                {{ course.tag.name }}
+                {%- endif -%}
+            </div>
+            {%- endif -%}
+            <div class="card-body">
+                <span class="card--course__name">{{ course.name }}</span>
+                <span class="card--course__actions float-right">
+                    <form action="{{ url_for('.course_ignore', course=course) }}" method="POST" onsubmit="return confirm('确认要忽略班级吗？忽略班级后，可以在班级列表中加入班级。')" class="d-inline">
+                        {{ g.csrf() }}
+                        <button type="submit" class="btn btn-outline-primary btn-sm">忽略</button>
+                    </form>
+                    <form action="{{ url_for('.course_join', course=course) }}" method="POST" class="d-inline">
+                        {{ g.csrf() }}
+                        <button type="submit" class="btn btn-primary btn-sm">加入</button>
+                    </form>
+                </span>
+            </div>
+        </a>
+        {%- endfor -%}
+    </div>
+    <hr class="my-4">
+    {%- endif -%}
+
     {%- if suggestions != None -%}
     <!-- <h4>我的比赛和作业</h4> -->
     {%- for type in 'in-progress', 'future', 'past' -%}

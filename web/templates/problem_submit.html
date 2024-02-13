@@ -8,38 +8,8 @@
 
 {% block content %}
     <div class="card card-body">
-        <h1 class="title-nav">
-            <span class="title-nav__title">{{ Problem_ID }}. {{ problem.title }}</span>
-            <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}">题面</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/problem/{{ Problem_ID }}/submit">提交</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/status?problem_id={{ Problem_ID }}">评测状态</a>
-                </li>
-                {% if not In_Exam -%}
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}/discuss">讨论</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}/rank">排行榜</a>
-                </li>
-                {% endif %}
-                {% if g.can_read %}
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/admin/problem/{{ Problem_ID }}/data-zip">下载本题数据</a>
-                </li>
-                {% endif %}
-                {% if g.can_write %}
-                <li class="nav-item">
-                    <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/problem/{{ Problem_ID }}/admin"> 管理 </a>
-                </li>
-                {% endif %}
-            </ul>
-        </h1>
+        {%- from 'component/problem.html' import problem_title -%}
+        {{ problem_title(problem) }}
         <hr>
         {% if languages_accepted | length > 0 -%}
         <form method="post" id="problem-submit-form">
@@ -60,7 +30,7 @@
             {%- endif %}
             <div class="row mx-0">
                 <label for="code">代码</label>
-                {% if not In_Exam and problem.allow_public_submissions -%}
+                {% if not g.in_exam and problem.allow_public_submissions -%}
                     <div class="form-group ml-auto">
                         <div class="custom-control custom-switch">
                             <input class="custom-control-input" type="checkbox" name="shared" id="shared"
@@ -71,7 +41,7 @@
                 {%- endif %}
             </div>
             <textarea class="form-control mb-3" rows="18" id="code" name="code" required="required"></textarea>
-            <input type="hidden" name="problem_id" value="{{ Problem_ID }}">
+            <input type="hidden" name="problem_id" value="{{ problem.id }}">
             <noscript>
                 <input type="submit" class="btn btn-block btn-primary" value="提交评测">
             </noscript>

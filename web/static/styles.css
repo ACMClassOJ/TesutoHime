@@ -175,17 +175,17 @@ body .card-header {
 .table-hover tbody tr.contest--pending:hover {
     background-color: rgba(0, 0, 0, 0.1);
 }
-html body a.card--contest {
+html body a.card {
     color: inherit;
     transition: cubic-bezier(.4,0,.2,1) .2s;
     transition-property: box-shadow, background-color;
 }
-html body a.card--contest:hover,
-html body a.card--contest:active,
-html body a.card--contest:focus {
+html body a.card:hover,
+html body a.card:active,
+html body a.card:focus {
     box-shadow: 0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12);
 }
-.card--contest .card-header {
+.card--small .card-header {
     font-size: 0.9rem;
     padding: .5rem 1rem;
     position: relative;
@@ -237,8 +237,11 @@ html body a.card--contest:focus {
     width: var(--progress);
     left: 0;
 }
-.card--contest .card-text {
+.card--small .card-text {
     font-size: 0.9rem;
+}
+.card--small .card-body {
+    padding: .75rem 1rem;
 }
 .card--contest .card--contest__name {
     font-size: 1.1rem;
@@ -252,16 +255,13 @@ html body a.card--contest:focus {
     max-height: 1.5em;
     overflow: hidden;
 }
-.card--contest .card-body {
-    padding: .75rem 1rem;
-}
 @media (min-width: 992px) {
     .contest-card-group {
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
     }
-    .card--contest {
+    .card--small {
         width: calc(50% - 0.5rem);
         height: fit-content;
     }

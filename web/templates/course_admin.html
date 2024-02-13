@@ -8,23 +8,8 @@
 
 {% block content %}
 <div class="card card-body">
-    <h1 class="title-nav">
-        <span class="title-nav__title">{{ course.name }}</span>
-        <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}">班级</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}/contest">比赛</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link mb-sm-2 mb-md-0" href="/OnlineJudge/course/{{ course.id }}/homework">作业</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link mb-sm-2 mb-md-0 active" href="/OnlineJudge/course/{{ course.id }}/admin">管理</a>
-            </li>
-        </ul>
-    </h1>
+    {%- from 'component/course.html' import course_title -%}
+    {{ course_title(course) }}
     {{
         nav_tab_list({
             'overview': '基本信息',
@@ -99,10 +84,10 @@
                     {% for contest in course.contests | reverse -%}
                     <tr>
                         <td>{{ contest.id }}</td>
-                        <td><a href="/OnlineJudge/problemset/{{ contest.id }}">[{{ ['比赛', '作业', '考试'][contest.type] }}] {{ contest.name }}</a></td>
+                        <td><a href="{{ url_for('.problemset', contest=contest) }}">[{{ ['比赛', '作业', '考试'][contest.type] }}] {{ contest.name }}</a></td>
                         <td>{{ g.utils.readable_time_minutes(contest.start_time) }}</td>
                         <td>{{ g.utils.readable_time_minutes(contest.end_time) }}</td>
-                        <td><a href="/OnlineJudge/problemset/{{ contest.id }}/admin" class="btn btn-sm btn-primary">管理</a></td>
+                        <td><a href="{{ url_for('.problemset_admin', contest=contest) }}" class="btn btn-sm btn-primary">管理</a></td>
                     </tr>
                     {%- endfor %}
                 </table>
@@ -165,7 +150,7 @@
                             <td>{{ rr.real_name }}</td>
                             <td>{{ ', '.join(rr.groups | map(attribute='name')) }}</td>
                             <td>
-                                <form method="POST" action="/OnlineJudge/course/{{ course.id }}/group/{{ group.id }}/remove" class="d-inline">
+                                <form method="POST" action="{{ url_for('.course_group_edit', course=course, group_id=group.id, action='remove') }}" class="d-inline">
                                     {{ g.csrf() }}
                                     <input type="hidden" name="data" value="{{ rr.student_id }}">
                                     <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('确认从分组中移除学生？')">移除</button>
@@ -184,8 +169,8 @@
                         </div>
                         <textarea class="form-control mb-3" rows="5" id="group-student-{{ group.id }}" name="data"></textarea>
                         <div class="float-right d-flex mb-3 ml-auto">
-                            <button class="btn btn-outline-primary mt-auto" type="submit" formaction="/OnlineJudge/course/{{ course.id }}/group/{{ group.id }}/add">添加学生</button>
-                            <button class="btn btn-outline-primary mt-auto" type="submit" formaction="/OnlineJudge/course/{{ course.id }}/group/{{ group.id }}/remove" onclick="return confirm('确定要移除学生？')">移除学生</button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit" formaction="{{ url_for('.course_group_edit', course=course, group_id=group.id, action='add') }}">添加学生</button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit" formaction="{{ url_for('.course_group_edit', course=course, group_id=group.id, action='remove') }}" onclick="return confirm('确定要移除学生？')">移除学生</button>
                         </div>
                     </form>
                 </div>

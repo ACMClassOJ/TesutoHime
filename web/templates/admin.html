@@ -62,7 +62,7 @@
                     <strong>警告</strong>: 在评测记录多时，以下操作十分缓慢。严禁多次点击按钮，否则会导致严重性能问题。
                 </p>
                 <h3> 批量重测 </h3>
-                <form id="formRejudge" action="/OnlineJudge/admin/rejudge" method="POST">
+                <form id="formRejudge" action="{{ url_for('.rejudge') }}" method="POST">
                     {{ g.csrf() }}
                     <input type="hidden" name="type" value="by_judge_id">
                     <div class="form-row">
@@ -79,7 +79,7 @@
                 <hr>
 
                 <h3> 批量题目重测 </h3>
-                <form id="formRejudge2" action="/OnlineJudge/admin/rejudge" method="POST">
+                <form id="formRejudge2" action="{{ url_for('.rejudge') }}" method="POST">
                     {{ g.csrf() }}
                     <input type="hidden" name="type" value="by_problem_id">
                     <div class="form-row">
@@ -100,7 +100,7 @@
                     评测机仍有可能返回评测结果，此时 Voided 状态将被真实的评测记录覆盖。若想中断评测，请使用终止评测 (abort) 功能。
                     因此，建议在如下情况使用此功能：需要作废一条已经出了结果的评测记录。
                 </p>
-                <form id="formDisableJudge" action="/OnlineJudge/admin/mark-void" method="POST">
+                <form id="formDisableJudge" action="{{ url_for('.mark_void') }}" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_judge_id">
@@ -115,7 +115,7 @@
                 </form>
                 <hr>
                 <h3>批量题目取消成绩</h3>
-                <form id="formDisableJudge2" action="/OnlineJudge/admin/mark-void" method="POST">
+                <form id="formDisableJudge2" action="{{ url_for('.mark_void') }}" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_problem_id">
@@ -132,7 +132,7 @@
                 <hr>
                 <h3>批量终止评测</h3>
                 <p>若指定的评测记录还在评测中，则将其状态设置为 Aborted (已测完的点不受影响)，使评测机终止评测任务，并判零分。</p>
-                <form id="form-abort" action="/OnlineJudge/admin/abort-judge" method="POST">
+                <form id="form-abort" action="{{ url_for('.abort_judge') }}" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_judge_id">
@@ -147,7 +147,7 @@
                 </form>
                 <hr>
                 <h3>批量题目终止评测</h3>
-                <form id="form-abort-2" action="/OnlineJudge/admin/abort-judge" method="POST">
+                <form id="form-abort-2" action="{{ url_for('.abort_judge') }}" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_problem_id">
@@ -170,4 +170,3 @@
     <script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
     <script src="{{ url_for('.static', filename = 'js/admin.js') }}?v=20240129"></script>
 {% endblock %}
-

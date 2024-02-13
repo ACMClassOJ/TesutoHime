@@ -42,8 +42,8 @@
             {% set status = get_status(contest) %}
             <tr {% if contest in user_contests %} class="contest--participant" {% elif status=='Going On' %} class="contest--running" {% elif status=='Pending' %} class="contest--pending" {% endif %}>
                 <td>{{ contest.id }}</td>
-                <td><a href="/OnlineJudge/course/{{ contest.course.id }}">{{ contest.course.name }}</a></td>
-                <td><a href="/OnlineJudge/problemset/{{ contest.id }}">{{ contest.name }}</a></td>
+                <td><a href="{{ url_for('.course', course=contest.course) }}">{{ contest.course.name }}</a></td>
+                <td><a href="{{ url_for('.problemset', contest=contest) }}">{{ contest.name }}</a></td>
                 <td>{{ g.utils.readable_time_minutes(contest.start_time) }}</td>
                 <td>{{ g.utils.readable_time_minutes(contest.end_time) }}</td>
                 <td>{{ status }}</td>
@@ -51,7 +51,7 @@
                     {%- set reason = reason_cannot_join(contest) -%}
                     {%- if contest in user_contests -%}
                     {%- if contest not in implicit_contests and g.time < contest.end_time -%}
-                    <form action="/OnlineJudge/problemset/{{ contest.id }}/quit" method="POST" onsubmit="return confirm('确认要退出{{ type_zh }}吗？')">
+                    <form action="{{ url_for('.problemset_quit', contest=contest) }}" method="POST" onsubmit="return confirm('确认要退出{{ type_zh }}吗？')">
                         {{ g.csrf() }}
                         <button type="submit" class="btn btn-outline-primary btn-sm">退出</button>
                     </form>
@@ -63,7 +63,7 @@
                     {%- elif reason == 'ended' -%}
                     <!-- <button disabled class="btn btn-primary btn-sm">报名</button> -->
                     {%- else -%}
-                    <form action="/OnlineJudge/problemset/{{ contest.id }}/join" method="POST">
+                    <form action="{{ url_for('.problemset_join', contest=contest) }}" method="POST">
                         {{ g.csrf() }}
                         <button type="submit" class="btn btn-primary btn-sm">报名</button>
                     </form>

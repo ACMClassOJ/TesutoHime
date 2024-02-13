@@ -10,7 +10,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ page }} · ACMOJ</title>
-    <link rel="shortcut icon" href="/OnlineJudge/favicon.ico">
+    <link rel="shortcut icon" href="{{ url_for('web.favicon') }}">
     <link href="{{ url_for('.static', filename = 'lib/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('.static', filename = 'argon.min.css') }}?v=20231109" rel="stylesheet">
     <link href="{{ url_for('.static', filename = 'lib/han.min.css') }}" rel="stylesheet"> {% block head %}{% endblock %}
@@ -21,7 +21,7 @@
 <body class="bg-secondary">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary py-2 mb-3">
         <div class="container">
-            <a class="navbar-brand" href="/OnlineJudge/">ACM Class OnlineJudge</a>
+            <a class="navbar-brand" href="{{ url_for('web.index') }}">ACM Class OnlineJudge</a>
             <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarContent">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -29,7 +29,7 @@
                 <div class="navbar-collapse-header">
                     <div class="row">
                         <div class="col-10 collapse-brand">
-                            <a href="/OnlineJudge/">ACM Class OnlineJudge</a>
+                            <a href="{{ url_for('web.index') }}">ACM Class OnlineJudge</a>
                         </div>
                         <div class="col-2 collapse-close">
                             <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#navbarContent">
@@ -40,20 +40,20 @@
                     </div>
                 </div>
                 <ul class="navbar-nav" style="line-height: 1;">
-                    <li class="nav-item"><a href="/OnlineJudge/problem" class="nav-link">题库</a></li>
-                    <li class="nav-item"><a href="/OnlineJudge/course" class="nav-link">班级</a></li>
-                    <li class="nav-item"><a href="/OnlineJudge/contest" class="nav-link">比赛</a></li>
-                    <li class="nav-item"><a href="/OnlineJudge/homework" class="nav-link">作业</a></li>
-                    <li class="nav-item"><a href="/OnlineJudge/status" class="nav-link">评测状态</a></li>
+                    <li class="nav-item"><a href="{{ url_for('web.problem_list') }}" class="nav-link">题库</a></li>
+                    <li class="nav-item"><a href="{{ url_for('web.course_list') }}" class="nav-link">班级</a></li>
+                    <li class="nav-item"><a href="{{ url_for('web.contest_list') }}" class="nav-link">比赛</a></li>
+                    <li class="nav-item"><a href="{{ url_for('web.homework_list') }}" class="nav-link">作业</a></li>
+                    <li class="nav-item"><a href="{{ url_for('web.status') }}" class="nav-link">评测状态</a></li>
                     {% if g.is_admin %}
-                    <li class="nav-item"><a href="/OnlineJudge/admin" class="nav-link">管理</a></li>
+                    <li class="nav-item"><a href="{{ url_for('web.admin.index') }}" class="nav-link">管理</a></li>
                     {% endif %}
-                    <li class="nav-item"><a href="/OnlineJudge/docs/overview" class="nav-link">文档</a></li>
-                    <li class="nav-item"><a href="/OnlineJudge/about" class="nav-link">关于</a></li>
+                    <li class="nav-item"><a href="{{ url_for('web.about') }}" class="nav-link">关于</a></li>
+                    <li class="nav-item"><a href="{{ url_for('web.help_index') }}" class="nav-link">帮助</a></li>
                     {% if g.user == None -%}
                     <li class="dropdown-divider"></li>
-                    <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/login">登录</a></li>
-                    <li class="d-block d-lg-none nav-link"><a href="/OnlineJudge/register">注册</a></li>
+                    <li class="d-block d-lg-none nav-link"><a href="{{ url_for('web.login') }}">登录</a></li>
+                    <li class="d-block d-lg-none nav-link"><a href="{{ url_for('web.register') }}">注册</a></li>
                     {%- endif %}
                 </ul>
                 <ul class="navbar-nav ml-lg-auto" style="line-height: 1;">
@@ -61,9 +61,9 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ g.user.friendly_name }}</a>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" href="/OnlineJudge/profile">个人信息</a>
+                            <a class="dropdown-item" href="{{ url_for('web.profile') }}">个人信息</a>
                             <div class="dropdown-divider"></div>
-                            <form action="/OnlineJudge/logout" method="POST">
+                            <form action="{{ url_for('web.logout') }}" method="POST">
                                 {{ g.csrf() }}
                                 <button class="dropdown-item" type="submit">登出</button>
                             </form>
@@ -71,8 +71,8 @@
                     </li>
                     {% else -%}
                     <li class="d-none d-lg-block">
-                        <a class="btn btn-neutral" href="/OnlineJudge/login">登录</a>
-                        <a class="btn btn-neutral" href="/OnlineJudge/register">注册</a>
+                        <a class="btn btn-neutral" href="{{ url_for('web.login') }}">登录</a>
+                        <a class="btn btn-neutral" href="{{ url_for('web.register') }}">注册</a>
                     </li>
                     {%- endif %}
                 </ul>

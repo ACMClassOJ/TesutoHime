@@ -24,7 +24,7 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="problemset-course"><a href="/OnlineJudge/course/{{ contest.course.id }}">{{ contest.course.name }}</a></div>
+            <div class="problemset-course"><a href="{{ url_for('.course', course=contest.course) }}">{{ contest.course.name }}</a></div>
             <h1 class="problemset-title title-nav">
                 <span class="title-nav__title">{{ contest.name }}</span>
                 <span class="title-nav__nav btn-group--title-nav">
@@ -32,7 +32,7 @@
                     <button class="btn btn-outline-primary" id="open-all">打开所有题目</button>
                     {%- endif -%}
                     {% if g.can_write -%}
-                    <a href="/OnlineJudge/problemset/{{ contest.id }}/admin" class="btn btn-outline-primary">管理</a>
+                    <a href="{{ url_for('.problemset_admin', contest=contest) }}" class="btn btn-outline-primary">管理</a>
                     {%- endif -%}
                     {%- if problems_visible and problems | length > 4 -%}
                     <button class="btn btn-outline-primary" id="width-toggle">切换宽度</button>
@@ -51,7 +51,7 @@
                         {% if has_real_name -%}<th>实名</th>{%- endif %}
                         {% if problems_visible -%}
                         {% for problem in problems -%}
-                            <th><a href="/OnlineJudge/problem/{{ problem }}" class="problem-link" target="_blank">{{ problem }}</a></th>
+                            <th><a href="{{ url_for('.problem', problem=problem) }}" class="problem-link" target="_blank">{{ problem }}</a></th>
                         {%- endfor %}
                         {%- endif %}
                         {% if contest.rank_partial_score -%}
@@ -98,13 +98,13 @@
                                         {%- endmacro -%}
                                         {%- if not problem['accepted'] -%}
                                             {% if g.is_admin -%}
-                                            <a class="text-red" href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j] }}">{{ status() }}</a>
+                                            <a class="text-red" href="{{ url_for('.status', submitter=player['username'], problem_id=problems[j]) }}">{{ status() }}</a>
                                             {% else -%}
                                             {{ status() }}
                                             {%- endif %}
                                         {%- else -%}
                                             {% if g.is_admin -%}
-                                            <a href="/OnlineJudge/status?submitter={{ player['username'] }}&problem_id={{ problems[j] }}">{{ status() }}</a>
+                                            <a href="{{ url_for('.status', submitter=player['username'], problem_id=problems[j]) }}">{{ status() }}</a>
                                             {% else -%}
                                             {{ status() }}
                                             {%- endif %}

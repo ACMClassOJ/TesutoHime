@@ -11,14 +11,14 @@
     <h1 class="title-nav">
         <span class="title-nav__title">{{ contest.id }}. {{ contest.name }}</span>
         <span class="title-nav__nav btn-group--title-nav">
-            <a href="/OnlineJudge/problemset/{{ contest.id }}" class="btn btn-outline-primary">返回比赛</a>
+            <a href="{{ url_for('.problemset', contest=contest) }}" class="btn btn-outline-primary">返回比赛</a>
         </span>
     </h1>
     {{ show_alert() }}
     <hr>
 
     <h3>基本信息</h3>
-    <p>所属班级：<a href="/OnlineJudge/course/{{ contest.course.id }}">{{ contest.course.name }}</a> <a href="/OnlineJudge/course/{{ contest.course.id }}/admin" class="btn btn-sm btn-outline-primary ml-2">管理</a></p>
+    <p>所属班级：<a href="{{ url_for('.course', course=contest.course) }}">{{ contest.course.name }}</a> <a href="{{ url_for('.course_admin', course=contest.course) }}" class="btn btn-sm btn-outline-primary ml-2">管理</a></p>
     <form method="POST">
         {{ g.csrf() }}
         <input type="hidden" name="action" value="edit">
@@ -101,16 +101,16 @@
             {% for problem in contest.problems -%}
                 <tr>
                     <td>{{ problem.id }}</td>
-                    <td><a href="/OnlineJudge/problem/{{ problem.id }}" target="_blank">{{ problem.title }}</a></td>
+                    <td><a href="{{ url_for('.problem', problem=problem) }}" target="_blank">{{ problem.title }}</a></td>
                     <td>{{ g.utils.readable_time(problem.release_time) }}</td>
-                    <td><a href="/OnlineJudge/status?problem_id={{ problem.id }}" class="d-block">{{ problem_stats[problem.id]['try'] }}</a></td>
-                    <td><a href="/OnlineJudge/status?problem_id={{ problem.id }}&status=accepted" class="d-block">{{ problem_stats[problem.id]['ac'] }}</a></td>
+                    <td><a href="{{ url_for('.status', problem_id=problem.id) }}" class="d-block">{{ problem_stats[problem.id]['try'] }}</a></td>
+                    <td><a href="{{ url_for('.status', problem_id=problem.id, status='accepted') }}" class="d-block">{{ problem_stats[problem.id]['ac'] }}</a></td>
                     <td>
-                        <form method="post" action="/OnlineJudge/problemset/{{ contest.id }}/problem/remove" class="d-inline">
+                        <form method="post" action="{{ url_for('.problemset_problem_remove', contest=contest) }}" class="d-inline">
                             {{ g.csrf() }}
                             <input type="hidden" name="id" value="{{ problem.id }}">
                             <span class="btn-group">
-                                <a href="/OnlineJudge/problem/{{ problem.id }}/admin" class="btn btn-outline-primary btn-sm">管理</a>
+                                <a href="{{ url_for('.problem_admin', problem=problem) }}" class="btn btn-outline-primary btn-sm">管理</a>
                                 <button type="submit" class="btn btn-outline-primary btn-sm" onclick="return confirm('确认从比赛中移除题目吗？')">移除</button>
                             </span>
                         </form>
@@ -130,8 +130,8 @@
                     <textarea class="form-control" name="id" id="problem-ids" rows="5"></textarea>
                 </div>
                 <div class="float-right d-flex mb-3 ml-auto btn-group">
-                    <button class="btn btn-outline-primary mt-auto" type="submit" formaction="/OnlineJudge/problemset/{{ contest.id }}/problem/add">添加题目</button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit" formaction="/OnlineJudge/problemset/{{ contest.id }}/problem/remove" onclick="return confirm('确认移除这些题目吗？')">移除题目</button>
+                    <button class="btn btn-outline-primary mt-auto" type="submit" formaction="{{ url_for('.problemset_problem_add', contest=contest) }}">添加题目</button>
+                    <button class="btn btn-outline-primary mt-auto" type="submit" formaction="{{ url_for('.problemset_problem_remove', contest=contest) }}" onclick="return confirm('确认移除这些题目吗？')">移除题目</button>
                 </div>
             </form>
         </details>

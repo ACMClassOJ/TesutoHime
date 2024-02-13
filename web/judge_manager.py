@@ -121,7 +121,8 @@ class JudgeManager:
             raise Exception('Runner error')
 
     @staticmethod
-    def add_submission(*, public: bool, language: str, user: User, problem_id: int, code: str) -> int:
+    def create_submission(*, public: bool, language: str, user: User,
+                          problem_id: int, code: str) -> JudgeRecordV2:
         rec = JudgeRecordV2(
             public=public,
             language=language,
@@ -137,7 +138,7 @@ class JudgeManager:
         s3_internal.put_object(Bucket=bucket, Key=key, Body=code.encode())
         JudgeManager.schedule_judge(problem_id, submission_id, language,
                                     str(user.id))
-        return submission_id
+        return rec
 
     @staticmethod
     def set_status(submission_id, status: str):

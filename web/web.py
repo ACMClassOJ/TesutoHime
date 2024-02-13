@@ -7,14 +7,14 @@ from http.client import (BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR,
                          NOT_FOUND, OK, REQUEST_ENTITY_TOO_LARGE, SEE_OTHER,
                          UNAUTHORIZED)
 from math import ceil
-from typing import List, NoReturn, Optional
+from typing import Dict, List, NoReturn, Optional
 from urllib.parse import quote, urlencode, urljoin
 from uuid import uuid4
 
 import requests
 import sqlalchemy as sa
 from flask import (Blueprint, Flask, abort, g, make_response, redirect,
-                   render_template, request, send_from_directory)
+                   render_template, request, send_from_directory, url_for)
 from sqlalchemy.orm import defer, selectinload
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
@@ -167,7 +167,7 @@ def errorhandler(exc: Exception):
 
 
 def not_logged_in():
-    return redirect('/OnlineJudge/login?next=' + quote(request.full_path))
+    return redirect(url_for('web.login', next=request.full_path), SEE_OTHER)
 
 def require_logged_in(func):
     @wraps(func)
@@ -210,7 +210,7 @@ def index():
 
 @web.route('/index.html')
 def index2():
-    return redirect('/OnlineJudge/')
+    return redirect(url_for('.index'))
 
 
 @web.route('/api/problem/<problem:problem>/description')
@@ -274,10 +274,10 @@ def login():
 
 @web.route('/logout', methods=['POST'])
 def logout():
+    ret = make_response(redirect(url_for('.index'), SEE_OTHER))
     if g.user is None:
-        return redirect('/OnlineJudge/')
+        return ret
     SessionManager.logout()
-    ret = make_response(redirect('/OnlineJudge/', SEE_OTHER))
     ret.delete_cookie(SessionManager.session_cookie_name)
     return ret
 
@@ -313,7 +313,7 @@ def problem_list():
     if problem_id == '':
         problem_id = None
     if problem_id is not None:
-        return redirect(f'/OnlineJudge/problem/{problem_id}')
+        return redirect(url_for('.problem', problem=int(problem_id)))
     problem_name_keyword = request.args.get('problem_name_keyword')
     if problem_name_keyword == '':
         problem_name_keyword = None
@@ -352,7 +352,7 @@ def problem_list():
 
 @web.route('/problem/<problem:problem>')
 @require_logged_in
-def problem_detail(problem: Problem):
+def problem(problem: Problem):
     in_exam = problem_in_exam(problem.id)
     return render_template('problem_details.html', problem=problem,
                            In_Exam=in_exam)
@@ -382,7 +382,7 @@ def process_problem_admin(problem: Problem):
             alert_fail('输入的题号不正确')
         course_id = problem.course_id
         ProblemManager.delete_problem(problem)
-        return redirect(f'/OnlineJudge/course/{course_id}/admin', SEE_OTHER)
+        return redirect(url_for('.course_admin', course=course_id), SEE_OTHER)
     elif action == 'priv-add':
         set_tab('privileges')
         username = request.form['username']
@@ -474,14 +474,14 @@ def problem_submit(problem: Problem):
         lang_str = lang_request_str.lower()
         if lang_str not in ProblemManager.languages_accepted(problem):
             abort(BAD_REQUEST)
-        submission_id = JudgeManager.add_submission(
+        submission = JudgeManager.create_submission(
             public=public,
             language=lang_str,
             user=g.user,
             problem_id=problem.id,
             code=user_code,
         )
-        return redirect(f'/OnlineJudge/code/{submission_id}/', SEE_OTHER)
+        return redirect(url_for('.submission', submission=submission), SEE_OTHER)
 
 
 def check_scheduler_auth():
@@ -705,11 +705,11 @@ def code_compat():
     submit_id = request.args.get('submit_id')
     if submit_id is None:
         abort(NOT_FOUND)
-    return redirect(f'/OnlineJudge/code/{submit_id}/')
+    return redirect(url_for('.submission', submission=int(submit_id)))
 
 @web.route('/code/<submission:submission>/')
 @require_logged_in
-def code(submission: JudgeRecordV2):
+def submission(submission: JudgeRecordV2):
     if submission.id <= OldJudgeManager.max_id():
         return code_old(submission.id)
 
@@ -768,7 +768,7 @@ def abort_judge(submission: JudgeRecordV2):
 def contest_list_generic(type, type_zh):
     contest_id = request.args.get(f'{type}_id')
     if contest_id is not None:
-        return redirect(f'/OnlineJudge/problemset/{contest_id}')
+        return redirect(url_for('.problemset', contest=int(contest_id)))
     implicit_contests = ContestManager.get_implicit_contests(g.user)
     user_contests = set(implicit_contests).union(g.user.external_contests)
 
@@ -800,10 +800,10 @@ def homework_list():
 
 @web.route('/contest/<int:contest_id>')
 def contest(contest_id):
-    return redirect(f'/OnlineJudge/problemset/{contest_id}')
+    return redirect(url_for('.problemset', contest=contest_id))
 @web.route('/homework/<int:contest_id>')
 def homework(contest_id):
-    return redirect(f'/OnlineJudge/problemset/{contest_id}')
+    return redirect(url_for('.problemset', contest=contest_id))
 
 @web.route('/problemset/<contest:contest>')
 def problemset(contest: Contest):
@@ -851,7 +851,7 @@ def process_problemset_admin(contest: Contest):
             alert_fail('输入的比赛编号不正确')
         course_id = contest.course_id
         ContestManager.delete_contest(contest)
-        return redirect(f'/OnlineJudge/course/{course_id}/admin', SEE_OTHER)
+        return redirect(url_for('.course_admin', course=course_id), SEE_OTHER)
     elif action == 'requirements':
         cc_str = form.get('completion_criteria', '')
         cc = None if cc_str == '' else int(cc_str)
@@ -933,7 +933,7 @@ def problemset_problem_add(contest: Contest):
         if problem not in contest.problems:
             contest.problems.append(problem)
 
-    return redirect(f'/OnlineJudge/problemset/{contest.id}/admin', SEE_OTHER)
+    return redirect(url_for('.problemset_admin', contest=contest), SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/problem/remove', methods=['POST'])
 def problemset_problem_remove(contest: Contest):
@@ -947,7 +947,7 @@ def problemset_problem_remove(contest: Contest):
     for problem_id in ids:
         ContestManager.delete_problem_from_contest(contest.id, problem_id)
 
-    return redirect(f'/OnlineJudge/problemset/{contest.id}/admin', SEE_OTHER)
+    return redirect(url_for('.problemset_admin', contest=contest), SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/quit', methods=['POST'])
 def problemset_quit(contest: Contest):
@@ -955,7 +955,7 @@ def problemset_quit(contest: Contest):
         abort(BAD_REQUEST, '比赛已结束')
     if g.user in contest.external_players:
         contest.external_players.remove(g.user)
-    return redirect(f'/OnlineJudge/problemset/{contest.id}', SEE_OTHER)
+    return redirect(url_for('.problemset', contest=contest), SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/join', methods=['POST'])
 def problemset_join(contest: Contest):
@@ -963,7 +963,7 @@ def problemset_join(contest: Contest):
         abort(BAD_REQUEST)
     if g.user not in contest.external_players:
         contest.external_players.add(g.user)
-    return redirect(f'/OnlineJudge/problemset/{contest.id}', SEE_OTHER)
+    return redirect(url_for('.problemset', contest=contest), SEE_OTHER)
 
 @require_logged_in
 def course_list_generic(title: str, description: str, query,
@@ -1044,7 +1044,7 @@ def course_join(course: Course):
     if g.user not in course.users:
         db.add(Enrollment(user_id=g.user.id, course_id=course.id))
         db.flush()
-    return redirect(f'/OnlineJudge/course/{course.id}/', SEE_OTHER)
+    return redirect(url_for('.course', course=course), SEE_OTHER)
 
 @web.route('/course/<course:course>/quit', methods=['POST'])
 def course_quit(course: Course):
@@ -1056,7 +1056,7 @@ def course_quit(course: Course):
     if enrollment.user_id != g.user.id or enrollment.course_id != course.id:
         abort(BAD_REQUEST)
     db.delete(enrollment)
-    return redirect(f'/OnlineJudge/course/{course.id}/', SEE_OTHER)
+    return redirect(url_for('.course', course=course), SEE_OTHER)
 
 @ignore_alert_fail
 def process_course_admin(course: Course):
@@ -1101,10 +1101,10 @@ def process_course_admin(course: Course):
         alert_success('已删除实名信息')
     elif action == 'problem-create':
         problem = ProblemManager.create_problem(course)
-        return redirect(f'/OnlineJudge/problem/{problem.id}/admin', SEE_OTHER)
+        return redirect(url_for('.problem_admin', problem=problem), SEE_OTHER)
     elif action == 'contest-create':
         contest = ContestManager.create_contest(course)
-        return redirect(f'/OnlineJudge/problemset/{contest.id}/admin', SEE_OTHER)
+        return redirect(url_for('.problemset_admin', contest=contest), SEE_OTHER)
     elif action == 'group-create':
         set_tab('group')
         name = form['name']
@@ -1222,7 +1222,7 @@ def course_group_edit(course, group_id, action):
         abort(NOT_FOUND)
 
     db.flush()
-    return redirect(f'/OnlineJudge/course/{course.id}/admin?tab=group&group={group.id}', SEE_OTHER)
+    return redirect(url_for('.course_admin', course=course, tab='group', group=str(group.id)), SEE_OTHER)
 
 
 @web.route('/profile', methods=['GET', 'POST'])
@@ -1249,51 +1249,35 @@ def profile():
             return ReturnCode.ERR_BAD_DATA
 
 
-# docs
+# help
 
-@web.route('/docs/overview')
-def docs():
-    return render_template('docs_overview.html')
+help_cache: Dict[str, Optional[str]] = {}
 
+@web.route('/help/<path:page>')
+def help(page):
+    if re.search('[^a-zA-Z0-9\-_/]', page) is not None or page[0] == '/':
+        abort(NOT_FOUND)
+    if page in help_cache:
+        content = help_cache[page]
+    else:
+        try:
+            with open(os.path.join(web.root_path, 'help', page + '.html'), 'r') as f:
+                content = f.read()
+        except FileNotFoundError:
+            content = None
+        help_cache[page] = content
+    if content is None:
+        abort(NOT_FOUND)
+    match_title = re.search('<h1[^>]*>([^<]+)</h1>', content)
+    if match_title is None:
+        title = '帮助'
+    else:
+        title = match_title.group(1)
+    return render_template('help.html', title=title, content=content)
 
-@web.route('/docs')
-def docs2():
-    return redirect('/OnlineJudge/docs/overview')
-
-
-@web.route('docs/account-and-profile')
-def account_and_profile_doc():
-    return render_template('account_and_profile_doc.html')
-
-
-@web.route('docs/classes-contests-homework-and-exams')
-def classes_contests_homework_and_exams_doc():
-    return render_template('classes_contests_homework_and_exams_doc.html')
-
-
-@web.route('docs/view-submit-and-judge-problems')
-def view_submit_and_judge_problems_doc():
-    return render_template('view_submit_and_judge_problems_doc.html')
-
-
-@web.route('/docs/admin-doc')
-def admin_doc():
-    return render_template('admin_doc.html')
-
-
-@web.route('/docs/problem-format-doc')
-def problem_format_doc():
-    return render_template('problem_format_doc.html')
-
-
-@web.route('/docs/data-doc')
-def data_doc():
-    return render_template('data_doc.html')
-
-
-@web.route('/docs/package-sample')
-def package_sample():
-    return render_template('package_sample.html')
+@web.route('/help/')
+def help_index():
+    return help('index')
 
 
 @web.route('/about')
@@ -1354,6 +1338,8 @@ class ModelConverter(BaseConverter):
             abort(BAD_REQUEST)
 
     def to_url(self, value) -> str:
+        if isinstance(value, int):
+            return str(value)
         return str(value.id)
 
 class ProblemConverter(ModelConverter):

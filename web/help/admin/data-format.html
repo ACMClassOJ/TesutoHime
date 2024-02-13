@@ -1,17 +1,15 @@
-{% extends 'base.html' %} {% set page='数据格式规范' %} {% block content %}
-<div class="card card-body">
 <h1 id="数据格式规范">数据格式规范</h1>
 <p><em>By cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2023.6.29。</em></p>
 <p><strong>请注意：输出文件大于 256 MiB 时会报错 (File size limit exceeded)，请确保题目的标准答案不会超过 256 MiB。</strong></p>
 <h2 id="zip总格式">ZIP总格式</h2>
-<p><em>注：请尽量使用避免任何未在文档上出现的特性或问题（特别是做出某个特定文件名的文件存在的假设），因为这可能在评测后端升级后发生变化。</em></p>
+<p><em>注：请尽量使用避免任何未在此处出现的特性或问题（特别是做出某个特定文件名的文件存在的假设），因为这可能在评测后端升级后发生变化。</em></p>
 <ul>
 <li><strong>数据包名称</strong>：<code>题号.zip</code>（如 <code>1000.zip</code>），<strong>请确认题号与题面中的 id（即数据库主键）保持一致再上传传输数据包</strong>。</li>
 <li><strong>数据包目录结构</strong>：<code>题号.zip/题号/所有文件</code>，如 <code>1000.zip/1000/1.in</code></li>
 <li><strong>可能包含的内容及大致情况</strong>：
 <ul>
 <li>（所有题目类型必须）一个 <code>config.json</code>，包含所有评测方法的信息。</li>
-<li>（除特殊情况外，所有题目类型必须）一个 <code>description.md</code>，即题面信息。请参考<a href="problem-format-doc">题面格式规范文档</a>。</li>
+<li>（除特殊情况外，所有题目类型必须）一个 <code>description.md</code>，即题面信息。请参考<a href="problem-format">题面格式规范</a>。</li>
 <li>（强烈建议）<code>solution.cpp</code>，即标程。</li>
 <li>（大部分情况下需要，verilog 评测不支持）若干 <code>数字.in</code>，即传统 OI 题中的输入文件。<strong>文件名请采用连续编号的，从1开始的纯数字</strong>，与 <code>.out</code> 对应。</li>
 <li>（大部分情况下需要，部分 spj 不需要）若干 <code>数字.out</code>，即传统 OI 题中的正确输出。<strong>文件名请采用连续编号的，从1开始的纯数字</strong>，与 <code>.in</code> 对应。</li>
@@ -86,9 +84,9 @@
 <p>是否启用 Verilog 评测，启用为 <code>true</code>，否则为 <code>false</code> 。默认为 <code>false</code>。请注意，如果启用该选项，所有的提交的将会<strong>强制</strong>被视作 Verilog。关于 Verilog 评测的更多信息，请参阅 <a href="#verilog-评测">Verilog 评测章节</a>。</p>
 <h3 id="quiz">Quiz</h3>
 <p>是否是填选题，填选题为 <code>true</code>，否则为 <code>false</code>。默认为 <code>false</code>。</p>
-<h2 id="description.md">description.md</h2>
+<h2 id="description">description.md</h2>
 <ul>
-<li>题面信息请参考<a href="problem-format-doc">题面格式规范文档</a>。</li>
+<li>题面信息请参考<a href="problem-format">题面格式规范</a>。</li>
 <li>在数据包中放 <code>description.md</code> 仅仅是为了数据包的完整性给以后的助教和管理员提供便利，其本身与数据库和网页题面显示并没有关联。</li>
 <li>因此重新上传数据包，<code>description.md</code> 中的改动并不会体现在网页上；</li>
 <li>通过网页或其他方式修改题面后，改动也不会同步到数据包里，请知悉；</li>
@@ -150,5 +148,3 @@
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>message <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">5</span><span class="op">],</span> <span class="st">&quot;w&quot;</span><span class="op">);</span> <span class="co">// 这里输出错误/提示信息</span></span></code></pre></div>
 <p>score 中只有一个 double 类型的数，如果值为 1，那么该测试点会被判断为 AC，否则为 WA。此功能可以实现部分赋分，例如将一个 groupScore 设为 100，且只包含一个测试点，如果 score 中的 double 数为 0.5，那么该 group 的得分就是 50 分。</p>
 <p>message 功能：这部分信息将显示到 OJ 上供选手查看。</p>
-</div>
-{% endblock %}

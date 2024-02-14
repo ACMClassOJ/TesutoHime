@@ -2,13 +2,16 @@ from datetime import datetime
 from math import ceil
 from typing import List
 
+from sqlalchemy import select
+
 from commons.models import *
 from scripts.db.env import Session
 
-
 db = Session()
 
-q = db.query(JudgeRecordV1)
+q = db.query(JudgeRecordV1) \
+    .where(~select(JudgeRecordV2.id).where(JudgeRecordV2.id == JudgeRecordV1.id).exists()) \
+    .order_by(JudgeRecordV1.id.asc())
 count = q.count()
 page_size = 10000
 pages = ceil(count / page_size)
@@ -35,40 +38,16 @@ def stat(x: int) -> JudgeStatus:
     ][x]
 
 
-checked_usernames = set()
-bad_usernames = set()
-
-checked_problems = set()
-bad_problems = set()
-
 for i in range(pages):
     page: List[JudgeRecordV1] = q.limit(page_size).offset(i * page_size).all()
     recs = []
     for s in page:
-        if s.username not in checked_usernames:
-            checked_usernames.add(s.username)
-            u = db.query(User.id).where(User.username == s.username).one_or_none()
-            if u is None:
-                bad_usernames.add(s.username)
-        if s.username in bad_usernames:
-            print(f'Nonexistent user {s.username} at {s.id}')
-            continue
-
-        if s.problem_id not in checked_problems:
-            checked_problems.add(s.problem_id)
-            p = db.query(Problem.id).where(Problem.id == s.problem_id).one_or_none()
-            if p is None:
-                bad_problems.add(s.problem_id)
-        if s.problem_id in bad_problems:
-            print(f'Nonexistent problem {s.problem_id} at {s.id}')
-            continue
-
         rec = JudgeRecordV2(
             id=s.id,
             public=s.public,
             language=lang(s.language),
             created_at=time(s.time),
-            username=s.username,
+            user_id=s.user_id,
             problem_id=s.problem_id,
             status=stat(s.status),
             score=s.score,
@@ -77,5 +56,7 @@ for i in range(pages):
         )
         recs.append(rec)
     db.add_all(recs)
+    db.flush()
 
+input('Press enter to continue...')
 db.commit()

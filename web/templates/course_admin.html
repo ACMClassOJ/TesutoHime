@@ -46,13 +46,13 @@
 
         <div {{ begin_tab('problem') }}>
             <h3>管理已有题目</h3>
-            <form id="form-jump-problem">
+            <form action="{{ url_for('.problem_admin_form') }}">
                 <div class="form-row">
                     <div class="form-group col-md-3">
                         <label for="problem-id">题目 ID</label>
-                        <input class="form-control" type="number" id="problem-id" required>
+                        <input class="form-control" type="number" name="id" id="problem-id" required>
                     </div>
-                    <div class="d-flex mb-3">
+                    <div class="d-flex mb-3 col-md-3">
                         <button type="submit" class="btn btn-outline-primary mt-auto">跳转</button>
                     </div>
                 </div>
@@ -348,5 +348,4 @@
 {% block script %}
 <script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/course_admin.js') }}?v=20240129"></script>
 {% endblock %}

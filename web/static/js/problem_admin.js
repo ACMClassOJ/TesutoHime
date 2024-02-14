@@ -6,9 +6,11 @@ $.fn.serializeObject = function () {
     return data
 }
 
-const uploadData = async (problemId, file, progressBar) => {
+const getUrl = name => document.querySelector(`link[rel='${name}']`).href
+
+const uploadData = async (file, progressBar) => {
     try {
-        const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/upload-url`)
+        const res = await fetch(getUrl('upload-url'))
         if (res.status !== 200) {
             swal('Error', '无法获取上传链接', 'error')
             return
@@ -30,7 +32,7 @@ const uploadData = async (problemId, file, progressBar) => {
             }
             progressBar.removeAttribute('value')
             try {
-                const res = await fetch(`/OnlineJudge/admin/problem/${problemId}/update-plan`, { method: 'POST' })
+                const res = await fetch(getUrl('update-plan'), { method: 'POST' })
                 if (res.status !== 200) {
                     swal('Error', `未知错误: ${res.status}`, 'error')
                     return
@@ -73,7 +75,7 @@ $(() => {
         editors[editormd_name] = editormd(editormd_name, {
             width: '100%',
             height: 400,
-            path: '/OnlineJudge/static/lib/editor.md/lib/',
+            path: getUrl('editor.md-lib'),
             toolbarIcons: () => [
                 'undo', 'redo', '|',
                 'bold', 'del', 'italic', 'quote', '|',
@@ -102,15 +104,15 @@ $(() => {
 
     const reloadDescription = () => $.ajax({
         dataType: 'text',
-        url: `/OnlineJudge/api/problem/${problemId}/description`,
+        url: getUrl('description'),
         success: response_text => {
             const main_json = JSON.parse(response_text)
-            new_or_modify_content_in_editormd('iptDescription', main_json['Description'])
-            new_or_modify_content_in_editormd('iptInput', main_json['Input'])
-            new_or_modify_content_in_editormd('iptOutput', main_json['Output'])
-            new_or_modify_content_in_editormd('iptExampleInput', main_json['Example_Input'])
-            new_or_modify_content_in_editormd('iptExampleOutput', main_json['Example_Output'])
-            new_or_modify_content_in_editormd('iptDataRange', main_json['Data_Range'])
+            new_or_modify_content_in_editormd('iptDescription', main_json['description'])
+            new_or_modify_content_in_editormd('iptInput', main_json['input'])
+            new_or_modify_content_in_editormd('iptOutput', main_json['output'])
+            new_or_modify_content_in_editormd('iptExampleInput', main_json['example_input'])
+            new_or_modify_content_in_editormd('iptExampleOutput', main_json['example_output'])
+            new_or_modify_content_in_editormd('iptDataRange', main_json['data_range'])
         },
         error: () => alert('无法获取题面，请刷新重试'),
     })
@@ -135,7 +137,7 @@ $(() => {
         e.preventDefault()
         e.stopPropagation()
         const data = $(this).serializeObject()
-        fetch(`/OnlineJudge/admin/problem/${problemId}/description`, {
+        fetch(getUrl('description'), {
             method: 'put',
             headers: {
                 'Content-Type': 'application/json',
@@ -170,7 +172,7 @@ $(() => {
     }
 
     function uploadLimit (limit) {
-        fetch(`/OnlineJudge/admin/problem/${problemId}/limit`, {
+        fetch(getUrl('limit'), {
             method: 'put',
             headers: {
                 'Content-Type': 'application/json',
@@ -290,7 +292,7 @@ $(() => {
         }
         folder.file('config.json', generateConfig())
         zip.generateAsync({ type: 'blob' }).then(blob => {
-            return uploadData(problemId, blob, document.getElementById('data-gui-progress'))
+            return uploadData(blob, document.getElementById('data-gui-progress'))
         })
     })
 
@@ -331,7 +333,7 @@ $(() => {
 
         const doUpload = () => {
             const progressBar = document.getElementById('data-upload-progress')
-            uploadData(problemId, file, progressBar)
+            uploadData(file, progressBar)
         }
 
         JSZip.loadAsync(file).then(function (zip) {
@@ -384,7 +386,7 @@ $(() => {
                 if (image.size === 0) {
                     throw new Error('您正在上传一个空文件')
                 }
-                const urlRes = await fetch(`/OnlineJudge/admin/pic-url`, {
+                const urlRes = await fetch(getUrl('pic-url'), {
                     method: 'POST',
                     body: new URLSearchParams({
                         length: image.size,
@@ -410,7 +412,7 @@ $(() => {
                 displayUrl.search = ''
                 var swal_content = document.createElement('p')
                 swal_content.innerHTML = `
-                    <img src='${displayUrl}' style='width: 33%'><br>
+                    <img src="${displayUrl}" style="width: 33%"><br>
                     <pre id='swal_content_url'>${displayUrl}</pre>
                     <pre id='swal_content_html'>&lt;img src=&quot;${displayUrl}&quot; style=&quot;width: 100%&quot;&gt;</pre>
                 `

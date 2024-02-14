@@ -46,7 +46,7 @@
                     <li class="nav-item"><a href="{{ url_for('web.homework_list') }}" class="nav-link">作业</a></li>
                     <li class="nav-item"><a href="{{ url_for('web.status') }}" class="nav-link">评测状态</a></li>
                     {% if g.is_admin %}
-                    <li class="nav-item"><a href="{{ url_for('web.admin.index') }}" class="nav-link">管理</a></li>
+                    <li class="nav-item"><a href="{{ url_for('web.admin') }}" class="nav-link">管理</a></li>
                     {% endif %}
                     <li class="nav-item"><a href="{{ url_for('web.about') }}" class="nav-link">关于</a></li>
                     <li class="nav-item"><a href="{{ url_for('web.help_index') }}" class="nav-link">帮助</a></li>
@@ -101,7 +101,7 @@
 <script src="{{ url_for('.static', filename = 'lib/jquery.form.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/sweetalert.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/han.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/csrf.js') }}?v=20240122"></script>
+<script src="{{ url_for('.static', filename = 'js/base.js') }}?v=20240214"></script>
 {% block script %}{% endblock %}
 
 </html>

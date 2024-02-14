@@ -51,19 +51,8 @@ class UserManager:
         return user
 
     @staticmethod
-    def modify_user(username: str, student_id: Optional[int], friendly_name: Optional[str],
-                    password: Optional[str], privilege: Optional[int]):
-        stmt = update(User).where(User.username == username)
-        if student_id is not None:
-            stmt = stmt.values(student_id=student_id)
-        if friendly_name is not None:
-            stmt = stmt.values(friendly_name=friendly_name)
-        if password is not None:
-            password = hash(password)
-            stmt = stmt.values(password=password)
-        if privilege is not None:
-            stmt = stmt.values(privilege=privilege)
-        db.execute(stmt)
+    def set_password(user: User, password: str):
+        user.password = hash(password)
 
     @staticmethod
     def check_login(user: User, password: str) -> bool:

@@ -223,12 +223,14 @@
     <p>删除比赛将会不可逆地从数据库中删除比赛相关的所有信息，但不会删除提交的代码。如您确认要删除比赛，请在下方文本框中输入比赛编号以确认：</p>
     <form method="POST">
         {{ g.csrf() }}
-        <div class="form-row d-flex">
+        <div class="form-row">
             <input type="hidden" name="action" value="delete">
             <div class="col-md-3">
                 <input class="form-control" type="text" name="confirm" pattern="{{ contest.id }}" required>
             </div>
-            <button class="btn btn-outline-primary ml-3" type="submit">删除比赛</button>
+            <div class="col-md-3">
+                <button class="btn btn-outline-primary" type="submit">删除比赛</button>
+            </div>
         </div>
     </form>
 </div>

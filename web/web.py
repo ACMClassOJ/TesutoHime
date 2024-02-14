@@ -4,8 +4,8 @@ import re
 from datetime import datetime
 from functools import wraps
 from http.client import (BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR,
-                         NOT_FOUND, OK, REQUEST_ENTITY_TOO_LARGE, SEE_OTHER,
-                         UNAUTHORIZED)
+                         NO_CONTENT, NOT_FOUND, OK, REQUEST_ENTITY_TOO_LARGE,
+                         SEE_OTHER, UNAUTHORIZED)
 from math import ceil
 from typing import Dict, List, NoReturn, Optional
 from urllib.parse import quote, urlencode, urljoin
@@ -28,7 +28,6 @@ from commons.models import (Contest, Course, CourseTag, Enrollment, Group,
                             RealnameReference, Term, User)
 from commons.task_typing import ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
-from web.admin import admin
 from web.config import (JudgeConfig, LoginConfig, NewsConfig, ProblemConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
@@ -37,7 +36,7 @@ from web.contest_manager import ContestManager
 from web.course_manager import CourseManager
 from web.csrf import setup_csrf
 from web.discuss_manager import DiscussManager
-from web.judge_manager import JudgeManager
+from web.judge_manager import JudgeManager, NotFoundException
 from web.news_manager import NewsManager
 from web.old_judge_manager import OldJudgeManager
 from web.problem_manager import ProblemManager
@@ -50,14 +49,13 @@ from web.utils import (SqlSession, db, gen_page, gen_page_for_problem_list,
                        generate_s3_public_url, readable_lang_v1, readable_time)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
-web.register_blueprint(admin, url_prefix='/admin')
 setup_csrf(web)
 
 
 def validate(username: Optional['str'] = None,
              password: Optional['str'] = None,
              friendly_name: Optional['str'] = None,
-             student_id: Optional['str'] = None) -> dict:
+             student_id: Optional['str'] = None) -> Optional[str]:
     """Validate a user.
 
     This function is used in registering and updating user information.
@@ -69,30 +67,24 @@ def validate(username: Optional['str'] = None,
         student_id: The student id to validate.
 
     Returns:
-        ReturnCode.SUC_VALIDATE if all the fields are valid.
-        ReturnCode.ERR_VALIDATE_INVALID_USERNAME if the username is invalid.
-        ReturnCode.ERR_VALIDATE_INVALID_PASSWD if the password is invalid.
-        ReturnCode.ERR_VALIDATE_INVALID_FRIENDLY_NAME if the friendly name is invalid.
-        ReturnCode.ERR_VALIDATE_INVALID_STUDENT_ID if the student id is invalid.
-        ReturnCode.ERR_VALIDATE_USERNAME_EXISTS if the username already exists.
-
-        The definition of ReturnCode is at Web/const.py.
+        None if all the fields are valid.
+        An error string if something is wrong.
     """
     username_reg = '([a-zA-Z][a-zA-Z0-9_]{0,19})$'
     password_reg = '([\x20-\x7e]{6,128})$'
     friendly_name_reg = '([a-zA-Z0-9_]{1,60})$'
     student_id_reg = '([0-9]{12})$'
     if username is not None and re.match(username_reg, username) is None:
-        return ReturnCode.ERR_VALIDATE_INVALID_USERNAME
+        return '用户名不符合要求。用户名要求：20位以内的大小写字母或数字（第一位必须是字母）。'
     if password is not None and re.match(password_reg, password) is None:
-        return ReturnCode.ERR_VALIDATE_INVALID_PASSWD
+        return '密码不符合要求。密码要求：6-30位的大小写字母、数字、下划线。'
     if friendly_name is not None and re.match(friendly_name_reg, friendly_name) is None:
-        return ReturnCode.ERR_VALIDATE_INVALID_FRIENDLY_NAME
+        return '昵称不符合要求。昵称要求：60位以内的大小写字母、数字、下划线。'
     if student_id is not None and re.match(student_id_reg, student_id) is None:
-        return ReturnCode.ERR_VALIDATE_INVALID_STUDENT_ID
+        return '学号不符合注册要求。学号要求：12位数字（如果不够可以用0补全）。'
     if username is not None and UserManager.has_user(username):
-        return ReturnCode.ERR_VALIDATE_USERNAME_EXISTS
-    return ReturnCode.SUC_VALIDATE
+        return '用户名已被注册。'
+    return None
 
 
 """
@@ -220,43 +212,6 @@ def index2():
     return redirect(url_for('.index'))
 
 
-@web.route('/api/problem/<problem:problem>/description')
-def get_problem_description(problem: Problem):
-    data = {
-        'ID': problem.id,
-        'Title': problem.title,
-        'Description': str(problem.description),
-        'Input': str(problem.input),
-        'Output': str(problem.output),
-        'Example_Input': str(problem.example_input),
-        'Example_Output': str(problem.example_output),
-        'Data_Range': str(problem.data_range),
-        'Release_Time': problem.release_time.isoformat(),
-        'Problem_Type': problem.problem_type,
-        'Limits': str(problem.limits),
-    }
-    return json.dumps(data)
-
-@web.route('/api/code', methods=['POST'])
-def get_code():
-    if g.user is None:
-        return '-1'
-    run_id = request.form.get('submit_id')
-    if run_id is None:
-        return '-1'
-    if not str(run_id).isdigit():  # bad argument
-        return '-1'
-    run_id = int(run_id)
-    if run_id < 0 or run_id > OldJudgeManager.max_id():
-        return '-1'
-    detail = OldJudgeManager.query_judge(run_id)
-    if detail is None:
-        return '-1'
-    if not JudgeManager.can_show(JudgeManager.get_submission(run_id)):
-        return '-1'
-    return detail.code
-
-
 def create_session(user):
     session_id = str(uuid4())
     SessionManager.new_session(user, session_id)
@@ -294,25 +249,30 @@ def logout():
     return ret
 
 
-@web.route('/register', methods=['GET', 'POST'])
-def register():
-    if WebConfig.Block_Register:
-        abort(NOT_FOUND)
-    if request.method == 'GET':
-        return render_template('register.html')
+@ignore_alert_fail
+def process_register():
     username = request.form.get('username')
     password = request.form.get('password')
     friendly_name = request.form.get('friendly_name')
     student_id = request.form.get('student_id')
     if username is None or password is None or friendly_name is None or student_id is None:
         abort(BAD_REQUEST)
-    val = validate(username, password, friendly_name, student_id)
-    if val == ReturnCode.SUC_VALIDATE:
-        user = UserManager.add_user(username, student_id, friendly_name, password, 0)
-        return create_session(user)
-    else:
-        ignore_alert_fail(alert_fail)(val['msg'])
-        return render_template('register.html')
+    error = validate(username, password, friendly_name, student_id)
+    if error is not None:
+        alert_fail(error)
+
+    user = UserManager.add_user(username, student_id, friendly_name, password, 0)
+    return create_session(user)
+
+@web.route('/register', methods=['GET', 'POST'])
+def register():
+    if WebConfig.Block_Register:
+        abort(NOT_FOUND)
+    if request.method == 'POST':
+        resp = process_register()
+        if resp is not None:
+            return resp
+    return render_template('register.html')
 
 
 @web.route('/problem')
@@ -392,7 +352,7 @@ def process_problem_admin(problem: Problem):
             alert_fail('输入的题号不正确')
         course_id = problem.course_id
         ProblemManager.delete_problem(problem)
-        return redirect(url_for('.course_admin', course=course_id), SEE_OTHER)
+        return redirect(url_for('.course_admin', course=course_id, tab='problem'), SEE_OTHER)
     elif action == 'priv-add':
         set_tab('privileges')
         username = request.form['username']
@@ -443,6 +403,13 @@ def problem_admin(problem: Problem):
 
     return render_template('problem_admin.html', problem=problem,
                            submission_count=submission_count, ac_count=ac_count)
+
+@web.route('/problem/admin')
+def problem_admin_form():
+    id = request.args.get('id')
+    if id is None:
+        abort(BAD_REQUEST)
+    return redirect(url_for('.problem_admin', problem=int(id)))
 
 
 @web.route('/problem/<problem:problem>/submit', methods=['GET', 'POST'])
@@ -615,6 +582,80 @@ def problem_discuss(problem: Problem):
         except TypeError:
             return ReturnCode.ERR_BAD_DATA
 
+def reads_problem(func):
+    @wraps(func)
+    def wrapped(problem, *args, **kwargs):
+        if not g.can_read:
+            abort(FORBIDDEN)
+        return func(problem, *args, **kwargs)
+    return wrapped
+
+def writes_problem(func):
+    @wraps(func)
+    def wrapped(problem, *args, **kwargs):
+        if not g.can_write:
+            abort(FORBIDDEN)
+        return func(problem, *args, **kwargs)
+    return wrapped
+
+@web.route('/problem/<problem:problem>/description', methods=['GET', 'PUT'])
+@writes_problem
+def problem_description(problem: Problem):
+    rows = 'description', 'input', 'output', 'example_input', 'example_output', 'data_range'
+    if request.method == 'GET':
+        data = {}
+        for row in rows:
+            data[row] = getattr(problem, row)
+        return data
+
+    form = request.json
+    if form is None:
+        abort(BAD_REQUEST)
+    for row in rows:
+        content = form.get(row, None)
+        if content == 'None' or content == '':
+            content = None
+        setattr(problem, row, content)
+    return make_response('', NO_CONTENT)
+
+@web.route('/problem/<problem:problem>/limit', methods=['put'])
+@writes_problem
+def problem_limit(problem: Problem):
+    problem.limits = request.json
+    return make_response('', NO_CONTENT)
+
+@web.route('/problem/<problem:problem>/upload-url')
+@writes_problem
+def problem_upload_url(problem: Problem):
+    return generate_s3_public_url('put_object', {
+        'Bucket': S3Config.Buckets.problems,
+        'Key': f'{problem.id}.zip',
+    }, ExpiresIn=3600)
+
+@web.route('/problem/<problem:problem>/update-plan', methods=['POST'])
+@writes_problem
+def problem_update_plan(problem: Problem):
+    url = urljoin(SchedulerConfig.base_url, f'problem/{problem.id}/update')
+    res = requests.post(url).json()
+    if res['result'] == 'ok':
+        problem.languages_accepted = res['languages']
+        return 'ok'
+    elif res['result'] == 'invalid problem':
+        return f'Invalid problem: {res["error"]}'
+    elif res['result'] == 'system error':
+        return f'System error: {res["error"]}'
+    return 'Bad result from scheduler'
+
+@web.route('/problem/<problem:problem>/data-zip')
+@reads_problem
+def problem_data_zip(problem: Problem):
+    key = f'{problem.id}.zip'
+    url = generate_s3_public_url('get_object', {
+        'Bucket': S3Config.Buckets.problems,
+        'Key': key,
+    }, ExpiresIn=3600)
+    return redirect(url, SEE_OTHER)
+
 
 @web.route('/status')
 @require_logged_in
@@ -698,6 +739,25 @@ def code_old(run_id):
                                language=language,
                                time=time,
                                score=score)
+
+@web.route('/api/code', methods=['POST'])
+def get_code_old():
+    if g.user is None:
+        return '-1'
+    run_id = request.form.get('submit_id')
+    if run_id is None:
+        return '-1'
+    if not str(run_id).isdigit():  # bad argument
+        return '-1'
+    run_id = int(run_id)
+    if run_id < 0 or run_id > OldJudgeManager.max_id():
+        return '-1'
+    detail = OldJudgeManager.query_judge(run_id)
+    if detail is None:
+        return '-1'
+    if not JudgeManager.can_show(JudgeManager.get_submission(run_id)):
+        return '-1'
+    return detail.code
 
 @web.route('/code')
 def code_compat():
@@ -1093,7 +1153,7 @@ def process_course_admin(course: Course):
             if rr is not None:
                 for e in rr.enrollments:
                     if e.admin:
-                        alert_fail(f'不能修改课程管理员 {repr(e.user.username)} 的实名信息')
+                        alert_fail(f'不能修改班级管理员 {repr(e.user.username)} 的实名信息')
             RealnameManager.add_student(line[0], line[1], course, groups)
         alert_success('编辑实名信息成功')
     elif action == 'realname-delete':
@@ -1104,7 +1164,7 @@ def process_course_admin(course: Course):
             abort(BAD_REQUEST)
         for e in rr.enrollments:
             if e.admin:
-                alert_fail(f'不能删除课程管理员 {repr(e.user.username)} 的实名信息')
+                alert_fail(f'不能删除班级管理员 {repr(e.user.username)} 的实名信息')
         db.delete(rr)
         db.flush()
         alert_success('已删除实名信息')
@@ -1160,7 +1220,7 @@ def process_course_admin(course: Course):
                 continue
             if enrollment.admin:
                 db.rollback()
-                alert_fail(f'用户 {repr(username)} 是课程管理员，请先移除管理权限')
+                alert_fail(f'用户 {repr(username)} 是班级管理员，请先移除管理权限')
             db.delete(enrollment)
             db.flush()
         alert_success('已移除用户')
@@ -1183,7 +1243,7 @@ def process_course_admin(course: Course):
             enrollment = UserManager.get_enrollment(user, course)
             if enrollment is None:
                 db.rollback()
-                alert_fail(f'用户 {repr(username)} 未加入课程')
+                alert_fail(f'用户 {repr(username)} 未加入班级')
             if enrollment.realname_reference is None:
                 db.rollback()
                 alert_fail(f'用户 {repr(username)} 未添加实名信息')
@@ -1234,28 +1294,144 @@ def course_group_edit(course, group_id, action):
     return redirect(url_for('.course_admin', course=course, tab='group', group=str(group.id)), SEE_OTHER)
 
 
+@ignore_alert_fail
+def process_profile():
+    form = request.form
+    friendly_name = form.get('friendly_name')
+    password = form.get('password')
+    password_repeat = form.get('password_repeat')
+    if password != password_repeat:
+        alert_fail('两次输入的密码不一致')
+    if password == '': password = None
+    if friendly_name == '': friendly_name = None
+
+    error = validate(friendly_name=friendly_name, password=password)
+    if error is not None:
+        alert_fail(error)
+
+    if friendly_name is not None:
+        g.user.friendly_name = friendly_name
+    if password is not None:
+        UserManager.set_password(g.user, password)
+    alert_success('成功修改个人信息')
+
 @web.route('/profile', methods=['GET', 'POST'])
 @require_logged_in
 def profile():
-    if request.method == 'GET':
-        return render_template('profile.html')
-    else:
-        form = request.json
-        if form is None:
-            abort(BAD_REQUEST)
-        try:
-            ret = validate(password=form.get('password'), friendly_name=form.get('friendly_name'))
-            if ret == ReturnCode.SUC_VALIDATE:
-                UserManager.modify_user(g.user.username, None, form.get('friendly_name'), form.get(
-                    'password'), None)
-                return ReturnCode.SUC_MOD_USER
-            else:
-                return ret
+    if request.method == 'POST':
+        process_profile()
+    return render_template('profile.html')
 
-        except KeyError:
+
+# admin
+
+def require_admin(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if not g.is_admin:
+            abort(FORBIDDEN)
+        return func(*args, **kwargs)
+    return wrapped
+
+@ignore_alert_fail
+def process_admin():
+    form = request.form
+    action = form['action']
+    if action == 'user':
+        set_tab('user')
+        user = UserManager.get_user_by_username(form['username'])
+        if user is None:
+            alert_fail('用户不存在')
+        args = {}
+        for key in 'student_id', 'friendly_name', 'password':
+            args[key] = request.form.get(key)
+            if args[key] == '': args[key] = None
+        error = validate(**args)
+        if error is not None:
+            alert_fail(error)
+        if args['student_id'] is not None:
+            user.student_id = args['student_id']
+        if args['friendly_name'] is not None:
+            user.student_id = args['friendly_name']
+        if args['password'] is not None:
+            UserManager.set_password(user, args['password'])
+        priv = request.form.get('privilege')
+        if priv is not None and priv != '':
+            user.privilege = int(priv)
+        db.flush()
+        alert_success('修改用户信息成功')
+
+@web.route('/admin/', methods=['GET', 'POST'])
+@require_admin
+def admin():
+    if request.method == 'POST':
+        process_admin()
+    return render_template('admin.html')
+
+
+def problem_admin_api(callback, success_retcode):
+    type = request.form['type']
+
+    if type == 'by_judge_id':
+        id = request.form['judge_id']
+        id_list = id.strip().splitlines()
+        try:
+            for i in id_list:
+                submission = JudgeManager.get_submission(int(i))
+                if submission is None:
+                    raise NotFoundException
+                if not ProblemManager.can_write(submission.problem):
+                    raise NotFoundException
+                callback(submission)
+            return success_retcode
+        except NotFoundException:
             return ReturnCode.ERR_BAD_DATA
-        except TypeError:
+    elif type == 'by_problem_id':
+        ids = request.form['problem_id'].strip().splitlines()
+        try:
+            for id in ids:
+                problem = ProblemManager.get_problem(int(id))
+                if problem is None:
+                    raise NotFoundException
+                if not ProblemManager.can_write(problem):
+                    raise NotFoundException
+                JudgeManager.problem_judge_foreach(callback, id)
+            return success_retcode
+        except NotFoundException:
             return ReturnCode.ERR_BAD_DATA
+
+@web.route('/admin/rejudge', methods=['POST'])
+def admin_rejudge():
+    return problem_admin_api(JudgeManager.rejudge, ReturnCode.SUC_REJUDGE)
+
+@web.route('/admin/mark-void', methods=['POST'])
+def admin_mark_void():
+    return problem_admin_api(JudgeManager.mark_void, ReturnCode.SUC_DISABLE_JUDGE)
+
+@web.route('/admin/abort-judge', methods=['POST'])
+def admin_abort_judge():
+    return problem_admin_api(JudgeManager.abort_judge, ReturnCode.SUC_ABORT_JUDGE)
+
+max_pic_size = 10485760
+
+@web.route('/admin/pic-url', methods=['POST'])
+@require_admin
+def admin_pic_url():
+    length = int(request.form['length'])
+    if length > max_pic_size:
+        abort(REQUEST_ENTITY_TOO_LARGE)
+    if length <= 0:
+        abort(BAD_REQUEST)
+    type = str(request.form['type'])
+    if not type.startswith('image/'):
+        abort(BAD_REQUEST)
+    return generate_s3_public_url('put_object', {
+        'Bucket': S3Config.Buckets.images,
+        'Key': str(uuid4()),
+        'ContentLength': length,
+        'ContentType': type,
+    }, ExpiresIn=3600)
+
 
 
 # help

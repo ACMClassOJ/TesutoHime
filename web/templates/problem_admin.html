@@ -8,6 +8,13 @@
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/editor.md/css/editormd.min.css') }}"> 
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
+
+<link rel="upload-url" href="{{ url_for('.problem_upload_url', problem=problem) }}">
+<link rel="update-plan" href="{{ url_for('.problem_update_plan', problem=problem) }}">
+<link rel="description" href="{{ url_for('.problem_description', problem=problem) }}">
+<link rel="limit" href="{{ url_for('.problem_limit', problem=problem) }}">
+<link rel="pic-url" href="{{ url_for('.admin_pic_url') }}">
+<link rel="editor.md-lib" href="{{ url_for('.static', filename='lib/editor.md/lib/') }}">
 {% endblock %}
 
 {% block content %}
@@ -41,7 +48,7 @@
                         <input class="form-control" type="text" name="title" id="iptTitle" value="{{ problem.title }}">
                     </div>
                     <div class="form-group col-md-3">
-                        <label for="iptReleaseTime">发布时间 (YYYY-MM-DDThh:mm:ss)</label>
+                        <label for="iptReleaseTime">发布时间 (YYYY-MM-DDThh:mm)</label>
                         <input class="form-control" type="datetime-local" name="time" id="iptReleaseTime" value="{{ datetime_local(problem.release_time) }}">
                     </div>
                     <div class="form-group col-md-3">
@@ -260,7 +267,7 @@
             <hr>
             <h3>
                 下载数据压缩包
-                <a href="{{ url_for('.admin.data_download', problem=problem) }}" class="btn btn-outline-primary float-right ml-auto mt-auto">点击下载</a>
+                <a href="{{ url_for('.problem_data_zip', problem=problem) }}" class="btn btn-outline-primary float-right ml-auto mt-auto">点击下载</a>
             </h3>
         </div>
 
@@ -272,7 +279,7 @@
             {% else %}
             <p>当前有 {{ submission_count }} 次提交，您确定要重测所有这些代码吗？请在下方文本框中输入题目编号以确认：</p>
             {% endif %}
-            <form id="form-rejudge" action="{{ url_for('.admin.rejudge') }}" method="POST">
+            <form id="form-rejudge" action="{{ url_for('.admin_rejudge') }}" method="POST">
                 {{ g.csrf() }}
                 <input type="hidden" name="type" value="by_problem_id">
                 <div class="form-row">
@@ -297,7 +304,7 @@
             {% else %}
             <p>当前有 {{ submission_count }} 次提交，您确定要取消所有这些提交的成绩吗？请在下方文本框中输入题目编号以确认：</p>
             {% endif %}
-            <form id="form-void" action="{{ url_for('.admin.mark_void') }}" method="POST">
+            <form id="form-void" action="{{ url_for('.admin_mark_void') }}" method="POST">
                 {{ g.csrf() }}
                 <div class="form-row">
                     <input type="hidden" name="type" value="by_problem_id">
@@ -317,7 +324,7 @@
             <hr>
             <h3>终止评测全部提交</h3>
             <p>如果想终止评测单份提交，请进入代码页面，点击代码上方的「终止评测」按钮。</p>
-            <form id="form-abort" action="{{ url_for('.admin.abort_judge') }}" method="POST">
+            <form id="form-abort" action="{{ url_for('.admin_abort_judge') }}" method="POST">
                 {{ g.csrf() }}
                 <div class="form-row">
                     <input type="hidden" name="type" value="by_problem_id">
@@ -484,5 +491,5 @@ window.problemId = {{ problem.id }}
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240131"></script>
+<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240214"></script>
 {% endblock %}

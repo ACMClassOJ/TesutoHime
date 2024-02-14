@@ -240,7 +240,7 @@
                 type: "POST",
                 dataType: "text",
                 data: {submit_id: {{ Detail.id }}},
-                url: "{{ url_for('.get_code') }}",
+                url: "{{ url_for('.get_code_old') }}",
                 success: function (response_text) {
                     $("#judge_detail_code_highlighted").text(response_text);
                     hljs.initHighlighting();

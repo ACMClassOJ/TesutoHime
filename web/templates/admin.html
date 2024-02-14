@@ -20,13 +20,13 @@
         <div class="tab-content">
             <div {{ begin_tab('problem') }}>
                 <h3>管理已有题目</h3>
-                <form id="form-jump-problem">
+                <form action="{{ url_for('.problem_admin_form') }}">
                     <div class="form-row">
                         <div class="form-group col-md-3">
                             <label for="problem-id">题目 ID</label>
-                            <input class="form-control" type="number" id="problem-id" required>
+                            <input class="form-control" type="number" name="id" id="problem-id" required>
                         </div>
-                        <div class="d-flex mb-3">
+                        <div class="d-flex mb-3 col-md-3">
                             <button type="submit" class="btn btn-outline-primary mt-auto">跳转</button>
                         </div>
                     </div>
@@ -42,7 +42,7 @@
                     <strong>警告</strong>: 在评测记录多时，以下操作十分缓慢。严禁多次点击按钮，否则会导致严重性能问题。
                 </p>
                 <h3> 批量重测 </h3>
-                <form id="formRejudge" action="{{ url_for('.rejudge') }}" method="POST">
+                <form id="formRejudge" action="{{ url_for('.admin_rejudge') }}" method="POST">
                     {{ g.csrf() }}
                     <input type="hidden" name="type" value="by_judge_id">
                     <div class="form-row">
@@ -59,7 +59,7 @@
                 <hr>
 
                 <h3> 批量题目重测 </h3>
-                <form id="formRejudge2" action="{{ url_for('.rejudge') }}" method="POST">
+                <form id="formRejudge2" action="{{ url_for('.admin_rejudge') }}" method="POST">
                     {{ g.csrf() }}
                     <input type="hidden" name="type" value="by_problem_id">
                     <div class="form-row">
@@ -80,7 +80,7 @@
                     评测机仍有可能返回评测结果，此时 Voided 状态将被真实的评测记录覆盖。若想中断评测，请使用终止评测 (abort) 功能。
                     因此，建议在如下情况使用此功能：需要作废一条已经出了结果的评测记录。
                 </p>
-                <form id="formDisableJudge" action="{{ url_for('.mark_void') }}" method="POST">
+                <form id="formDisableJudge" action="{{ url_for('.admin_mark_void') }}" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_judge_id">
@@ -95,7 +95,7 @@
                 </form>
                 <hr>
                 <h3>批量题目取消成绩</h3>
-                <form id="formDisableJudge2" action="{{ url_for('.mark_void') }}" method="POST">
+                <form id="formDisableJudge2" action="{{ url_for('.admin_mark_void') }}" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_problem_id">
@@ -112,7 +112,7 @@
                 <hr>
                 <h3>批量终止评测</h3>
                 <p>若指定的评测记录还在评测中，则将其状态设置为 Aborted (已测完的点不受影响)，使评测机终止评测任务，并判零分。</p>
-                <form id="form-abort" action="{{ url_for('.abort_judge') }}" method="POST">
+                <form id="form-abort" action="{{ url_for('.admin_abort_judge') }}" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_judge_id">
@@ -127,7 +127,7 @@
                 </form>
                 <hr>
                 <h3>批量题目终止评测</h3>
-                <form id="form-abort-2" action="{{ url_for('.abort_judge') }}" method="POST">
+                <form id="form-abort-2" action="{{ url_for('.admin_abort_judge') }}" method="POST">
                     {{ g.csrf() }}
                     <div class="form-row">
                         <input type="hidden" name="type" value="by_problem_id">
@@ -146,31 +146,32 @@
 
             {% if g.user.privilege >= g.consts.Privilege.SUPER %}
             <div {{ begin_tab('user') }}>
-                <form id="formUser">
+                <form method="POST">
+                    {{ g.csrf() }}
+                    <input type="hidden" name="action" value="user">
                     <div class="form-row">
                         <div class="form-group col-md-3">
-                            <label for="iptUsername"> Username </label>
+                            <label for="iptUsername">用户名</label>
                             <input class="form-control" type="text" name="username" id="iptUsername">
                         </div>
                         <div class="form-group col-md-3">
-                            <label for="iptStudentId"> Student ID </label>
-                            <input class="form-control" type="number" name="id" id="iptStudentId">
+                            <label for="iptStudentId">学号</label>
+                            <input class="form-control" type="number" name="student_id" id="iptStudentId">
                         </div>
                         <div class="form-group col-md-3">
-                            <label for="iptFriendlyName"> Friendly Name </label>
-                            <input class="form-control" type="text" name="name" id="iptFriendlyName">
+                            <label for="iptFriendlyName">昵称</label>
+                            <input class="form-control" type="text" name="friendly_name" id="iptFriendlyName">
                         </div>
                         <div class="form-group col-md-3">
-                            <label for="iptPassword"> Password </label>
+                            <label for="iptPassword">密码</label>
                             <input class="form-control" type="password" name="password" id="iptPassword">
                         </div>
                         <div class="form-group col-md-3">
-                            <label for="iptPrivilege"> Privilege </label>
+                            <label for="iptPrivilege">权限等级</label>
                             <input class="form-control" type="number" name="privilege" id="iptPrivilege">
                         </div>
                         <div class="float-right d-flex mb-3 ml-auto pr-1">
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUser"> Add User </button>
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyUser"> Modify User </button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit">修改用户信息</button>
                         </div>
                     </div>
                 </form>

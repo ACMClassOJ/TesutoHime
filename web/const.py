@@ -157,6 +157,7 @@ judge_status_info = {
 
     'skipped': JudgeStatusInfo('Skipped', 'black', 'Skip', 'secondary'),
     'system_error': JudgeStatusInfo('System Error', 'gray-dark', 'SE', 'default'),
+    'bad_problem': JudgeStatusInfo('Bad Problem', 'gray-dark', 'BP', 'default'),
     'unknown_error': JudgeStatusInfo('Unknown Error', 'gray-dark', 'UKE', 'default'),
 }
 

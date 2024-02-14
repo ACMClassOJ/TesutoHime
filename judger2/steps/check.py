@@ -31,7 +31,7 @@ async def check(outfile: CheckInput, cwd: PosixPath, checker: Checker) -> CheckR
         inf = outfile.input_path
         ouf = outfile.output_path
     if ouf is None:
-        return CheckResult('system_error', 'Nothing to check')
+        return CheckResult('bad_problem', 'Nothing to check')
 
     # check
     return await checkers[checker.__class__](inf, ouf, cwd, checker)
@@ -100,11 +100,11 @@ def checker_read_float(outfile: PosixPath, message: str = ''):
     try:
         score = float(outfile.read_text())
     except ValueError:
-        return CheckResult('system_error', 'Invalid SPJ checker: score not number')
+        return CheckResult('bad_problem', 'Invalid SPJ checker: score not number')
     if isinf(score):
-        return CheckResult('system_error', 'Invalid SPJ checker: score is infinity')
+        return CheckResult('bad_problem', 'Invalid SPJ checker: score is infinity')
     if isnan(score):
-        return CheckResult('system_error', 'Invalid SPJ checker: score is NaN')
+        return CheckResult('bad_problem', 'Invalid SPJ checker: score is NaN')
 
     result: Literal['accepted', 'wrong_answer'] = 'accepted' if score >= 1.0 else 'wrong_answer'
     return CheckResult(result, message, score)
@@ -121,7 +121,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
     try:
         exe = (await ensure_input(checker.executable)).path
     except NotCompiledException as e:
-        return CheckResult('system_error', f'cannot compile spj: {e}')
+        return CheckResult('bad_problem', f'cannot compile spj: {e}')
 
     # run spj
     with TempDir() as cwd:
@@ -151,7 +151,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
                                     supplementary_paths=bindmount,
                                     supplementary_paths_rw=[str(user_cwd)])
         if res.error is not None:
-            return CheckResult('system_error', f'checker error: {res.message}')
+            return CheckResult('bad_problem', f'checker error: {res.message}')
 
         msg = message.read_text() if message.exists() else ''
         return checker_read_float(score, msg)

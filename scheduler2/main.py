@@ -94,7 +94,7 @@ async def run_judge(problem_id: str, submission_id: str,
             plan_str = await read_file(s3_buckets.problems, plan_key(problem_id))
         except ClientError:
             msg = 'Cannot get judge plan'
-            res = ProblemJudgeResult(result='system_error', message=msg)
+            res = ProblemJudgeResult(result='bad_problem', message=msg)
         if plan_str is not None:
             plan = deserialize(plan_str)
             logger.debug(f'plan for problem {problem_id} loaded')
@@ -110,7 +110,7 @@ async def run_judge(problem_id: str, submission_id: str,
         logger.warning(f'invalid problem encountered in judging: {format_exc(e)}')
         if res is None:
             msg = f'Invalid problem: {e}'
-            res = ProblemJudgeResult(result='system_error', message=msg)
+            res = ProblemJudgeResult(result='bad_problem', message=msg)
     except InvalidCodeException as e:
         if res is None:
             msg = f'Invalid code: {e}'

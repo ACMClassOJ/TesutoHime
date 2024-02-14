@@ -344,6 +344,7 @@ class JudgeStatus(Enum):
     wrong_answer = auto()
     skipped = auto()
     system_error = auto()
+    bad_problem = auto()
     unknown_error = auto()
 
     accepted = auto()

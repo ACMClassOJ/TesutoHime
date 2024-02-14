@@ -112,7 +112,7 @@ RunError = Literal[
     'memory_leak',
     'system_error',
 ]
-CheckError = Literal['wrong_answer']
+CheckError = Literal['wrong_answer', 'bad_problem']
 Skipped = Literal['skipped']
 Void = Literal['void']
 Aborted = Literal['aborted']

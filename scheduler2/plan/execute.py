@@ -367,7 +367,12 @@ async def run_judge_tasks(ctx: ExecutionContext):
 
 
 def synthesize_results(results: Iterable[ResultType]) -> ResultType:
-    for res in results:
+    results_list = list(results)
+    if 'system_error' in results_list:
+        return 'system_error'
+    if 'bad_problem' in results_list:
+        return 'bad_problem'
+    for res in results_list:
         if res != 'accepted':
             return res
     return 'accepted'

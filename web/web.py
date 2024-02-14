@@ -29,7 +29,7 @@ from commons.models import (Contest, Course, CourseTag, Enrollment, Group,
 from commons.task_typing import ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
 from web.admin import admin
-from web.config import (JudgeConfig, LoginConfig, ProblemConfig,
+from web.config import (JudgeConfig, LoginConfig, NewsConfig, ProblemConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
 from web.const import Privilege, ReturnCode, language_info, runner_status_info
@@ -126,8 +126,7 @@ def before_request():
     if len(request.query_string) == 0 and request.full_path.endswith('?'):
         request.full_path = request.full_path[:-1]
 
-    if (request.full_path.startswith(('/OnlineJudge/static',
-                                      '/OnlineJudge/api/heartBeat')) or
+    if (request.full_path.startswith(url_for('web.static', filename='')) or
         request.full_path.endswith(('.js', '.css', '.ico'))):
         return
 
@@ -205,11 +204,13 @@ def ignore_alert_fail(func):
 def index():
     suggestions = invited_courses = None
     if g.user is not None:
-        contests = ContestManager.get_contests_for_user(g.user, True)
+        contests = ContestManager.get_contests_for_user(g.user, include_admin=True, ignore_groups=True)
         suggestions = ContestManager.suggest_contests(list(contests))
         invited_courses = CourseManager.get_invited_courses(g.user)
         invited_courses = set(c for c in invited_courses if c.id not in g.user.ignored_course_ids)
-    return render_template('index.html', news=NewsManager.get_news(),
+    return render_template('index.html',
+                           news=NewsManager.get_news(),
+                           news_link=NewsConfig.link,
                            suggestions=suggestions,
                            invited_courses=invited_courses)
 
@@ -256,26 +257,31 @@ def get_code():
     return detail.code
 
 
+def create_session(user):
+    session_id = str(uuid4())
+    SessionManager.new_session(user, session_id)
+    next = request.args.get('next', url_for('.index'))
+    ret = make_response(redirect(next, SEE_OTHER))
+    ret.set_cookie(key=SessionManager.session_cookie_name, value=session_id, max_age=LoginConfig.Login_Life_Time)
+    return ret
+
 @web.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
-        nxt = request.args.get('next')
-        nxt = '/' if nxt is None else nxt
-        return render_template('login.html', Next=nxt)
-    username = request.form.get('username')
-    password = request.form.get('password')
-    if username is None or password is None:
-        abort(BAD_REQUEST)
-    user = UserManager.get_user_by_username(username)
-    if user is None:
-        return ReturnCode.ERR_LOGIN
-    if not UserManager.check_login(user, password):
-        return ReturnCode.ERR_LOGIN
-    lid = str(uuid4())
-    SessionManager.new_session(user, lid)
-    ret = make_response(ReturnCode.SUC_LOGIN)
-    ret.set_cookie(key=SessionManager.session_cookie_name, value=lid, max_age=LoginConfig.Login_Life_Time)
-    return ret
+        return render_template('login.html')
+    try:
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if username is None or password is None:
+            alert_fail('请输入用户名和密码')
+        user = UserManager.get_user_by_username(username)
+        if user is None:
+            alert_fail('用户名或密码错误')
+        if not UserManager.check_login(user, password):
+            alert_fail('用户名或密码错误')
+        return create_session(user)
+    except AlertFail:
+        return render_template('login.html')
 
 
 @web.route('/logout', methods=['POST'])
@@ -293,8 +299,7 @@ def register():
     if WebConfig.Block_Register:
         abort(NOT_FOUND)
     if request.method == 'GET':
-        nxt = request.args.get('next')
-        return render_template('register.html', Next=nxt)
+        return render_template('register.html')
     username = request.form.get('username')
     password = request.form.get('password')
     friendly_name = request.form.get('friendly_name')
@@ -303,10 +308,11 @@ def register():
         abort(BAD_REQUEST)
     val = validate(username, password, friendly_name, student_id)
     if val == ReturnCode.SUC_VALIDATE:
-        UserManager.add_user(username, student_id, friendly_name, password, 0)
-        return ReturnCode.SUC_REGISTER
+        user = UserManager.add_user(username, student_id, friendly_name, password, 0)
+        return create_session(user)
     else:
-        return val
+        ignore_alert_fail(alert_fail)(val['msg'])
+        return render_template('register.html')
 
 
 @web.route('/problem')
@@ -450,13 +456,14 @@ def problem_submit(problem: Problem):
                                    languages_accepted=languages_accepted)
         elif problem.problem_type == 1:
             quiz_json = QuizManager.get_json_from_data_service_by_id(QuizTempDataConfig, problem.id)
-            success = quiz_json['e'] == 0
-            if success:
-                for i in quiz_json['problems']:
+            problems = None
+            if quiz_json is not None:
+                problems = quiz_json['problems']
+                for i in problems:
                     i['answer'] = ''
 
-            return render_template('quiz_submit.html', problem=problem, success=success,
-                                   quiz=quiz_json['problems'] if success else None)
+            return render_template('quiz_submit.html', problem=problem,
+                                   problems=problems)
     else:
         public = bool(request.form.get('shared', 0))  # 0 or 1
         if g.in_exam or not problem.allow_public_submissions:
@@ -1175,7 +1182,7 @@ def process_course_admin(course: Course):
             enrollment = UserManager.get_enrollment(user, course)
             if enrollment is None:
                 db.rollback()
-                alert_fail(f'用户 {repr(username)} 未报名课程')
+                alert_fail(f'用户 {repr(username)} 未加入课程')
             if enrollment.realname_reference is None:
                 db.rollback()
                 alert_fail(f'用户 {repr(username)} 未添加实名信息')

@@ -3,7 +3,6 @@ import os
 import zipfile
 
 from web.config import S3Config
-from web.const import ReturnCode
 from web.utils import s3_internal
 
 
@@ -18,5 +17,5 @@ class QuizManager:
                 try:
                     main_json = json.loads(f.read())
                 except json.JSONDecodeError:
-                    return ReturnCode.ERR_QUIZ_JSON_DECODE
-        return {**main_json, **ReturnCode.SUC_QUIZ_JSON_DECODE}
+                    return None
+        return main_json

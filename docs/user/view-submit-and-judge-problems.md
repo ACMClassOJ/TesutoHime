@@ -92,21 +92,63 @@ iverlog answer.v -o code
 - 参与评测的提交所对应的 commit hash，助教可以根据这个 commit hash 找到对应的提交；
 - 如果在编译过程中没有使用 cmake 或 make，则分别会显示一条警告信息。（具体请见 [Git 编译流程](#git-编译流程)部分）
 
-## 评测结果
+## 评测状态
 
-| 评测结果 | 说明 |
-|:---:| -------------------- |
-|Pending|等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。|
-|Compiling|正在编译。你的程序正在被评测机编译成可执行文件。|
-|Running & Judging|正在测试。你的程序正在被评测机运行以检查正确性。|
-|Accepted|通过。你的程序正确通过全部测试点。|
-|Aborted|评测中断。这可能是由于你或管理员手动中断了评测，也可能是因为评测机在评测时下线。|
-|Voided|成绩无效。你的程序被管理员标记为无效。|
-|Wrong Answer|答案错误。你的程序在某个测试点输出了错误的答案。|
-|Compile Error|编译错误。你的程序没有通过编译。|
-|Runtime Error|运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、程序返回值不为 0、除以 0 等。|
-|Time Limit Exceed|时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。|
-|Memory Limit Exceed|内存超限。你的程序请求了过多的内存。|
-|Memory Leak|内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。|
-|Disk Limit Exceed|磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。|
-|System Error|系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。|
+<div>
+  <p class="status__row">
+    <span class="status__col"><span class="text-gray">Pending</span>:</span>
+    <span>等待测试。这可能由于评测机正忙，也可能由于所有评测机均已下线。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-blue">Compiling</span>:</span>
+    <span>正在编译。你的程序正在被评测机编译成可执行文件。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-blue">Running & Judging</span>:</span>
+    <span>正在测试。你的程序正在被评测机运行以检查正确性。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-green">Accepted</span>:</span>
+    <span>通过。你的程序正确通过全部测试点。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-gray-dark">Aborted</span>:</span>
+    <span>评测中断。这可能是由于你或管理员手动中断了评测，也可能是因为评测机在评测时下线。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-bstatus__rown">Voided</span>:</span>
+    <span>成绩无效。你的程序被管理员标记为无效。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-red">Wrong Answer</span>:</span>
+    <span>答案错误。你的程序在某个测试点输出了错误的答案。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-yellow">Compile Error</span>:</span>
+    <span>编译错误。你的程序没有通过编译。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-red">Runtime Error</span>:</span>
+    <span>运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、程序返回值不为 0、除以 0 等。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-orange">Time Limit Exceed</span>:</span>
+    <span>时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-orange">Memory Limit Exceed</span>:</span>
+    <span>内存超限。你的程序请求了过多的内存。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-purple">Memory Leak</span>:</span>
+    <span>内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-purple">Disk Limit Exceed</span>:</span>
+    <span>磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</span>
+  </p>
+  <p class="status__row">
+    <span class="status__col"><span class="text-gray-dark">System Error</span>:</span>
+    <span>系统错误。评测系统在测试你的程序时出现错误，请联系管理员处理。</span>
+  </p>
+</div>

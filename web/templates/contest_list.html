@@ -35,7 +35,7 @@
                     <th>开始时间</th>
                     <th>结束时间</th>
                     <th>状态</th>
-                    <th>报名</th>
+                    <th>加入</th>
                 </tr>
             </thead>
             {% for contest in contests -%}
@@ -57,16 +57,16 @@
                         <button type="submit" class="btn btn-outline-primary btn-sm">退出</button>
                     </form>
                     {%- else -%}
-                    <button disabled class="btn btn-primary btn-sm">已报名</button>
+                    <button disabled class="btn btn-primary btn-sm">已加入</button>
                     {%- endif -%}
                     {%- elif reason == 'in-exam' -%}
                     <button disabled class="btn btn-primary btn-sm">已于考试中</button>
                     {%- elif reason == 'ended' -%}
-                    <!-- <button disabled class="btn btn-primary btn-sm">报名</button> -->
+                    <!-- <button disabled class="btn btn-primary btn-sm">已结束</button> -->
                     {%- else -%}
                     <form action="{{ url_for('.problemset_join', contest=contest) }}" method="POST">
                         {{ g.csrf() }}
-                        <button type="submit" class="btn btn-primary btn-sm">报名</button>
+                        <button type="submit" class="btn btn-primary btn-sm">加入</button>
                     </form>
                     {%- endif -%}
                 </td>

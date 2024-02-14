@@ -45,6 +45,7 @@ class WebConfig:
     Courses_Each_Page = 20
 
 class NewsConfig:
+    link = 'https://acm.sjtu.edu.cn/OnlineJudge/blog/'
     feed = 'https://acm.sjtu.edu.cn/OnlineJudge/blog/index.json'
 
 class SchedulerConfig:

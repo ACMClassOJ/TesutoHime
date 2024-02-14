@@ -45,7 +45,7 @@
         {%- elif status['reason-cannot-join'] == None -%}
         <form action="{{ url_for('web.problemset_join', contest=contest) }}" method="POST">
           {{ g.csrf() }}
-          <button type="submit" class="btn btn-primary btn-sm">报名</button>
+          <button type="submit" class="btn btn-primary btn-sm">加入</button>
         </form>
         {%- elif status['reason-cannot-join'] == 'in-exam' -%}
         <button disabled class="btn btn-outline-primary btn-sm">已在考试中</button>

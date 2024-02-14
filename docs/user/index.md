@@ -5,6 +5,7 @@
 - [账户和个人信息](account-and-profile.md)
 - [班级、比赛、作业与考试](classes-contests-homework-and-exams.md)
 - [查看、提交及评测题目](view-submit-and-judge-problems.md)
+- [有关从老 OJ 迁移后题面与数据的兼容性问题](onlinejudge-old.md)
 
 ## 管理员
 

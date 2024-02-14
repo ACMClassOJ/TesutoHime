@@ -42,11 +42,13 @@ def verify_sha512(hashed, password):
 class UserManager:
     @staticmethod
     def add_user(username: str, student_id: str, friendly_name: str, password: str,
-                 privilege: int):  # will not check whether the argument is illegal
+                 privilege: int) -> User:  # will not check whether the argument is illegal
         password = hash(password)
         user = User(username=username, student_id=student_id, friendly_name=friendly_name,
                     password=password, privilege=privilege)
         db.add(user)
+        db.flush()
+        return user
 
     @staticmethod
     def modify_user(username: str, student_id: Optional[int], friendly_name: Optional[str],

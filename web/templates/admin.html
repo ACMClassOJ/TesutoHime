@@ -37,40 +37,6 @@
             </div>
 
 
-            {% if g.user.privilege >= g.consts.Privilege.SUPER %}
-            <div {{ begin_tab('user') }}>
-                <form id="formUser">
-                    <div class="form-row">
-                        <div class="form-group col-md-3">
-                            <label for="iptUsername"> Username </label>
-                            <input class="form-control" type="text" name="username" id="iptUsername">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="iptStudentId"> Student ID </label>
-                            <input class="form-control" type="number" name="id" id="iptStudentId">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="iptFriendlyName"> Friendly Name </label>
-                            <input class="form-control" type="text" name="name" id="iptFriendlyName">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="iptPassword"> Password </label>
-                            <input class="form-control" type="password" name="password" id="iptPassword">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="iptPrivilege"> Privilege </label>
-                            <input class="form-control" type="number" name="privilege" id="iptPrivilege">
-                        </div>
-                        <div class="float-right d-flex mb-3 ml-auto pr-1">
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUser"> Add User </button>
-                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyUser"> Modify User </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            {% endif %}
-
-
             <div {{ begin_tab('judge') }}>
                 <p> 
                     <strong>警告</strong>: 在评测记录多时，以下操作十分缓慢。严禁多次点击按钮，否则会导致严重性能问题。
@@ -176,6 +142,40 @@
                 </form>
                 <hr>
             </div>
+
+
+            {% if g.user.privilege >= g.consts.Privilege.SUPER %}
+            <div {{ begin_tab('user') }}>
+                <form id="formUser">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="iptUsername"> Username </label>
+                            <input class="form-control" type="text" name="username" id="iptUsername">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptStudentId"> Student ID </label>
+                            <input class="form-control" type="number" name="id" id="iptStudentId">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptFriendlyName"> Friendly Name </label>
+                            <input class="form-control" type="text" name="name" id="iptFriendlyName">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptPassword"> Password </label>
+                            <input class="form-control" type="password" name="password" id="iptPassword">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="iptPrivilege"> Privilege </label>
+                            <input class="form-control" type="number" name="privilege" id="iptPrivilege">
+                        </div>
+                        <div class="float-right d-flex mb-3 ml-auto pr-1">
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnAddUser"> Add User </button>
+                            <button class="btn btn-outline-primary mt-auto" type="submit" id="btnModifyUser"> Modify User </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

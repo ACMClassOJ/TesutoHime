@@ -52,8 +52,12 @@
                     <li class="nav-item"><a href="{{ url_for('web.help_index') }}" class="nav-link">帮助</a></li>
                     {% if g.user == None -%}
                     <li class="dropdown-divider"></li>
-                    <li class="d-block d-lg-none nav-link"><a href="{{ url_for('web.login') }}">登录</a></li>
-                    <li class="d-block d-lg-none nav-link"><a href="{{ url_for('web.register') }}">注册</a></li>
+                    {%- set next = request.full_path -%}
+                    {%- if request.endpoint in 'web.login', 'web.register' -%}
+                    {%- set next = request.args.get('next', url_for('web.index')) -%}
+                    {%- endif -%}
+                    <li class="d-block d-lg-none nav-link"><a href="{{ url_for('web.login', next=next) }}">登录</a></li>
+                    <li class="d-block d-lg-none nav-link"><a href="{{ url_for('web.register', next=next) }}">注册</a></li>
                     {%- endif %}
                 </ul>
                 <ul class="navbar-nav ml-lg-auto" style="line-height: 1;">
@@ -71,8 +75,8 @@
                     </li>
                     {% else -%}
                     <li class="d-none d-lg-block">
-                        <a class="btn btn-neutral" href="{{ url_for('web.login') }}">登录</a>
-                        <a class="btn btn-neutral" href="{{ url_for('web.register') }}">注册</a>
+                        <a class="btn btn-neutral" href="{{ url_for('web.login', next=next) }}">登录</a>
+                        <a class="btn btn-neutral" href="{{ url_for('web.register', next=next) }}">注册</a>
                     </li>
                     {%- endif %}
                 </ul>

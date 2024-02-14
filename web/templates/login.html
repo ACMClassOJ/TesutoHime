@@ -5,10 +5,11 @@
 {% block content %}
     <div class="card card-body col-lg-5 m-auto">
         <h1>登录</h1>
+        {{ show_alert() }}
         {% if g.user != None -%}
             <h4 class="text-center">您已经以 {{ g.user.friendly_name }} 身份登录。</h4>
         {% else -%}
-            <form method="post" id="login">
+            <form method="POST">
                 {{ g.csrf() }}
                 <div class="form-group">
                     <label for="username">用户名</label>
@@ -20,14 +21,9 @@
                     <input class="form-control" type="password" name="password" id="password"
                            required="required">
                 </div>
-                <input type="hidden" name="next" value="{{ Next }}">
                 <br>
                 <input type="submit" class="btn btn-block btn-primary" value="登录">
             </form>
         {%- endif %}
     </div>
-{% endblock %}
-
-{% block script %}
-    <script src="{{ url_for('.static', filename = 'js/login.js') }}?v=2"></script>
 {% endblock %}

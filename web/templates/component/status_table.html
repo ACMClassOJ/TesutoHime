@@ -6,7 +6,7 @@
 				<th>编号</th>
 				<th class="status-list__user">昵称{% if g.is_admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
 				<th class="status-list__problem">题目</th>
-				<th><span class="mr-2">评测状态</span><a href="{{ url_for('.about') }}#judge-status">?</a></th>
+				<th><span class="mr-2">评测状态</span><a href="{{ url_for('.help', page='view-submit-and-judge-problems') }}#评测状态">?</a></th>
 				{%- if show_time %}
 				<th class="status-list__time">运行时间</th>
 				{%- endif %}

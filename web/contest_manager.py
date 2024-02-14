@@ -148,27 +148,35 @@ class ContestManager:
         return set(contest.external_players).union(cls._get_implicit_players(contest))
 
     @staticmethod
-    def _get_implicit_contests_query(user: User, include_admin = False):
+    def _get_implicit_contests_query(user: User, include_admin = False,
+                                     ignore_groups = False):
         # TODO: DB perf
-        return select(Contest) \
+        stmt = select(Contest) \
             .join(Enrollment, Enrollment.course_id == Contest.course_id) \
-            .where(Enrollment.user_id == user.id) \
-            .where(true if include_admin else (~Enrollment.admin)) \
-            .join(RealnameReference, RealnameReference.course_id == Contest.course_id) \
-            .where(RealnameReference.student_id == user.student_id) \
-            .where(true if include_admin else or_(Contest.group_ids == None,
-                       select(GroupRealnameReference.id)
-                       .where(GroupRealnameReference.realname_reference_id == RealnameReference.id)
-                       .where(GroupRealnameReference.group_id == func.any(Contest.group_ids))
-                       .exists()))
+            .where(Enrollment.user_id == user.id)
+        if not include_admin:
+            stmt = stmt.where(~Enrollment.admin)
+        if not ignore_groups:
+            stmt = stmt \
+                .join(RealnameReference, RealnameReference.course_id == Contest.course_id) \
+                .where(RealnameReference.student_id == user.student_id) \
+                .where(or_(Contest.group_ids == None,
+                           select(GroupRealnameReference.id)
+                           .where(GroupRealnameReference.realname_reference_id == RealnameReference.id)
+                           .where(GroupRealnameReference.group_id == func.any(Contest.group_ids))
+                           .exists()))
+        return stmt
 
     @classmethod
-    def get_implicit_contests(cls, user: User, include_admin = False) -> Sequence[Contest]:
-        return list(db.scalars(cls._get_implicit_contests_query(user, include_admin)))
+    def get_implicit_contests(cls, user: User, include_admin = False,
+                              ignore_groups = False) -> Sequence[Contest]:
+        return list(db.scalars(cls._get_implicit_contests_query(user, include_admin, ignore_groups)))
 
     @classmethod
-    def get_contests_for_user(cls, user: User, include_admin = False) -> Set[Contest]:
-        return set(user.external_contests).union(cls.get_implicit_contests(user, include_admin))
+    def get_contests_for_user(cls, user: User, *,
+                              include_admin = False,
+                              ignore_groups = False) -> Set[Contest]:
+        return set(user.external_contests).union(cls.get_implicit_contests(user, include_admin, ignore_groups))
 
     @staticmethod
     def get_contest(contest_id: int) -> Optional[Contest]:

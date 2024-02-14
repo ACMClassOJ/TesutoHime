@@ -5,7 +5,11 @@
 {% block content %}
     <div class="card card-body col-lg-5 m-auto">
         <h1>注册</h1>
-        <form method="post" id="register">
+        {{ show_alert() }}
+        {% if g.user != None -%}
+        <h4 class="text-center">您已经以 {{ g.user.friendly_name }} 身份登录。</h4>
+        {% else -%}
+        <form method="POST">
             {{ g.csrf() }}
             <div class="form-group">
                 <label for="username">用户名</label>
@@ -26,9 +30,6 @@
             <br>
             <input class="btn btn-block btn-primary" type="submit" value="注册">
         </form>
+        {%- endif -%}
     </div>
-{% endblock %}
-
-{% block script %}
-    <script src="{{ url_for('.static', filename = 'js/register.js') }}"></script>
 {% endblock %}

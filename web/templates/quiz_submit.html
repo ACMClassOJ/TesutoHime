@@ -17,13 +17,13 @@
         {%- from 'component/problem.html' import problem_title -%}
         {{ problem_title(problem) }}
         <hr>
-        <form method="post" id="quiz_submit_form">
+        <form method="post">
             {{ g.csrf() }}
             <input type="hidden" name="lang" value="quiz">
-            <div id="quiz_rendering">
-                {%- if success -%}
+            <div>
+                {%- if problems != None -%}
 
-                {%- for problem in quiz -%}
+                {%- for problem in problems -%}
                 <p class="problem-title">{{ problem['id'] }}. {{ render(problem['title']) }}</p>
                 {%- if problem['type'] == 'SELECT' -%}
                 {% for option in problem['options'] -%}

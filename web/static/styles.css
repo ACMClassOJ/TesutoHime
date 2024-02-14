@@ -256,7 +256,7 @@ html body a.card:focus {
     overflow: hidden;
 }
 @media (min-width: 992px) {
-    .contest-card-group {
+    .contest-card-group, .course-card-group {
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;

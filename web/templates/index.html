@@ -35,6 +35,7 @@
 
     {%- if invited_courses != None and invited_courses | length > 0 -%}
     <h4 class="mb-3">待加入的班级</h4>
+    <p>加入班级后，班级的管理员将可以看到您的全部提交代码，您将自动加入所有与您相关的作业、比赛和考试。</p>
     <div class="course-card-group">
         {%- for course in invited_courses -%}
         <a class="card card--small mb-3" href="{{ url_for('.course', course=course) }}">
@@ -88,7 +89,7 @@
     <p><strong>邀请您加入 ACMOJ 助教 QQ 群: 942621107</strong>（此消息仅对助教显示，请勿拉学生入群。）</p>
     {%- endif %}
     <p>如需要管理员账户，以及对 OJ 有任何改进建议，欢迎邮件 ACM OJ 管理组。</p>
-    <p>请所有助教在上题前阅读“管理”界面，“文档”选项卡的相关文档，注意题面与数据格式的规范！</p>
+    <p>请所有助教在上题前阅读「帮助」界面中的相关文档，注意题面与数据格式的规范！</p>
     <p>联系管理组：<a href="mailto:acmclassoj@googlegroups.com">acmclassoj@googlegroups.com</a></p>
     <p>
         友情链接：<!--

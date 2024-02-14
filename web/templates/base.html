@@ -14,7 +14,7 @@
     <link href="{{ url_for('.static', filename = 'lib/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('.static', filename = 'argon.min.css') }}?v=20231109" rel="stylesheet">
     <link href="{{ url_for('.static', filename = 'lib/han.min.css') }}" rel="stylesheet"> {% block head %}{% endblock %}
-    <link href="{{ url_for('.static', filename = 'styles.css') }}?v=20240214" rel="stylesheet">
+    <link href="{{ url_for('.static', filename = 'styles.css') }}?v=20240214v2" rel="stylesheet">
     <link href="{{ url_for('.static', filename = 'dark.css') }}?v=20240203" rel="stylesheet">
 </head>
 
@@ -53,7 +53,7 @@
                     {% if g.user == None -%}
                     <li class="dropdown-divider"></li>
                     {%- set next = request.full_path -%}
-                    {%- if request.endpoint in 'web.login', 'web.register' -%}
+                    {%- if request.endpoint in ('web.login', 'web.register') -%}
                     {%- set next = request.args.get('next', url_for('web.index')) -%}
                     {%- endif -%}
                     <li class="d-block d-lg-none nav-link"><a href="{{ url_for('web.login', next=next) }}">登录</a></li>

@@ -827,6 +827,7 @@ def problemset(contest: Contest):
         problems_visible=problems_visible,
         has_real_name=has_real_name,
         real_name_map=real_name_map,
+        has_completed=ContestManager.user_has_completed_by_scores,
         data=data,
     )
 

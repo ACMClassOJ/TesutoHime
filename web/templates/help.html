@@ -1,6 +1,15 @@
 {% extends 'base.html' %}
 {% set page=title %}
 {% block content %}
+<style>
+img {
+  max-width: 100%;
+}
+figcaption {
+  text-align: center;
+  opacity: .8;
+}
+</style>
 <div class="card card-body">
 {{ content | safe }}
 </div>

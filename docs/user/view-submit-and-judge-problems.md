@@ -7,7 +7,7 @@
 有以下几种方法可以跳转到题目页面：
 
 - 在「题库」标签下搜索或直接点击题目；
-- 在比赛、作业、考试中点击题号。
+- 在作业、比赛、考试中点击题号。
 
 题目首页上会显示题目的基本信息，包括题目名称、题目描述、输入输出格式、样例输入输出、数据范围等。
 
@@ -104,7 +104,7 @@ iverlog answer.v -o code
     <span>正在编译。你的程序正在被评测机编译成可执行文件。</span>
   </p>
   <p class="status__row">
-    <span class="status__col"><span class="text-blue">Running & Judging</span>:</span>
+    <span class="status__col"><span class="text-blue">Judging</span>:</span>
     <span>正在测试。你的程序正在被评测机运行以检查正确性。</span>
   </p>
   <p class="status__row">
@@ -132,11 +132,11 @@ iverlog answer.v -o code
     <span>运行时错误。你的程序在运行时发生崩溃，这可能由于数组越界、程序返回值不为 0、除以 0 等。</span>
   </p>
   <p class="status__row">
-    <span class="status__col"><span class="text-orange">Time Limit Exceed</span>:</span>
+    <span class="status__col"><span class="text-orange">Time Limit Exceeded</span>:</span>
     <span>时间超限。你的程序没有在规定时间内得出答案，这可能由于死循环，或算法复杂度过高。</span>
   </p>
   <p class="status__row">
-    <span class="status__col"><span class="text-orange">Memory Limit Exceed</span>:</span>
+    <span class="status__col"><span class="text-orange">Memory Limit Exceeded</span>:</span>
     <span>内存超限。你的程序请求了过多的内存。</span>
   </p>
   <p class="status__row">
@@ -144,7 +144,7 @@ iverlog answer.v -o code
     <span>内存泄露。你的程序输出了正确的答案，但是却发生内存泄露，请检查动态内存管理。</span>
   </p>
   <p class="status__row">
-    <span class="status__col"><span class="text-purple">Disk Limit Exceed</span>:</span>
+    <span class="status__col"><span class="text-purple">Disk Limit Exceeded</span>:</span>
     <span>磁盘超限。你的程序使用了过多的磁盘空间，请检查磁盘空间管理。</span>
   </p>
   <p class="status__row">

@@ -1,4 +1,4 @@
-{% macro status_table(submissions, real_name_map, show_links, show_time=true, show_memory=true, show_score=true) -%}
+{% macro status_table(submissions, real_name_map, show_links, show_title, show_time=true, show_memory=true, show_score=true) -%}
 <div class="table-responsive">
 	<table class="table table-striped table-bordered table-hover status-list">
 		<thead>
@@ -34,7 +34,11 @@
 				<span class="text-black-50 float-right"><small>{{ display_real_name(real_name_map[submission.user.student_id]) }}</small></span>
 			</td>
 			<td class="status-list__problem">
+				{%- if show_title[submission] -%}
 				<a href="{{ url_for('.problem', problem=submission.problem_id) }}">{{ submission.problem_id }}. {{ submission.problem.title }}</a>
+				{%- else -%}
+				{{ submission.problem_id }}. [题目未发布]
+				{%- endif -%}
 			</td>
 			<td>
 				<strong>

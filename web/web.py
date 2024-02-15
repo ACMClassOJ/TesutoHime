@@ -703,15 +703,18 @@ def status():
 
     real_name_map = {}
     show_links = {}
+    show_title = {}
     for submission in submissions:
         if submission.user.student_id not in real_name_map:
             real_name_map[submission.user.student_id] = \
                 RealnameManager.query_realname_for_current_user(submission.user.student_id)
         show_links[submission] = JudgeManager.can_show(submission)
+        show_title[submission] = ProblemManager.can_show(submission.problem)
     return render_template('status.html', pages=gen_page(page, max_page),
                            submissions=submissions,
                            real_name_map=real_name_map,
                            show_links=show_links,
+                           show_title=show_title,
                            args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
 
 

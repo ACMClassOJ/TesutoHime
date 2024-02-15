@@ -55,6 +55,8 @@ class JudgeManager:
 
         if ProblemManager.can_read(submission.problem):
             return True
+        if not ProblemManager.can_show(submission.problem):
+            return False
         if UserManager.user_enrolled_in_some_course_that_i_manage(submission.user, g.user):
             return True
 

@@ -52,7 +52,7 @@
         <div class="form-row">
             <label class="col-md-2">排名设置</label>
         </div>
-        <div class="form-row">
+        <div class="form-row" id="contest-controls">
             <div class="col-md-2">
                 <div class="custom-control custom-checkbox mb-3">
                     <input class="custom-control-input" name="ranked" id="ranked" type="checkbox"{{ ' checked' if contest.ranked }}>
@@ -78,6 +78,27 @@
                 </div>
             </div>
         </div>
+        <div id="label-penalty-and-partial-score" class="card card--small mb-3 w-100 border-danger">
+            <div class="text-danger card-header"><strong>⚠ 不建议同时开启「计算罚时」和「计算部分分」</strong></div>
+            <div class="card-body">
+                <p>根据 *CPC 的规则，罚时计算时只会考虑完全通过（Accepted）的题目，而不考虑只取得部分分的题目；同时开启两个选项有可能会使骗分选手在排名上高于正解选手。</p>
+                <p>例如，一次比赛有两道满分分别为 100 分的题目。</p>
+                <ul>
+                    <li>选手 A 打了两个暴力，得分为 50 + 50，由于没有通过任何题目，其罚时计算为 0；</li>
+                    <li>选手 B 过了一道题，得分为 100 + 0，由于通过了第一题，其罚时大于 0。</li>
+                </ul>
+                <p>此时选手 A 排名高于选手 B，但一般认为选手 B 水平会高于选手 A。</p>
+                <p>（这则消息只是一个提醒，如果符合您的需要，您完全可以同时开启这两个选项。）</p>
+            </div>
+        </div>
+        <style>
+        #label-penalty-and-partial-score {
+            display: none;
+        }
+        #contest-controls:has(#rank-penalty:checked):has(#rank-partial-score:checked) + #label-penalty-and-partial-score {
+            display: block;
+        }
+        </style>
         <div class="float-right d-flex mb-3 ml-auto">
             <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
         </div>

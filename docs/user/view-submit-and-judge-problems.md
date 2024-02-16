@@ -78,7 +78,7 @@ make
 对于 Verilog 编译，我们会使用类似下面的指令进行编译：
 
 ```sh
-iverlog answer.v -o code
+iverilog answer.v -o code
 ```
 
 ## 查看评测详情

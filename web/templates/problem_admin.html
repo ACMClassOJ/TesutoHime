@@ -114,6 +114,7 @@
                 <li><a href="{{ url_for('.problemset', contest=contest) }}">
                     [{{ [ '比赛', '作业', '考试' ][contest.type] }}]
                     {{ contest.id }}.
+                    {{ contest.course.name }}
                     {{ contest.name }}
                 </a></li>
                 {% endfor %}

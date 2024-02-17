@@ -82,21 +82,18 @@ class JudgeManager:
 
 
     @staticmethod
-    def problem_judge_foreach(callback, problem_id):
+    def problem_judge_foreach(callback, problem_id) -> None:
         old_judger_max_id = OldJudgeManager.max_id()
         submissions = db \
-            .query(JudgeRecordV2.id) \
+            .query(JudgeRecordV2) \
             .where(JudgeRecordV2.problem_id == problem_id) \
             .all()
         for submission in submissions:
             if submission.id > old_judger_max_id:
-                callback(submission.id)
+                callback(submission)
 
     @staticmethod
-    def mark_void(id):
-        submission = db.get(JudgeRecordV2, id)
-        if submission is None:
-            raise NotFoundException()
+    def mark_void(submission: JudgeRecordV2):
         submission.details = None
         submission.status = JudgeStatus.void
         submission.message = 'Your judge result has been marked as void by an admin.'
@@ -114,8 +111,8 @@ class JudgeManager:
         )
 
     @staticmethod
-    def abort_judge(id):
-        url = urljoin(SchedulerConfig.base_url, f'submission/{id}/abort')
+    def abort_judge(submission: JudgeRecordV2):
+        url = urljoin(SchedulerConfig.base_url, f'submission/{submission.id}/abort')
         res = requests.post(url)
         if res.status_code == NOT_FOUND:
             return

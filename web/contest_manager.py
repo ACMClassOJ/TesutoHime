@@ -133,7 +133,7 @@ class ContestManager:
         return data
 
     @staticmethod
-    def _get_implicit_players(contest: Contest) -> Sequence[User]:
+    def get_implicit_players(contest: Contest) -> Sequence[User]:
         stmt = select(RealnameReference) \
             .where(RealnameReference.course_id == contest.course_id)
         if contest.group_ids is not None:
@@ -145,7 +145,7 @@ class ContestManager:
 
     @classmethod
     def get_players(cls, contest: Contest) -> Set[User]:
-        return set(contest.external_players).union(cls._get_implicit_players(contest))
+        return set(contest.external_players).union(cls.get_implicit_players(contest))
 
     @staticmethod
     def _get_implicit_contests_query(user: User, include_admin = False,
@@ -262,7 +262,7 @@ class ContestManager:
         end_time = contest.end_time
         problems = cls.list_problem_for_contest(contest.id)
         external_players = set(contest.external_players)
-        implicit_players = set(cls._get_implicit_players(contest))
+        implicit_players = set(cls.get_implicit_players(contest))
         players = external_players.union(implicit_players)
 
         data = [

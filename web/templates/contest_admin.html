@@ -240,6 +240,16 @@
     <hr>
     {%- endif -%}
 
+    <h3>导出提交数据</h3>
+    <p>您可以在此处导出所有正式选手在比赛中提交的代码。将会导出每个学生每道题目在比赛时间范围内的最晚一次最高分提交；例如，四次提交得分分别为 40、80、80、60，则将导出第三次提交的代码。</p>
+    <p>此功能将会使用较多的服务器资源，请勿频繁进行导出，请勿连续多次点击此按钮。</p>
+    <form method="POST">
+        {{ g.csrf() }}
+        <input type="hidden" name="action" value="export">
+        <button type="submit" class="btn btn-outline-primary" onclick="setTimeout(() => this.disabled = true)">导出提交数据</button>
+    </form>
+    <hr>
+
     <h3>删除比赛</h3>
     <p>删除比赛将会不可逆地从数据库中删除比赛相关的所有信息，但不会删除提交的代码。如您确认要删除比赛，请在下方文本框中输入比赛编号以确认：</p>
     <form method="POST">

@@ -6,15 +6,17 @@ from functools import wraps
 from http.client import (BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR,
                          NO_CONTENT, NOT_FOUND, OK, REQUEST_ENTITY_TOO_LARGE,
                          SEE_OTHER, UNAUTHORIZED)
+from itertools import groupby
 from math import ceil
 from typing import Dict, List, NoReturn, Optional
 from urllib.parse import quote, urlencode, urljoin
 from uuid import uuid4
+from zipfile import ZipFile
 
 import requests
 import sqlalchemy as sa
 from flask import (Blueprint, Flask, abort, g, make_response, redirect,
-                   render_template, request, send_from_directory, url_for)
+                   render_template, request, send_file, send_from_directory, url_for)
 from sqlalchemy.orm import defer, selectinload
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
@@ -46,7 +48,8 @@ from web.session_manager import SessionManager
 from web.tracker import tracker
 from web.user_manager import UserManager
 from web.utils import (SqlSession, db, gen_page, gen_page_for_problem_list,
-                       generate_s3_public_url, readable_lang_v1, readable_time)
+                       generate_s3_public_url, readable_lang_v1, readable_time,
+                       s3_internal)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 setup_csrf(web)
@@ -894,6 +897,94 @@ def problemset(contest: Contest):
         data=data,
     )
 
+
+def export_problemset(contest: Contest):
+    def format_realname(rr: Optional[RealnameReference]) -> str:
+        if rr is None:
+            return 'Unknown'
+        name = rr.real_name
+        for g in sorted(rr.groups, key=lambda g: g.name, reverse=True):
+            name = f'[{g.name}]{name}'
+        return name.replace('/', '_')
+
+    def filename (s: JudgeRecordV2) -> str:
+        user = player_by_id[s.user_id]
+        return f'{user.student_id}-{names[user.id]}-{user.username}-{s.id}-P{s.problem_id}-{s.status.name}-{s.score}.cpp'
+
+    def process_prelude(content: str, language: str):
+        prelude_formatting = {
+            'cpp': ('/**\n', ' * ', '\n */'),
+            'verilog': ('/**\n', ' * ', '\n */'),
+            'python': ('', '# ', ''),
+        }
+
+        if language not in prelude_formatting:
+            return content
+        prefix, line_prefix, postfix = prelude_formatting[language]
+        return (prefix +
+                '\n'.join(line_prefix + x for x in content.strip().splitlines()) +
+                postfix)
+
+    def prelude (s: JudgeRecordV2) -> str:
+        details_message = ''
+        message = s.message
+        if s.details is not None:
+            details: ProblemJudgeResult = deserialize(s.details)
+            details_message = '\n'.join(f'{group.name}: {group.score} {group.result}' for group in details.groups)
+        user = player_by_id[s.user_id]
+        content = f'''
+{user.student_id} {names[user.id]} ({user.username})
+Problem {s.problem_id} - {problem_by_id[s.problem_id].title}
+Time: {s.created_at.strftime('%Y-%m-%d %H:%M:%S')}
+Status: {s.status.name}
+Score: {s.score}
+Message: {message}
+
+{details_message}
+'''.strip()
+        return process_prelude(content, s.language) + '\n\n'
+
+    players = ContestManager.get_implicit_players(contest)
+    player_by_id = dict((x.id, x) for x in players)
+    problem_by_id = dict((x.id, x) for x in contest.problems)
+    names = dict(
+        (x.id, format_realname(RealnameManager.query_realname_for_contest(x.student_id, contest)))
+        for x in players)
+    submissions = db \
+        .query(JudgeRecordV2) \
+        .where(JudgeRecordV2.problem_id.in_(x.id for x in contest.problems)) \
+        .where(JudgeRecordV2.user_id.in_(x.id for x in players)) \
+        .where(JudgeRecordV2.created_at >= contest.start_time) \
+        .where(JudgeRecordV2.created_at < contest.end_time) \
+        .all()
+    submissions = sorted(submissions, key=lambda x: (x.user_id, x.problem_id))
+
+    zip_filename = f'/tmp/export-{contest.id}-{uuid4()}.zip'
+    g.export_filename = zip_filename
+    f = ZipFile(zip_filename, 'w')
+    for _, tries_i in groupby(submissions, lambda x: (x.user_id, x.problem_id)):
+        tries = list(tries_i)
+        score = max(x.score for x in tries)
+        score_tries = list(sorted(filter(lambda x: x.score == score, tries), key=lambda x: x.id))
+        s = score_tries[-1]
+        r = s3_internal.get_object(Bucket=S3Config.Buckets.submissions,
+                                   Key=f'{s.id}.code')['Body'].read()
+        with f.open(f'{s.problem_id}/{filename(s)}', 'w') as w:
+            w.write(prelude(s).encode())
+            w.write(r)
+
+    f.close()
+    return send_file(zip_filename, as_attachment=True, download_name=f'export-{contest.id}.zip')
+
+@web.after_request
+def export_problemset_cleanup(resp):
+    if 'export_filename' in g:
+        try:
+            os.remove(g.export_filename)
+        except Exception:
+            pass
+    return resp
+
 @ignore_alert_fail
 def process_problemset_admin(contest: Contest):
     form = request.form
@@ -945,6 +1036,8 @@ def process_problemset_admin(contest: Contest):
                     gs.append(group.id)
             contest.group_ids = gs
         alert_success('已更改分组')
+    elif action == 'export':
+        return export_problemset(contest)
     else:
         abort(BAD_REQUEST)
 

@@ -46,7 +46,7 @@
     {%- if invited_courses != None and invited_courses | length > 0 -%}
     <h4 class="mb-3">待加入的班级</h4>
     <p>加入班级后，班级的管理员将可以看到您的全部提交代码，您将自动加入所有与您相关的作业、比赛和考试。</p>
-    <div class="course-card-group">
+    <div class="card-group--small">
         {%- for course in invited_courses -%}
         <a class="card card--small mb-3" href="{{ url_for('.course', course=course) }}">
             {%- if course.term != None or course.tag != None -%}
@@ -85,7 +85,7 @@
     {%- set contests = suggestions[type] -%}
     {%- if contests | length > 0 -%}
     <h4 class="mb-3">{{ { 'in-progress': '正在进行', 'future': '即将开始', 'past': '刚刚结束' }[type] }}</h4>
-    <div class="contest-card-group">
+    <div class="card-group--small">
         {%- for contest in contests -%}
         {{ contest_card(contest) }}
         {%- endfor -%}

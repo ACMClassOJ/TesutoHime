@@ -24,7 +24,7 @@
         {%- if contests | length > 0 -%}
         <hr>
         <h3 class="mb-3">{{ { 'in-progress': '正在进行', 'future': '即将开始', 'past': '刚刚结束' }[type] }}</h3>
-        <div class="contest-card-group">
+        <div class="card-group--small">
             {%- for contest in contests -%}
             {{ contest_card(contest, show_course_name=False) }}
             {%- endfor -%}

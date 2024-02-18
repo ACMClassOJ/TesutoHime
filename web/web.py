@@ -16,7 +16,8 @@ from zipfile import ZipFile
 import requests
 import sqlalchemy as sa
 from flask import (Blueprint, Flask, abort, g, make_response, redirect,
-                   render_template, request, send_file, send_from_directory, url_for)
+                   render_template, request, send_file, send_from_directory,
+                   url_for)
 from sqlalchemy.orm import defer, selectinload
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
@@ -34,6 +35,7 @@ from web.config import (JudgeConfig, LoginConfig, NewsConfig, ProblemConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
 from web.const import Privilege, ReturnCode, language_info, runner_status_info
+from web.contest_cache import ContestCache
 from web.contest_manager import ContestManager
 from web.course_manager import CourseManager
 from web.csrf import setup_csrf
@@ -663,9 +665,9 @@ def problem_data_zip(problem: Problem):
 @web.route('/status')
 @require_logged_in
 def status():
-    arg_submitter = request.args.get('submitter')
-    if arg_submitter == '':
-        arg_submitter = None
+    arg_username = request.args.get('username')
+    if arg_username == '':
+        arg_username = None
     arg_problem_id = request.args.get('problem_id')
     if arg_problem_id == '':
         arg_problem_id = None
@@ -688,8 +690,8 @@ def status():
         .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
         .options(selectinload(JudgeRecordV2.user).load_only(User.student_id, User.friendly_name)) \
         .options(selectinload(JudgeRecordV2.problem).load_only(Problem.title))
-    if arg_submitter is not None:
-        user = UserManager.get_user_by_username(arg_submitter)
+    if arg_username is not None:
+        user = UserManager.get_user_by_username(arg_username)
         if user is not None:
             query = query.where(JudgeRecordV2.user_id == user.id)
     if arg_problem_id is not None:
@@ -872,13 +874,13 @@ def homework(contest_id):
 
 @web.route('/problemset/<contest:contest>')
 def problemset(contest: Contest):
-    problems = ContestManager.list_problem_for_contest(contest.id)
     problems_visible = g.time >= contest.start_time or ContestManager.can_read(contest)
     data = ContestManager.get_board_view(contest)
     student_ids = set(x['student_id'] for x in data)
     real_name_map = dict((s, RealnameManager.query_realname_for_contest(s, contest)) for s in student_ids)
     has_real_name = any(real_name_map[s] is not None for s in real_name_map)
     contest_status = ContestManager.get_status(contest)
+    my_data = next((x for x in data if x['id'] == g.user.id), None)
 
     time_elapsed = (g.time - contest.start_time).total_seconds()
     time_overall = (contest.end_time - contest.start_time).total_seconds()
@@ -887,7 +889,6 @@ def problemset(contest: Contest):
     return render_template(
         'contest.html',
         contest=contest,
-        problems=problems,
         status=contest_status,
         percentage=percentage,
         problems_visible=problems_visible,
@@ -895,6 +896,7 @@ def problemset(contest: Contest):
         real_name_map=real_name_map,
         has_completed=ContestManager.user_has_completed_by_scores,
         data=data,
+        my_data=my_data,
     )
 
 
@@ -993,6 +995,7 @@ def process_problemset_admin(contest: Contest):
         contest.rank_penalty = form.get('rank_penalty', 'off') == 'on'
         contest.rank_partial_score = form.get('rank_partial_score', 'off') == 'on'
         contest.rank_all_users = form.get('rank_all_users', 'off') == 'on'
+        ContestCache.flush(contest.id)
         alert_success('已编辑比赛')
     elif action == 'delete':
         if request.form['confirm'] != str(contest.id):
@@ -1019,6 +1022,7 @@ def process_problemset_admin(contest: Contest):
             if form.get(f'lang-{lang}', 'off') == 'on':
                 languages.append(lang)
         contest.allowed_languages = None if len(languages) == len(language_info) or len(languages) == 0 else languages
+        ContestCache.flush(contest.id)
         alert_success('已更改作业要求')
     elif action == 'groups':
         if form.get('all', 'off') == 'on':
@@ -1029,6 +1033,7 @@ def process_problemset_admin(contest: Contest):
                 if form.get(f'group-{group.id}', 'off') == 'on':
                     gs.append(group.id)
             contest.group_ids = gs
+        ContestCache.flush(contest.id)
         alert_success('已更改分组')
     elif action == 'export':
         return export_problemset(contest)
@@ -1083,6 +1088,7 @@ def problemset_problem_add(contest: Contest):
         if problem not in contest.problems:
             contest.problems.append(problem)
 
+    ContestCache.flush(contest.id)
     return redirect(url_for('.problemset_admin', contest=contest), SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/problem/remove', methods=['POST'])
@@ -1097,6 +1103,7 @@ def problemset_problem_remove(contest: Contest):
     for problem_id in ids:
         ContestManager.delete_problem_from_contest(contest.id, problem_id)
 
+    ContestCache.flush(contest.id)
     return redirect(url_for('.problemset_admin', contest=contest), SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/quit', methods=['POST'])
@@ -1105,6 +1112,7 @@ def problemset_quit(contest: Contest):
         abort(BAD_REQUEST, '比赛已结束')
     if g.user in contest.external_players:
         contest.external_players.remove(g.user)
+    ContestCache.flush(contest.id)
     return redirect(request.form['back'], SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/join', methods=['POST'])
@@ -1113,6 +1121,7 @@ def problemset_join(contest: Contest):
         abort(BAD_REQUEST)
     if g.user not in contest.external_players:
         contest.external_players.add(g.user)
+    ContestCache.flush(contest.id)
     return redirect(url_for('.problemset', contest=contest), SEE_OTHER)
 
 @require_logged_in

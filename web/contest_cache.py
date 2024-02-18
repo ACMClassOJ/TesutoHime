@@ -16,13 +16,17 @@ class ContestCache:
 
     @classmethod
     def get(cls, contest_id: int):
-        rst = cls.redis.get(ContestCache._key(contest_id))
+        rst = cls.redis.get(cls._key(contest_id))
         return json.loads(rst) if rst is not None else None
 
     @classmethod
     def put(cls, contest_id: int, data: list):
         cls.redis.set(
-            ContestCache._key(contest_id),
+            cls._key(contest_id),
             json.dumps(data, ensure_ascii=False),
-            ex = ContestCache.expire_time
+            ex = cls.expire_time
         )
+
+    @classmethod
+    def flush(cls, contest_id: int):
+        cls.redis.delete(cls._key(contest_id))

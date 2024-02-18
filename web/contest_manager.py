@@ -294,6 +294,7 @@ class ContestManager:
                     } for problem in contest.problems
                 ],
                 'student_id': user.student_id,
+                'id': user.id,
                 'username': user.username,
                 'is_external': user not in implicit_players,
             } for user in players

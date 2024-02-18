@@ -12,7 +12,7 @@
     {{ course_title(course) }}
     <hr>
     {%- if contests | length > 0 -%}
-    <div class="contest-card-group">
+    <div class="card-group--small">
         {%- for contest in contests -%}
         {{ contest_card(contest, show_course_name=False, show_type=show_type) }}
         {%- endfor -%}

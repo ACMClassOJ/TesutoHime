@@ -2,7 +2,7 @@ __all__ = ('ContestManager',)
 
 from datetime import datetime, timedelta
 from functools import cmp_to_key
-from typing import Dict, List, Optional, Sequence, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 from flask import g
 from sqlalchemy import delete, func, or_, select, true
@@ -252,15 +252,27 @@ class ContestManager:
             retval['status'] = 'in-progress'
         return retval
 
+    @staticmethod
+    def get_contest_submissions(contest: Contest, players: Iterable[User], *, no_details: bool = True) -> Sequence[JudgeRecordV2]:
+        query = db.query(JudgeRecordV2)
+        if no_details:
+            query = query \
+                .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message))
+        query = query \
+            .where(JudgeRecordV2.problem_id.in_([x.id for x in contest.problems])) \
+            .where(JudgeRecordV2.user_id.in_([x.id for x in players])) \
+            .where(JudgeRecordV2.created_at >= contest.start_time) \
+            .where(JudgeRecordV2.created_at < contest.end_time)
+        if contest.allowed_languages is not None:
+            query = query.where(JudgeRecordV2.language.in_(contest.allowed_languages))
+        return query.all()
+
     @classmethod
     def get_scores(cls, contest: Contest) -> List[dict]:
         data = ContestCache.get(contest.id)
         if data is not None:
             return data
 
-        start_time = contest.start_time
-        end_time = contest.end_time
-        problems = cls.list_problem_for_contest(contest.id)
         external_players = set(contest.external_players)
         implicit_players = set(cls.get_implicit_players(contest))
         players = external_players.union(implicit_players)
@@ -273,12 +285,13 @@ class ContestManager:
                 'friendly_name': user.friendly_name,
                 'problems': [
                     {
-                        'id': problem,
+                        'id': problem.id,
+                        'status': None,
                         'score': 0,
                         'count': 0,
                         'pending_count': 0,
                         'accepted': False,
-                    } for problem in problems
+                    } for problem in contest.problems
                 ],
                 'student_id': user.student_id,
                 'username': user.username,
@@ -286,19 +299,9 @@ class ContestManager:
             } for user in players
         ]
         user_id_to_num = dict((user.id, i) for i, user in enumerate(players))
-        problem_to_num = dict((problem, i) for i, problem in enumerate(problems))
+        problem_to_num = dict((problem.id, i) for i, problem in enumerate(contest.problems))
 
-        query = db \
-            .query(JudgeRecordV2) \
-            .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
-            .where(JudgeRecordV2.problem_id.in_(problems)) \
-            .where(JudgeRecordV2.user_id.in_([x.id for x in players])) \
-            .where(JudgeRecordV2.created_at >= start_time) \
-            .where(JudgeRecordV2.created_at < end_time)
-        if contest.allowed_languages is not None:
-            query = query.where(JudgeRecordV2.language.in_(contest.allowed_languages))
-        submits = query.all()
-        for submit in submits:
+        for submit in cls.get_contest_submissions(contest, players):
             user_id = submit.user_id
             problem_id = submit.problem_id
             status = submit.status
@@ -323,11 +326,14 @@ class ContestManager:
                 user_data['score'] -= max_score
                 max_score = int(score)
                 user_data['score'] += max_score
+            if int(score) >= max_score:
+                problem['status'] = submit.status.name
 
             if is_ac:
                 problem['accepted'] = True
+                problem['status'] = 'accepted'
                 user_data['ac_count'] += 1  # type: ignore
-                user_data['penalty'] += (int((submit_time - start_time).total_seconds()) + submit_count * 1200) // 60
+                user_data['penalty'] += (int((submit_time - contest.start_time).total_seconds()) + submit_count * 1200) // 60
 
             if status in [JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging]:
                 problem['pending_count'] += 1

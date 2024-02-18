@@ -950,13 +950,7 @@ Message: {message}
     names = dict(
         (x.id, format_realname(RealnameManager.query_realname_for_contest(x.student_id, contest)))
         for x in players)
-    submissions = db \
-        .query(JudgeRecordV2) \
-        .where(JudgeRecordV2.problem_id.in_(x.id for x in contest.problems)) \
-        .where(JudgeRecordV2.user_id.in_(x.id for x in players)) \
-        .where(JudgeRecordV2.created_at >= contest.start_time) \
-        .where(JudgeRecordV2.created_at < contest.end_time) \
-        .all()
+    submissions = ContestManager.get_contest_submissions(contest, players)
     submissions = sorted(submissions, key=lambda x: (x.user_id, x.problem_id))
 
     zip_filename = f'/tmp/export-{contest.id}-{uuid4()}.zip'

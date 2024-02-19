@@ -313,7 +313,7 @@
                     {% for e in course.admin_enrollments -%}
                     <tr>
                         <td>{{ e.user.username }}</td>
-                        <td>{{ e.realname_reference.real_name if e.realname_reference != None }}</td>
+                        <td>{{ e.realname_reference.real_name if e.realname_reference is not None }}</td>
                         <td>
                             {%- if e.user != g.user -%}
                             <form method="POST" class="d-inline">

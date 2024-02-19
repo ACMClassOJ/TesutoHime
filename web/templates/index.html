@@ -3,7 +3,7 @@
 {% set page='主页' %}
 
 {% block head %}
-{%- if suggestions != None -%}
+{%- if suggestions is not None -%}
 {{ render_styles() }}
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}">
 {%- endif -%}
@@ -13,7 +13,7 @@
 <div class="card card-body">
     <h1>Welcome to ACM Class OnlineJudge</h1>
 
-    {%- if g.user != None and g.user.privilege >= g.consts.Privilege.ADMIN and not g.is_admin -%}
+    {%- if g.user is not None and g.user.privilege >= g.consts.Privilege.ADMIN and not g.is_admin -%}
     <h4>致 ACMOJ 管理员的一封信</h4>
     <p>近几个学期以来，使用 ACMOJ 的教学班不断增多，现有的作业、比赛等机制已不再能够满足使用需求，大量班级的作业混合展示在一起，给同学们造成了一定的不便。为此，在 2023&ndash;2024 学年春季学期中，ACMOJ 将启用正式的班级机制，OJ 中题目、作业、比赛的管理均将基于班级。在学生加入班级之后，学生将自动加入班级内与他/她相关的所有作业、比赛和考试，OJ 首页也将展示更为个性化的内容。详细内容可以参见 <a href="{{ url_for('.help', page='admin/getting-started') }}">管理入门</a> 和 <a href="https://acm.sjtu.edu.cn/OnlineJudge/blog/changelog-in-2024-winter-vacation/">2024 寒假更新日志</a>。</p>
     <p>班级的创建暂时需要由运维组人工完成。如果您有创建班级的需求，请填写<a href="https://wj.sjtu.edu.cn/q/9w8DAefP">ACMOJ 班级创建表单</a>。表单由运维组人工处理，会有一定的延迟，敬请谅解。</p>
@@ -43,19 +43,19 @@
 
     {%- endif %}
 
-    {%- if invited_courses != None and invited_courses | length > 0 -%}
+    {%- if invited_courses is not None and invited_courses | length > 0 -%}
     <h4 class="mb-3">待加入的班级</h4>
     <p>加入班级后，班级的管理员将可以看到您的全部提交代码，您将自动加入所有与您相关的作业、比赛和考试。</p>
     <div class="card-group--small">
         {%- for course in invited_courses -%}
         <a class="card card--small mb-3" href="{{ url_for('.course', course=course) }}">
-            {%- if course.term != None or course.tag != None -%}
+            {%- if course.term is not None or course.tag is not None -%}
             <div class="card-header">
-                {%- if course.term != None -%}
+                {%- if course.term is not None -%}
                 {{ course.term.name }}
-                {%- if course.tag != None %} &middot; {% endif -%}
+                {%- if course.tag is not None %} &middot; {% endif -%}
                 {%- endif -%}
-                {%- if course.tag != None -%}
+                {%- if course.tag is not None -%}
                 {{ course.tag.name }}
                 {%- endif -%}
             </div>
@@ -79,7 +79,7 @@
     <hr class="my-4">
     {%- endif -%}
 
-    {%- if suggestions != None -%}
+    {%- if suggestions is not None -%}
     <!-- <h4>我的比赛和作业</h4> -->
     {%- for type in 'in-progress', 'future', 'past' -%}
     {%- set contests = suggestions[type] -%}

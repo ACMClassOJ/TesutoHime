@@ -57,13 +57,13 @@
                 <td>{{ display_real_name(real_name_map[submission.user.student_id]) }}</td>
                 {%- endif %}
 
-                {%- if submission.time_msecs != None -%}
+                {%- if submission.time_msecs is not None -%}
                 <td>{{ submission.time_msecs }} ms</td>
                 {% else -%}
                 <td>N/A</td>
                 {%- endif %}
 
-                {%- if submission.memory_bytes != None -%}
+                {%- if submission.memory_bytes is not None -%}
                 <td>{{ "%.0f" % (submission.memory_bytes / 1024) }} KiB</td>
                 {% else -%}
                 <td>N/A</td>

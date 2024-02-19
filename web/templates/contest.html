@@ -44,12 +44,12 @@
             {%- endif -%}
             <hr>
 
-            {%- if my_data != None and problems_visible and contest.problems | length > 0 -%}
+            {%- if my_data is not None and problems_visible and contest.problems | length > 0 -%}
             <h4 class="mb-3">题目</h4>
             <div class="card-group--small">
                 {%- for problem in my_data['problems'] -%}
                 {%- set j = loop.index0 -%}
-                <a class="card card--small {{ 'border-' + g.consts.judge_status_info[problem['status']].badge_type if problem['status'] != None }} mb-3" href="{{ url_for('.problem', problem=contest.problems[j]) }}">
+                <a class="card card--small {{ 'border-' + g.consts.judge_status_info[problem['status']].badge_type if problem['status'] is not None }} mb-3" href="{{ url_for('.problem', problem=contest.problems[j]) }}">
                     <div class="card-header">
                         <span>Problem {{ j + 1 }}</span>
                         {%- if problem['count'] + problem['pending_count'] > 0 -%}
@@ -92,7 +92,7 @@
                         {% if contest.ranked %}<th>排名</th>{% endif %}
                         <th>昵称{% if g.is_admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
                         {% if has_real_name -%}<th>实名</th>{%- endif %}
-                        {% if g.can_read and contest.completion_criteria != None %}<th>完成情况</th>{% endif %}
+                        {% if g.can_read and contest.completion_criteria is not None %}<th>完成情况</th>{% endif %}
                         {% if problems_visible -%}
                         {% for problem in contest.problems -%}
                             <th><a href="{{ url_for('.problem', problem=problem) }}" class="problem-link" target="_blank">{{ problem.id }}</a></th>
@@ -119,7 +119,7 @@
                             {% if has_real_name -%}
                             <td>{{ display_real_name(real_name_map[player['student_id']]) }}</td>
                             {%- endif %}
-                            {% if g.can_read and contest.completion_criteria != None -%}
+                            {% if g.can_read and contest.completion_criteria is not None -%}
                             {%- if has_completed(contest, player) -%}
                             <td>已完成</td>
                             {%- else -%}

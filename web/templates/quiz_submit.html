@@ -21,7 +21,7 @@
             {{ g.csrf() }}
             <input type="hidden" name="lang" value="quiz">
             <div>
-                {%- if problems != None -%}
+                {%- if problems is not None -%}
 
                 {%- for problem in problems -%}
                 <p class="problem-title">{{ problem['id'] }}. {{ render(problem['title']) }}</p>

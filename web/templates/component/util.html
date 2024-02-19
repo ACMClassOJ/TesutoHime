@@ -34,7 +34,7 @@
 <!-- TODO -->
 {{ _display_real_name(real_names[0]) }}
 {%- endif -%}
-{%- elif real_names != None -%}
+{%- elif real_names is not None -%}
 {{ _display_real_name(real_names) }}
 {%- endif -%}
 {%- endmacro -%}
@@ -100,7 +100,7 @@ class="tab-pane fade{{ ' show active' if name == current_tab_remember.t }}" id="
 {%- endmacro -%}
 
 {%- macro show_alert() -%}
-{%- if 'alert' in g and g.alert != None -%}
+{%- if 'alert' in g and g.alert is not None -%}
 <div class="alert alert-{{ g.alert['type'] }}" role="alert">{{ g.alert['content'] }}</div>
 {%- endif -%}
 {%- endmacro -%}

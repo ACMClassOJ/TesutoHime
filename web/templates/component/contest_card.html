@@ -42,7 +42,7 @@
         {%- else -%}
         <button disabled class="btn btn-outline-primary btn-sm">已加入</button>
         {%- endif -%}
-        {%- elif status['reason-cannot-join'] == None -%}
+        {%- elif status['reason-cannot-join'] is None -%}
         <form action="{{ url_for('web.problemset_join', contest=contest) }}" method="POST">
           {{ g.csrf() }}
           <button type="submit" class="btn btn-primary btn-sm">加入</button>

@@ -23,8 +23,8 @@
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('web.index') }}">ACM Class OnlineJudge</a>
             <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarContent">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+                <span class="navbar-toggler-icon"></span>
+            </button>
             <div class="navbar-collapse collapse" id="navbarContent">
                 <div class="navbar-collapse-header">
                     <div class="row">
@@ -50,7 +50,7 @@
                     {% endif %}
                     <li class="nav-item"><a href="{{ url_for('web.about') }}" class="nav-link">关于</a></li>
                     <li class="nav-item"><a href="{{ url_for('web.help_index') }}" class="nav-link">帮助</a></li>
-                    {% if g.user == None -%}
+                    {% if g.user is None -%}
                     <li class="dropdown-divider"></li>
                     {%- set next = request.full_path -%}
                     {%- if request.endpoint in ('web.login', 'web.register') -%}
@@ -61,7 +61,7 @@
                     {%- endif %}
                 </ul>
                 <ul class="navbar-nav ml-lg-auto" style="line-height: 1;">
-                    {% if g.user != None -%}
+                    {% if g.user is not None -%}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ g.user.friendly_name }}</a>
                         <div class="dropdown-menu dropdown-menu-right">
@@ -93,15 +93,14 @@
             </p>
         </div>
     </footer>
+
+    <script src="{{ url_for('.static', filename = 'lib/jquery.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/popper.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/jquery.form.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/sweetalert.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'lib/han.min.js') }}"></script>
+    <script src="{{ url_for('.static', filename = 'js/base.js') }}?v=20240214"></script>
+    {% block script %}{% endblock %}
 </body>
-
-<script src="{{ url_for('.static', filename = 'lib/jquery.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/popper.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/bootstrap.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/jquery.form.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/sweetalert.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/han.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/base.js') }}?v=20240214"></script>
-{% block script %}{% endblock %}
-
 </html>

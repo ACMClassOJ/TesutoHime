@@ -1282,7 +1282,7 @@ def process_course_admin(course: Course):
     elif action == 'group-create':
         set_tab('group')
         name = form['name']
-        if CourseManager.get_group_by_name(course, name) != None:
+        if CourseManager.get_group_by_name(course, name) is not None:
             alert_fail(f'分组 {repr(name)} 已存在')
         group = Group(name=name,
                       description=form.get('description', ''),
@@ -1677,4 +1677,5 @@ oj.url_map.converters['contest'] = ContestConverter
 oj.url_map.converters['course'] = CourseConverter
 oj.register_blueprint(web, url_prefix='/OnlineJudge')
 oj.jinja_env.add_extension('jinja2.ext.do')
+oj.jinja_env.tests['None'] = oj.jinja_env.tests['none']
 oj.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400

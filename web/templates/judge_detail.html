@@ -13,9 +13,9 @@
     <div class="card card-body">
         <h1>评测详情 {{ submission.id }}</h1>
         
-        {{ status_table([submission], real_name_map={ submission.user.student_id: real_name }, show_links={ submission: False }, show_title={ submission: True }, show_time=submission.time_msecs != None, show_memory=submission.memory_bytes != None, show_score=show_score) }}
+        {{ status_table([submission], real_name_map={ submission.user.student_id: real_name }, show_links={ submission: False }, show_title={ submission: True }, show_time=submission.time_msecs is not None, show_memory=submission.memory_bytes is not None, show_score=show_score) }}
 
-        {% if details != None -%}
+        {% if details is not None -%}
         <div class="row">
             <div class="m-auto">
                 {% for group in details.groups %}
@@ -31,7 +31,7 @@
             </div>
         </div>
         {%- endif %}
-        {% if submission.message != None and submission.message != '' -%}
+        {% if submission.message is not None and submission.message != '' -%}
         <pre><code>{{ submission.message }}</code></pre>
         {% endif -%}
         {% if submission.status.name == 'pending' or submission.status.name == 'compiling' or submission.status.name == 'judging' -%}
@@ -81,7 +81,7 @@
             </span>
         </div>
         <pre class="{{ submission.language }}"><code id="judge_detail_code_highlighted">Waiting for code</code></pre>
-        {% if details != None -%}
+        {% if details is not None -%}
             <hr>
             <div>
                 {% if details.groups|length > 0 -%}
@@ -108,7 +108,7 @@
                                                     {{ g.consts.judge_status_info[testpoint.result].name }}
                                                 </span></b>
                                             </div>
-                                            {% if testpoint.resource_usage != None -%}
+                                            {% if testpoint.resource_usage is not None -%}
                                             <div class="col-2"> <i class="fa fa-clock"></i> {{ testpoint.resource_usage.time_msecs }} ms </div>
                                             <div class="col-2"> <i class="fa fa-memory"></i> {{ "%.0f" % (testpoint.resource_usage.memory_bytes / 1024) }} KiB </div>
                                             {% if testpoint.resource_usage.file_size_bytes > 0 -%}

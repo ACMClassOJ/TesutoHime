@@ -160,7 +160,7 @@
     <hr>
 
     <h3>作业要求</h3>
-    {%- if contest.completion_criteria != None -%}
+    {%- if contest.completion_criteria is not None -%}
     <p>共 {{ completion_stats['total'] }} 人需完成，有 {{ completion_stats['completed'] }} 人已完成。</p>
     {%- endif -%}
     <style>
@@ -194,7 +194,7 @@
             {% for key in g.consts.language_info -%}
             <div class="col-md-2">
                 <div class="custom-control custom-checkbox mb-3">
-                    <input class="custom-control-input" name="lang-{{ key }}" id="lang-{{ key }}" type="checkbox"{{ ' checked' if contest.allowed_languages == None or key in contest.allowed_languages }}>
+                    <input class="custom-control-input" name="lang-{{ key }}" id="lang-{{ key }}" type="checkbox"{{ ' checked' if contest.allowed_languages is None or key in contest.allowed_languages }}>
                     <label class="custom-control-label" for="lang-{{ key }}">{{ g.consts.language_info[key].name }}</label>
                 </div>
             </div>
@@ -220,14 +220,14 @@
         <div class="form-row">
             <div class="col-md-2" id="allgroups-container">
                 <div class="custom-control custom-checkbox mb-3">
-                    <input class="custom-control-input" name="all" id="allgroups" type="checkbox"{{ ' checked' if contest.group_ids == None }}>
+                    <input class="custom-control-input" name="all" id="allgroups" type="checkbox"{{ ' checked' if contest.group_ids is None }}>
                     <label class="custom-control-label" for="allgroups">全部分组/无分组</label>
                 </div>
             </div>
             {% for group in contest.course.groups -%}
             <div class="col-md-2">
                 <div class="custom-control custom-checkbox mb-3">
-                    <input class="custom-control-input" name="group-{{ group.id }}" id="group-{{ group.id }}" type="checkbox"{{ ' checked' if contest.group_ids == None or group.id in contest.group_ids }}>
+                    <input class="custom-control-input" name="group-{{ group.id }}" id="group-{{ group.id }}" type="checkbox"{{ ' checked' if contest.group_ids is None or group.id in contest.group_ids }}>
                     <label class="custom-control-label" for="group-{{ group.id }}">{{ group.name }}</label>
                 </div>
             </div>

@@ -29,14 +29,14 @@
                     <td><a href="{{ url_for('.course', course=course) }}">{{ course.name }}</a></td>
                     {%- if show_tag -%}
                     <td>
-                        {%- if course.tag_id != None -%}
+                        {%- if course.tag_id is not None -%}
                         <a href="{{ url_for('.course_list_tag', tag_id=course.tag.id) }}">{{ course.tag.name }}</a>
                         {%- endif -%}
                     </td>
                     {%- endif -%}
                     {%- if show_term -%}
                     <td>
-                        {%- if course.term_id != None -%}
+                        {%- if course.term_id is not None -%}
                         <a href="{{ url_for('.course_list_term', term_id=course.term.id) }}">{{ course.term.name }}</a>
                         {%- endif -%}
                     </td>
@@ -44,8 +44,8 @@
                     <td>
                         {%- set enrollment = get_enrollment(g.user, course) -%}
                         {%- set rr = get_realname_reference(g.user.student_id, course.id) -%}
-                        {%- if enrollment != None -%}
-                        {%- if rr != None -%}
+                        {%- if enrollment is not None -%}
+                        {%- if rr is not None -%}
                         <button disabled class="btn btn-primary btn-sm">已加入</button>
                         {%- elif can_join(course) -%}
                         <form action="{{ url_for('.course_quit', course=course) }}" method="POST">
@@ -59,7 +59,7 @@
                         <form action="{{ url_for('.course_join', course=course) }}" method="POST">
                             {{ g.csrf() }}
                             <button type="submit" class="btn btn-primary btn-sm">
-                                {%- if rr != None -%}
+                                {%- if rr is not None -%}
                                 加入
                                 {%- else -%}
                                 旁听

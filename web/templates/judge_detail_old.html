@@ -74,7 +74,7 @@
                 </tr>
             </table>
         </div>
-        {% if Data != None -%}
+        {% if Data is not None -%}
         <div class="row">
             <div class="m-auto">
                 {% for group in Data %}
@@ -138,7 +138,7 @@
             <button id="copy_button" class="btn btn-primary btn-sm float-right" data-clipboard-target="#judge_detail_code_highlighted">复制</button>
         </div>
         <pre class="cpp"><code id="judge_detail_code_highlighted">Waiting for code</code></pre>
-        {% if Data != None -%}
+        {% if Data is not None -%}
             <hr>
             <div>
                 <h5>测试点详情：</h5>

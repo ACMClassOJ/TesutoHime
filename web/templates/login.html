@@ -6,7 +6,7 @@
     <div class="card card-body col-lg-5 m-auto">
         <h1>登录</h1>
         {{ show_alert() }}
-        {% if g.user != None -%}
+        {% if g.user is not None -%}
             <h4 class="text-center">您已经以 {{ g.user.friendly_name }} 身份登录。</h4>
         {% else -%}
             <form method="POST">

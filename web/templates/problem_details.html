@@ -11,31 +11,31 @@
     {{ problem_title(problem) }}
     <hr>
     <div>
-        {%- if problem.description != None -%}
+        {%- if problem.description is not None -%}
         <h3>题目描述</h3>
         <div id="description">{{ render(problem.description) }}</div>
         {%- endif -%}
-        {%- if problem.input != None -%}
+        {%- if problem.input is not None -%}
         <h3>输入格式</h3>
         <div id="input-format">{{ render(problem.input) }}</div>
         {%- endif -%}
-        {%- if problem.output != None -%}
+        {%- if problem.output is not None -%}
         <h3>输出格式</h3>
         <div id="output-format">{{ render(problem.output) }}</div>
         {%- endif -%}
-        {%- if problem.example_input != None -%}
+        {%- if problem.example_input is not None -%}
         <h3>样例输入</h3>
         <div id="example-input">{{ render(problem.example_input) }}</div>
         {%- endif -%}
-        {%- if problem.example_output != None -%}
+        {%- if problem.example_output is not None -%}
         <h3>样例输出</h3>
         <div id="example-output">{{ render(problem.example_output) }}</div>
         {%- endif -%}
-        {%- if problem.data_range != None -%}
+        {%- if problem.data_range is not None -%}
         <h3>数据范围</h3>
         <div id="data-range">{{ render(problem.data_range) }}</div>
         {%- endif -%}
-        {%- if problem.limits != None and problem.limits['time'] | length > 0 -%}
+        {%- if problem.limits is not None and problem.limits['time'] | length > 0 -%}
         <h3>时空磁盘限制（运行时）</h3>
         <div id="limits">
             {%- set min_time = problem.limits['time'] | min -%}

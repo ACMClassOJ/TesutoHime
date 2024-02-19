@@ -70,16 +70,17 @@ judge_status_info = {
 @dataclass
 class LanguageInfo:
     name: str
+    extension: Optional[str] = None
     # if false, users could not submit in this language, unless the problem
     # allows explicitly
     acceptable_by_default: bool = True
 
 language_info = {
-    'cpp': LanguageInfo('C++'),
-    'python': LanguageInfo('Python'),
+    'cpp': LanguageInfo('C++', 'cpp'),
+    'python': LanguageInfo('Python', 'py'),
     'git': LanguageInfo('Git'),
-    'verilog': LanguageInfo('Verilog', False),
-    'quiz': LanguageInfo('Quiz', False),
+    'verilog': LanguageInfo('Verilog', 'v', acceptable_by_default=False),
+    'quiz': LanguageInfo('Quiz', 'json', acceptable_by_default=False),
 }
 
 @dataclass

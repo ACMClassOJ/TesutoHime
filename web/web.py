@@ -8,7 +8,7 @@ from http.client import (BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR,
                          SEE_OTHER, UNAUTHORIZED)
 from itertools import groupby
 from math import ceil
-from typing import Dict, List, NoReturn, Optional
+from typing import Dict, Iterable, List, NoReturn, Optional
 from urllib.parse import quote, urlencode, urljoin
 from uuid import uuid4
 from zipfile import ZipFile
@@ -910,8 +910,10 @@ def export_problemset(contest: Contest):
         return name.replace('/', '_')
 
     def filename (s: JudgeRecordV2) -> str:
+        ext = language_info[s.language].extension
+        ext = '.' + ext if ext is not None else ''
         user = player_by_id[s.user_id]
-        return f'{user.student_id}-{names[user.id]}-{user.username}-{s.id}-P{s.problem_id}-{s.status.name}-{s.score}.cpp'
+        return f'{user.student_id}-{names[user.id]}-{user.username}-{s.id}-P{s.problem_id}-{s.status.name}-{s.score}{ext}'
 
     def process_prelude(content: str, language: str):
         prelude_formatting = {
@@ -946,7 +948,11 @@ Message: {message}
 '''.strip()
         return process_prelude(content, s.language) + '\n\n'
 
-    players = ContestManager.get_implicit_players(contest)
+    players: Iterable[User]
+    if contest.rank_all_users:
+        players = ContestManager.get_players(contest)
+    else:
+        players = ContestManager.get_implicit_players(contest)
     player_by_id = dict((x.id, x) for x in players)
     problem_by_id = dict((x.id, x) for x in contest.problems)
     names = dict(

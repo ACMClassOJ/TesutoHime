@@ -170,7 +170,7 @@ class ContestManager:
     @classmethod
     def get_implicit_contests(cls, user: User, include_admin = False,
                               ignore_groups = False) -> Sequence[Contest]:
-        return list(db.scalars(cls._get_implicit_contests_query(user, include_admin, ignore_groups)))
+        return db.scalars(cls._get_implicit_contests_query(user, include_admin, ignore_groups)).all()
 
     @classmethod
     def get_contests_for_user(cls, user: User, *,
@@ -254,18 +254,18 @@ class ContestManager:
 
     @staticmethod
     def get_contest_submissions(contest: Contest, players: Iterable[User], *, no_details: bool = True) -> Sequence[JudgeRecordV2]:
-        query = db.query(JudgeRecordV2)
+        stmt = select(JudgeRecordV2)
         if no_details:
-            query = query \
+            stmt = stmt \
                 .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message))
-        query = query \
+        stmt = stmt \
             .where(JudgeRecordV2.problem_id.in_([x.id for x in contest.problems])) \
             .where(JudgeRecordV2.user_id.in_([x.id for x in players])) \
             .where(JudgeRecordV2.created_at >= contest.start_time) \
             .where(JudgeRecordV2.created_at < contest.end_time)
         if contest.allowed_languages is not None:
-            query = query.where(JudgeRecordV2.language.in_(contest.allowed_languages))
-        return query.all()
+            stmt = stmt.where(JudgeRecordV2.language.in_(contest.allowed_languages))
+        return db.scalars(stmt).all()
 
     @classmethod
     def get_scores(cls, contest: Contest) -> List[dict]:

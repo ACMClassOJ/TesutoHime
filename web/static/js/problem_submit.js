@@ -5,7 +5,7 @@ function detectLangage (code, languagesAllowed) {
     const detectors = [
         [ 'git', /^(https?:\/\/|git)/i ],
         [ 'verilog', /endmodule/ ],
-        [ 'cpp', /\([^)]*\)[^:{]*{/ ],
+        [ 'cpp', /\([^)]*\)[^:{'"=]*{/ ],
     ]
     for (const [ language, re ] of detectors) {
         if (languagesAllowed.includes(language) && code.match(re)) return language

@@ -41,7 +41,7 @@ ACMOJ 是以低年级本科生教学为导向的在线评测服务。在 ACM 班
 
 - 评测机、调度机、Web 服务等模块均可独立运行；
 - 支持多语言评测 (C++, Git, Verilog)；
-- 支持 Special Judge (参见[数据包格式规范文档](docs/user/data_doc.md#spj))；
+- 支持 Special Judge (参见[数据包格式规范文档](docs/user/admin/data-format.md#spj))；
 - 沙箱 (编译、评测、评分期，使用 [nsjail](https://github.com/google/nsjail) 以限制资源使用)；
 - 以最小评测单元 (而非一整道题) 为调度的最小粒度，并可中途打断。
 
@@ -53,11 +53,7 @@ ACMOJ 是以低年级本科生教学为导向的在线评测服务。在 ACM 班
 
 ### 用户文档
 
-- [管理界面使用指南](docs/user/admin_doc.md)；
-- [题面格式规范](docs/user/problem_format_doc.md)；
-- [数据格式规范](docs/user/data_doc.md)；
-- [数据包样例](docs/user/package_sample.md)。
-
+参[见用户帮助页](docs/user/index.md)。
 
 ### 开发文档
 

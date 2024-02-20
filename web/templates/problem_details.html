@@ -127,6 +127,11 @@
             </details>
         </div>
         {%- endif -%}
+
+        {%- if g.is_admin -%}
+        <h3>题目归属信息</h3>
+        <p>题目属于的班级：<a href="{{ url_for('.course', course=problem.course) }}">{{ problem.course.name }}</a></p>
+        {%- endif -%}
     </div>
 </div>
 {% endblock %}

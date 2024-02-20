@@ -52,6 +52,7 @@ class User(UseTimestamps, Base):
     privilege: Mapped[int]
 
     ignored_course_ids: Mapped[List[int]] = mapped_column(ARRAY(Integer), server_default='{}')
+    data_license_agreed: Mapped[bool] = mapped_column(server_default=text('false'))
 
     external_contests: Mapped[Set['Contest']] = relationship(
         secondary='contest_player',

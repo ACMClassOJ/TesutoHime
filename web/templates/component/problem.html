@@ -17,7 +17,7 @@
       })
     -%}
     {%- endif -%}
-    {%- if g.can_read -%}
+    {%- if g.is_admin or g.can_read -%}
     {%- do links.update({ '.problem_data_zip': '下载数据' }) -%}
     {%- endif -%}
     {%- if g.can_write -%}

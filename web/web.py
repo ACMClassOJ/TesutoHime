@@ -651,9 +651,23 @@ def problem_update_plan(problem: Problem):
         return f'System error: {res["error"]}'
     return 'Bad result from scheduler'
 
-@web.route('/problem/<problem:problem>/data-zip')
-@reads_problem
+@ignore_alert_fail
+def handle_problem_data_zip() -> bool:
+    if 'submit' not in request.args:
+        return False
+    if request.args.get('agree') != 'yes':
+        alert_fail('请阅读提示后再下载数据')
+    g.user.data_license_agreed = True
+    return True
+
+@web.route('/problem/<problem:problem>/data-zip', methods=['GET', 'POST'])
 def problem_data_zip(problem: Problem):
+    if not g.is_admin and not g.can_read:
+        abort(FORBIDDEN)
+    if not g.can_read and not g.user.data_license_agreed:
+        ok = handle_problem_data_zip()
+        if ok is None or not ok:
+            return render_template('data_license.html')
     key = f'{problem.id}.zip'
     url = generate_s3_public_url('get_object', {
         'Bucket': S3Config.Buckets.problems,

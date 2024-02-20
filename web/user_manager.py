@@ -9,7 +9,7 @@ from flask import g
 from sqlalchemy import func, select, update
 
 from commons.models import (Contest, Course, Enrollment, Problem,
-                            ProblemPrivilege, User)
+                            ProblemPrivilege, Term, User)
 from web.config import RedisConfig
 from web.const import Privilege, PrivilegeType
 from web.utils import db, redis_connect
@@ -128,6 +128,9 @@ class UserManager:
         stmt = select(Enrollment.id) \
             .where(Enrollment.user_id == user.id) \
             .where(Enrollment.admin) \
+            .join(Course) \
+            .join(Term) \
+            .where(g.time <= Term.end_time) \
             .limit(1)
         is_some_admin = db.scalar(stmt) is not None
 

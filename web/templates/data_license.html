@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% set page='数据下载提示' %}
+
+{% block content %}
+<div class="card card-body">
+  <h1>数据下载提示</h1>
+  {{ show_alert() }}
+  <!-- TO DEVELOPERS: please also update docs/user/getting-started.md and run `make user-docs` -->
+  <p>ACMOJ 上的题目数据著作权归题目作者所有（您可以在题面页上查看题目所属的班级），下载数据仅供您本人学习、调试使用。</p>
+  <p><strong>未经题目作者同意，严禁将数据外传，严禁将数据用于其他目的</strong>，包括但不限于：</p>
+  <ul>
+    <li>将题目数据（整体或部分，下同）发送给学生；</li>
+    <li>将题目数据发送给本班级管理员之外的人；</li>
+    <li>将题目数据上传至其他平台；</li>
+    <li>改编数据后，重新上传至 ACMOJ 或其他平台；</li>
+    <li>将题目数据用于训练人工智能模型；</li>
+    <li>其他侵犯原作者著作权的行为。</li>
+  </ul>
+  <p>如果学生无法通过题目，请您在您自己的设备上使用题目数据进行调试，严禁将数据点发送给学生。</p>
+  <p>如果您认为题目数据有误，请联系题目作者或 OJ 运维组进行修复。</p>
+  <form>
+    <input type="hidden" name="submit" value="yes">
+    <div id="agree-container">
+      <div class="custom-control custom-checkbox mt-2 mb-3 ml-1">
+        <input class="custom-control-input" id="agree" name="agree" value="yes" type="checkbox" required>
+        <label class="custom-control-label" for="agree">我已阅读并同意以上内容</label>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">下载数据</button>
+    <style>
+    #agree-container:has(#agree:not(:checked)) + button {
+      display: none;
+    }
+    </style>
+  </form>
+</div>
+{% endblock %}

@@ -176,7 +176,8 @@ alembic 会自动对比数据库内容和当前 model 的差异，生成 migrati
 - `student_id`: 学号；
 - `friendly_name`: 昵称；
 - `password`: 密码；
-- `privilege`: 用户权限。
+- `privilege`: 用户权限；
+- `data_license_agreed`: 是否同意数据使用协议。
 
 ### course_tag 表
 

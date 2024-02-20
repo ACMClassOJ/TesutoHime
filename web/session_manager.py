@@ -27,6 +27,12 @@ class SessionManager:
         return UserManager.get_user(int(user_id))
 
     @classmethod
+    def switch_user(cls, user: User):
+        session_id = request.cookies.get(cls.session_cookie_name)
+        assert session_id is not None
+        cls.new_session(user, session_id)
+
+    @classmethod
     def logout(cls) -> None:
         session_id = request.cookies.get(cls.session_cookie_name)
         if session_id is None: return

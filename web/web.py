@@ -1457,6 +1457,8 @@ def process_admin():
     form = request.form
     action = form['action']
     if action == 'user':
+        if g.user.privilege < Privilege.SUPER:
+            abort(FORBIDDEN)
         set_tab('user')
         user = UserManager.get_user_by_username(form['username'])
         if user is None:
@@ -1486,6 +1488,17 @@ def admin():
     if request.method == 'POST':
         process_admin()
     return render_template('admin.html')
+
+@web.route('/admin/su', methods=['POST'])
+@require_admin
+def admin_su():
+    if g.user.privilege < Privilege.SUPER:
+        abort(FORBIDDEN)
+    user = UserManager.get_user_by_username(request.form['username'])
+    if user is None:
+        abort(BAD_REQUEST, '用户不存在')
+    SessionManager.switch_user(user)
+    return redirect(url_for('.index'))
 
 
 def problem_admin_api(callback, success_retcode):

@@ -15,6 +15,7 @@
             {%- do tabs.update({ 'user': '用户' }) -%}
             {%- endif -%}
             {{ nav_tab_list(tabs, 'problem', True) }}
+            {{ show_alert() }}
         </h1>
         <hr>
         <div class="tab-content">
@@ -41,7 +42,7 @@
                 <p> 
                     <strong>警告</strong>: 在评测记录多时，以下操作十分缓慢。严禁多次点击按钮，否则会导致严重性能问题。
                 </p>
-                <h3> 批量重测 </h3>
+                <h3>批量重测</h3>
                 <form id="formRejudge" action="{{ url_for('.admin_rejudge') }}" method="POST">
                     {{ g.csrf() }}
                     <input type="hidden" name="type" value="by_judge_id">
@@ -58,7 +59,7 @@
 
                 <hr>
 
-                <h3> 批量题目重测 </h3>
+                <h3>批量题目重测</h3>
                 <form id="formRejudge2" action="{{ url_for('.admin_rejudge') }}" method="POST">
                     {{ g.csrf() }}
                     <input type="hidden" name="type" value="by_problem_id">
@@ -170,8 +171,9 @@
                             <label for="iptPrivilege">权限等级</label>
                             <input class="form-control" type="number" name="privilege" id="iptPrivilege">
                         </div>
-                        <div class="float-right d-flex mb-3 ml-auto pr-1">
-                            <button class="btn btn-outline-primary mt-auto" type="submit">修改用户信息</button>
+                        <div class="float-right d-flex mb-3 ml-auto mt-auto pr-1">
+                            <button class="btn btn-outline-primary" type="submit">修改用户信息</button>
+                            <button class="btn btn-outline-primary" type="submit" formaction="{{ url_for('.admin_su') }}" onclick="return confirm('确认模拟用户登录？')">模拟用户登录</button>
                         </div>
                     </div>
                 </form>

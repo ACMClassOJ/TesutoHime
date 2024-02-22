@@ -6,7 +6,7 @@ from typing import Optional, Sequence
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
 from flask import g
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 
 from commons.models import (Contest, Course, Enrollment, Problem,
                             ProblemPrivilege, Term, User)

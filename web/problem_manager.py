@@ -1,4 +1,3 @@
-from datetime import datetime
 from http.client import BAD_REQUEST
 from typing import List, Optional
 

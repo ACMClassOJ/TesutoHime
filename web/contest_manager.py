@@ -5,7 +5,7 @@ from functools import cmp_to_key
 from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 from flask import g
-from sqlalchemy import delete, func, or_, select, true
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import defer
 
 from commons.models import (Contest, ContestProblem, Course, Enrollment,

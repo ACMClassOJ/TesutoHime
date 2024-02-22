@@ -367,6 +367,12 @@ h-hws[hidden] {
 code h-hws, code h-hws[hidden], h-hws.quote-inner, h-hws.quote-outer:lang(zh-CN), h-hws.quote-outer:lang(zh-Hans), h-hws[hidden].quote-inner, h-hws[hidden].quote-outer:lang(zh-CN), h-hws[hidden].quote-outer:lang(zh-Hans), kbd h-hws, kbd h-hws[hidden], pre h-hws, pre h-hws[hidden], samp h-hws, samp h-hws[hidden] {
     display: none !important;
 }
+.realname-group h-char.bd-jiya.bd-end::after,
+.realname-group h-char.bd-jiya.bd-open::before,
+.realname-group h-cs,
+.realname-group h-cs[hidden] {
+    white-space: unset;
+}
 
 .markdown-fallback {
     white-space: pre-wrap;

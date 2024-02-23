@@ -184,15 +184,35 @@
                 </div>
             </div>
             <style>
-                #toggle-external-container {
-                    display: none;
+            #toggle-external-container {
+                display: none;
+            }
+            #toggle-external-container:has(input) {
+                display: block;
+            }
+            #contest-table-wrapper:has(+ #toggle-external-container #toggle-external:not(:checked)) .player--external {
+                display: none;
+            }
+            #contest-table-wrapper:has(+ #toggle-external-container #toggle-external:not(:checked))
+            .table-striped tbody tr:nth-of-type(2n+1):not(:nth-child(2n+1 of :not(.player--external))) {
+                background-color: unset;
+            }
+            #contest-table-wrapper:has(+ #toggle-external-container #toggle-external:not(:checked))
+            .table-striped tbody tr:nth-child(2n+1 of :not(.player--external)) {
+                background-color: rgba(0,0,0,.05);
+            }
+            .table-hover tbody tr:hover:not(#a#b#c#d#e#f#g#h#i#j#k#l#m#n) {
+                background-color: rgba(0,0,0,.075);
+            }
+            @media (prefers-color-scheme: dark) {
+                #contest-table-wrapper:has(+ #toggle-external-container #toggle-external:not(:checked))
+                .table-striped tbody tr:nth-child(2n+1 of :not(.player--external)) {
+                    background-color: rgba(255, 255, 255, 0.035);
                 }
-                #toggle-external-container:has(input) {
-                    display: block;
+                .table-hover tbody tr:hover:not(#a#b#c#d#e#f#g#h#i#j#k#l#m#n) {
+                    background-color: rgba(255, 255, 255, 0.075);
                 }
-                #contest-table-wrapper:has(+ #toggle-external-container #toggle-external:not(:checked)) .player--external {
-                    display: none;
-                }
+            }
             </style>
             {%- endif -%}
         </div>

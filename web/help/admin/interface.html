@@ -104,11 +104,11 @@
 <h4 id="python-表达式格式">Python 表达式格式</h4>
 <p>您可以在表达式内使用下列函数或变量：</p>
 <ul>
-<li><code>ac(problem_id1, problem_id2, ...)</code>: 若所有这些题目均通过（Accepted），则返回 True，否则返回 False；</li>
+<li><code>ac(index1, index2, ...)</code>: 若所有这些题目（index 为题目在作业里的顺序，从 1 开始）均通过（Accepted），则返回 True，否则返回 False；</li>
 <li><code>ac()</code>: 若作业中全部题目均通过，则返回 True，否则返回 False；</li>
-<li><code>count(problem_id1, problem_id2, ...)</code>: 返回学生通过这些题目的个数；</li>
+<li><code>count(index1, index2, ...)</code>: 返回学生通过这些题目的个数；</li>
 <li><code>count()</code>: 返回学生通过作业中题目的个数；</li>
-<li><code>score(problem_id1, problem_id2, ...)</code>: 返回学生在这些题目中得到的分数和；</li>
+<li><code>score(index1, index2, ...)</code>: 返回学生在这些题目中得到的分数和；</li>
 <li><code>score()</code>: 返回学生在作业中得到的总分；</li>
 <li><code>groups</code>: 一个 List[str]，表示学生的所有分组名称，可以用 <code>'groupname' in groups</code> 来判断学生是否在分组中。</li>
 </ul>
@@ -128,13 +128,13 @@
 要求通过全部题目；</li>
 <li><code>count() &gt;= 3</code><br />
 五选三；</li>
-<li><code>ac(1461, 1462, 6437, 6438)</code><br />
+<li><code>ac(1, 2, 3, 4)</code><br />
 要求通过前四道题，第五道题不做要求；</li>
-<li><code>ac(1461, 1462) and count(6437, 6438, 5033) &gt;= 2</code><br />
+<li><code>ac(1, 2) and count(3, 4, 5) &gt;= 2</code><br />
 要求通过前两题，后三题三选二；</li>
-<li><code>ac(1461, 1462) and score(6437, 6438, 5033) &gt;= 160</code><br />
+<li><code>ac(1, 2) and score(3, 4, 5) &gt;= 160</code><br />
 要求通过前两题，后三题分数之和至少 160 分；</li>
-<li><code>count(1461, 1462, 6437) &gt;= 2 if 'B班' in groups else count(6437, 6438, 5033) &gt;= 2</code><br />
+<li><code>count(1, 2, 3) &gt;= 2 if 'B班' in groups else count(3, 4, 5) &gt;= 2</code><br />
 B 班要求前三题三选二，A 班要求后三题三选一。</li>
 </ul>
 <h3 id="导出提交数据">导出提交数据</h3>

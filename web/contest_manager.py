@@ -383,13 +383,12 @@ class ContestManager:
         elif typ == CompletionCriteriaType.python:
             if contest.completion_criteria is None:
                 return False
-            def get_problem_score(problem_id: int) -> dict:
-                if type(problem_id) != int:
-                    raise TypeError(f'Problem ID {problem_id} should be int, not {type(problem_id)}')
-                for problem in scores['problems']:
-                    if problem['id'] == problem_id:
-                        return problem
-                raise ValueError(f'Problem {problem_id} not found')
+            def get_problem_score(index: int) -> dict:
+                if type(index) != int:
+                    raise TypeError(f'Problem index {index} should be int, not {type(index)}')
+                if not (1 <= index <= len(scores['problems'])):
+                    raise ValueError(f'Problem index {index} out of range')
+                return scores['problems'][index - 1]
 
             def api(func):
                 @wraps(func)

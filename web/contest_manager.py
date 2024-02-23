@@ -150,14 +150,14 @@ class ContestManager:
 
     @staticmethod
     def _get_implicit_contests_query(user: User, include_admin = False,
-                                     ignore_groups = False):
+                                     include_unofficial = False):
         # TODO: DB perf
         stmt = select(Contest) \
             .join(Enrollment, Enrollment.course_id == Contest.course_id) \
             .where(Enrollment.user_id == user.id)
         if not include_admin:
             stmt = stmt.where(~Enrollment.admin)
-        if not ignore_groups:
+        if not include_unofficial:
             stmt = stmt \
                 .join(RealnameReference, RealnameReference.course_id == Contest.course_id) \
                 .where(RealnameReference.student_id == user.student_id) \
@@ -170,19 +170,20 @@ class ContestManager:
 
     @classmethod
     def get_implicit_contests(cls, user: User, include_admin = False,
-                              ignore_groups = False) -> Sequence[Contest]:
-        return db.scalars(cls._get_implicit_contests_query(user, include_admin, ignore_groups)).all()
+                              include_unofficial = False) -> Sequence[Contest]:
+        return db.scalars(cls._get_implicit_contests_query(user, include_admin, include_unofficial)).all()
 
     @classmethod
     def get_contests_for_user(cls, user: User, *,
                               include_admin = False,
-                              ignore_groups = False) -> Set[Contest]:
+                              include_unofficial = False) -> Set[Contest]:
         if 'user_contests' not in g:
             g.user_contests = {}
-        if user.id in g.user_contests:
-            return g.user_contests[user.id]
-        contests = set(user.external_contests).union(cls.get_implicit_contests(user, include_admin, ignore_groups))
-        g.user_contests[user.id] = contests
+        cache_key = (user.id, include_admin, include_unofficial)
+        if cache_key in g.user_contests:
+            return g.user_contests[cache_key]
+        contests = set(user.external_contests).union(cls.get_implicit_contests(user, include_admin, include_unofficial))
+        g.user_contests[cache_key] = contests
         return contests
 
     @staticmethod
@@ -205,11 +206,11 @@ class ContestManager:
         suggested_contests['future'].sort(key=lambda c: c.start_time)
         suggested_contests['past'].sort(key=lambda c: c.end_time, reverse=True)
 
-        user_contests = cls.get_contests_for_user(g.user)
+        user_contests = [x.id for x in cls.get_contests_for_user(g.user)]
         suggestion: Dict[str, List[dict]] = { 'in-progress': [], 'future': [], 'past': [] }
         for k in suggested_contests:
             for contest in suggested_contests[k]:
-                status = cls.get_status_for_card(contest, contest in user_contests)
+                status = cls.get_status_for_card(contest, contest.id in user_contests)
                 suggestion[k].append(status)
 
         return suggestion

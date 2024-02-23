@@ -201,7 +201,7 @@ def ignore_alert_fail(func):
 def index():
     suggestions = invited_courses = None
     if g.user is not None:
-        contests = ContestManager.get_contests_for_user(g.user, include_admin=True, ignore_groups=True)
+        contests = ContestManager.get_contests_for_user(g.user, include_admin=True, include_unofficial=True)
         suggestions = ContestManager.suggest_contests(list(contests))
         invited_courses = CourseManager.get_invited_courses(g.user)
         invited_courses = set(c for c in invited_courses if c.id not in g.user.ignored_course_ids)
@@ -1206,8 +1206,8 @@ def course_contest_list_generic(course: Course, type: str):
     type_ids = [0, 2] if type == 'contest' else [1]
     contests = list(filter(lambda c: c.type in type_ids, course.contests))
     contests.sort(key=lambda c: c.end_time, reverse=True)
-    contests_enrolled = ContestManager.get_contests_for_user(g.user)
-    statuses = [ContestManager.get_status_for_card(c, c in contests_enrolled) for c in contests]
+    contests_enrolled = [x.id for x in ContestManager.get_contests_for_user(g.user)]
+    statuses = [ContestManager.get_status_for_card(c, c.id in contests_enrolled) for c in contests]
 
     return render_template('course_contest_list.html', type=type,
                            course=course, contests=statuses,

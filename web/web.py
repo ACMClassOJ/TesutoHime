@@ -25,9 +25,9 @@ from werkzeug.routing import BaseConverter
 import commons.task_typing
 import web.const as consts
 import web.utils as utils
-from commons.models import (Contest, Course, CourseTag, Enrollment, Group,
-                            JudgeRecordV2, JudgeStatus, Problem,
-                            ProblemPrivilege, ProblemPrivilegeType,
+from commons.models import (CompletionCriteriaType, Contest, Course, CourseTag,
+                            Enrollment, Group, JudgeRecordV2, JudgeStatus,
+                            Problem, ProblemPrivilege, ProblemPrivilegeType,
                             RealnameReference, Term, User)
 from commons.task_typing import ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
@@ -908,7 +908,6 @@ def problemset(contest: Contest):
         problems_visible=problems_visible,
         has_real_name=has_real_name,
         real_name_map=real_name_map,
-        has_completed=ContestManager.user_has_completed_by_scores,
         data=data,
         my_data=my_data,
     )
@@ -1024,24 +1023,27 @@ def process_problemset_admin(contest: Contest):
         ContestManager.delete_contest(contest)
         return redirect(url_for('.course_admin', course=course_id), SEE_OTHER)
     elif action == 'requirements':
-        cc_str = form.get('completion_criteria', '')
-        cc = None if cc_str == '' else int(cc_str)
-        if cc is not None:
-            if contest.rank_partial_score:
-                if cc < 0:
-                    alert_fail('要求完成的分数不能为负数')
-            else:
-                if cc < 0:
-                    alert_fail('要求完成的题目数不能为负数')
-                if cc > len(contest.problems):
-                    alert_fail('要求完成的题目数不能超过题目总数')
-        contest.completion_criteria = cc
+        cc_type_str = form.get('type', 'none')
+        cc_type = getattr(CompletionCriteriaType, cc_type_str, None)
+        if not isinstance(cc_type, CompletionCriteriaType):
+            alert_fail(f'作业要求类型 {repr(cc_type_str)} 不正确')
+        cc_value = form.get('completion_criteria', None)
+        if cc_value is not None and len(cc_value) > 128:
+            alert_fail('作业要求超出长度限制')
+        if cc_type == CompletionCriteriaType.none:
+            cc_value = None
+        err = ContestManager.validate_completion_criteria(contest, cc_type, cc_value)
+        if err is not None:
+            alert_fail(err)
+        contest.completion_criteria_type = cc_type
+        contest.completion_criteria = cc_value
 
         languages = []
         for lang in language_info:
             if form.get(f'lang-{lang}', 'off') == 'on':
                 languages.append(lang)
         contest.allowed_languages = None if len(languages) == len(language_info) or len(languages) == 0 else languages
+        db.flush()
         ContestCache.flush(contest.id)
         alert_success('已更改作业要求')
     elif action == 'groups':
@@ -1073,14 +1075,16 @@ def problemset_admin(contest: Contest):
     scores = ContestManager.get_scores(contest)
     # problem id -> (try count, ac count)
     problem_stats = dict((problem.id, { 'try': 0, 'ac': 0 }) for problem in contest.problems)
-    completion_stats = { 'total': 0, 'completed': 0 }
+    completion_stats = { 'total': 0, 'completed': 0, 'errors': set() }
     for player in scores:
         if player['is_external'] and not contest.rank_all_users:
             continue
-        if contest.completion_criteria is not None:
-            completion_stats['total'] += 1
-            if ContestManager.user_has_completed_by_scores(contest, player):
-                completion_stats['completed'] += 1
+        if contest.completion_criteria_type != CompletionCriteriaType.none:
+            completion_stats['total'] += 1  # type: ignore
+            if type(player['completed']) == str:
+                completion_stats['errors'].add(player['completed'])  # type: ignore
+            elif player['completed'] == True:  # can also be str
+                completion_stats['completed'] += 1  # type: ignore
         for problem in player['problems']:
             if problem['count'] > 0:
                 problem_stats[problem['id']]['try'] += 1

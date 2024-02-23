@@ -231,6 +231,11 @@ class ProblemPrivilege(UseTimestamps, Base):
     comment: Mapped[str] = mapped_column(server_default='')
 
 
+class CompletionCriteriaType(Enum):
+    none = auto()
+    simple = auto()
+    python = auto()
+
 class Contest(UseTimestamps, Base):
     id: Mapped[intpk]
     name: Mapped[str]
@@ -248,7 +253,8 @@ class Contest(UseTimestamps, Base):
     group_ids: Mapped[Optional[List[int]]] = mapped_column(ARRAY(Integer))
     rank_all_users: Mapped[bool] = mapped_column(server_default=text('false'))
 
-    completion_criteria: Mapped[Optional[int]]
+    completion_criteria_type: Mapped[CompletionCriteriaType] = mapped_column(SqlEnum(CompletionCriteriaType), server_default='none')
+    completion_criteria: Mapped[Optional[str]]
     allowed_languages: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text))
 
     external_players: Mapped[Set[User]] = relationship(

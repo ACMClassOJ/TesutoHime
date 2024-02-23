@@ -160,32 +160,56 @@
     <hr>
 
     <h3>作业要求</h3>
-    {%- if contest.completion_criteria is not None -%}
+    {%- if contest.completion_criteria_type.name != 'none' -%}
     <p>共 {{ completion_stats['total'] }} 人需完成，有 {{ completion_stats['completed'] }} 人已完成。</p>
     {%- endif -%}
+    {%- if completion_stats['errors'] | length > 0 -%}
+    <h4>检查过程中出现运行时错误：</h4>
+    <ul>
+        {%- for error in completion_stats['errors'] -%}
+        <li>{{ error }}</li>
+        {%- endfor -%}
+    </ul>
+    {%- endif -%}
     <style>
-        #requirement-count, #requirement-score {
+        #requirement-count, #requirement-score, #requirement-python {
             display: none;
         }
+        #cc-container:has(#cc-type option[value="none"]:checked) #cc-input-container,
         #main:has(#rank-partial-score) #requirement-general {
             display: none;
         }
-        #main:has(#rank-partial-score:checked) #requirement-score {
-            display: initial;
+        #main:has(#rank-partial-score:checked) #cc-container:has(#cc-type option[value="simple"]:checked) #requirement-score {
+            display: inline-block;
         }
-        #main:has(#rank-partial-score:not(:checked)) #requirement-count {
-            display: initial;
+        #main:has(#rank-partial-score:not(:checked)) #cc-container:has(#cc-type option[value="simple"]:checked) #requirement-count {
+            display: inline-block;
+        }
+        #cc-container:has(#cc-type option[value="python"]:checked) #requirement-python {
+            display: inline-block;
+        }
+        #cc-container:has(#cc-type option[value="python"]:checked) #completion-criteria {
+            font-family: monospace;
         }
     </style>
     <form method="post">
         {{ g.csrf() }}
         <input type="hidden" name="action" value="requirements">
-        <div class="mb-3">
-            <label for="completion-criteria" id="requirement-count">至少完成的题目数</label>
-            <label for="completion-criteria" id="requirement-score">至少完成的分数</label>
-            <label for="completion-criteria" id="requirement-general">至少完成的题目数/分数</label>
-            <input class="form-control" type="number" name="completion_criteria" id="completion-criteria" value="{{ contest.completion_criteria }}">
-            <div class="form-text">如无需统计完成情况，请留空或清空。</div>
+        <div class="form-row" id="cc-container">
+            <div class="form-group col-md-3">
+                <label for="cc-type">完成情况统计方式</label>
+                <select class="form-control selectpicker" name="type" id="cc-type"
+                        data-style="form-control font-weight-normal border-grey shadow-none">
+                    {{ option_list({ 'none': '不统计', 'simple': '得到的分数' if contest.rank_partial_score else '完成题目数', 'python': '高级' }, contest.completion_criteria_type.name) }}
+                </select>
+            </div>
+            <div class="form-group col-md" id="cc-input-container">
+                <label for="completion-criteria" id="requirement-count">至少完成的题目数</label>
+                <label for="completion-criteria" id="requirement-score">至少得到的分数</label>
+                <label for="completion-criteria" id="requirement-python">Python 代码 <a href="{{ url_for('.help', page='admin/interface') }}#python-表达式格式">（点击查看格式及示例）</a></label>
+                <label for="completion-criteria" id="requirement-general">作业要求（至少完成的题目数/分数/高级要求）</label>
+                <input class="form-control" name="completion_criteria" id="completion-criteria" value="{{ contest.completion_criteria if contest.completion_criteria is not None }}" maxlength="128">
+            </div>
         </div>
         <div class="form-row">
             <label class="col-md-2">允许使用的语言</label>

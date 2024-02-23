@@ -1,5 +1,7 @@
 from logging.config import fileConfig
 
+import alembic_postgresql_enum
+
 from alembic import context
 from commons.models import metadata
 from scripts.db.env import engine

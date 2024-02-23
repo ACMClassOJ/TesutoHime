@@ -92,7 +92,7 @@
                         {% if contest.ranked %}<th>排名</th>{% endif %}
                         <th>昵称{% if g.is_admin -%}<span class="small">（点击查看用户名）</span>{%- endif %}</th>
                         {% if has_real_name -%}<th>实名</th>{%- endif %}
-                        {% if g.can_read and contest.completion_criteria is not None %}<th>完成情况</th>{% endif %}
+                        {% if g.can_read and contest.completion_criteria_type.name != 'none' %}<th>完成情况</th>{% endif %}
                         {% if problems_visible -%}
                         {% for problem in contest.problems -%}
                             <th><a href="{{ url_for('.problem', problem=problem) }}" class="problem-link" target="_blank">{{ problem.id }}</a></th>
@@ -119,8 +119,10 @@
                             {% if has_real_name -%}
                             <td>{{ display_real_name(real_name_map[player['student_id']]) }}</td>
                             {%- endif %}
-                            {% if g.can_read and contest.completion_criteria is not None -%}
-                            {%- if has_completed(contest, player) -%}
+                            {% if g.can_read and contest.completion_criteria_type.name != 'none' -%}
+                            {%- if player['completed'] is string -%}
+                            <td>错误：{{ player['completed'] }}</td>
+                            {%- elif player['completed'] == True -%}
                             <td>已完成</td>
                             {%- else -%}
                             <td>未完成</td>

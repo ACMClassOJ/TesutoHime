@@ -1,18 +1,19 @@
 __all__ = ('ContestManager',)
 
 from datetime import datetime, timedelta
-from functools import cmp_to_key
-from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
+from functools import cmp_to_key, wraps
+from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
 from flask import g
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import defer
 
-from commons.models import (Contest, ContestProblem, Course, Enrollment,
+from commons.models import (CompletionCriteriaType, Contest, ContestProblem, Course, Enrollment,
                             GroupRealnameReference, JudgeRecordV2, JudgeStatus,
                             RealnameReference, User)
 from web.const import ContestType, PrivilegeType
 from web.contest_cache import ContestCache
+from web.py_sanitize import PySanitizer
 from web.user_manager import UserManager
 from web.utils import db
 
@@ -176,7 +177,13 @@ class ContestManager:
     def get_contests_for_user(cls, user: User, *,
                               include_admin = False,
                               ignore_groups = False) -> Set[Contest]:
-        return set(user.external_contests).union(cls.get_implicit_contests(user, include_admin, ignore_groups))
+        if 'user_contests' not in g:
+            g.user_contests = {}
+        if user.id in g.user_contests:
+            return g.user_contests[user.id]
+        contests = set(user.external_contests).union(cls.get_implicit_contests(user, include_admin, ignore_groups))
+        g.user_contests[user.id] = contests
+        return contests
 
     @staticmethod
     def get_contest(contest_id: int) -> Optional[Contest]:
@@ -209,23 +216,16 @@ class ContestManager:
 
     @classmethod
     def get_status_for_card(cls, contest: Contest, is_enrolled: bool) -> dict:
-        completion_criteria = ''
         future = g.time < contest.start_time
-        scores = cls.get_user_scores(contest, g.user)
-        if contest.completion_criteria is not None:
-            if contest.rank_partial_score:
-                completion_criteria = f'需得到 {contest.completion_criteria} 分'
-                if is_enrolled and not future and scores is not None:
-                    completion_criteria += f'，已得到 {scores["score"]} 分'
-            else:
-                completion_criteria = f'需完成 {contest.completion_criteria} 题'
-                if is_enrolled and not future and scores is not None:
-                    completion_criteria += f'，已完成 {scores["ac_count"]} 题'
+        if any(contest.id == x.id for x in cls.get_contests_for_user(g.user)):
+            scores = cls.get_user_scores(contest, g.user)
+        else:
+            scores = None
 
         retval = {
             'contest': contest,
             'status': '',
-            'completion': completion_criteria,
+            'completion': cls.get_completion_message(contest, scores, is_enrolled and not future),
             'enrolled': is_enrolled,
             'is-external': True if scores is None else scores['is_external'],
             'reason-cannot-join': cls.reason_cannot_join(contest),
@@ -234,8 +234,8 @@ class ContestManager:
             retval['status'] = 'future'
             return retval
         not_completed = False
-        if contest.completion_criteria is not None and is_enrolled:
-            if cls.user_has_completed_by_scores(contest, scores):
+        if contest.completion_criteria_type != CompletionCriteriaType.none and is_enrolled:
+            if scores is not None and scores['completed']:
                 retval['status'] = 'completed'
                 return retval
             not_completed = True
@@ -295,10 +295,12 @@ class ContestManager:
                 ],
                 'student_id': user.student_id,
                 'id': user.id,
+                'completed': False,
                 'username': user.username,
                 'is_external': user not in implicit_players,
             } for user in players
         ]
+        user_id_to_user = dict((user.id, user) for user in players)
         user_id_to_num = dict((user.id, i) for i, user in enumerate(players))
         problem_to_num = dict((problem.id, i) for i, problem in enumerate(contest.problems))
 
@@ -317,7 +319,7 @@ class ContestManager:
             user_data = data[rank]
             problem = user_data['problems'][problem_index]  # type: ignore
 
-            if problem['accepted'] == True:
+            if problem['accepted']:
                 continue
             max_score = problem['score']
             is_ac = status == JudgeStatus.accepted
@@ -343,21 +345,126 @@ class ContestManager:
 
             problem['score'] = max_score
             problem['count'] = submit_count
-            problem['accepted'] = is_ac
+
+        code = None
+        if contest.completion_criteria_type == CompletionCriteriaType.python:
+            if contest.completion_criteria is not None:
+                code = cls._py_sanitizer.safe_compile(contest.completion_criteria)
+        for player in data:
+            user = user_id_to_user[player['id']]  # type: ignore
+            player['completed'] = cls.user_has_completed_by_scores(contest, player, user, code)  # type: ignore
 
         ContestCache.put(contest.id, data)
         return data
 
-    @staticmethod
-    def user_has_completed_by_scores(contest: Contest, scores: Optional[dict]) -> bool:
-        if contest.completion_criteria is None:
-            return False
+    _py_sanitizer = PySanitizer(['score', 'ac', 'count'], ['groups'])
+
+    @classmethod
+    def user_has_completed_by_scores(cls, contest: Contest,
+                                     scores: Optional[dict],
+                                     user: User,
+                                     cached_code = None) -> Union[str, bool]:
         if scores is None:
             return False
-        if contest.rank_partial_score:
-            return scores['score'] >= contest.completion_criteria
-        else:
-            return scores['ac_count'] >= contest.completion_criteria
+        typ = contest.completion_criteria_type
+        if typ == CompletionCriteriaType.none:
+            return False
+        elif typ == CompletionCriteriaType.simple:
+            if contest.completion_criteria is None:
+                return False
+            try:
+                crit = int(contest.completion_criteria)
+            except ValueError as e:
+                return str(e)
+            if contest.rank_partial_score:
+                return scores['score'] >= crit
+            else:
+                return scores['ac_count'] >= crit
+        elif typ == CompletionCriteriaType.python:
+            if contest.completion_criteria is None:
+                return False
+            def get_problem_score(problem_id: int) -> dict:
+                if type(problem_id) != int:
+                    raise TypeError(f'Problem ID {problem_id} should be int, not {type(problem_id)}')
+                for problem in scores['problems']:
+                    if problem['id'] == problem_id:
+                        return problem
+                raise ValueError(f'Problem {problem_id} not found')
+
+            def api(func):
+                @wraps(func)
+                def wrapped(*problems):
+                    if len(problems) == 0:
+                        return func(*scores['problems'])
+                    return func(*(get_problem_score(x) for x in problems))
+                return wrapped
+
+            @api
+            def score(*problems):
+                return sum(x['score'] for x in problems)
+            @api
+            def count(*problems):
+                return sum(1 if problem['accepted'] else 0 for problem in problems)
+            @api
+            def ac(*problems):
+                return all(x['accepted'] for x in problems)
+
+            enrollment = UserManager.get_enrollment(user, contest.course)
+            if enrollment is None or enrollment.realname_reference is None:
+                groups = []
+            else:
+                groups = [x.name for x in enrollment.realname_reference.groups]
+            locals = { 'score': score, 'count': count, 'ac': ac, 'groups': groups }
+            try:
+                code = contest.completion_criteria if cached_code is None else cached_code
+                retval = cls._py_sanitizer.safe_eval(code, locals)
+                if type(retval) != bool:
+                    raise TypeError(f'Return value must be a bool, not {repr(retval)}')
+                return retval
+            except Exception as e:
+                return str(e)
+
+    @classmethod
+    def validate_completion_criteria(cls, contest: Contest,
+                                     type: CompletionCriteriaType,
+                                     value: Optional[str]) -> Optional[str]:
+        if type == CompletionCriteriaType.none:
+            pass
+        elif type == CompletionCriteriaType.simple:
+            if value is None or value == '':
+                return '要求不能为空'
+            try:
+                crit = int(value)
+            except ValueError as e:
+                return str(e)
+            if crit < 0:
+                return '要求不能为负数'
+            if not contest.rank_partial_score and crit > len(contest.problems):
+                return '要求完成的题目数不能超过题目总数'
+        elif type == CompletionCriteriaType.python:
+            if value is None or value == '':
+                return '要求不能为空'
+            try:
+                cls._py_sanitizer.safe_compile(value)
+            except Exception as e:
+                return str(e)
+        return None
+
+    @staticmethod
+    def get_completion_message(contest: Contest, scores: Optional[dict],
+                               show_current: bool) -> str:
+        typ = contest.completion_criteria_type
+        if typ == CompletionCriteriaType.simple:
+            if contest.rank_partial_score:
+                completion_criteria = f'需得到 {contest.completion_criteria} 分'
+                if show_current and scores is not None:
+                    completion_criteria += f'，已得到 {scores["score"]} 分'
+            else:
+                completion_criteria = f'需完成 {contest.completion_criteria} 题'
+                if show_current and scores is not None:
+                    completion_criteria += f'，已完成 {scores["ac_count"]} 题'
+            return completion_criteria
+        return ''
 
     @classmethod
     def get_user_scores(cls, contest: Contest, user: User) -> Optional[dict]:

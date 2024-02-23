@@ -421,7 +421,7 @@ class ContestManager:
                     raise TypeError(f'Return value must be a bool, not {repr(retval)}')
                 return retval
             except Exception as e:
-                return str(e)
+                return str(e)[:64]
 
     @classmethod
     def validate_completion_criteria(cls, contest: Contest,

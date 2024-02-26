@@ -208,7 +208,7 @@
                 <label for="completion-criteria" id="requirement-score">至少得到的分数</label>
                 <label for="completion-criteria" id="requirement-python">Python 代码 <a href="{{ url_for('.help', page='admin/interface') }}#python-表达式格式" target="_blank">（点击查看格式及示例）</a></label>
                 <label for="completion-criteria" id="requirement-general">作业要求（至少完成的题目数/分数/高级要求）</label>
-                <input class="form-control" name="completion_criteria" id="completion-criteria" value="{{ contest.completion_criteria if contest.completion_criteria is not None }}" maxlength="128">
+                <input class="form-control" name="completion_criteria" id="completion-criteria" value="{{ contest.completion_criteria if contest.completion_criteria is not None }}" maxlength="{{ completion_criteria_max_length }}">
             </div>
         </div>
         <div class="form-row">

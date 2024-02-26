@@ -1000,6 +1000,8 @@ def export_problemset_cleanup(resp):
             pass
     return resp
 
+completion_criteria_max_length = 512
+
 @ignore_alert_fail
 def process_problemset_admin(contest: Contest):
     form = request.form
@@ -1028,7 +1030,7 @@ def process_problemset_admin(contest: Contest):
         if not isinstance(cc_type, CompletionCriteriaType):
             alert_fail(f'作业要求类型 {repr(cc_type_str)} 不正确')
         cc_value = form.get('completion_criteria', None)
-        if cc_value is not None and len(cc_value) > 128:
+        if cc_value is not None and len(cc_value) > completion_criteria_max_length:
             alert_fail('作业要求超出长度限制')
         if cc_type == CompletionCriteriaType.none:
             cc_value = None
@@ -1093,7 +1095,8 @@ def problemset_admin(contest: Contest):
 
     return render_template('contest_admin.html', contest=contest,
                            problem_stats=problem_stats,
-                           completion_stats=completion_stats)
+                           completion_stats=completion_stats,
+                           completion_criteria_max_length=completion_criteria_max_length)
 
 @web.route('/problemset/<contest:contest>/problem/add', methods=['POST'])
 def problemset_problem_add(contest: Contest):

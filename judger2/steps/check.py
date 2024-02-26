@@ -98,7 +98,7 @@ async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker
 
 def checker_read_float(outfile: PosixPath, message: str = ''):
     try:
-        score = float(outfile.read_text())
+        score = float(outfile.read_text(errors='replace'))
     except ValueError:
         return CheckResult('bad_problem', 'Invalid SPJ checker: score not number')
     if isinf(score):
@@ -153,7 +153,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
         if res.error is not None:
             return CheckResult('bad_problem', f'checker error: {res.message}')
 
-        msg = message.read_text() if message.exists() else ''
+        msg = message.read_text(errors='replace') if message.exists() else ''
         return checker_read_float(score, msg)
 
 

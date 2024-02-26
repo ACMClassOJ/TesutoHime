@@ -177,7 +177,7 @@ async def run_with_limits(
 
         # parse result file
         try:
-            text = result_file.read_text().replace('\n', '')
+            text = result_file.read_text(errors='replace').replace('\n', '')
             # 'run' code realtime mem
             params = text.split(' ')
             if len(params) < 4 or params[0] != 'run':

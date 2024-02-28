@@ -212,6 +212,7 @@ class ContestManager:
             for contest in suggested_contests[k]:
                 status = cls.get_status_for_card(contest, contest.id in user_contests)
                 suggestion[k].append(status)
+            suggestion[k].sort(key=lambda s: s['enrolled'], reverse=True)
 
         return suggestion
 

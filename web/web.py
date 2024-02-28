@@ -1208,7 +1208,7 @@ def course(course: Course):
 def course_contest_list_generic(course: Course, type: str):
     type_ids = [0, 2] if type == 'contest' else [1]
     contests = list(filter(lambda c: c.type in type_ids, course.contests))
-    contests.sort(key=lambda c: c.end_time, reverse=True)
+    contests.sort(key=lambda c: c.start_time, reverse=True)
     contests_enrolled = [x.id for x in ContestManager.get_contests_for_user(g.user)]
     statuses = [ContestManager.get_status_for_card(c, c.id in contests_enrolled) for c in contests]
 

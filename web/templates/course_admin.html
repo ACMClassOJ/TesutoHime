@@ -279,11 +279,13 @@
             <h3>批量添加/修改实名信息</h3>
             <p>每行一条信息，格式为「学号,姓名,分组（可不填）」。请使用半角（西文）逗号。一位同学可以有多个分组，以竖线「|」分隔。</p>
             <p>为便于 OJ 的管理，请勿修改或删除班级管理员的实名信息。</p>
-            <form method="POST" class="clearfix">
+            <form id="form-realname-create" method="POST" class="clearfix">
                 {{ g.csrf() }}
                 <input type="hidden" name="action" value="realname-create">
-                <textarea class="form-control mb-3" rows="5" name="data" placeholder="523030910000,张三"></textarea>
+                <textarea id="realname-data" class="form-control mb-3" rows="5" name="data" placeholder="523030910000,张三"></textarea>
                 <div class="float-right d-flex mb-3 ml-auto">
+                    <input hidden id="file-csv" type="file">
+                    <button id="import-csv" class="btn btn-outline-primary mt-auto" type="button">打开 CSV 文件</button>
                     <button class="btn btn-outline-primary mt-auto" type="submit">添加实名信息</button>
                 </div>
             </form>
@@ -346,6 +348,7 @@
 {% endblock %}
 
 {% block script %}
-<script src="{{ url_for('.static', filename = 'lib/bootstrap-select.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
+<script src="{{ url_for('.static', filename='lib/bootstrap-select.min.js') }}"></script>
+<script src="{{ url_for('.static', filename='lib/clipboard.min.js') }}"></script>
+<script src="{{ url_for('.static', filename='js/course_admin.js') }}?v=20240303"></script>
 {% endblock %}

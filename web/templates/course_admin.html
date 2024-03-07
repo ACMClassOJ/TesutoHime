@@ -17,7 +17,7 @@
             'contest': '比赛与作业',
             'group': '分组',
             'user': '成员',
-        }, 'overview')
+        }, 'problem')
     }}
     {{ show_alert() }}
     <hr>
@@ -198,7 +198,10 @@
 
 
         <div {{ begin_tab('user') }}>
-            <h3 class="mb-3">实名信息</h3>
+            <h3 class="mb-3">
+                实名信息
+                <a class="btn btn-outline-primary float-right" href="{{ url_for('.course_realname_export', course=course) }}">导出</a>
+            </h3>
             {%- if course.groups | length > 0 -%}
             <style>
                 #group-filter {
@@ -278,6 +281,7 @@
             <hr>
             <h3>批量添加/修改实名信息</h3>
             <p>每行一条信息，格式为「学号,姓名,分组（可不填）」。请使用半角（西文）逗号。一位同学可以有多个分组，以竖线「|」分隔。</p>
+            <p>如需删除实名信息，请填写需要删除的学号，并将姓名填写为「delete」（不含引号）。</p>
             <p>为便于 OJ 的管理，请勿修改或删除班级管理员的实名信息。</p>
             <form id="form-realname-create" method="POST" class="clearfix">
                 {{ g.csrf() }}
@@ -286,7 +290,7 @@
                 <div class="float-right d-flex mb-3 ml-auto">
                     <input hidden id="file-csv" type="file">
                     <button id="import-csv" class="btn btn-outline-primary mt-auto" type="button">打开 CSV 文件</button>
-                    <button class="btn btn-outline-primary mt-auto" type="submit">添加实名信息</button>
+                    <button class="btn btn-outline-primary mt-auto" type="submit">提交</button>
                 </div>
             </form>
             <hr>

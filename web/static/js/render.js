@@ -45,4 +45,12 @@
       Han(el).render()
     }
   }
+
+  for (const el of document.getElementsByClassName('card--contest__description')) {
+      const rendered = el.querySelector('.rendered')
+      if (!rendered) continue
+      if (rendered.getBoundingClientRect().height > el.getBoundingClientRect().height + 1) {
+          el.classList.add('truncated')
+      }
+  }
 }

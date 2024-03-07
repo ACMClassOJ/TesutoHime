@@ -199,17 +199,19 @@ def ignore_alert_fail(func):
 
 @web.route('/')
 def index():
-    suggestions = invited_courses = None
+    suggestions = invited_courses = admin_courses = None
     if g.user is not None:
         contests = ContestManager.get_contests_for_user(g.user, include_admin=True, include_unofficial=True)
         suggestions = ContestManager.suggest_contests(list(contests))
         invited_courses = CourseManager.get_invited_courses(g.user)
         invited_courses = set(c for c in invited_courses if c.id not in g.user.ignored_course_ids)
+        admin_courses = CourseManager.get_admin_courses(g.user)
     return render_template('index.html',
                            news=NewsManager.get_news(),
                            news_link=NewsConfig.link,
                            suggestions=suggestions,
-                           invited_courses=invited_courses)
+                           invited_courses=invited_courses,
+                           admin_courses=admin_courses)
 
 
 @web.route('/index.html')
@@ -1392,6 +1394,20 @@ def course_admin(course: Course):
 
     return render_template('course_admin.html', course=course)
 
+@web.route('/course/<course:course>/realname', methods=['GET', 'POST'])
+def course_realname_export(course: Course):
+    if not g.can_write:
+        abort(FORBIDDEN)
+    def format(rr: RealnameReference):
+        groups = '|'.join(g.name for g in rr.groups)
+        if len(groups) > 0:
+            groups = ',' + groups
+        return f'{rr.student_id},{rr.real_name}{groups}'
+    text = '\n'.join(format(rr) for rr in course.realname_references)
+    resp = make_response(text)
+    resp.content_type = 'text/plain;charset=utf-8'
+    return resp
+
 @web.route('/course/<course:course>/group/<int:group_id>/<action>', methods=['POST'])
 def course_group_edit(course, group_id, action):
     if not g.can_write:
@@ -1494,7 +1510,9 @@ def process_admin():
 def admin():
     if request.method == 'POST':
         process_admin()
-    return render_template('admin.html')
+    admin_courses = CourseManager.get_admin_courses(g.user, current_only=False)
+    return render_template('admin.html',
+                           admin_courses=admin_courses)
 
 @web.route('/admin/su', methods=['POST'])
 @require_admin

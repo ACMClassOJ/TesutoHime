@@ -534,6 +534,17 @@ html .progress-bar {
   background-color: #aa5d6c;
 }
 
+html .card--contest .card--contest__description.truncated::after {
+  background-image: linear-gradient(rgba(30, 30, 30, 0), rgb(30, 30, 30) 90%);
+  opacity: 1;
+  transition: opacity cubic-bezier(.4,0,.2,1) .2s;
+}
+html .card--contest:hover .card--contest__description.truncated::after,
+html .card--contest:focus .card--contest__description.truncated::after,
+html .card--contest:active .card--contest__description.truncated::after {
+  opacity: 0;
+}
+
 
 /* https://highlightjs.org/ */
 pre code.hljs {

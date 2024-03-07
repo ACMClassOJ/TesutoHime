@@ -17,6 +17,8 @@ class RealnameManager:
         if rr is not None:
             db.delete(rr)
             db.flush()
+        if real_name == 'delete':
+            return
         rr = RealnameReference(student_id=student_id, real_name=real_name,
                                course_id=course.id)
         db.add(rr)

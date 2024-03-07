@@ -10,7 +10,7 @@
     {%- from 'component/problem.html' import problem_title -%}
     {{ problem_title(problem) }}
     <hr>
-    <div>
+    <div id="problem-description">
         {%- if problem.description is not None -%}
         <h3>题目描述</h3>
         <div id="description">{{ render(problem.description) }}</div>

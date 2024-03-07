@@ -13,7 +13,7 @@
 {%- set time_elapsed = (g.time - contest.start_time).total_seconds() -%}
 {%- set time_overall = (contest.end_time - contest.start_time).total_seconds() -%}
 {%- set percentage = (((100 * time_elapsed / time_overall) | int, 0) | max, 100) | min -%}
-<a class="card card--contest card--small mb-3 border-{{ class_ }}" href="{{ url_for('web.problemset', contest=contest) }}">
+<a class="card card--contest card--small border-{{ class_ }}" href="{{ url_for('web.problemset', contest=contest) }}">
   <div class="card-header" style="--progress: {{ percentage }}%">
     {%- if show_type -%}
     <div>

@@ -49,6 +49,14 @@ body .card-header {
         max-width: 13em;
     }
 }
+.link--status {
+    text-decoration: underline dashed;
+    color: inherit;
+}
+.link--status:hover, .link--status:active, .link--status:focus {
+    color: inherit;
+    text-decoration: underline solid;
+}
 
 .blog-post__date::before {
     content: '(';
@@ -148,6 +156,16 @@ body .card-header {
     content: ')';
 }
 
+#problem-description h3 {
+    margin: .5em 0 .3em;
+}
+#problem-description th[align="center"] {
+    text-align: center;
+}
+#problem-description th[align="right"] {
+    text-align: center;
+}
+
 .contest--participant {
     background-color: #fdf5e6;
 }
@@ -237,6 +255,10 @@ html body a.card:focus {
     width: var(--progress);
     left: 0;
 }
+.card--small {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
 .card--small .card-text {
     font-size: 0.9rem;
 }
@@ -255,15 +277,43 @@ html body a.card:focus {
     max-height: 1.5em;
     overflow: hidden;
 }
+.card--contest .card--contest__description p {
+    margin-bottom: 0.2rem;
+}
+.card--contest .card--contest__description.truncated {
+    max-height: 3em;
+    margin-bottom: -.75rem;
+}
+.card--contest .card--contest__description.truncated::after {
+    content: '';
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: .75rem;
+    right: .75rem;
+    height: 2em;
+    background-image: linear-gradient(rgba(255, 255, 255, 0), rgb(255, 255, 255) 90%);
+}
 @media (min-width: 992px) {
     .card-group--small {
         display: flex;
         flex-wrap: wrap;
-        justify-content: space-between;
+        margin: 0 -0.5rem;
     }
     .card--small {
-        width: calc(50% - 0.5rem);
+        width: calc(50% - 1rem);
+        margin: 0.5rem;
         height: fit-content;
+    }
+}
+@media (min-width: 1440px) {
+    .fullwidth .card--small {
+        width: calc(33.3333333333333333% - 1rem);
+    }
+}
+@media (min-width: 1800px) {
+    .fullwidth .card--small {
+        width: calc(25% - 1rem);
     }
 }
 

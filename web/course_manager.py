@@ -17,8 +17,11 @@ class CourseManager:
         return db.get(Course, course_id)
 
     @staticmethod
-    def can_join(course: Course) -> bool:
+    def is_current(course: Course) -> bool:
         return course.term is None or g.time <= course.term.end_time
+    @classmethod
+    def can_join(cls, course: Course) -> bool:
+        return cls.is_current(course)
 
     @staticmethod
     def can_read(course: Course) -> bool:
@@ -58,6 +61,16 @@ class CourseManager:
                 courses.add(course)
         return courses
 
+    @classmethod
+    def get_admin_courses(cls, user: User, current_only: bool = True) -> Sequence[Course]:
+        courses = []
+        for e in user.enrollments:
+            if not e.admin: continue
+            c = e.course
+            if current_only and not cls.is_current(c): continue
+            courses.append(c)
+        courses.sort(key=lambda c: c.id, reverse=True)
+        return courses
 
     @staticmethod
     def get_group(group_id: int) -> Optional[Group]:

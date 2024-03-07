@@ -48,7 +48,7 @@
     <p>加入班级后，班级的管理员将可以看到您的全部提交代码，您将自动加入所有与您相关的作业、比赛和考试。</p>
     <div class="card-group--small">
         {%- for course in invited_courses -%}
-        <a class="card card--small mb-3" href="{{ url_for('.course', course=course) }}">
+        <a class="card card--small" href="{{ url_for('.course', course=course) }}">
             {%- if course.term is not None or course.tag is not None -%}
             <div class="card-header">
                 {%- if course.term is not None -%}
@@ -70,6 +70,35 @@
                     <form action="{{ url_for('.course_join', course=course) }}" method="POST" class="d-inline">
                         {{ g.csrf() }}
                         <button type="submit" class="btn btn-primary btn-sm">加入</button>
+                    </form>
+                </span>
+            </div>
+        </a>
+        {%- endfor -%}
+    </div>
+    <hr class="my-4">
+    {%- endif -%}
+
+    {%- if admin_courses is not None and admin_courses | length > 0 -%}
+    <div class="card-group--small">
+        {%- for course in admin_courses -%}
+        <a class="card card--small" href="{{ url_for('.course', course=course) }}">
+            {%- if course.term is not None or course.tag is not None -%}
+            <div class="card-header">
+                {%- if course.term is not None -%}
+                {{ course.term.name }}
+                {%- if course.tag is not None %} &middot; {% endif -%}
+                {%- endif -%}
+                {%- if course.tag is not None -%}
+                {{ course.tag.name }}
+                {%- endif -%}
+            </div>
+            {%- endif -%}
+            <div class="card-body">
+                <span class="card--course__name">{{ course.name }}</span>
+                <span class="card--course__actions float-right">
+                    <form action="{{ url_for('.course_admin', course=course) }}" class="d-inline">
+                        <button type="submit" class="btn btn-primary btn-sm">管理</button>
                     </form>
                 </span>
             </div>

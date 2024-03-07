@@ -49,7 +49,7 @@
             <div class="card-group--small">
                 {%- for problem in my_data['problems'] -%}
                 {%- set j = loop.index0 -%}
-                <a class="card card--small {{ 'border-' + g.consts.judge_status_info[problem['status']].badge_type if problem['status'] is not None }} mb-3" href="{{ url_for('.problem', problem=contest.problems[j]) }}">
+                <a class="card card--small {{ 'border-' + g.consts.judge_status_info[problem['status']].badge_type if problem['status'] is not None }}" href="{{ url_for('.problem', problem=contest.problems[j]) }}">
                     <div class="card-header">
                         <span>Problem {{ j + 1 }}</span>
                         {%- if problem['count'] + problem['pending_count'] > 0 -%}

@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/editor.md/css/editormd.min.css') }}"> 
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
 
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}">
+
 <link rel="upload-url" href="{{ url_for('.problem_upload_url', problem=problem) }}">
 <link rel="update-plan" href="{{ url_for('.problem_update_plan', problem=problem) }}">
 <link rel="description" href="{{ url_for('.problem_description', problem=problem) }}">
@@ -249,6 +251,7 @@
         </div>
 
         <div {{ begin_tab('data-zip') }}>
+            <p><a class="float-right" href="{{ url_for('.help', page='admin/data-format') }}"><i class="fa fa-question-circle mr-1"></i>如何创建数据包？</a></p>
             <h3>上传数据压缩包</h3>
             <form id="formDataZipUpload">
                 <input type="hidden" name="id" value="{{ problem.id }}">

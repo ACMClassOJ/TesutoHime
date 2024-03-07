@@ -40,12 +40,12 @@
 				{{ submission.problem_id }}. [题目未发布]
 				{%- endif -%}
 			</td>
-			<td>
+			<td class="text-{{ g.consts.judge_status_info[submission.status.name].color }}">
 				<strong>
 					{% if show_links[submission] -%}
-					<a href="{{ url_for('.submission', submission=submission) }}">
+					<a class="link--status" href="{{ url_for('.submission', submission=submission) }}">
 					{% endif -%}
-						<span class="text-{{ g.consts.judge_status_info[submission.status.name].color }}">{{ g.consts.judge_status_info[submission.status.name].name }}</span>
+					{{ g.consts.judge_status_info[submission.status.name].name }}
 					{% if show_links[submission] -%}
 					</a>
 					{% endif -%}

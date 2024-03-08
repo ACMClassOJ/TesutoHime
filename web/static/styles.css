@@ -51,11 +51,13 @@ body .card-header {
 }
 .link--status {
     text-decoration: underline dashed;
+    text-decoration-thickness: 0.8px;
     color: inherit;
 }
 .link--status:hover, .link--status:active, .link--status:focus {
-    color: inherit;
     text-decoration: underline solid;
+    text-decoration-thickness: 0.8px;
+    color: inherit;
 }
 
 .blog-post__date::before {

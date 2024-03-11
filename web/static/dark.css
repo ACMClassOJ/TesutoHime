@@ -635,9 +635,9 @@ html .contributor-card {
   border-color: rgba(255, 255, 255, 0.25);
 }
 
-html body a.card.card--contest:focus,
-html body a.card.card--contest:active,
-html body a.card.card--contest:hover {
+html body a.card:not(._blah):focus,
+html body a.card:not(._blah):active,
+html body a.card:not(._blah):hover {
   box-shadow: none;
   background-color: #333333 !important;
 }

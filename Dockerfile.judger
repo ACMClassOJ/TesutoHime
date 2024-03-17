@@ -4,11 +4,11 @@ FROM phusion/baseimage:jammy-1.0.2 as development
 # Set the working directory to /app
 WORKDIR /app
 
-# Use aliyun Mirror
+# Use SJTU Mirror
 # --------------------
-RUN sed -i 's/archive.ubuntu.com/mirrors.sjtug.sjtu.edu.cn/g' /etc/apt/sources.list \
-    && sed -i 's/security.ubuntu.com/mirrors.sjtug.sjtu.edu.cn/g' /etc/apt/sources.list \ 
-    && apt-get clean
+# RUN sed -i 's/archive.ubuntu.com/mirrors.sjtug.sjtu.edu.cn/g' /etc/apt/sources.list \
+#     && sed -i 's/security.ubuntu.com/mirrors.sjtug.sjtu.edu.cn/g' /etc/apt/sources.list \ 
+#     && apt-get clean
 
 # Install packages
 RUN apt-get update && \
@@ -39,3 +39,4 @@ USER root
 RUN echo "ojrunner:100000:65536" | tee -a /etc/subuid
 
 USER ojrunner
+

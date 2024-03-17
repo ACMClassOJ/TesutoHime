@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 from commons.models import *
 
-db_url = environ.get('DB')
+db_url = environ.get('TesutoHime_WEB_DATABASE_URL')
 if db_url is None or db_url == '':
     raise Exception('Please specify connection URL by setting the DB environment variable.')
 

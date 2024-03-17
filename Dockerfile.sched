@@ -30,4 +30,3 @@ COPY . .
 # Install packages specified in requirements.txt
 RUN pip3 install -r scheduler2/requirements.txt
 
-

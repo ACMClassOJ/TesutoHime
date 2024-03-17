@@ -8,7 +8,7 @@ port: 5100
 
 web:
   base_url: http://10.0.0.2:5000/OnlineJudge/
-  auth: Bearer xxxxxxxxxxxxxxxx
+  auth: 'Bearer xxxxxxxxxxxxxxxx'
 
 s3:
   connection:

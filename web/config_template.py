@@ -19,7 +19,7 @@ class RedisConfig:
 
 
 class S3Config:
-    public_url = 'https://acm.sjtu.edu.cn/OnlineJudge/'
+    public_url = os.getenv('TesutoHime_WEB_S3_PUBLIC_URL', 'http://localhost:3000/OnlineJudge/')
     class Connections:
         public = {
             'endpoint_url': os.getenv('TesutoHime_WEB_S3_PUBLIC_ENDPOINT', 'http://localhost:9000/'),
@@ -45,7 +45,7 @@ class WebConfig:
     Block_Register = False                #暂停OJ注册
     Contests_Each_Page = 20               #比赛页面每页显示多少比赛
     Courses_Each_Page = 20
-    If_Debug = os.getenv('TesutoHime_WEB_DEBUG', 'True') == 'True'
+    Debug = os.getenv('TesutoHime_WEB_DEBUG', 'True') == 'True'
                                           #是否开启调试模式，debug模式会使用csrf的单下划线cookie
 
 class NewsConfig:
@@ -53,7 +53,7 @@ class NewsConfig:
     feed = 'https://acm.sjtu.edu.cn/OnlineJudge/blog/index.json'
 
 class SchedulerConfig:
-    base_url = 'http://localhost:5100'
+    base_url = os.getenv('TesutoHime_WEB_SCHEDULER_URL', 'http://localhost:5100')
     auth = os.getenv('TesutoHime_WEB_SCHEDULER_AUTH', 'Bearer xxxxxxxxxxxxxxxx')
 
 class JudgeConfig:

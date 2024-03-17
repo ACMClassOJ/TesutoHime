@@ -1,0 +1,33 @@
+# Command docker build -f Dockerfile.sched .
+
+# development: you need mount the current directory to the container
+FROM python:3.10 as development
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy files
+COPY ./scheduler2/requirements.txt /app/scheduler2/requirements.txt
+
+# User setup
+RUN adduser ojsched && chown -R ojsched /app && \
+    mkdir -p /var/oj/scheduler /var/log/oj/scheduler /var/cache/oj/scheduler && \
+    chown ojsched:ojsched /var/oj/scheduler /var/log/oj/scheduler /var/cache/oj/scheduler
+
+# Set the user to run the app
+USER ojsched
+
+# Set sjtu python mirror
+# Install packages specified in requirements.txt
+RUN pip3 config set global.index-url https://mirror.sjtu.edu.cn/pypi/web/simple && \
+    pip3 install -r scheduler2/requirements.txt
+
+
+FROM development
+
+COPY . .
+
+# Install packages specified in requirements.txt
+RUN pip3 install -r scheduler2/requirements.txt
+
+

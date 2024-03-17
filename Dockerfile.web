@@ -1,0 +1,37 @@
+# Command docker build -f Dockerfile.web .
+
+# development: you need mount the current directory to the container
+FROM python:3.10 as development
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy only the requirements.txt file to the container at /app
+COPY web/requirements.txt /app/web/requirements.txt
+COPY web/config_template.py /app/web/config.py
+
+# User setup
+RUN adduser ojweb && chown -R ojweb /app && \
+    mkdir -p /var/log/oj/web/ /var/cache/oj/web/ && \
+    chown ojweb /var/log/oj/web/ /var/cache/oj/web/
+
+# Set the user to run the app
+USER ojweb
+
+# Set sjtu python mirror
+# Install packages specified in requirements.txt 
+RUN pip3 config set global.index-url https://mirror.sjtu.edu.cn/pypi/web/simple && \
+    pip3 install -r web/requirements.txt
+
+# Make port 5000 available to the world outside this container
+EXPOSE 5000
+
+FROM development
+
+# Copy the current directory contents into the container at /app
+COPY . .
+
+# Install packages specified in requirements.txt 
+RUN pip3 install -r web/requirements.txt && cd web && cp config_template.py config.py
+
+

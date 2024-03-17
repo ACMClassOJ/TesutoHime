@@ -5,9 +5,14 @@ from secrets import token_bytes
 from flask import Blueprint, Response, abort, g, request
 from markupsafe import Markup
 from werkzeug.datastructures import ImmutableMultiDict
+from web.config import WebConfig
 
 csrf_cookie_name = '__Host-acmoj-csrf'
 csrf_input_name = '_acmoj-csrf'
+
+# 如果是在开发环境，修改csrf_cookie_name不使用双下划线开头，__需要https
+if WebConfig.Debug:
+    csrf_cookie_name = '_Host-acmoj-csrf'
 
 def generate_token() -> str:
     return b64encode(token_bytes(12)).decode()

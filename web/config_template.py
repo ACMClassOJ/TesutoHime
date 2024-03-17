@@ -1,6 +1,8 @@
+import os
+
 class DatabaseConfig:
     # 数据库地址, 一般替换 username 与 database 即可
-    url = 'postgresql+psycopg2://username@/database'
+    url = os.getenv('TesutoHime_WEB_DATABASE_URL', 'postgresql+psycopg2://username@/database')
 
     # 经过多少秒后，一个数据库连接将被 sqlalchemy 连接池回收。
     # 由于 mysql 服务端通常对一个连接的最长时长有限制（默认是 28800 秒），
@@ -9,9 +11,9 @@ class DatabaseConfig:
     connection_pool_recycle = 7200
 
 class RedisConfig:
-    host = 'localhost'
-    port = 6379
-    password = 'Progynova'
+    host = os.getenv('TesutoHime_WEB_REDIS_HOST', 'localhost')
+    port = int(os.getenv('TesutoHime_WEB_REDIS_PORT', 6379))
+    password = os.getenv('TesutoHime_WEB_REDIS_PASSWORD', '')
     db = 0
     prefix = 'oj:'
 
@@ -20,14 +22,14 @@ class S3Config:
     public_url = 'https://acm.sjtu.edu.cn/OnlineJudge/'
     class Connections:
         public = {
-            'endpoint_url': 'http://localhost:9000/',
-            'aws_access_key_id': 'xxxxxxxxxxxxxxxx',
-            'aws_secret_access_key': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+            'endpoint_url': os.getenv('TesutoHime_WEB_S3_PUBLIC_ENDPOINT', 'http://localhost:9000/'),
+            'aws_access_key_id': os.getenv('TesutoHime_WEB_S3_PUBLIC_ACCESS_KEY', 'xxxxxxxxxxxxxxxx'),
+            'aws_secret_access_key': os.getenv('TesutoHime_WEB_S3_PUBLIC_SECRET_KEY', 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',),
         }
         internal = {
-            'endpoint_url': 'http://localhost:9000/',
-            'aws_access_key_id': 'xxxxxxxxxxxxxxxx',
-            'aws_secret_access_key': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+            'endpoint_url': os.getenv('TesutoHime_WEB_S3_INTERNAL_ENDPOINT', 'http://localhost:9000/'),
+            'aws_access_key_id': os.getenv('TesutoHime_WEB_S3_INTERNAL_ACCESS_KEY', 'xxxxxxxxxxxxxxxx'),
+            'aws_secret_access_key': os.getenv('TesutoHime_WEB_S3_INTERNAL_SECRET_KEY', 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',),
         }
     class Buckets:
         problems = 'oj-problems'
@@ -43,6 +45,8 @@ class WebConfig:
     Block_Register = False                #暂停OJ注册
     Contests_Each_Page = 20               #比赛页面每页显示多少比赛
     Courses_Each_Page = 20
+    If_Debug = os.getenv('TesutoHime_WEB_DEBUG', 'True') == 'True'
+                                          #是否开启调试模式，debug模式会使用csrf的单下划线cookie
 
 class NewsConfig:
     link = 'https://acm.sjtu.edu.cn/OnlineJudge/blog/'
@@ -50,12 +54,13 @@ class NewsConfig:
 
 class SchedulerConfig:
     base_url = 'http://localhost:5100'
-    auth = 'Bearer xxxxxxxxxxxxxxxx'
+    auth = os.getenv('TesutoHime_WEB_SCHEDULER_AUTH', 'Bearer xxxxxxxxxxxxxxxx')
 
 class JudgeConfig:
     Judge_Each_Page = 15                  #评测详情界面每页显示多少题目
     Max_Duration = 120                    #judger上次向web发送心跳超过这个时间判定为下线，单位s
-    Web_Server_Secret = 'web_secret'      #web_secret，judger需要此密钥来向web服务器通信
+    Web_Server_Secret = os.getenv('TesutoHime_WEB_JUDGE_SECRET', 'web_secret')
+                                          #web_secret，judger需要此密钥来向web服务器通信
                                           #建议生成随机字符串构成一个较强的密钥
 
 class ProblemConfig:

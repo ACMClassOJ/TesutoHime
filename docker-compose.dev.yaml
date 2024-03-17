@@ -1,0 +1,124 @@
+# Command01: docker-compose -f docker-compose.dev.yaml build
+# Command02: docker-compose -f docker-compose.dev.yaml up
+services:
+  # Database
+  postgresql:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: postgres_pwd
+      POSTGRES_DB: oj
+    volumes:
+      - ./mount/postgres_data:/var/lib/postgresql/data
+
+  # Redis Cache
+  redis:
+    image: redis:latest
+    command: redis-server --requirepass "redis_pwd"
+    volumes:
+      - ./mount/redis_data:/data
+    ports:
+      - "6379:6379"
+
+  # Web Server
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: development
+    command: python3 -m web.main
+    ports:
+      - "5000:5000"
+    environment:
+      - TesutoHime_WEB_DATABASE_URL=postgresql+psycopg2://postgres_user:postgres_pwd@postgresql/oj
+      - TesutoHime_WEB_REDIS_HOST=redis
+      - TesutoHime_WEB_REDIS_PORT=6379
+      - TesutoHime_WEB_REDIS_PASSWORD=redis_pwd
+      - TesutoHime_WEB_S3_PUBLIC_ENDPOINT=http://minio:9000
+      - TesutoHime_WEB_S3_PUBLIC_ACCESS_KEY=minioadmin
+      - TesutoHime_WEB_S3_PUBLIC_SECRET_KEY=minioadmin
+      - TesutoHime_WEB_S3_INTERNAL_ENDPOINT=http://minio:9000
+      - TesutoHime_WEB_S3_INTERNAL_ACCESS_KEY=minioadmin
+      - TesutoHime_WEB_S3_INTERNAL_SECRET_KEY=minioadmin
+      - TesutoHime_WEB_DEBUG=True
+      - TesutoHime_WEB_SCHEDULER_AUTH=Bearer xxxxxxxxxxxxxxxx
+      - TesutoHime_WEB_JUDGE_SECRET=web_secret
+    volumes:
+      - .:/app
+    depends_on:
+      - postgresql
+      - redis
+
+  # Minio S3
+  minio:
+    # restart: always
+    image: minio/minio:latest
+    command: server --console-address ':9001' /data
+    expose:
+      - 9000
+      - 9001
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./mount/minio_data:/data
+      # environment:
+      # MINIO_ROOT_USER: 
+      # MINIO_ROOT_PASSWORD: 
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # redis insight
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    ports:
+      - "5540:5540"
+    environment:
+      - REDISINSIGHT_REDIS_URI=redis://:redis_pwd@redis:6379
+    depends_on:
+      - redis
+    volumes:
+      - ./mount/redisinsight_data:/db
+
+
+  # 因为文件夹权限问题，需要手动创建挂载文件夹并修改权限
+  # sudo chown -R 5050:5050 ./mount/pgadmin_data
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    volumes:
+      - ./mount/pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+
+  # Sched Server
+  sched:
+    build:
+      context: .
+      dockerfile: Dockerfile.sched
+      target: development
+    command: python3 -m scheduler2.main
+    volumes:
+      - .:/app
+
+    depends_on:
+      - redis
+      - minio
+      - web
+
+  # Judger
+  judger:
+    build:
+      context: .
+      dockerfile: Dockerfile.judger
+      target: development
+    command: python3 -m judger2.main
+    depends_on:
+      - redis
+
+

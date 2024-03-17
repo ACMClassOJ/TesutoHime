@@ -1,0 +1,41 @@
+# Command docker build -f Dockerfile.judger .
+FROM phusion/baseimage:jammy-1.0.2 as development
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Use aliyun Mirror
+# --------------------
+RUN sed -i 's/archive.ubuntu.com/mirrors.sjtug.sjtu.edu.cn/g' /etc/apt/sources.list \
+    && sed -i 's/security.ubuntu.com/mirrors.sjtug.sjtu.edu.cn/g' /etc/apt/sources.list \ 
+    && apt-get clean
+
+# Install packages
+RUN apt-get update && \
+    apt install -y python3 python3-pip pkg-config autoconf bison flex \
+    libprotobuf-dev libnl-route-3-dev libtool protobuf-compiler uidmap \
+    build-essential cmake valgrind iverilog wget git
+
+# Copy the current directory contents into the container at /app
+COPY . .
+
+# User setup
+RUN adduser ojrunner && chown -R ojrunner /app && \
+    mkdir -p /var/oj/runner /var/log/oj/runner /var/cache/oj/runner && \
+    chown ojrunner:ojrunner /var/oj/runner /var/log/oj/runner /var/cache/oj/runner
+
+# Set the user to run the app
+USER ojrunner
+
+# Install packages specified in requirements.txt 
+RUN pip3 config set global.index-url https://mirror.sjtu.edu.cn/pypi/web/simple && \
+    pip3 install -r judger2/requirements.txt
+
+# Compile the judger and checker
+RUN cd judger2/sandbox && make && cd ../checker && scripts/build 
+
+USER root
+# /etc/subuid
+RUN echo "ojrunner:100000:65536" | tee -a /etc/subuid
+
+USER ojrunner

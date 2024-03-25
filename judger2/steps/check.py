@@ -43,22 +43,13 @@ if not checker_exe.exists():
     raise Exception('checker executable not found')
 checker_exe = str(checker_exe)
 
-async def checker_cmp_abtest(infile, outfile, cwd, checker):
-    resA = await checker_cmp(infile, outfile, cwd, checker)
-    if not checker.ignore_whitespace or \
-        resA.result not in ['accepted', 'wrong_answer']:
-        return resA
-    resB = await checker_cmp_b(infile, outfile, cwd, checker)
-    if resA.result != resB.result:
-        msg = f'Checker A/B test failed ({resA = }, {resB = }). Please contact OJ maintenance group immediately at acmclassoj@googlegroups.com'
-        return CheckResult('system_error', msg)
-    return resA
 
-async def checker_cmp_b(_infile, outfile: PosixPath, _cwd, checker: CompareChecker):
+async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker):
     ans = (await ensure_cached(checker.answer)).path
     if not checker.ignore_whitespace:
         return CheckResult('system_error', 'cannot check without ignore_whitespace')
-    argv = [checker_exe, '-ZB', '--', str(outfile), str(ans)]
+    argv = [checker_exe, '-ZB', '--', str(outfile), str(ans)] if checker.ignore_whitespace \
+        else [checker_exe, '--', str(outfile), str(ans)]
     supplementary_paths = \
         ['/bin', '/usr/bin', checker_exe, str(outfile), str(ans)]
     logger.debug(f'about to run {argv}')
@@ -74,25 +65,6 @@ async def checker_cmp_b(_infile, outfile: PosixPath, _cwd, checker: CompareCheck
     if res.error is not None:
         logger.error(f'checker failed with {res.error}: {res.message}')
         return CheckResult('system_error', f'checker B failed with {res.error}: {res.message}')
-    return CheckResult('accepted', '', 1.0)
-
-async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker):
-    ans = (await ensure_cached(checker.answer)).path
-    flags = '-qZB' if checker.ignore_whitespace else '-q'
-    argv = [str(diff), flags, str(outfile), str(ans)]
-    logger.debug(f'about to run {argv}')
-    with TempDir() as cwd:
-        res = await run_with_limits(
-            argv,
-            cwd,
-            checker_cmp_limits,
-            supplementary_paths=['/bin', '/usr/bin', str(outfile), str(ans)],
-        )
-    if res.error == 'runtime_error' and res.code == diff_errexit_code:
-        return CheckResult('wrong_answer', '')
-    if res.error is not None:
-        logger.error(f'diff failed with {res.error}: {res.message}')
-        return CheckResult('system_error', f'checker failed with {res.error}: {res.message}')
     return CheckResult('accepted', '', 1.0)
 
 
@@ -162,7 +134,7 @@ CheckerFunction: TypeAlias = Callable[
     Coroutine[Any, Any, CheckResult],
 ]
 checkers: Dict[Type[Checker], CheckerFunction] = {
-    CompareChecker: checker_cmp_abtest,
+    CompareChecker: checker_cmp,
     DirectChecker: checker_direct,
     SpjChecker: checker_spj,  # type: ignore
 }

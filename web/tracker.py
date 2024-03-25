@@ -13,12 +13,13 @@ from web.utils import readable_time
 
 class Tracker:
     def log(self):
+        if 'skip_logging' in g and g.skip_logging: return
         everything: Dict[Any, Any] = {}
-        everything['IP'] = request.remote_addr
-        everything['Time'] = readable_time(datetime.now())
+        everything['ip'] = request.remote_addr
+        everything['time'] = g.time.isoformat()
         if g.user is not None:
-            everything['Username'] = g.user.username
-            everything['Realname'] = RealnameManager.query_realname_for_logs(g.user.student_id)
+            everything['username'] = g.user.username
+            everything['realname'] = RealnameManager.query_realname_for_logs(g.user.student_id)
         everything['url'] = '/'.join(request.url.split('/')[4:])
         everything['post_args'] = request.form.copy()
         if 'password' in everything['post_args']:
@@ -26,6 +27,9 @@ class Tracker:
         if 'code' in everything['post_args']:
             del everything['post_args']['code']
         everything['args'] = request.args
+        for k in g.timings:
+            g.timings[k] = round(g.timings[k], 4)
+        everything['timings'] = g.timings
         self.tracker.info(json.dumps(everything, ensure_ascii=False))
 
     def __init__(self):                                  #经测试，先运行init，再运行下面的setup_log
@@ -61,6 +65,8 @@ seen_slow_statements = set()
 @event.listens_for(Engine, "after_cursor_execute")
 def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
     total = time.time() - conn.info["query_start_time"].pop(-1)
+    g.timings['sql'] += total
+    g.timings['sqlcount'] += 1
     if total > 0.1:  # 100 ms
         statement_str = str(statement)
         if statement_str not in seen_slow_statements:

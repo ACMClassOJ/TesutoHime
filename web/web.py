@@ -15,9 +15,10 @@ from zipfile import ZipFile
 
 import requests
 import sqlalchemy as sa
-from flask import (Blueprint, Flask, abort, g, make_response, redirect,
+from flask import (Blueprint, Flask, abort, appcontext_pushed,
+                   before_render_template, g, make_response, redirect,
                    render_template, request, send_file, send_from_directory,
-                   url_for)
+                   template_rendered, url_for)
 from sqlalchemy.orm import defer, selectinload
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
@@ -112,7 +113,6 @@ def problem_in_exam(problem_id):
 
 def setup_appcontext():
     g.db = SqlSession()
-    g.time = datetime.now()
     g.user = SessionManager.current_user()
     g.is_admin = g.user is not None and UserManager.is_some_admin(g.user)
     g.utils = utils
@@ -125,6 +125,7 @@ def before_request():
 
     if (request.full_path.startswith(url_for('web.static', filename='')) or
         request.full_path.endswith(('.js', '.css', '.ico'))):
+        g.skip_logging = True
         return
 
     xff = request.headers.get('X-Forwarded-For')
@@ -133,8 +134,6 @@ def before_request():
 
     if 'db' not in g:
         setup_appcontext()
-
-    tracker.log()
 
 @web.after_request
 def after_request(resp):
@@ -1731,3 +1730,25 @@ oj.register_blueprint(web, url_prefix='/OnlineJudge')
 oj.jinja_env.add_extension('jinja2.ext.do')
 oj.jinja_env.tests['None'] = oj.jinja_env.tests['none']
 oj.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400
+
+def appcontext_pushed_log(*args, **kwargs):
+    g.time = datetime.now()
+    g.timings = { 'sql': 0.0, 'sqlcount': 0, 'template': 0.0 }
+def before_render_template_log(*args, **kwargs):
+    g.time_before_render_template = datetime.now()
+def template_rendered_log(*args, **kwargs):
+    timedelta = datetime.now() - g.time_before_render_template
+    g.timings['template'] += timedelta.total_seconds()
+
+appcontext_pushed.connect(appcontext_pushed_log, oj)
+before_render_template.connect(before_render_template_log, oj)
+template_rendered.connect(template_rendered_log, oj)
+
+@oj.before_request
+def before_request_log(*args, **kwargs):
+    g.timings['init'] = (datetime.now() - g.time).total_seconds()
+
+@oj.teardown_request
+def teardown_request_log(*args, **kwargs):
+    g.timings['total'] = (datetime.now() - g.time).total_seconds()
+    tracker.log()

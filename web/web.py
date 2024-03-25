@@ -36,7 +36,6 @@ from web.config import (JudgeConfig, LoginConfig, NewsConfig, ProblemConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
 from web.const import Privilege, ReturnCode, language_info, runner_status_info
-from web.contest_cache import ContestCache
 from web.contest_manager import ContestManager
 from web.course_manager import CourseManager
 from web.csrf import setup_csrf
@@ -112,6 +111,7 @@ def problem_in_exam(problem_id):
 
 
 def setup_appcontext():
+    g.cache = {}
     g.db = SqlSession()
     g.user = SessionManager.current_user()
     g.is_admin = g.user is not None and UserManager.is_some_admin(g.user)
@@ -1017,7 +1017,7 @@ def process_problemset_admin(contest: Contest):
         contest.rank_penalty = form.get('rank_penalty', 'off') == 'on'
         contest.rank_partial_score = form.get('rank_partial_score', 'off') == 'on'
         contest.rank_all_users = form.get('rank_all_users', 'off') == 'on'
-        ContestCache.flush(contest.id)
+        ContestManager.flush_cache(contest)
         alert_success('已编辑比赛')
     elif action == 'delete':
         if request.form['confirm'] != str(contest.id):
@@ -1047,7 +1047,7 @@ def process_problemset_admin(contest: Contest):
                 languages.append(lang)
         contest.allowed_languages = None if len(languages) == len(language_info) or len(languages) == 0 else languages
         db.flush()
-        ContestCache.flush(contest.id)
+        ContestManager.flush_cache(contest)
         alert_success('已更改作业要求')
     elif action == 'groups':
         if form.get('all', 'off') == 'on':
@@ -1058,7 +1058,7 @@ def process_problemset_admin(contest: Contest):
                 if form.get(f'group-{group.id}', 'off') == 'on':
                     gs.append(group.id)
             contest.group_ids = gs
-        ContestCache.flush(contest.id)
+        ContestManager.flush_cache(contest)
         alert_success('已更改分组')
     elif action == 'export':
         return export_problemset(contest)
@@ -1116,7 +1116,7 @@ def problemset_problem_add(contest: Contest):
         if problem not in contest.problems:
             contest.problems.append(problem)
 
-    ContestCache.flush(contest.id)
+    ContestManager.flush_cache(contest)
     return redirect(url_for('.problemset_admin', contest=contest), SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/problem/remove', methods=['POST'])
@@ -1131,7 +1131,7 @@ def problemset_problem_remove(contest: Contest):
     for problem_id in ids:
         ContestManager.delete_problem_from_contest(contest.id, problem_id)
 
-    ContestCache.flush(contest.id)
+    ContestManager.flush_cache(contest)
     return redirect(url_for('.problemset_admin', contest=contest), SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/quit', methods=['POST'])
@@ -1140,7 +1140,7 @@ def problemset_quit(contest: Contest):
         abort(BAD_REQUEST, '比赛已结束')
     if g.user in contest.external_players:
         contest.external_players.remove(g.user)
-    ContestCache.flush(contest.id)
+    ContestManager.flush_cache(contest)
     return redirect(request.form['back'], SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/join', methods=['POST'])
@@ -1149,7 +1149,7 @@ def problemset_join(contest: Contest):
         abort(BAD_REQUEST)
     if g.user not in contest.external_players:
         contest.external_players.add(g.user)
-    ContestCache.flush(contest.id)
+    ContestManager.flush_cache(contest)
     return redirect(url_for('.problemset', contest=contest), SEE_OTHER)
 
 @require_logged_in

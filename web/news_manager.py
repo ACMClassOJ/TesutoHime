@@ -1,23 +1,20 @@
 __all__ = ('NewsManager',)
 
-import json
 from http.client import OK
 
 import requests
 
+from web.cache import Cache
 from web.config import NewsConfig
-from web.utils import RedisConfig, redis_connect
 
-expire_time = 30
-redis = redis_connect()
-key = RedisConfig.prefix + 'news'
+cache = Cache('news', 60, json=True)
 
 class NewsManager:
     @staticmethod
     def get_news():
-        cached = redis.get(key)
+        cached = cache.get('')
         if cached is not None:
-            return json.loads(cached)
+            return cached
         try:
             res = requests.get(NewsConfig.feed)
             if res.status_code == OK:
@@ -27,8 +24,7 @@ class NewsManager:
                 for item in news:
                     if item['date'] < 0:
                         item['date'] = 0
-                text = json.dumps(news, ensure_ascii=False)
-                redis.set(key, text, ex=expire_time)
+                cache.set('', news)
                 return news
             return []
         except Exception:

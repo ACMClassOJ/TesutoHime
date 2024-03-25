@@ -10,9 +10,9 @@ from sqlalchemy import func, select
 
 from commons.models import (Contest, Course, Enrollment, Problem,
                             ProblemPrivilege, Term, User)
-from web.config import RedisConfig
+from web.cache import Cache
 from web.const import Privilege, PrivilegeType
-from web.utils import db, redis_connect
+from web.utils import db
 
 password_hasher = PasswordHasher()
 
@@ -81,33 +81,17 @@ class UserManager:
     def has_user(username: str) -> bool:
         return UserManager.get_user_by_username(username) is not None
 
-    redis = redis_connect()
-
-    @staticmethod
-    def _privileges_redis_key(user: User) -> str:
-        return f'{RedisConfig.prefix}priv:{user.id}'
+    _privilege_cache = Cache('priv', 3600)
 
     @classmethod
     def _privileges_cache_get(cls, user: User, type: str, id: Optional[int] = None) -> Optional[str]:
         hash_key = f'{type}{":" + str(id) if id is not None else ""}'
-        if 'privilege_cache' not in g:
-            g.privilege_cache = {}
-        if hash_key in g.privilege_cache:
-            return g.privilege_cache[hash_key]
-        redis_key = cls._privileges_redis_key(user)
-        cached = cls.redis.hget(redis_key, hash_key)
-        g.privilege_cache[hash_key] = cached
-        return cached
+        return cls._privilege_cache.hget(user.id, hash_key)
 
     @classmethod
     def _privileges_cache_set(cls, user: User, type: str, id: Optional[int], content: str) -> None:
         hash_key = f'{type}{":" + str(id) if id is not None else ""}'
-        redis_key = cls._privileges_redis_key(user)
-        if 'privilege_cache' not in g:
-            g.privilege_cache = {}
-        g.privilege_cache[hash_key] = content
-        cls.redis.hset(redis_key, hash_key, content)
-        cls.redis.expire(redis_key, 3600)
+        return cls._privilege_cache.hset(user.id, hash_key, content)
 
     @staticmethod
     def get_enrollment(user: User, course: Course) -> Optional[Enrollment]:
@@ -236,4 +220,4 @@ class UserManager:
 
     @classmethod
     def flush_privileges(cls, user: User):
-        cls.redis.delete(cls._privileges_redis_key(user))
+        cls._privilege_cache.flush(user.id)

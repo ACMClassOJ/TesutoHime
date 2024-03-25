@@ -11,8 +11,8 @@ from sqlalchemy.orm import defer
 from commons.models import (CompletionCriteriaType, Contest, ContestProblem, Course, Enrollment,
                             GroupRealnameReference, JudgeRecordV2, JudgeStatus,
                             RealnameReference, User)
+from web.cache import Cache
 from web.const import ContestType, PrivilegeType
-from web.contest_cache import ContestCache
 from web.py_sanitize import PySanitizer
 from web.user_manager import UserManager
 from web.utils import db
@@ -269,15 +269,22 @@ class ContestManager:
             stmt = stmt.where(JudgeRecordV2.language.in_(contest.allowed_languages))
         return db.scalars(stmt).all()
 
-    @classmethod
-    def get_scores(cls, contest: Contest) -> List[dict]:
-        data = ContestCache.get(contest.id)
-        if data is not None:
-            return data
+    _cache = Cache('contest', 14, json=True)
+    _user_cache = Cache('contest-user', 14, json=True)
 
-        external_players = set(contest.external_players)
-        implicit_players = set(cls.get_implicit_players(contest))
-        players = external_players.union(implicit_players)
+    @classmethod
+    def get_scores(cls, contest: Contest, users: Optional[Set[User]] = None) -> List[dict]:
+        if users is None:
+            data = cls._cache.get(contest.id)
+            if data is not None:
+                return data
+
+            external_players = set(contest.external_players)
+            implicit_players = set(cls.get_implicit_players(contest))
+            players = external_players.union(implicit_players)
+        else:
+            external_players = implicit_players = set()
+            players = users
 
         data = [
             {
@@ -311,7 +318,7 @@ class ContestManager:
             problem_id = submit.problem_id
             status = submit.status
             score = submit.score
-            submit_time: datetime = submit.created_at
+            submit_time = submit.created_at
 
             if user_id not in user_id_to_num:
                 continue
@@ -356,8 +363,30 @@ class ContestManager:
             user = user_id_to_user[player['id']]  # type: ignore
             player['completed'] = cls.user_has_completed_by_scores(contest, player, user, code)  # type: ignore
 
-        ContestCache.put(contest.id, data)
+        if users is None:
+            cls._cache.set(contest.id, data)
+
         return data
+
+    @classmethod
+    def get_user_scores(cls, contest: Contest, user: User) -> Optional[dict]:
+        scores_all = cls._cache.get(contest.id)
+        if scores_all is not None:
+            for scores in scores_all:
+                if scores['username'] == user.username:
+                    return scores
+            return None
+        cached = cls._user_cache.hget(contest.id, user.id)
+        if cached is not None:
+            return cached
+        scores = cls.get_scores(contest, users=set([user]))[0]
+        cls._user_cache.hset(contest.id, user.id, scores)
+        return scores
+
+    @classmethod
+    def flush_cache(cls, contest: Contest):
+        cls._cache.flush(contest.id)
+        cls._user_cache.flush(contest.id)
 
     _py_sanitizer = PySanitizer(['score', 'ac', 'count'], ['groups'])
 
@@ -466,14 +495,6 @@ class ContestManager:
                     completion_criteria += f'，已完成 {scores["ac_count"]} 题'
             return completion_criteria
         return ''
-
-    @classmethod
-    def get_user_scores(cls, contest: Contest, user: User) -> Optional[dict]:
-        scores_all = cls.get_scores(contest)
-        for scores in scores_all:
-            if scores['username'] == user.username:
-                return scores
-        return None
 
     @classmethod
     def get_board_view(cls, contest: Contest) -> List[dict]:

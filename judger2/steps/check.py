@@ -10,7 +10,7 @@ from commons.task_typing import (Checker, CheckInput, CheckResult,
                                  CompareChecker, DirectChecker, RunResult, SpjChecker)
 
 from judger2.cache import ensure_cached
-from judger2.config import checker_cmp_limits, diff
+from judger2.config import checker_cmp_limits
 from judger2.sandbox import run_with_limits
 from judger2.steps.compile_ import NotCompiledException, ensure_input
 from judger2.util import TempDir, copy_supplementary_files
@@ -37,7 +37,7 @@ async def check(outfile: CheckInput, cwd: PosixPath, checker: Checker) -> CheckR
     return await checkers[checker.__class__](inf, ouf, cwd, checker)
 
 
-diff_errexit_code = 1
+checker_errexit_code = 1
 checker_exe = PosixPath(__file__).parent.parent / 'checker' / 'checker'
 if not checker_exe.exists():
     raise Exception('checker executable not found')
@@ -60,7 +60,7 @@ async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker
             checker_cmp_limits,
             supplementary_paths=supplementary_paths,
         )
-    if res.error == 'runtime_error' and res.code == diff_errexit_code:
+    if res.error == 'runtime_error' and res.code == checker_errexit_code:
         return CheckResult('wrong_answer', '')
     if res.error is not None:
         logger.error(f'checker failed with {res.error}: {res.message}')
@@ -134,7 +134,7 @@ CheckerFunction: TypeAlias = Callable[
     Coroutine[Any, Any, CheckResult],
 ]
 checkers: Dict[Type[Checker], CheckerFunction] = {
-    CompareChecker: checker_cmp,
+    CompareChecker: checker_cmp,  # type: ignore
     DirectChecker: checker_direct,
     SpjChecker: checker_spj,  # type: ignore
 }

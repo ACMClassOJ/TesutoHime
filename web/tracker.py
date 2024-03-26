@@ -1,14 +1,12 @@
 import json
 import logging
 import logging.handlers
-from datetime import datetime
 from typing import Any, Dict
 
 from flask import g, request
 
 from web.config import LogConfig
 from web.realname_manager import RealnameManager
-from web.utils import readable_time
 
 
 class Tracker:
@@ -17,9 +15,9 @@ class Tracker:
         everything: Dict[Any, Any] = {}
         everything['ip'] = request.remote_addr
         everything['time'] = g.time.isoformat()
-        if g.user is not None:
-            everything['username'] = g.user.username
-            everything['realname'] = RealnameManager.query_realname_for_logs(g.user.student_id)
+        if 'user_username' in g:
+            everything['username'] = g.user_username
+            everything['realname'] = g.user_realname
         everything['url'] = '/'.join(request.url.split('/')[4:])
         everything['post_args'] = request.form.copy()
         if 'password' in everything['post_args']:

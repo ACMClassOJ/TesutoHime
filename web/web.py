@@ -114,6 +114,9 @@ def setup_appcontext():
     g.cache = {}
     g.db = SqlSession()
     g.user = SessionManager.current_user()
+    if g.user is not None:
+        g.user_username = g.user.username
+        g.user_realname = RealnameManager.query_realname_for_logs(g.user.student_id)
     g.is_admin = g.user is not None and UserManager.is_some_admin(g.user)
     g.utils = utils
     g.consts = consts
@@ -1752,3 +1755,6 @@ def before_request_log(*args, **kwargs):
 def teardown_request_log(*args, **kwargs):
     g.timings['total'] = (datetime.now() - g.time).total_seconds()
     tracker.log()
+    if 'db' in g:
+        g.db.close()
+        g.db = None

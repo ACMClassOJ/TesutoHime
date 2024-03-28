@@ -149,6 +149,21 @@ class ContestManager:
         return set(contest.external_players).union(cls.get_implicit_players(contest))
 
     @staticmethod
+    def check_implicit_membership(contest: Contest, user: User) -> bool:
+        stmt = select(RealnameReference) \
+            .where(RealnameReference.student_id == user.student_id) \
+            .where(RealnameReference.course_id == contest.course_id) \
+            .where(select(Enrollment)
+                  .where(Enrollment.user_id == user.id)
+                  .where(Enrollment.course_id == contest.course_id)
+                  .exists())
+        rr = db.scalar(stmt)
+        if rr is None: return False
+        if contest.group_ids is None: return True
+        group_ids = [x.id for x in rr.groups]
+        return any(x in contest.group_ids for x in group_ids)
+
+    @staticmethod
     def _get_implicit_contests_query(user: User, include_admin = False,
                                      include_unofficial = False):
         # TODO: DB perf
@@ -285,6 +300,11 @@ class ContestManager:
         else:
             external_players = implicit_players = set()
             players = users
+            for u in users:
+                if u in contest.external_players:
+                    external_players.add(u)
+                if cls.check_implicit_membership(contest, u):
+                    implicit_players.add(u)
 
         data = [
             {

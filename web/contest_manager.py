@@ -239,12 +239,29 @@ class ContestManager:
         else:
             scores = None
 
+        is_external = True if scores is None else scores['is_external']
+
+        if contest.group_ids is None:
+            course_member = not is_external
+        else:
+            stmt = select(Enrollment.id) \
+                    .where(Enrollment.user_id == g.user.id) \
+                    .where(Enrollment.course_id == contest.course_id) \
+                    .where(Enrollment.admin == False) \
+                    .where(select(RealnameReference)
+                           .where(RealnameReference.student_id == g.user.student_id)
+                           .where(RealnameReference.course_id == contest.course_id)
+                           .exists())
+            e = db.scalar(stmt)
+            course_member = e is not None
+
         retval = {
             'contest': contest,
             'status': '',
             'completion': cls.get_completion_message(contest, scores, is_enrolled and not future),
             'enrolled': is_enrolled,
-            'is-external': True if scores is None else scores['is_external'],
+            'course-member': course_member,
+            'is-external': is_external,
             'reason-cannot-join': cls.reason_cannot_join(contest),
         }
         if future:

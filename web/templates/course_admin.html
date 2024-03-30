@@ -85,8 +85,8 @@
                     <tr>
                         <td>{{ contest.id }}</td>
                         <td><a href="{{ url_for('.problemset', contest=contest) }}">[{{ ['比赛', '作业', '考试'][contest.type] }}] {{ contest.name }}</a></td>
-                        <td>{{ g.utils.readable_time_minutes(contest.start_time) }}</td>
-                        <td>{{ g.utils.readable_time_minutes(contest.end_time) }}</td>
+                        <td>{{ g.utils.readable_time_minutes(contest.start_time, True) }}</td>
+                        <td>{{ g.utils.readable_time_minutes(contest.end_time, True) }}</td>
                         <td><a href="{{ url_for('.problemset_admin', contest=contest) }}" class="btn btn-sm btn-primary">管理</a></td>
                     </tr>
                     {%- endfor %}

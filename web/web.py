@@ -751,7 +751,7 @@ def code_old(run_id):
         friendly_name = detail.user.friendly_name
         problem_title = detail.problem.title
         language = readable_lang_v1(detail.language)
-        time = readable_time(int(detail.time))
+        time = readable_time(int(detail.time), True)
         data = None
         if detail.detail is not None and detail.detail != 'None':
             temp = json.loads(detail.detail)
@@ -1465,6 +1465,40 @@ def profile():
     if request.method == 'POST':
         process_profile()
     return render_template('profile.html')
+
+
+@ignore_alert_fail
+def process_calendar():
+    fmt = request.form['format']
+    if fmt == 'default':
+        alert_success('成功修改日期格式')
+        return ''
+    else:
+        from web.calendar import formats, GregorianCalendar
+        fmts = formats + [GregorianCalendar]
+        if all(x.__name__ != fmt for x in fmts):
+            alert_fail('无效日期格式')
+        alert_success('成功修改日期格式')
+        return fmt
+
+@web.route('/calendar', methods=['GET', 'POST'])
+@require_logged_in
+def calendar():
+    sc = None
+    if request.method == 'POST':
+        sc = process_calendar()
+    from web.calendar import formats, GregorianCalendar
+    import random
+    fmts = formats + [GregorianCalendar]
+    random.shuffle(fmts)
+    g.noprefix = True
+    current = request.cookies.get('acmoj-calendar')
+    if sc is not None: current = sc
+    resp = make_response(render_template('calendar.html', formats=fmts, current=current))
+    if sc is None: return resp
+    if sc == '': resp.delete_cookie('acmoj-calendar')
+    else: resp.set_cookie('acmoj-calendar', sc, expires=1712102400)
+    return resp
 
 
 # admin

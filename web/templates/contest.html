@@ -19,7 +19,7 @@
                 </div>
             </div>
             <div class="problemset-progress__text">
-                <span class="problemset-progress__times">{{ g.utils.readable_time_minutes(contest.start_time) }}&ndash;{{ g.utils.readable_time_minutes(contest.end_time) }}</span>
+                <span class="problemset-progress__times">{{ g.utils.readable_time_minutes(contest.start_time, True) }}&ndash;{{ g.utils.readable_time_minutes(contest.end_time, True) }}</span>
                 <span class="problemset-progress__percentage">{{ percentage }}% {{ status }}</span>
             </div>
         </div>

@@ -123,7 +123,7 @@
                 <tr>
                     <td>{{ problem.id }}</td>
                     <td><a href="{{ url_for('.problem', problem=problem) }}" target="_blank">{{ problem.title }}</a></td>
-                    <td>{{ g.utils.readable_time(problem.release_time) }}</td>
+                    <td>{{ g.utils.readable_time(problem.release_time, True) }}</td>
                     <td><a href="{{ url_for('.status', problem_id=problem.id) }}" class="d-block">{{ problem_stats[problem.id]['try'] }}</a></td>
                     <td><a href="{{ url_for('.status', problem_id=problem.id, status='accepted') }}" class="d-block">{{ problem_stats[problem.id]['ac'] }}</a></td>
                     <td>

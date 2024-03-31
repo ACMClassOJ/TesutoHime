@@ -1,3 +1,8 @@
+body {
+    /* we handle biaodian trimming by han.css, so turn it off */
+    text-spacing-trim: space-all;
+}
+
 h1 {
     margin: 1rem 0;
 }

@@ -10,8 +10,6 @@ from sqlalchemy.orm import Session as _Session
 from sqlalchemy.orm import sessionmaker
 from werkzeug.local import LocalProxy
 
-from web.calendar import (random_format, random_format_date,
-                          random_format_minutes)
 from web.config import DatabaseConfig, RedisConfig, S3Config
 from web.const import language_info
 
@@ -38,27 +36,18 @@ def redis_connect():
     return redis.StrictRedis(host=RedisConfig.host, port=RedisConfig.port, password=RedisConfig.password, db=RedisConfig.db, decode_responses=True)
 
 
-def readable_date(time, real = False) -> str:
+def readable_date(time) -> str:
     if type(time) == int or type(time) == float:
         time = datetime.fromtimestamp(time)
-    if real:
-        return time.strftime('%Y-%m-%d')
-    else:
-        return random_format_date(time)
+    return time.strftime('%Y-%m-%d')
 
-def readable_time(time, real = False) -> str:
+def readable_time(time) -> str:
     if type(time) == int or type(time) == float:
         time = datetime.fromtimestamp(time)
-    if real:
-        return time.strftime('%Y-%m-%d %H:%M:%S')
-    else:
-        return random_format(time)
+    return time.strftime('%Y-%m-%d %H:%M:%S')
 
-def readable_time_minutes(time: datetime, real = False) -> str:
-    if real:
-        return time.strftime('%Y-%m-%d %H:%M')
-    else:
-        return random_format_minutes(time)
+def readable_time_minutes(time: datetime) -> str:
+    return time.strftime('%Y-%m-%d %H:%M')
 
 def readable_lang_v1(lang: int) -> str:
     # Get the readable language name.

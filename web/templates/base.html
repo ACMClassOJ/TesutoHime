@@ -66,7 +66,6 @@
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">{{ g.user.friendly_name }}</a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <a class="dropdown-item" href="{{ url_for('web.profile') }}">个人信息</a>
-                            <a class="dropdown-item" href="{{ url_for('web.calendar') }}">日期和时间格式</a>
                             <div class="dropdown-divider"></div>
                             <form action="{{ url_for('web.logout') }}" method="POST">
                                 {{ g.csrf() }}

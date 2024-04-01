@@ -77,7 +77,7 @@
 			<td>{{ g.utils.readable_lang(submission.language) }}</td>
 			{%- endif %}
 
-			<td>{{ g.utils.readable_time(submission.created_at, request.endpoint == 'web.submission') }}</td>
+			<td>{{ g.utils.readable_time(submission.created_at) }}</td>
 		</tr>
 		{%- endfor %}
 	</table>

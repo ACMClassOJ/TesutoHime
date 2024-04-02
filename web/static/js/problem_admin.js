@@ -26,6 +26,10 @@ const uploadData = async (file, progressBar) => {
         }
         xhr.onreadystatechange = async () => {
             if (xhr.readyState !== 4) return
+            if (xhr.status === 413) {
+                swal('Error', '您选择的数据包过大。一般情况下，请不要使用大文件来卡 log 的复杂度。如果您确实需要上传如此大的数据包，请联系 OJ 运维组。', 'error')
+                return
+            }
             if (xhr.status !== 200) {
                 swal('Error', `未知错误: ${xhr.status}`, 'error')
                 return

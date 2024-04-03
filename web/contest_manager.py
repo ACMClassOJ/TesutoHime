@@ -315,7 +315,8 @@ class ContestManager:
             implicit_players = set(cls.get_implicit_players(contest))
             players = external_players.union(implicit_players)
         else:
-            external_players = implicit_players = set()
+            external_players = set()
+            implicit_players = set()
             players = users
             for u in users:
                 if u in contest.external_players:

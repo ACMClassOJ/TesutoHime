@@ -902,7 +902,10 @@ def problemset(contest: Contest):
 
     time_elapsed = (g.time - contest.start_time).total_seconds()
     time_overall = (contest.end_time - contest.start_time).total_seconds()
-    percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
+    if time_overall > 0:
+        percentage = min(max(int(100 * time_elapsed / time_overall), 0), 100)
+    else:
+        percentage = 0 if time_elapsed < 0 else 100
 
     return render_template(
         'contest.html',

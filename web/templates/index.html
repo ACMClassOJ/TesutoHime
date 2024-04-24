@@ -116,9 +116,7 @@
     <h4 class="mb-3">{{ { 'in-progress': '正在进行', 'future': '即将开始', 'past': '刚刚结束' }[type] }}</h4>
     <div class="card-group--small">
         {%- for contest in contests -%}
-        {%- if not (contest['course-member'] and contest['is-external']) -%}
         {{ contest_card(contest) }}
-        {%- endif -%}
         {%- endfor -%}
     </div>
     <hr class="my-4">

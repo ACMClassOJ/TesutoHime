@@ -205,6 +205,8 @@ def index():
     if g.user is not None:
         contests = ContestManager.get_contests_for_user(g.user, include_admin=True, include_unofficial=True)
         suggestions = ContestManager.suggest_contests(list(contests))
+        for type in suggestions:
+            suggestions[type] = [x for x in suggestions[type] if not (x['course-member'] and x['is-external'])]
         invited_courses = CourseManager.get_invited_courses(g.user)
         invited_courses = set(c for c in invited_courses if c.id not in g.user.ignored_course_ids)
         admin_courses = CourseManager.get_admin_courses(g.user)

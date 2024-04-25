@@ -10,7 +10,7 @@
 <div class="card card-body">
     <h1>{{ type_zh }}列表</h1>
     <div>
-        <form class="form-group input-group" method="get" id="status_serach">
+        <form class="form-group input-group" method="get" id="status_search">
             <input class="form-control input-group" type="text" name="keyword" id="keyword" placeholder="关键字" value="{{ args["keyword"] if "keyword" in args and args["keyword"] }}">
             <select class="form-control selectpicker" name="status" id="status" data-style="form-control font-weight-normal border-grey shadow-none">
                 {{ option_list({

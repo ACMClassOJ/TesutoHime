@@ -84,6 +84,7 @@
             <hr>
             {%- endif -%}
 
+            {%- if g.is_admin or contest.show_score -%}
             <h4>{{ '排行榜' if contest.ranked else '完成情况' }}</h4>
             <div class="table-responsive" id="contest-table-wrapper">
                 <table class="table table-striped table-bordered table-hover" id="contest">
@@ -223,6 +224,7 @@
                 }
             }
             </style>
+            {%- endif -%}
             {%- endif -%}
         </div>
     </div>

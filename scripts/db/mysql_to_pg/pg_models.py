@@ -62,6 +62,7 @@ class Contest(Base):
     end_time = Column(DateTime)
     type = Column(Integer, index=True)
     ranked = Column(Boolean, nullable=False)
+    show_score = Column(Boolean, nullable=False)
     rank_penalty = Column(Boolean, nullable=False)
     rank_partial_score = Column(Boolean, nullable=False)
 

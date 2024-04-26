@@ -247,6 +247,7 @@ class Contest(UseTimestamps, Base):
     ranked: Mapped[bool]
     rank_penalty: Mapped[bool]
     rank_partial_score: Mapped[bool]
+    show_score: Mapped[bool]
 
     course_id: Mapped[course_fk]
     course: Mapped[Course] = relationship(back_populates='contests')

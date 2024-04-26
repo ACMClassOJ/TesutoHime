@@ -61,6 +61,12 @@
             </div>
             <div class="col-md-2">
                 <div class="custom-control custom-checkbox mb-3">
+                    <input class="custom-control-input" name="show_score" id="show-score" type="checkbox"{{ ' checked' if contest.show_score }}>
+                    <label class="custom-control-label" for="show-score">公开显示分数</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="custom-control custom-checkbox mb-3">
                     <input class="custom-control-input" name="rank_penalty" id="rank-penalty" type="checkbox"{{ ' checked' if contest.rank_penalty }}>
                     <label class="custom-control-label" for="rank-penalty">计算罚时</label>
                 </div>

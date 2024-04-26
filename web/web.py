@@ -1022,6 +1022,7 @@ def process_problemset_admin(contest: Contest):
         contest.end_time = datetime.fromisoformat(form['end_time'])
         contest.type = int(form['type'])
         contest.ranked = form.get('ranked', 'off') == 'on'
+        contest.show_score = form.get('show_score', 'off') == 'on'
         contest.rank_penalty = form.get('rank_penalty', 'off') == 'on'
         contest.rank_partial_score = form.get('rank_partial_score', 'off') == 'on'
         contest.rank_all_users = form.get('rank_all_users', 'off') == 'on'

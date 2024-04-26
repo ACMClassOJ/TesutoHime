@@ -27,6 +27,7 @@ class ContestManager:
                           end_time=end_time,
                           type=ContestType.CONTEST,
                           ranked=True,
+                          show_score=True,
                           rank_penalty=False,
                           rank_partial_score=True,
                           course_id=course.id)

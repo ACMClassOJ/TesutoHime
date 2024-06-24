@@ -113,8 +113,6 @@ class Contributor:
 def gh(x): return f'https://github.com/{x}'
 
 mntners = [
-    Mntner('Alan Liang', gh('Alan-Liang'), 'liangyalun@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010333-292122.png'),
-    Mntner('LauYeeYu', gh('LauYeeYu'), 'liu_yiyu@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/3d435e1d-274a-491b-9f36-f1433c3ccade'),
     Mntner('Wankupi', gh('Wankupi'), 'kunpengwang@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/847be529-0157-4e06-8920-48bbd4735032'),
 ]
 

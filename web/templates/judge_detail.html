@@ -115,16 +115,16 @@
                                             <div class="col-2"> <i class="fa fa-database"></i> {{ "%.2f" | format(testpoint.resource_usage.file_size_bytes / 1048576) }} MiB </div>
                                             {%- endif %}
                                             {%- endif %}
-                                            {% if testpoint.message != '' -%}
-                                            <div class="col testpoint_msg_exp" id="testpoint_msg_exp-{{ j }}_{{ testpoint.id }}">
-                                                <span style="position: relative; float: right;"> Show details <i class="fa fa-caret-down"></i></span>
-                                            </div>
-                                            {%- endif %}
                                         </div>
                                         {% if testpoint.message != '' -%}
                                         <div class="testpoint_msg" id="testpoint_msg-{{ j }}_{{ testpoint.id }}">
                                             <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ testpoint.message }}</pre>
                                         </div>
+                                        {% if testpoint.message != '' -%}
+                                        <div class="testpoint_msg_exp" id="testpoint_msg_exp-{{ j }}_{{ testpoint.id }}">
+                                            <span style="position: relative;"> Show more <i class="fa fa-caret-down"></i></span>
+                                        </div>
+                                        {%- endif %}
                                         {%- endif %}
                                     </td>
                                 </tr>

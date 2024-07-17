@@ -1635,6 +1635,7 @@ def about():
     if len(runners) == 0:
         runner_dict = {}
         runner_list: List[dict] = []
+        runner_success = True
     else:
         query = urlencode({'id': ','.join(str(x.id) for x in runners)})
         url = urljoin(SchedulerConfig.base_url, f'status?{query}')

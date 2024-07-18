@@ -139,7 +139,7 @@
                             {% if problems_visible -%}
                             {% for problem in player.problems -%}
                             {%- set j = loop.index0 -%}
-                                <td>
+                                <td data-order="{{ problem['score'] if contest.rank_partial_score and problem['count'] > 0 else 0 }}">
                                     {% if problem['count'] > 0 or problem['pending_count'] > 0 -%}
                                         {{ problem['score'] if contest.rank_partial_score and problem['count'] > 0 else '' -}}
                                         {%- macro plural_submit(x) -%}

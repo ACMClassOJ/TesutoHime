@@ -46,17 +46,24 @@
 
         <div {{ begin_tab('problem') }}>
             <h3>管理已有题目</h3>
-            <form action="{{ url_for('.problem_admin_form') }}">
-                <div class="form-row">
-                    <div class="form-group col-md-3">
-                        <label for="problem-id">题目 ID</label>
-                        <input class="form-control" type="number" name="id" id="problem-id" required>
-                    </div>
-                    <div class="d-flex mb-3 col-md-3">
-                        <button type="submit" class="btn btn-outline-primary mt-auto">跳转</button>
-                    </div>
-                </div>
-            </form>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>编号</th>
+                            <th>名称</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    {%- for problem in course.problems | sort(attribute='id') -%}
+                    <tr>
+                        <td>{{problem.id}}</td>
+                        <td><a href="{{ url_for('.problem', problem=problem) }}" target="_blank">{{ problem.title }}</a></td>
+                        <td><a href="{{ url_for('.problem_admin', problem=problem) }}" target="_blank" class="btn btn-sm btn-primary">管理</a></td>
+                    </tr>
+                    {%- endfor -%}
+                </table>
+            </div>
             <hr>
             <h3>新建题目</h3>
             <p>请勿连续多次点击此按钮。</p>

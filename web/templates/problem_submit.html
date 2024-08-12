@@ -33,9 +33,9 @@
                 {% if not g.in_exam and problem.allow_public_submissions -%}
                     <div class="form-group ml-auto">
                         <div class="custom-control custom-switch">
-                            <input class="custom-control-input" type="checkbox" name="shared" id="shared"
-                                   value="shared">
-                            <label class="custom-control-label" for="shared">代码对他人可见</label>
+                            <input class="custom-control-input" type="checkbox" name="public" id="public"
+                                   value="public">
+                            <label class="custom-control-label" for="public">代码对他人可见</label>
                         </div>
                     </div>
                 {%- endif %}

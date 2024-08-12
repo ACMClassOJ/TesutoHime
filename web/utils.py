@@ -1,17 +1,18 @@
 from datetime import datetime
+from typing import Iterable, List
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import boto3
 import redis
 from botocore.config import Config
-from flask import g
+from flask import g, request, url_for
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session as _Session
 from sqlalchemy.orm import sessionmaker
 from werkzeug.local import LocalProxy
 
 from web.config import DatabaseConfig, RedisConfig, S3Config
-from web.const import language_info
+from web.const import language_info, api_scopes_order
 
 engine = create_engine(DatabaseConfig.url,
                        pool_recycle=DatabaseConfig.connection_pool_recycle)
@@ -64,6 +65,12 @@ def readable_lang_v1(lang: int) -> str:
 def readable_lang(lang: str) -> str:
     return 'Unknown' if lang not in language_info \
             else language_info[lang].name
+
+def is_api_call() -> bool:
+    return request.path.startswith(url_for('web.api.index'))
+
+def sort_scopes(scopes: Iterable[str]) -> List[str]:
+    return sorted(scopes, key=lambda x: api_scopes_order.index(x))
 
 
 def gen_page(cur_page: int, max_page: int):

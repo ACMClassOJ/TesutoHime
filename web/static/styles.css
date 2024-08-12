@@ -439,3 +439,8 @@ code h-hws, code h-hws[hidden], h-hws.quote-inner, h-hws.quote-outer:lang(zh-CN)
     margin-left: 0.4em;
     font-size: 0.66rem;
 }
+
+.api-scope {
+    cursor: help;
+    text-decoration: underline dashed;
+}

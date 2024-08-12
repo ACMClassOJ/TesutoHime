@@ -1,19 +1,20 @@
-from http.client import NOT_FOUND
+from http.client import NOT_FOUND, OK
 from typing import List, Optional
-from urllib.parse import urljoin
+from urllib.parse import quote, urljoin
 
 import requests
 from flask import abort, g
 from sqlalchemy.orm import defer, selectinload
 from typing_extensions import TypeGuard
 
-from commons.models import JudgeRecordV2, JudgeRunnerV2, JudgeStatus, User
-from web.config import S3Config, SchedulerConfig
+from commons.models import JudgeRecordV2, JudgeRunnerV2, JudgeStatus, Problem, User
+from commons.util import deserialize
+from web.config import ProblemConfig, S3Config, SchedulerConfig
 from web.contest_manager import ContestManager
 from web.old_judge_manager import OldJudgeManager
 from web.problem_manager import ProblemManager
 from web.user_manager import UserManager
-from web.utils import db, s3_internal
+from web.utils import db, generate_s3_public_url, s3_internal
 
 
 class NotFoundException(Exception): pass
@@ -79,6 +80,16 @@ class JudgeManager:
         return submission.status in \
             (JudgeStatus.pending, JudgeStatus.compiling, JudgeStatus.judging) and \
             (submission.user_id == g.user.id or cls.can_write(submission))
+
+    @staticmethod
+    def can_create(problem: Problem, public: bool, language: str, code: str) -> bool:
+        if g.in_exam or not problem.allow_public_submissions:
+            if public: return False
+        if language not in ProblemManager.languages_accepted(problem):
+            return False
+        if len(code) > ProblemConfig.Max_Code_Length:
+            return False
+        return True
 
 
     @staticmethod
@@ -175,6 +186,35 @@ class JudgeManager:
     @staticmethod
     def get_submission(submission_id: int) -> Optional[JudgeRecordV2]:
         return db.get(JudgeRecordV2, submission_id)
+
+    @staticmethod
+    def get_details(submission: JudgeRecordV2):
+        details = deserialize(submission.details) if submission.details is not None else None
+        if details is None and submission.status == JudgeStatus.judging:
+            url = f'submission/{quote(str(submission.id))}/status'
+            # TODO: caching
+            res = requests.get(urljoin(SchedulerConfig.base_url, url))
+            if res.status_code == OK:
+                details = deserialize(res.text)
+            elif res.status_code == NOT_FOUND:
+                pass
+            else:
+                raise Exception(f'Unknown status code {res.status_code} fetching judge status')
+        return details
+
+    @staticmethod
+    def sign_code_url(submission: JudgeRecordV2) -> str:
+        return generate_s3_public_url('get_object', {
+            'Bucket': S3Config.Buckets.submissions,
+            'Key': JudgeManager.key_from_submission_id(submission.id),
+        }, ExpiresIn=60)
+
+    @classmethod
+    def should_show_score(cls, submission: JudgeRecordV2) -> bool:
+        return (
+            not cls.can_abort(submission) and
+            submission.status not in (JudgeStatus.void, JudgeStatus.aborted)
+        )
 
     @staticmethod
     def list_runners() -> List[JudgeRunnerV2]:

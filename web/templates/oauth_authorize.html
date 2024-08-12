@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% set page='第三方应用授权' %}
+
+{% block content %}
+<div class="card card-body col-lg-5 m-auto">
+  <h1>第三方应用授权</h1>
+  <p><strong><q>{{ app.name }}</q></strong> 请求：</p>
+  <ul>
+    {% for scope in g.utils.sort_scopes(scopes) -%}
+    <li>{{ g.consts.api_scopes[scope] }}</li>
+    {% endfor %}
+  </ul>
+  <p>
+    点击下方按钮表示您同意上述请求。
+    您可以在 <a href="{{ url_for('.settings_api') }}">API 设置</a> 中管理您授权的第三方应用。
+  </p>
+  <p class="mb-3">
+    此应用由 <strong><q>{{ app.provider }}</q></strong> 提供。
+    您将转到 <strong>{{ redirect_hostname }}</strong>。
+  </p>
+  <form method="POST">
+    {{ g.csrf() }}
+    <button type="submit" class="btn btn-block btn-primary">授权 {{ app.name }}</button>
+  </form>
+</div>
+{% endblock %}

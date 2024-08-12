@@ -18,6 +18,9 @@ class Tracker:
         if 'user_username' in g:
             everything['username'] = g.user_username
             everything['realname'] = g.user_realname
+        if 'token' in g and g.token is not None:
+            everything['token_id'] = g.token.id
+            everything['app_id'] = g.token.app_id
         everything['url'] = '/'.join(request.url.split('/')[4:])
         everything['post_args'] = request.form.copy()
         if 'password' in everything['post_args']:

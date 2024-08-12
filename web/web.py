@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from http.client import (BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR,
                          NO_CONTENT, NOT_FOUND, OK, REQUEST_ENTITY_TOO_LARGE,
@@ -9,7 +9,7 @@ from http.client import (BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR,
 from itertools import groupby
 from math import ceil
 from typing import Dict, Iterable, List, NoReturn, Optional
-from urllib.parse import quote, urlencode, urljoin
+from urllib.parse import urlencode, urljoin, urlsplit, urlunsplit
 from uuid import uuid4
 from zipfile import ZipFile
 
@@ -26,22 +26,25 @@ from werkzeug.routing import BaseConverter
 import commons.task_typing
 import web.const as consts
 import web.utils as utils
-from commons.models import (CompletionCriteriaType, Contest, Course, CourseTag,
+from commons.models import (AccessToken, CompletionCriteriaType, Contest, Course, CourseTag,
                             Enrollment, Group, JudgeRecordV2, JudgeStatus,
                             Problem, ProblemPrivilege, ProblemPrivilegeType,
                             RealnameReference, Term, User)
 from commons.task_typing import ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
-from web.config import (JudgeConfig, LoginConfig, NewsConfig, ProblemConfig,
+from web.api import abort_json, api, api_get_user, token_is_valid
+from web.config import (JudgeConfig, LoginConfig, NewsConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
-from web.const import Privilege, ReturnCode, language_info, runner_status_info
+from web.const import (Privilege, ReturnCode, api_scopes, language_info,
+                       runner_status_info)
 from web.contest_manager import ContestManager
 from web.course_manager import CourseManager
 from web.csrf import setup_csrf
 from web.discuss_manager import DiscussManager
 from web.judge_manager import JudgeManager, NotFoundException
 from web.news_manager import NewsManager
+from web.oauth_manager import OauthManager, randtoken
 from web.old_judge_manager import OldJudgeManager
 from web.problem_manager import ProblemManager
 from web.quiz_manager import QuizManager
@@ -50,10 +53,11 @@ from web.session_manager import SessionManager
 from web.tracker import tracker
 from web.user_manager import UserManager
 from web.utils import (SqlSession, db, gen_page, gen_page_for_problem_list,
-                       generate_s3_public_url, readable_lang_v1, readable_time,
-                       s3_internal)
+                       generate_s3_public_url, is_api_call, readable_lang_v1,
+                       readable_time, s3_internal, sort_scopes)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
+web.register_blueprint(api, url_prefix='/api/v1')
 setup_csrf(web)
 
 
@@ -113,7 +117,10 @@ def problem_in_exam(problem_id):
 def setup_appcontext():
     g.cache = {}
     g.db = SqlSession()
-    g.user = SessionManager.current_user()
+    if is_api_call():
+        g.user = api_get_user()
+    else:
+        g.user = SessionManager.current_user()
     if g.user is not None:
         g.user_username = g.user.username
         g.user_realname = RealnameManager.query_realname_for_logs(g.user.student_id)
@@ -168,6 +175,8 @@ def errorhandler(exc: Exception):
 
 
 def not_logged_in():
+    if is_api_call():
+        abort_json(UNAUTHORIZED, 'access token missing or invalid')
     return redirect(url_for('web.login', next=request.full_path), SEE_OTHER)
 
 def require_logged_in(func):
@@ -248,6 +257,33 @@ def login():
         return create_session(user)
     except AlertFail:
         return render_template('login.html')
+
+@web.route('/oauth/authorize', methods=['GET', 'POST'])
+@require_logged_in
+def oauth_authorize():
+    client_id = request.args['client_id']
+    redirect_uri = request.args['redirect_uri']
+    scope = request.args['scope']
+    state = request.args.get('state', '')
+
+    app = OauthManager.get_app(client_id)
+    # if app is None or not OauthManager.redirect_uri_is_valid(app, redirect_uri):
+    #     abort(BAD_REQUEST, 'Invalid redirect_uri')
+    scopes = set(scope.split(' '))
+    for scope in scopes:
+        if not OauthManager.scope_is_valid(app, scope):
+            abort(BAD_REQUEST, f'Invalid scope {scope}')
+
+    if request.method == 'GET':
+        redirect_hostname = urlsplit(redirect_uri).hostname
+        return render_template('oauth_authorize.html', app=app, scopes=scopes, redirect_hostname=redirect_hostname)
+    elif request.method == 'POST':
+        code = OauthManager.create_code(app, redirect_uri, scopes)
+        scheme, netloc, path, query, fragment = urlsplit(redirect_uri)
+        if query != '':
+            query += '&'
+        query += urlencode([('state', state), ('code', code)])
+        return redirect(urlunsplit((scheme, netloc, path, query, fragment)), SEE_OTHER)
 
 
 @web.route('/logout', methods=['POST'])
@@ -443,20 +479,13 @@ def problem_submit(problem: Problem):
             return render_template('quiz_submit.html', problem=problem,
                                    problems=problems)
     else:
-        public = bool(request.form.get('shared', 0))  # 0 or 1
-        if g.in_exam or not problem.allow_public_submissions:
-            public = False
-        lang_request_str = str(request.form.get('lang'))
-        if lang_request_str == 'quiz':
-            user_code: Optional[str] = json.dumps(request.form.to_dict())
+        public = bool(request.form.get('public', 0))  # 0 or 1
+        lang_str = str(request.form.get('lang'))
+        if lang_str == 'quiz':
+            user_code = json.dumps(request.form.to_dict())
         else:
-            user_code = request.form.get('code')
-        if user_code is None:
-            abort(BAD_REQUEST)
-        if len(str(user_code)) > ProblemConfig.Max_Code_Length:
-            abort(REQUEST_ENTITY_TOO_LARGE)
-        lang_str = lang_request_str.lower()
-        if lang_str not in ProblemManager.languages_accepted(problem):
+            user_code = request.form['code']
+        if not JudgeManager.can_create(problem, public, lang_str, user_code):
             abort(BAD_REQUEST)
         submission = JudgeManager.create_submission(
             public=public,
@@ -768,7 +797,7 @@ def code_old(run_id):
                                time=time,
                                score=score)
 
-@web.route('/api/code', methods=['POST'])
+@web.route('/get-code-old', methods=['POST'])
 def get_code_old():
     if g.user is None:
         return '-1'
@@ -800,31 +829,13 @@ def submission(submission: JudgeRecordV2):
     if submission.id <= OldJudgeManager.max_id():
         return code_old(submission.id)
 
-    details = deserialize(submission.details) if submission.details is not None else None
-    if details is None and submission.status == JudgeStatus.judging:
-        url = f'submission/{quote(str(submission.id))}/status'
-        # TODO: caching
-        res = requests.get(urljoin(SchedulerConfig.base_url, url))
-        if res.status_code == OK:
-            details = deserialize(res.text)
-        elif res.status_code == NOT_FOUND:
-            pass
-        else:
-            raise Exception(f'Unknown status code {res.status_code} fetching judge status')
-
-    code_url = generate_s3_public_url('get_object', {
-        'Bucket': S3Config.Buckets.submissions,
-        'Key': JudgeManager.key_from_submission_id(submission.id),
-    }, ExpiresIn=60)
-    show_score = not g.can_abort and submission.status not in \
-        (JudgeStatus.void, JudgeStatus.aborted)
     real_name = RealnameManager.query_realname_for_current_user(submission.user.student_id)
     return render_template('judge_detail.html',
                            submission=submission,
                            real_name=real_name,
-                           code_url=code_url,
-                           details=details,
-                           show_score=show_score)
+                           code_url=JudgeManager.sign_code_url(submission),
+                           details=JudgeManager.get_details(submission),
+                           show_score=JudgeManager.should_show_score(submission))
 
 @web.route('/code/<submission:submission>/void', methods=['POST'])
 def mark_void(submission: JudgeRecordV2):
@@ -1464,12 +1475,71 @@ def process_profile():
         UserManager.set_password(g.user, password)
     alert_success('成功修改个人信息')
 
-@web.route('/profile', methods=['GET', 'POST'])
+@web.route('/settings/profile', methods=['GET', 'POST'])
 @require_logged_in
 def profile():
     if request.method == 'POST':
         process_profile()
     return render_template('profile.html')
+
+@ignore_alert_fail
+def process_settings_api():
+    form = request.form
+    action = form['action']
+    if action == 'app:revoke':
+        app_id = int(form['id'])
+        app = OauthManager.from_app_id(app_id)
+        if app is None:
+            return alert_fail('此应用不存在')
+        OauthManager.revoke_app(app)
+        alert_success(f'已撤销 {app.name} 的授权')
+    elif action == 'pat:create':
+        name = form['name']
+        scopes = [s for s in api_scopes if form.get(f'scope-{s}', 'off') == 'on']
+        token = AccessToken()
+        token.token = randtoken()
+        token.name = name
+        token.user_id = g.user.id
+        token.scopes = scopes
+        token.expires_at = g.time + timedelta(days=365)
+        db.add(token)
+        alert_success(f'访问令牌已创建。请记下您的令牌： {token.token} 此令牌以后不会再次展示给您。')
+    elif action == 'pat:revoke':
+        id = int(form['id'])
+        t = db.get(AccessToken, id)
+        if t is None:
+            alert_fail('访问令牌不存在')
+        if t.user_id != g.user.id or t.app_id is not None:
+            alert_fail('访问令牌不属于本用户')
+        if not token_is_valid(t):
+            alert_fail('令牌已经失效')
+        t.revoked_at = g.time
+        db.flush()
+        alert_success('已撤销令牌')
+    else:
+        alert_fail(f'Unknown action {action}')
+
+@web.route('/settings/api', methods=['GET', 'POST'])
+@require_logged_in
+def settings_api():
+    if request.method == 'POST':
+        process_settings_api()
+
+    user: User = g.user
+    tokens = user.access_tokens
+    app_ids = set(token.app_id for token in tokens if token.app_id is not None and token_is_valid(token))
+    apps = [OauthManager.from_app_id(id) for id in app_ids]
+    app_tokens = dict((app, [t for t in tokens if t.app_id == app.id and token_is_valid(t)]) for app in apps)
+    apps_info = [{
+        'app': app,
+        'last_used': max(token.created_at for token in app_tokens[app]),
+        'scopes': sort_scopes(set(scope for token in app_tokens[app] for scope in token.scopes)),
+    } for app in apps if len(app_tokens[app]) > 0]
+    apps_info.sort(key=lambda x: x['last_used'], reverse=True)
+
+    pats = [t for t in tokens if t.app_id is None and token_is_valid(t)]
+
+    return render_template('settings_api.html', apps=apps_info, pats=pats)
 
 
 # admin

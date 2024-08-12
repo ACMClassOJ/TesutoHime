@@ -95,6 +95,17 @@ runner_status_info = {
     'busy': RunnerStatus('Busy', 'orange'),
 }
 
+api_scopes = {
+    'user:read': '获取您的用户名、昵称、学号',
+    'submission:create': '以您的身份提交代码',
+    'submission:read': '查看评测状态',
+    'submission:write': '修改评测状态',
+}
+api_scopes_order = [
+    'user:read',
+    'submission:read', 'submission:create', 'submission:write',
+]
+
 @dataclass
 class Mntner:
     name: str

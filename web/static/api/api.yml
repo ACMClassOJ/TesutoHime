@@ -1,0 +1,211 @@
+openapi: 3.0.3
+info:
+  title: ACMOJ API v1
+  description: TODO
+  contact:
+    email: acmclassoj@googlegroups.com
+  version: 1.0.0
+externalDocs:
+  description: ACMOJ 帮助
+  url: https://acm.sjtu.edu.cn/OnlineJudge/help/
+servers:
+  - url: /OnlineJudge/api/v1
+tags:
+  - name: user
+    description: 用户
+  - name: submission
+    description: 评测
+paths:
+  /user:
+    get:
+      tags:
+        - user
+      summary: 查询当前用户信息
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      security:
+        - token: []
+        - acmoj-oauth:
+          - user:read
+  /problem/{problem}/submit:
+    post:
+      tags:
+        - submission
+      summary: 提交评测任务
+      parameters:
+        - name: problem
+          in: path
+          description: 题目编号
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: 提交信息
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: ['lang', 'code']
+              properties:
+                public:
+                  type: string
+                  enum: [ 'true', 'false' ]
+                lang:
+                  type: string
+                  example: 'cpp'
+                code:
+                  type: string
+                  example: |
+                    #include <stdio.h>
+                    
+                    int main () {
+                      printf("Hello World!\n");
+                    }
+      responses:
+        '201':
+          description: 提交成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: 提交编号
+      security:
+        - token: []
+        - acmoj-oauth:
+          - submission:create
+  /submission/{submission}:
+    get:
+      tags:
+        - submission
+      summary: 查询评测状态
+      parameters:
+        - $ref: '#/components/parameters/submission'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+      security:
+        - token: []
+        - acmoj-oauth:
+          - submission:read
+  /submission/{submission}/abort:
+    post:
+      tags:
+        - submission
+      summary: 中止评测
+      parameters:
+        - $ref: '#/components/parameters/submission'
+      responses:
+        '204':
+          description: 中止成功
+        '403':
+          description: 无法中止
+      security:
+        - token: []
+        - acmoj-oauth:
+          - submission:write
+
+components:
+  parameters:
+    submission:
+      name: submission
+      in: path
+      required: true
+      description: 提交编号
+      schema:
+        type: integer
+  schemas:
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          example: username
+        friendly_name:
+          type: string
+          example: friendly_name
+        student_id:
+          type: string
+          description: 学号或工号
+          example: '520030910001'
+    Submission:
+      type: object
+      properties:
+        id:
+          type: integer
+        public:
+          type: boolean
+          description: 代码是否公开可见
+        language:
+          type: string
+          example: cpp
+        problem_id:
+          type: string
+          example: 1000
+        score:
+          type: integer
+          example: 100
+        message:
+          type: string
+        time_msecs:
+          type: integer
+          example: 2233
+        memory_bytes:
+          type: integer
+          example: 1048576
+        status:
+          type: string
+          enum:
+            - accepted
+            - wrong_answer
+            - compile_error
+            - runtime_error
+            - time_limit_exceeded
+            - memory_limit_exceeded
+            - disk_limit_exceeded
+            - memory_leak
+            - pending
+            - compiling
+            - judging
+            - void
+            - aborted
+            - skipped
+            - system_error
+            - bad_problem
+            - unknown_error
+        should_show_score:
+          type: boolean
+        code_url:
+          type: string
+          example: /OnlineJudge/oj-submissions/465210.code?X-Amz-Algorithm=...
+        friendly_name:
+          type: string
+          example: ACM
+          description: 提交者昵称
+
+  securitySchemes:
+    acmoj-oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /OnlineJudge/oauth/authorize
+          tokenUrl: /OnlineJudge/api/v1/oauth/token
+          scopes:
+            user:read: 获取用户基本信息
+            submission:read: 查看评测状态
+            submission:create: 提交代码
+            submission:write: 修改评测状态（例如中止评测）
+    token:
+      type: http
+      scheme: bearer

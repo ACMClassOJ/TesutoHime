@@ -66,6 +66,7 @@ class User(UseTimestamps, Base):
         uselist=True,
         viewonly=True,
     )
+    access_tokens: Mapped[Set['AccessToken']] = relationship(back_populates='user')
 
 user_fk = Annotated[int, mapped_column(ForeignKey(User.id), index=True)]
 
@@ -376,3 +377,29 @@ class JudgeRecordV2(UseTimestamps, Base):
     details: Mapped[Optional[str]]  # actually JSON of ProblemJudgeResult
     time_msecs: Mapped[Optional[bigint]]
     memory_bytes: Mapped[Optional[bigint]]
+
+class OauthApp(UseTimestamps, Base):
+    id: Mapped[intpk]
+    client_id: Mapped[str] = mapped_column(index=True)
+    client_secret: Mapped[str]
+    redirect_uri: Mapped[str]
+    name: Mapped[str]
+    provider: Mapped[str]
+    scopes: Mapped[List[str]] = mapped_column(ARRAY(Text))
+
+oauth_app_fk = Annotated[int, mapped_column(ForeignKey(OauthApp.id, ondelete='CASCADE'), index=True)]
+
+class AccessToken(UseTimestamps, Base):
+    id: Mapped[intpk]
+    token: Mapped[str] = mapped_column(index=True)
+    name: Mapped[Optional[str]]
+
+    user_id: Mapped[user_fk]
+    user: Mapped[User] = relationship(back_populates='access_tokens')
+    scopes: Mapped[List[str]] = mapped_column(ARRAY(Text))
+
+    app_id: Mapped[Optional[oauth_app_fk]]
+    app: Mapped[Optional[OauthApp]] = relationship()
+
+    expires_at: Mapped[datetime]
+    revoked_at: Mapped[Optional[datetime]]

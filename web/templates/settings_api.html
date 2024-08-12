@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% set page='API 设置' %}
+
+{% block content %}
+<div class="card card-body">
+  {{ show_alert() }}
+  <h1>API 设置</h1>
+  <h2>个人访问令牌</h2>
+  <div class="card-group--small">
+    {% for token in pats -%}
+    <div class="card card--small">
+      <div class="card-header">
+        {{ token.name }}
+      </div>
+      <div class="card-body">
+        <div>
+          创建时间：{{ g.utils.readable_time(token.created_at) }}
+          <span class="float-right z-index-100">
+            <form method="POST" onsubmit="return confirm('确认要撤销 {{ token.name }} 吗？')">
+              {{ g.csrf() }}
+              <input type="hidden" name="action" value="pat:revoke">
+              <input type="hidden" name="id" value="{{ token.id }}">
+              <button type="submit" class="btn btn-outline-primary btn-sm">撤销</button>
+            </form>
+          </span>
+        </div>
+        <div>
+          授权范围：
+          {% for scope in g.utils.sort_scopes(token.scopes) %}
+          <span class="api-scope" title="{{ g.consts.api_scopes[scope] }}">{{ scope }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {%- endfor %}
+  </div>
+  <details>
+    <summary>创建个人访问令牌</summary>
+    <form method="POST">
+      {{ g.csrf() }}
+      <input type="hidden" name="action" value="pat:create">
+      <label>授权范围</label>
+      {% for scope in g.consts.api_scopes_order -%}
+      <div class="custom-control custom-checkbox ml-2 mb-1">
+        <input class="custom-control-input" name="scope-{{ scope }}" id="scope-{{ scope }}" type="checkbox" checked>
+        <label class="custom-control-label" for="scope-{{ scope }}"><code style="color: inherit">{{ scope }}</code> &mdash; {{ g.consts.api_scopes[scope] }}</label>
+      </div>
+      {%- endfor %}
+      <div class="form-row">
+        <div class="form-group col-md-3">
+          <label for="pat-name">令牌名称</label>
+          <input class="form-control" name="name" id="pat-name" required>
+        </div>
+        <div class="d-flex mb-3 col-md-3">
+          <button type="submit" class="btn btn-outline-primary mt-auto">创建</button>
+        </div>
+      </div>
+    </form>
+  </details>
+  <hr>
+
+  <h2>授权的第三方应用</h2>
+  {% if apps | length == 0 %}
+  <p>暂未授权第三方应用</p>
+  {% endif %}
+  <div class="card-group--small">
+    {% for app in apps -%}
+    <div class="card card--small">
+      <div class="card-header d-flex justify-content-between">
+        <div><strong>{{ app['app'].name }}</strong></div>
+        <div>由 {{ app['app'].provider }} 提供</div>
+      </div>
+      <div class="card-body">
+        <div>
+          上次授权：{{ g.utils.readable_time(app['last_used']) }}
+          <span class="float-right z-index-100">
+            <form method="POST" onsubmit="return confirm('确认要撤销 {{ app['app'].name }} 的授权吗？')">
+              {{ g.csrf() }}
+              <input type="hidden" name="action" value="app:revoke">
+              <input type="hidden" name="id" value="{{ app['app'].id }}">
+              <button type="submit" class="btn btn-outline-primary btn-sm">撤销</button>
+            </form>
+          </span>
+        </div>
+        <div>
+          授权范围：
+          {% for scope in app['scopes'] %}
+          <span class="api-scope" title="{{ g.consts.api_scopes[scope] }}">{{ scope }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {%- endfor %}
+  </div>
+</div>
+{% endblock %}

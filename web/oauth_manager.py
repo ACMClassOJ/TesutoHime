@@ -1,7 +1,7 @@
 __all__ = ('OauthManager',)
 
 from datetime import timedelta
-from typing import List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from urllib.parse import SplitResult, urlsplit
 from os import urandom
@@ -50,7 +50,7 @@ class OauthManager:
         )
 
     @staticmethod
-    def create_code(app: OauthApp, redirect_uri: str, scopes: List[str]) -> str:
+    def create_code(app: OauthApp, redirect_uri: str, scopes: Iterable[str]) -> str:
         code = randtoken()
         redirect_uri = urlsafe_b64encode(redirect_uri.encode()).decode()
         scope = urlsafe_b64encode(' '.join(scopes).encode()).decode()

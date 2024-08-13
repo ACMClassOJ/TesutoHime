@@ -19,7 +19,6 @@ from flask import (Blueprint, Flask, abort, appcontext_pushed,
                    before_render_template, g, make_response, redirect,
                    render_template, request, send_file, send_from_directory,
                    template_rendered, url_for)
-from sqlalchemy.orm import defer, selectinload
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
 
@@ -53,7 +52,7 @@ from web.session_manager import SessionManager
 from web.tracker import tracker
 from web.user_manager import UserManager
 from web.utils import (SqlSession, db, gen_page, gen_page_for_problem_list,
-                       generate_s3_public_url, is_api_call, readable_lang_v1,
+                       generate_s3_public_url, is_api_call, paged_search_limitoffset, readable_lang_v1,
                        readable_time, s3_internal, sort_scopes)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
@@ -267,8 +266,8 @@ def oauth_authorize():
     state = request.args.get('state', '')
 
     app = OauthManager.get_app(client_id)
-    # if app is None or not OauthManager.redirect_uri_is_valid(app, redirect_uri):
-    #     abort(BAD_REQUEST, 'Invalid redirect_uri')
+    if app is None or not OauthManager.redirect_uri_is_valid(app, redirect_uri):
+        abort(BAD_REQUEST, 'Invalid redirect_uri')
     scopes = set(scope.split(' '))
     for scope in scopes:
         if not OauthManager.scope_is_valid(app, scope):
@@ -325,48 +324,16 @@ def register():
 @web.route('/problem')
 @require_logged_in
 def problem_list():
-    page = request.args.get('page')
-    page = int(page) if page else 1
-
-    problem_id = request.args.get('problem_id')
-    if problem_id == '':
-        problem_id = None
-    if problem_id is not None:
+    problem_id = request.args.get('id', '')
+    if problem_id != '':
         return redirect(url_for('.problem', problem=int(problem_id)))
-    problem_name_keyword = request.args.get('problem_name_keyword')
-    if problem_name_keyword == '':
-        problem_name_keyword = None
-    problem_type = request.args.get('problem_type')
-    if problem_type == '-1' or problem_type == '':
-        problem_type = None
-    contest_id = request.args.get('contest_id')
-    contest_id = int(contest_id) if contest_id is not None and contest_id != '' else None
 
-    limit = WebConfig.Problems_Each_Page
-    offset = (page - 1) * WebConfig.Problems_Each_Page
-    query = db.query(Problem.id, Problem.title, Problem.problem_type)
-    if not UserManager.has_site_owner_tag(g.user):
-        readable_course_ids = UserManager.get_readable_course_ids(g.user)
-        query = query.where(sa.or_(Problem.release_time <= g.time,
-                                   Problem.course_id.in_(readable_course_ids)))
-    if problem_name_keyword is not None:
-        query = query.where(sa.func.strpos(Problem.title, problem_name_keyword) > 0)
-    if problem_type is not None:
-        query = query.where(Problem.problem_type == problem_type)
-    if contest_id is not None:
-        problem_ids = ContestManager.list_problem_for_contest(contest_id)
-        query = query.where(Problem.id.in_(problem_ids))
-    count_under_11000 = query.where(Problem.id <= 11000).count()
+    res = paged_search_limitoffset(WebConfig.Problems_Each_Page, ProblemManager.ProblemSearch)
+    count_under_11000 = db.scalar(res.query.where(Problem.id <= 11000).with_only_columns(sa.func.count()))
     max_page_under_11000 = ceil(count_under_11000 / WebConfig.Problems_Each_Page)
-    count = query.count()
-    max_page = ceil(count / WebConfig.Problems_Each_Page)
-    problems = query \
-        .order_by(Problem.id.asc()) \
-        .limit(limit).offset(offset) \
-        .all()
 
-    return render_template('problem_list.html', problems=problems,
-                            pages=gen_page_for_problem_list(page, max_page, max_page_under_11000),
+    return render_template('problem_list.html', problems=res.entities,
+                            pages=gen_page_for_problem_list(res.page, res.max_page, max_page_under_11000),
                             args=dict(filter(lambda e: e[0] != 'page', request.args.items())))
 
 @web.route('/problem/<problem:problem>')
@@ -714,46 +681,8 @@ def problem_data_zip(problem: Problem):
 @web.route('/status')
 @require_logged_in
 def status():
-    arg_username = request.args.get('username')
-    if arg_username == '':
-        arg_username = None
-    arg_problem_id = request.args.get('problem_id')
-    if arg_problem_id == '':
-        arg_problem_id = None
-    arg_status = request.args.get('status')
-    if arg_status == '':
-        arg_status = None
-    if arg_status is not None:
-        arg_status = getattr(JudgeStatus, arg_status, None)
-        if not isinstance(arg_status, JudgeStatus):
-            abort(BAD_REQUEST)
-    arg_lang = request.args.get('lang')
-    if arg_lang == '':
-        arg_lang = None
-
-    page = request.args.get('page')
-    page = int(page) if page is not None else 1
-    limit = JudgeConfig.Judge_Each_Page
-    offset = (page - 1) * JudgeConfig.Judge_Each_Page
-    query = db.query(JudgeRecordV2) \
-        .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
-        .options(selectinload(JudgeRecordV2.user).load_only(User.student_id, User.friendly_name)) \
-        .options(selectinload(JudgeRecordV2.problem).load_only(Problem.title))
-    if arg_username is not None:
-        user = UserManager.get_user_by_username(arg_username)
-        if user is not None:
-            query = query.where(JudgeRecordV2.user_id == user.id)
-    if arg_problem_id is not None:
-        query = query.where(JudgeRecordV2.problem_id == arg_problem_id)
-    if arg_status is not None:
-        query = query.where(JudgeRecordV2.status == arg_status)
-    if arg_lang is not None:
-        query = query.where(JudgeRecordV2.language == arg_lang)
-    query = query.order_by(JudgeRecordV2.id.desc())
-    count = query.count()
-    max_page = ceil(count / JudgeConfig.Judge_Each_Page)
-    query = query.limit(limit).offset(offset)
-    submissions = query.all()
+    res = paged_search_limitoffset(JudgeConfig.Judge_Each_Page, JudgeManager.SubmissionSearch)
+    submissions = res.entities
 
     real_name_map = {}
     show_links = {}
@@ -764,7 +693,7 @@ def status():
                 RealnameManager.query_realname_for_current_user(submission.user.student_id)
         show_links[submission] = JudgeManager.can_show(submission)
         show_title[submission] = ProblemManager.can_show(submission.problem)
-    return render_template('status.html', pages=gen_page(page, max_page),
+    return render_template('status.html', pages=gen_page(res.page, res.max_page),
                            submissions=submissions,
                            real_name_map=real_name_map,
                            show_links=show_links,
@@ -870,22 +799,17 @@ def contest_list_generic(type, type_zh):
     implicit_contests = ContestManager.get_implicit_contests(g.user)
     user_contests = set(implicit_contests).union(g.user.external_contests)
 
-    page = request.args.get('page')
-    page = int(page) if page is not None else 1
     type_ids = [0, 2] if type == 'contest' else [1]
-    keyword = request.args.get('keyword')
-    status = request.args.get('status')
-    count, contests = ContestManager.list_contest(type_ids, page, WebConfig.Contests_Each_Page, keyword=keyword, status=status)
+    desc = ContestManager.ContestSearch(type_ids)
+    res = paged_search_limitoffset(WebConfig.Contests_Each_Page, desc)
 
-    max_page = ceil(count / WebConfig.Contests_Each_Page)
-
-    return render_template('contest_list.html', contests=contests,
+    return render_template('contest_list.html', contests=res.entities,
                            get_status=ContestManager.get_status,
                            reason_cannot_join=ContestManager.reason_cannot_join,
                            implicit_contests=implicit_contests,
                            user_contests=user_contests,
                            type=type, type_zh=type_zh,
-                           pages=gen_page(page, max_page),
+                           pages=gen_page(res.page, res.max_page),
                            args=dict(filter(lambda e: e[0] != 'page' and e[0] != 'all', request.args.items())))
 
 @web.route('/contest')
@@ -1528,14 +1452,14 @@ def settings_api():
     user: User = g.user
     tokens = user.access_tokens
     app_ids = set(token.app_id for token in tokens if token.app_id is not None and token_is_valid(token))
-    apps = [OauthManager.from_app_id(id) for id in app_ids]
+    apps = [app for app in (OauthManager.from_app_id(id) for id in app_ids) if app is not None]
     app_tokens = dict((app, [t for t in tokens if t.app_id == app.id and token_is_valid(t)]) for app in apps)
     apps_info = [{
         'app': app,
         'last_used': max(token.created_at for token in app_tokens[app]),
         'scopes': sort_scopes(set(scope for token in app_tokens[app] for scope in token.scopes)),
     } for app in apps if len(app_tokens[app]) > 0]
-    apps_info.sort(key=lambda x: x['last_used'], reverse=True)
+    apps_info.sort(key=lambda x: x['last_used'], reverse=True)  # type: ignore
 
     pats = [t for t in tokens if t.app_id is None and token_is_valid(t)]
 

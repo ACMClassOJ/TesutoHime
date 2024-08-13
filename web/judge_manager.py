@@ -4,6 +4,7 @@ from urllib.parse import quote, urljoin
 
 import requests
 from flask import abort, g
+from sqlalchemy import select
 from sqlalchemy.orm import defer, selectinload
 from typing_extensions import TypeGuard
 
@@ -14,7 +15,7 @@ from web.contest_manager import ContestManager
 from web.old_judge_manager import OldJudgeManager
 from web.problem_manager import ProblemManager
 from web.user_manager import UserManager
-from web.utils import db, generate_s3_public_url, s3_internal
+from web.utils import SearchDescriptor, db, generate_s3_public_url, s3_internal
 
 
 class NotFoundException(Exception): pass
@@ -223,3 +224,34 @@ class JudgeManager:
             .where(JudgeRunnerV2.visible) \
             .order_by(JudgeRunnerV2.id) \
             .all()
+
+    class SubmissionSearch(SearchDescriptor):
+        __model__ = JudgeRecordV2
+
+        @staticmethod
+        def __base_query__():
+            return select(JudgeRecordV2) \
+                .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message)) \
+                .options(selectinload(JudgeRecordV2.user).load_only(User.student_id, User.friendly_name)) \
+                .options(selectinload(JudgeRecordV2.problem).load_only(Problem.title))
+
+        @staticmethod
+        def username(username: str):
+            user = UserManager.get_user_by_username(username)
+            if user is None: return False
+            return JudgeRecordV2.user_id == user.id
+
+        @staticmethod
+        def problem_id(id: int):
+            return JudgeRecordV2.problem_id == id
+
+        @staticmethod
+        def status(status: str):
+            s = getattr(JudgeStatus, status, None)
+            if not isinstance(s, JudgeStatus):
+                return False
+            return JudgeRecordV2.status == s
+
+        @staticmethod
+        def lang(lang: str):
+            return JudgeRecordV2.language == lang

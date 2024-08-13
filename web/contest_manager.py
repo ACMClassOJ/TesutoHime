@@ -5,17 +5,18 @@ from functools import cmp_to_key, wraps
 from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
 from flask import g
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.orm import defer
 
-from commons.models import (CompletionCriteriaType, Contest, ContestProblem, Course, Enrollment,
-                            GroupRealnameReference, JudgeRecordV2, JudgeStatus,
-                            RealnameReference, User)
+from commons.models import (CompletionCriteriaType, Contest, ContestProblem,
+                            Course, Enrollment, GroupRealnameReference,
+                            JudgeRecordV2, JudgeStatus, RealnameReference,
+                            User)
 from web.cache import Cache
 from web.const import ContestType, PrivilegeType
 from web.py_sanitize import PySanitizer
 from web.user_manager import UserManager
-from web.utils import db
+from web.utils import SearchDescriptor, db
 
 
 class ContestManager:
@@ -100,32 +101,6 @@ class ContestManager:
             return 'Finished'
         else:
             return 'Going On'
-
-    @staticmethod
-    def list_contest(types: List[int], page: int, num_per_page: int,
-                     keyword: Optional[str] = None,
-                     status: Optional[str] = None) -> Tuple[int, Sequence[Contest]]:
-        limit = num_per_page
-        offset = (page - 1) * num_per_page
-        stmt = select(Contest).where(Contest.type.in_(types))
-        if keyword: # keyword is not None and len(keyword) > 0
-            stmt = stmt.where(func.strpos(Contest.name, keyword) > 0)
-        if status:
-            current_time = g.time
-            if status == 'Pending':
-                stmt = stmt.where(Contest.start_time > current_time)
-            elif status == 'Going On':
-                stmt = stmt.where(Contest.start_time <= current_time) \
-                    .where(Contest.end_time >= current_time)
-            elif status == 'Finished':
-                stmt = stmt.where(Contest.end_time < current_time)
-        stmt_count = stmt.with_only_columns(func.count())
-        stmt_data = stmt.order_by(Contest.id.desc()) \
-            .limit(limit).offset(offset)
-        count = db.scalar(stmt_count)
-        assert count is not None
-        this_page = db.scalars(stmt_data).all()
-        return count, this_page
 
     @staticmethod
     def list_problem_for_contest(contest_id: int) -> Sequence[int]:
@@ -561,3 +536,27 @@ class ContestManager:
                 player['rank'] = scores[i - 1]['rank']
 
         return scores
+
+    class ContestSearch(SearchDescriptor):
+        __model__ = Contest
+
+        def __init__(self, types: List[int]):
+            self._types = types
+
+        def __base_query__(self):
+            return select(Contest).where(Contest.type.in_(self._types))
+
+        @staticmethod
+        def keyword(keyword: str):
+            return func.strpos(Contest.name, keyword) > 0
+
+        @staticmethod
+        def status(status: str):
+            current_time = g.time
+            if status == 'Pending':
+                return Contest.start_time > current_time
+            elif status == 'Going On':
+                return and_(Contest.start_time <= current_time,
+                            Contest.end_time >= current_time)
+            elif status == 'Finished':
+                return Contest.end_time < current_time

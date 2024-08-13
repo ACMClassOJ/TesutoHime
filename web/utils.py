@@ -1,18 +1,21 @@
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable, List
+from math import ceil
+from typing import Any, Iterable, List, Optional
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import boto3
 import redis
+import sqlalchemy as sa
 from botocore.config import Config
 from flask import g, request, url_for
-from sqlalchemy import create_engine
+from sqlalchemy import Select, create_engine, select
 from sqlalchemy.orm import Session as _Session
 from sqlalchemy.orm import sessionmaker
 from werkzeug.local import LocalProxy
 
 from web.config import DatabaseConfig, RedisConfig, S3Config
-from web.const import language_info, api_scopes_order
+from web.const import api_scopes_order, language_info
 
 engine = create_engine(DatabaseConfig.url,
                        pool_recycle=DatabaseConfig.connection_pool_recycle)
@@ -120,3 +123,54 @@ def gen_page(cur_page: int, max_page: int):
 
 def gen_page_for_problem_list(cur_page: int, max_page: int, latest_page_under_11000: int):
     return gen_page(cur_page, max_page) + [['#', latest_page_under_11000, 0]]
+
+
+class SearchDescriptor:
+    __model__: Any
+
+    @classmethod
+    def __base_query__(cls):
+        return select(cls.__model__)
+
+    @classmethod
+    def __order__(cls):
+        return cls.__model__.id.desc()
+
+@dataclass
+class SearchResult:
+    entities: List[Any]
+    count: int
+    page: int
+    max_page: int
+    query: Select[Any]
+
+def get_search_param(name: str) -> Optional[str]:
+    arg = request.args.get(name)
+    return None if arg == '' else arg
+
+def get_search_param_int(name: str) -> Optional[int]:
+    arg = request.args.get(name)
+    return None if arg is None else int(arg)
+
+def paged_search_limitoffset(per_page: int, descriptor) -> SearchResult:
+    page = int(request.args.get('page', '1'))
+    fields = [x for x in dir(descriptor) if x[0] != '_']
+    args = dict((field, get_search_param(field)) for field in fields)
+    query = descriptor.__base_query__()
+    for key, value in args.items():
+        if value is not None:
+            f = getattr(descriptor, key)
+            types = list(f.__annotations__.values())
+            if len(types) > 0 and types[0] is int:
+                filter = f(int(value))
+            else:
+                filter = f(value)
+            query = query.where(filter)
+
+    offset = (page - 1) * per_page
+    entities_query = query.order_by(descriptor.__order__()).limit(per_page).offset(offset)
+    entities = list(db.scalars(entities_query).all())
+    count = db.scalar(select(sa.func.count()).select_from(query))
+    max_page = ceil(count / per_page)
+
+    return SearchResult(entities, count, page, max_page, query)

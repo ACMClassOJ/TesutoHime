@@ -14,11 +14,11 @@
             <input class="form-control input-group" type="text" name="keyword" id="keyword" placeholder="关键字" value="{{ args["keyword"] if "keyword" in args and args["keyword"] }}">
             <select class="form-control selectpicker" name="status" id="status" data-style="form-control font-weight-normal border-grey shadow-none">
                 {{ option_list({
-                    'All': 'All',
+                    '': 'All',
                     'Pending': 'Pending',
                     'Going On': 'Going On',
                     'Finished': 'Finished',
-                }, args['status'] if 'status' in args else 'All') }}
+                }, args['status'] if 'status' in args else '') }}
             </select>
             <div class="input-group-append">
                 <button class="btn btn-outline-primary">搜索</button>

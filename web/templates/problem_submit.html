@@ -16,17 +16,17 @@
             {{ g.csrf() }}
             {% if languages_accepted | length > 1 -%}
             <div class="form-group">
-                <label for="lang">语言</label>
-                <select id="lang" name="lang" class="form-control input-group py-0 selectpicker"
+                <label for="language">语言</label>
+                <select id="language" name="language" class="form-control input-group py-0 selectpicker"
                         data-style="form-control rounded border-grey shadow-none font-weight-normal">
                     <option value="autodetect" selected>自动检测</option>
-                    {%- for lang in languages_accepted -%}
-                    <option value="{{ lang }}">{{ g.consts.language_info[lang].name }}</option>
+                    {%- for language in languages_accepted -%}
+                    <option value="{{ language }}">{{ g.consts.language_info[language].name }}</option>
                     {%- endfor -%}
                 </select>
             </div>
             {%- else -%}
-            <input type="hidden" id="lang" name="lang" value="{{ languages_accepted[0] }}">
+            <input type="hidden" id="language" name="language" value="{{ languages_accepted[0] }}">
             {%- endif %}
             <div class="row mx-0">
                 <label for="code">代码</label>

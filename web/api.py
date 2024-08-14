@@ -1,11 +1,11 @@
 from functools import wraps
 from http.client import (BAD_REQUEST, CREATED, FORBIDDEN,
                          INTERNAL_SERVER_ERROR, NO_CONTENT, UNAUTHORIZED)
-from typing import Optional
+from typing import NoReturn, Optional
 from urllib.parse import parse_qsl, urlencode
 
-from flask import (Blueprint, g, jsonify, make_response, redirect, request,
-                   url_for)
+from flask import (Blueprint, abort, g, jsonify, make_response, redirect,
+                   request, url_for)
 from sqlalchemy import select
 from typing_extensions import TypeGuard
 from werkzeug.exceptions import BadRequest, HTTPException
@@ -170,26 +170,44 @@ def index():
 
 # routes: user
 
+def abort_oauth(error: str, description: str) -> NoReturn:
+    res = jsonify({ 'error': error, 'error_description': description })
+    res.status_code = BAD_REQUEST
+    abort(res)
+
 @api.route('/oauth/token', methods=['POST'])
 def oauth_token():
-    client_id = request.form['client_id']
-    client_secret = request.form['client_secret']
-    redirect_uri = request.form.get('redirect_uri')
-    code = request.form['code']
+    try:
+        grant_type = request.form['grant_type']
+        client_id = request.form['client_id']
+        client_secret = request.form['client_secret']
+        redirect_uri = request.form.get('redirect_uri')
+        code = request.form['code']
+    except KeyError as e:
+        abort_oauth('invalid request', f'missing {e.args[0]}')
 
+    if grant_type != 'authorization_code':
+        abort_oauth('unsupported_grant_type', 'invalid grant_type')
     app = OauthManager.get_app(client_id)
     if app is None or app.client_secret != client_secret:
-        abort_json(UNAUTHORIZED, 'invalid client_id or client_secret')
+        abort_oauth('invalid_client', 'invalid client_id or client_secret')
     res = OauthManager.use_code(app, redirect_uri, code)
     if res is None:
-        abort_json(UNAUTHORIZED, 'invalid code')
+        abort_oauth('invalid_grant', 'invalid code')
     user_id, scopes = res
-    token = OauthManager.create_access_token(app, user_id, scopes)
-    return jsonify({
+    try:
+        token = OauthManager.create_access_token(app, user_id, scopes)
+    except ValueError:
+        abort_oauth('invalid_scope', 'invalid scope')
+    resp = jsonify({
         'access_token': token.token,
-        'scopes': scopes,
-        'expires_at': token.expires_at.isoformat(),
+        'token_type': 'bearer',
+        'expires_in': (token.expires_at - g.time).total_seconds(),
+        'scope': ' '.join(scopes),
     })
+    resp.headers['Cache-Control'] = 'no-store'
+    resp.headers['Pragma'] = 'no-cache'
+    return resp
 
 @api.route('/user/profile')
 @scope('user:profile')
@@ -244,12 +262,12 @@ def problem(problem: Problem):
 @scope('submission:create')
 def problem_submit(problem: Problem):
     public = request.form.get('public', 'false') == 'true'
-    lang = request.form['lang']
+    language = request.form['language']
     code = request.form['code']
 
-    if not JudgeManager.can_create(problem, public, lang, code):
+    if not JudgeManager.can_create(problem, public, language, code):
         abort_json(BAD_REQUEST, 'unable to create submission')
-    submission = JudgeManager.create_submission(public=public, language=lang, user=g.user, problem_id=problem.id, code=code)
+    submission = JudgeManager.create_submission(public=public, language=language, user=g.user, problem_id=problem.id, code=code)
     resp = jsonify({ 'id': submission.id })
     resp.status_code = CREATED
     resp.headers.set('Location', url_for('.submission', submission=submission))

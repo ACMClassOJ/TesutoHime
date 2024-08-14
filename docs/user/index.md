@@ -14,3 +14,7 @@
 - [题面格式规范](admin/problem-format.md)
 - [数据格式规范](admin/data-format.md)
 - [数据包样例](admin/package-sample.md)
+
+## 第三方应用
+
+- [ACMOJ API](api.md)

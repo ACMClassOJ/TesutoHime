@@ -32,8 +32,12 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               type: object
-              required: [ 'client_id', 'client_secret', 'code' ]
+              required: [ 'grant_type', 'client_id', 'client_secret', 'code' ]
               properties:
+                grant_type:
+                  type: string
+                  enum: [ 'authorization_code' ]
+                  description: 必须为 authorization_code
                 client_id:
                   type: string
                 client_secret:
@@ -56,18 +60,21 @@ paths:
                   access_token:
                     type: string
                     example: acmoj-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-                  scopes:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/scope'
-                  expires_at:
+                  token_type:
                     type: string
-                    format: date-time
+                    enum: [ 'bearer' ]
+                  expires_in:
+                    type: integer
+                    example: 31536000
+                    description: access token 有效期，以秒记
+                  scope:
+                    type: string
+                    description: 获得的 access token 的授权范围，以空格分隔
   /user/profile:
     get:
       tags:
         - user
-      summary: 查询当前用户信息
+      summary: 查询当前用户信息 (user:profile)
       responses:
         '200':
           description: 查询成功
@@ -84,7 +91,7 @@ paths:
       tags:
         - user
         - course
-      summary: 查询用户加入的课程
+      summary: 查询用户加入的班级 (course:read)
       responses:
         '200':
           description: 查询成功
@@ -106,7 +113,7 @@ paths:
       tags:
         - user
         - problemset
-      summary: 查询用户加入的比赛与作业
+      summary: 查询用户加入的比赛与作业 (problemset:read)
       responses:
         '200':
           description: 查询成功
@@ -128,7 +135,7 @@ paths:
     get:
       tags:
         - problem
-      summary: 列出题目
+      summary: 列出题目 (problem:read)
       parameters:
         - name: keyword
           in: query
@@ -149,7 +156,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  submissions:
+                  problems:
                     type: array
                     items:
                       $ref: '#/components/schemas/ProblemBrief'
@@ -163,7 +170,7 @@ paths:
     get:
       tags:
         - problem
-      summary: 查看题目详情
+      summary: 查看题目详情 (problem:read)
       parameters:
         - $ref: '#/components/parameters/problem'
       responses:
@@ -183,7 +190,7 @@ paths:
       tags:
         - problem
         - submission
-      summary: 提交评测任务
+      summary: 提交评测任务 (submission:create)
       parameters:
         - $ref: '#/components/parameters/problem'
       requestBody:
@@ -192,13 +199,13 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               type: object
-              required: ['lang', 'code']
+              required: ['language', 'code']
               properties:
                 public:
                   type: string
                   enum: [ 'true', 'false' ]
                   example: false
-                lang:
+                language:
                   type: string
                   example: 'cpp'
                 code:
@@ -234,7 +241,7 @@ paths:
     get:
       tags:
         - submission
-      summary: 列出提交记录
+      summary: 列出提交记录 (submission:read)
       parameters:
         - name: username
           in: query
@@ -280,7 +287,7 @@ paths:
     get:
       tags:
         - submission
-      summary: 查询评测状态
+      summary: 查询评测状态 (submission:read)
       parameters:
         - $ref: '#/components/parameters/submission'
       responses:
@@ -298,7 +305,7 @@ paths:
     post:
       tags:
         - submission
-      summary: 中止评测
+      summary: 中止评测 (submission:write)
       parameters:
         - $ref: '#/components/parameters/submission'
       responses:
@@ -315,7 +322,7 @@ paths:
     get:
       tags:
         - problemset
-      summary: 查询评测状态
+      summary: 查询评测状态 (problemset:read)
       parameters:
         - $ref: '#/components/parameters/problemset'
       responses:
@@ -333,7 +340,7 @@ paths:
     post:
       tags:
         - problemset
-      summary: 加入比赛或作业
+      summary: 加入比赛或作业 (problemset:membership)
       parameters:
         - $ref: '#/components/parameters/problemset'
       responses:
@@ -349,7 +356,7 @@ paths:
     post:
       tags:
         - problemset
-      summary: 退出比赛或作业
+      summary: 退出比赛或作业 (problemset:membership)
       parameters:
         - $ref: '#/components/parameters/problemset'
       responses:
@@ -366,7 +373,7 @@ paths:
     get:
       tags:
         - course
-      summary: 列出班级
+      summary: 列出班级 (无需 scope)
       parameters:
         - name: keyword
           in: query
@@ -405,7 +412,7 @@ paths:
     get:
       tags:
         - course
-      summary: 查看班级详情
+      summary: 查看班级详情 (无需 scope)
       parameters:
         - $ref: '#/components/parameters/course'
       responses:
@@ -422,7 +429,7 @@ paths:
     post:
       tags:
         - course
-      summary: 加入班级
+      summary: 加入班级 (course:membership)
       parameters:
         - $ref: '#/components/parameters/course'
       responses:
@@ -438,7 +445,7 @@ paths:
     post:
       tags:
         - course
-      summary: 退出班级
+      summary: 退出班级 (course:membership)
       parameters:
         - $ref: '#/components/parameters/course'
       responses:
@@ -456,7 +463,7 @@ paths:
     get:
       tags:
         - course
-      summary: 列出班级的比赛和作业
+      summary: 列出班级的比赛和作业 (无需 scope)
       parameters:
         - $ref: '#/components/parameters/course'
       responses:
@@ -542,21 +549,27 @@ components:
         description:
           type: string
           description: 题目描述
+          nullable: true
         input:
           type: string
           description: 输入格式
+          nullable: true
         output:
           type: string
           description: 输出格式
+          nullable: true
         example_input:
           type: string
           description: 样例输入
+          nullable: true
         example_output:
           type: string
           description: 样例输出
+          nullable: true
         data_range:
           type: string
           description: 数据范围
+          nullable: true
         languages_accepted:
           type: array
           description: 允许提交的语言
@@ -574,15 +587,23 @@ components:
         title:
           type: string
           example: A+B
+          nullable: true
+          description: 题目未发布时此项为 null
         url:
           type: string
           example: '/OnlineJudge/api/v1/problem/42'
+          nullable: true
+          description: 题目未发布时此项为 null
         submit_url:
           type: string
           example: '/OnlineJudge/api/v1/problem/42/submit'
+          nullable: true
+          description: 题目未发布时此项为 null
         html_url:
           type: string
           example: '/OnlineJudge/problem/42'
+          nullable: true
+          description: 题目未发布时此项为 null
     Submission:
       type: object
       properties:
@@ -605,15 +626,19 @@ components:
           example: 100
         message:
           type: string
+          nullable: true
         details:
           type: object
+          nullable: true
           description: 评测点详情。格式可能在未来变动，请以 API 实际返回值为准。
         time_msecs:
           type: integer
           example: 2233
+          nullable: true
         memory_bytes:
           type: integer
           example: 1048576
+          nullable: true
         status:
           $ref: '#/components/schemas/submission-status'
         should_show_score:
@@ -628,6 +653,7 @@ components:
         abort_url:
           type: string
           example: /OnlineJudge/api/v1/submission/42/abort
+          nullable: true
           description: 若不能中止，则为 null
         html_url:
           type: string
@@ -654,10 +680,12 @@ components:
         url:
           type: string
           example: '/OnlineJudge/api/v1/submission/42'
+          nullable: true
           description: 若无权限访问则为 null
         html_url:
           type: string
           example: '/OnlineJudge/code/42'
+          nullable: true
           description: 若无权限访问则为 null
     Problemset:
       type: object
@@ -694,9 +722,11 @@ components:
         join_url:
           type: string
           example: '/OnlineJudge/api/v1/problemset/42/join'
+          nullable: true
         quit_url:
           type: string
           example: '/OnlineJudge/api/v1/problemset/42/quit'
+          nullable: true
         html_url:
           type: string
           example: '/OnlineJudge/problemset/42'
@@ -734,17 +764,21 @@ components:
           type: string
         tag:
           $ref: '#/components/schemas/CourseTag'
+          nullable: true
         term:
           $ref: '#/components/schemas/Term'
+          nullable: true
         url:
           type: string
           example: '/OnlineJudge/api/v1/course/42'
         join_url:
           type: string
           example: '/OnlineJudge/api/v1/course/42/join'
+          nullable: true
         quit_url:
           type: string
           example: '/OnlineJudge/api/v1/course/42/quit'
+          nullable: true
         html_url:
           type: string
           example: '/OnlineJudge/course/42'
@@ -786,7 +820,8 @@ components:
     next:
       type: string
       example: '/OnlineJudge/api/v1/endpoint?cursor=42'
-      description: 下一页的地址
+      nullable: true
+      description: 下一页的地址，最后一页为 null
     scope:
       type: string
       enum:

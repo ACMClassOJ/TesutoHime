@@ -250,11 +250,14 @@ def login():
 @web.route('/oauth/authorize', methods=['GET', 'POST'])
 @require_logged_in
 def oauth_authorize():
+    response_type = request.args['response_type']
     client_id = request.args['client_id']
     redirect_uri = request.args['redirect_uri']
     scope = request.args['scope']
     state = request.args.get('state', '')
 
+    if response_type != 'code':
+        abort(BAD_REQUEST, 'Invalid response_type')
     app = OauthManager.get_app(client_id)
     if app is None or not OauthManager.redirect_uri_is_valid(app, redirect_uri):
         abort(BAD_REQUEST, 'Invalid redirect_uri')
@@ -438,7 +441,7 @@ def problem_submit(problem: Problem):
                                    problems=problems)
     else:
         public = bool(request.form.get('public', 0))  # 0 or 1
-        lang_str = str(request.form.get('lang'))
+        lang_str = str(request.form.get('language'))
         if lang_str == 'quiz':
             user_code = json.dumps(request.form.to_dict())
         else:

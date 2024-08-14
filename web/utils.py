@@ -1,14 +1,16 @@
 from dataclasses import dataclass
 from datetime import datetime
+from functools import wraps
+from http.client import SEE_OTHER, UNAUTHORIZED
 from math import ceil
-from typing import Any, Iterable, List, Optional
+from typing import Any, Iterable, List, NoReturn, Optional
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import boto3
 import redis
 import sqlalchemy as sa
 from botocore.config import Config
-from flask import g, request, url_for
+from flask import abort, g, jsonify, redirect, request, url_for
 from sqlalchemy import Select, create_engine, select
 from sqlalchemy.orm import Session as _Session
 from sqlalchemy.orm import sessionmaker
@@ -72,6 +74,31 @@ def readable_lang(lang: str) -> str:
 def is_api_call() -> bool:
     return request.path.startswith(url_for('web.api.index'))
 
+def abort_json(code: int, message: str) -> NoReturn:
+    resp = jsonify({ 'error': code, 'message': message })
+    resp.status_code = code
+    abort(resp)
+
+def abort_converter(code: int, message: str = '') -> NoReturn:
+    if is_api_call():
+        abort_json(code, message)
+    else:
+        abort(code, message)
+
+def not_logged_in() -> NoReturn:
+    if is_api_call():
+        abort_json(UNAUTHORIZED, 'access token is missing or invalid')
+    else:
+        abort(redirect(url_for('web.login', next=request.full_path), SEE_OTHER))
+
+def require_logged_in(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if g.user is None:
+            return not_logged_in()
+        return func(*args, **kwargs)
+    return wrapped
+
 def sort_scopes(scopes: Iterable[str]) -> List[str]:
     return sorted(scopes, key=lambda x: api_scopes_order.index(x))
 
@@ -125,24 +152,36 @@ def gen_page_for_problem_list(cur_page: int, max_page: int, latest_page_under_11
     return gen_page(cur_page, max_page) + [['#', latest_page_under_11000, 0]]
 
 
+'''
+Unified search system.
+
+The following code implements a generic search and pagination.
+To create a new search, subclass SearchDescriptor and pass the class as
+the descriptor to paged_search_*. The methods of the class are search
+filters. Calling the method with a query should return a SQLAlchemy
+boolean expression. If the method's parameter is annotated with type
+int, the argument will be converted to an integer before passing to the
+method. Fields that begin with an underscore _ are not treated as
+parameters; you can use these fields for custom purposes.
+'''
 class SearchDescriptor:
+    # The model object, e.g. Problem
     __model__: Any
+    # asc or desc
+    __order__ = 'desc'
 
     @classmethod
     def __base_query__(cls):
         return select(cls.__model__)
 
     @classmethod
-    def __order__(cls):
-        return cls.__model__.id.desc()
-
-@dataclass
-class SearchResult:
-    entities: List[Any]
-    count: int
-    page: int
-    max_page: int
-    query: Select[Any]
+    def __order_phrase__(cls):
+        if cls.__order__ == 'asc':
+            return cls.__model__.id.asc()
+        elif cls.__order__ == 'desc':
+            return cls.__model__.id.desc()
+        else:
+            raise Exception(f'Unknown order {cls.__order__}')
 
 def get_search_param(name: str) -> Optional[str]:
     arg = request.args.get(name)
@@ -152,11 +191,11 @@ def get_search_param_int(name: str) -> Optional[int]:
     arg = request.args.get(name)
     return None if arg is None else int(arg)
 
-def paged_search_limitoffset(per_page: int, descriptor) -> SearchResult:
-    page = int(request.args.get('page', '1'))
+def paged_search_make_query(descriptor) -> Select[Any]:
     fields = [x for x in dir(descriptor) if x[0] != '_']
     args = dict((field, get_search_param(field)) for field in fields)
     query = descriptor.__base_query__()
+
     for key, value in args.items():
         if value is not None:
             f = getattr(descriptor, key)
@@ -167,10 +206,55 @@ def paged_search_limitoffset(per_page: int, descriptor) -> SearchResult:
                 filter = f(value)
             query = query.where(filter)
 
+    return query
+
+@dataclass
+class LimitOffsetSearchResult:
+    query: Select[Any]
+    entities: List[Any]
+    count: int
+    page: int
+    max_page: int
+
+def paged_search_limitoffset(per_page: int, descriptor) -> LimitOffsetSearchResult:
+    query = paged_search_make_query(descriptor)
+
+    page = int(request.args.get('page', '1'))
     offset = (page - 1) * per_page
-    entities_query = query.order_by(descriptor.__order__()).limit(per_page).offset(offset)
+    order = descriptor.__order_phrase__()
+
+    entities_query = query.order_by(order).limit(per_page).offset(offset)
     entities = list(db.scalars(entities_query).all())
-    count = db.scalar(select(sa.func.count()).select_from(query))
+    count = db.scalar(select(sa.func.count()).select_from(query))  # type: ignore
+    assert count is not None
     max_page = ceil(count / per_page)
 
-    return SearchResult(entities, count, page, max_page, query)
+    return LimitOffsetSearchResult(query, entities, count, page, max_page)
+
+@dataclass
+class CursorSearchResult:
+    entities: List[Any]
+    cursor: Optional[int]
+
+def paged_search_cursor(per_page: int, descriptor) -> CursorSearchResult:
+    query = paged_search_make_query(descriptor)
+
+    cursor_str = request.args.get('cursor')
+    if cursor_str is not None:
+        cursor = int(cursor_str)
+        if descriptor.__order__ == 'asc':
+            filter = descriptor.__model__.id >= cursor
+        elif descriptor.__order__ == 'desc':
+            filter = descriptor.__model__.id <= cursor
+        else:
+            raise Exception(f'Unknown order {descriptor.__order__}')
+        query = query.where(filter)
+
+    order = descriptor.__order_phrase__()
+    query = query.order_by(order).limit(per_page + 1)
+    entities = list(db.scalars(query).all())
+    cursor = None if len(entities) != per_page + 1 else entities[-1].id  # type: ignore
+    if len(entities) == per_page + 1:
+        entities = entities[:-1]
+
+    return CursorSearchResult(entities, cursor)

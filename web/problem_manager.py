@@ -84,6 +84,7 @@ class ProblemManager:
 
     class ProblemSearch(SearchDescriptor):
         __model__ = Problem
+        __order__ = 'asc'
 
         @staticmethod
         def __base_query__():
@@ -95,10 +96,6 @@ class ProblemManager:
             return query
 
         @staticmethod
-        def __order__():
-            return Problem.id.asc()
-
-        @staticmethod
         def keyword(keyword: str):
             return sa.func.strpos(Problem.title, keyword) > 0
 
@@ -107,6 +104,8 @@ class ProblemManager:
             return Problem.problem_type == type
 
         @staticmethod
-        def contest_id(id: int):
-            problem_ids = ContestManager.list_problem_for_contest(id)
+        def problemset_id(id: int):
+            contest = ContestManager.get_contest(id)
+            if contest is None: return False
+            problem_ids = ContestManager.list_problem_for_contest(contest)
             return Problem.id.in_(problem_ids)

@@ -13,8 +13,8 @@
             <form class="form-group input-group" method="get" id="status_search">
                 <input class="form-control input-group" type="number" name="id" id="problem_id"
                        placeholder="题目编号" value="{{ args["id"] if "id" in args }}">
-                <input class="form-control input-group" type="number" name="contest_id" id="contest_id"
-                       placeholder="比赛编号" value="{{ args["contest_id"] if "contest_id" in args }}">
+                <input class="form-control input-group" type="number" name="problemset_id" id="problemset_id"
+                       placeholder="比赛编号" value="{{ args["problemset_id"] if "problemset_id" in args }}">
                 <input class="form-control input-group" type="text" name="keyword" id="problem_name_keyword" placeholder="题目名称（关键字）"
                        value="{{ args["keyword"] if "keyword" in args }}">
                 <select class="form-control selectpicker" name="type" id="problem_type"

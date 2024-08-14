@@ -25,6 +25,7 @@
             </form>
           </span>
         </div>
+        <div>失效时间：{{ g.utils.readable_time(token.expires_at) }}</div>
         <div>
           授权范围：
           {% for scope in g.utils.sort_scopes(token.scopes) %}

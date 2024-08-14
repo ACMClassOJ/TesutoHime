@@ -1,7 +1,7 @@
-openapi: 3.0.3
+openapi: 3.1.3
 info:
   title: ACMOJ API v1
-  description: TODO
+  description: ACM Class OnlineJudge API
   contact:
     email: acmclassoj@googlegroups.com
   version: 1.0.0
@@ -13,10 +13,57 @@ servers:
 tags:
   - name: user
     description: 用户
+  - name: problem
+    description: 题目
   - name: submission
     description: 评测
+  - name: problemset
+    description: 比赛与作业
+  - name: course
+    description: 班级
 paths:
-  /user:
+  /oauth/token:
+    post:
+      tags:
+        - user
+      summary: 获取 access token
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [ 'client_id', 'client_secret', 'code' ]
+              properties:
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+                code:
+                  type: string
+                  description: 从前端授权接口得到的 code
+                  example: acmoj-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+                redirect_uri:
+                  type: string
+                  description: 建议填写。若填写，服务器会检查此处的值与前端授权时的 redirect_uri 是否一致，防止攻击行为。
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: acmoj-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+                  scopes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/scope'
+                  expires_at:
+                    type: string
+                    format: date-time
+  /user/profile:
     get:
       tags:
         - user
@@ -27,23 +74,118 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/Profile'
       security:
         - token: []
         - acmoj-oauth:
-          - user:read
+          - user:profile
+  /user/courses:
+    get:
+      tags:
+        - user
+        - course
+      summary: 查询用户加入的课程
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  courses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Course'
+      security:
+        - token: []
+        - acmoj-oauth:
+          - course:read
+  /user/problemsets:
+    get:
+      tags:
+        - user
+        - problemset
+      summary: 查询用户加入的比赛与作业
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  problemsets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Problemset'
+      security:
+        - token: []
+        - acmoj-oauth:
+          - problemset:read
+
+  /problem/:
+    get:
+      tags:
+        - problem
+      summary: 列出题目
+      parameters:
+        - name: keyword
+          in: query
+          description: 按关键词查找题目
+          schema:
+            type: string
+        - name: problemset_id
+          in: query
+          description: 只显示指定比赛或作业中的题目
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/cursor'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  submissions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProblemBrief'
+                  next:
+                    $ref: '#/components/schemas/next'
+      security:
+        - token: []
+        - acmoj-oauth:
+          - problem:read
+  /problem/{problem}:
+    get:
+      tags:
+        - problem
+      summary: 查看题目详情
+      parameters:
+        - $ref: '#/components/parameters/problem'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      security:
+        - token: []
+        - acmoj-oauth:
+          - problem:read
+
   /problem/{problem}/submit:
     post:
       tags:
+        - problem
         - submission
       summary: 提交评测任务
       parameters:
-        - name: problem
-          in: path
-          description: 题目编号
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/problem'
       requestBody:
         description: 提交信息
         content:
@@ -55,6 +197,7 @@ paths:
                 public:
                   type: string
                   enum: [ 'true', 'false' ]
+                  example: false
                 lang:
                   type: string
                   example: 'cpp'
@@ -69,6 +212,12 @@ paths:
       responses:
         '201':
           description: 提交成功
+          headers:
+            Location:
+              description: 新创建的评测任务的 API URL
+              schema:
+                type: string
+                example: '/OnlineJudge/api/v1/submission/42'
           content:
             application/json:
               schema:
@@ -81,6 +230,52 @@ paths:
         - token: []
         - acmoj-oauth:
           - submission:create
+  /submission/:
+    get:
+      tags:
+        - submission
+      summary: 列出提交记录
+      parameters:
+        - name: username
+          in: query
+          description: 只显示指定用户的提交记录
+          schema:
+            type: string
+        - name: problem_id
+          in: query
+          description: 只显示指定题目的提交记录
+          schema:
+            type: integer
+            example: 1000
+        - name: status
+          in: query
+          description: 只显示指定状态的提交记录
+          schema:
+            $ref: '#/components/schemas/submission-status'
+        - name: lang
+          in: query
+          description: 只显示指定语言的提交记录
+          schema:
+            $ref: '#/components/schemas/submission-language'
+        - $ref: '#/components/parameters/cursor'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  submissions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SubmissionBrief'
+                  next:
+                    $ref: '#/components/schemas/next'
+      security:
+        - token: []
+        - acmoj-oauth:
+          - submission:read
   /submission/{submission}:
     get:
       tags:
@@ -116,8 +311,180 @@ paths:
         - acmoj-oauth:
           - submission:write
 
+  /problemset/{problemset}:
+    get:
+      tags:
+        - problemset
+      summary: 查询评测状态
+      parameters:
+        - $ref: '#/components/parameters/problemset'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problemset'
+      security:
+        - token: []
+        - acmoj-oauth:
+          - problemset:read
+  /problemset/{problemset}/join:
+    post:
+      tags:
+        - problemset
+      summary: 加入比赛或作业
+      parameters:
+        - $ref: '#/components/parameters/problemset'
+      responses:
+        '204':
+          description: 加入成功
+        '403':
+          description: 无法加入
+      security:
+        - token: []
+        - acmoj-oauth:
+          - problemset:membership
+  /problemset/{problemset}/quit:
+    post:
+      tags:
+        - problemset
+      summary: 退出比赛或作业
+      parameters:
+        - $ref: '#/components/parameters/problemset'
+      responses:
+        '204':
+          description: 退出成功
+        '403':
+          description: 无法退出
+      security:
+        - token: []
+        - acmoj-oauth:
+          - problemset:membership
+
+  /course/:
+    get:
+      tags:
+        - course
+      summary: 列出班级
+      parameters:
+        - name: keyword
+          in: query
+          description: 按关键词查找班级
+          schema:
+            type: string
+        - name: term
+          in: query
+          description: 只显示指定学期的班级
+          schema:
+            type: integer
+        - name: tag
+          in: query
+          description: 只显示指定标签的班级
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/cursor'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  courses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Course'
+                  next:
+                    $ref: '#/components/schemas/next'
+      security:
+        - token: []
+        - acmoj-oauth: []
+  /course/{course}:
+    get:
+      tags:
+        - course
+      summary: 查看班级详情
+      parameters:
+        - $ref: '#/components/parameters/course'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+      security:
+        - token: []
+        - acmoj-oauth: []
+  /course/{course}/join:
+    post:
+      tags:
+        - course
+      summary: 加入班级
+      parameters:
+        - $ref: '#/components/parameters/course'
+      responses:
+        '204':
+          description: 加入成功
+        '403':
+          description: 无法加入
+      security:
+        - token: []
+        - acmoj-oauth:
+          - course:membership
+  /course/{course}/quit:
+    post:
+      tags:
+        - course
+      summary: 退出班级
+      parameters:
+        - $ref: '#/components/parameters/course'
+      responses:
+        '204':
+          description: 退出成功
+        '400':
+          description: 未加入要退出的班级
+        '403':
+          description: 无法退出
+      security:
+        - token: []
+        - acmoj-oauth:
+          - course:membership
+  /course/{course}/problemsets:
+    get:
+      tags:
+        - course
+      summary: 列出班级的比赛和作业
+      parameters:
+        - $ref: '#/components/parameters/course'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  problemsets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Course'
+      security:
+        - token: []
+        - acmoj-oauth: []
+
 components:
   parameters:
+    problem:
+      name: problem
+      in: path
+      description: 题目编号
+      required: true
+      schema:
+        type: integer
+        example: 1000
     submission:
       name: submission
       in: path
@@ -125,8 +492,32 @@ components:
       description: 提交编号
       schema:
         type: integer
+        example: 42
+    problemset:
+      name: problemset
+      in: path
+      description: 比赛或作业编号
+      required: true
+      schema:
+        type: integer
+        example: 42
+    course:
+      name: course
+      in: path
+      description: 班级编号
+      required: true
+      schema:
+        type: integer
+        example: 42
+    cursor:
+      name: cursor
+      in: query
+      description: 分页指针
+      schema:
+        type: integer
+
   schemas:
-    User:
+    Profile:
       type: object
       properties:
         username:
@@ -139,25 +530,84 @@ components:
           type: string
           description: 学号或工号
           example: '520030910001'
+    Problem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1000
+        title:
+          type: string
+          example: A+B
+        description:
+          type: string
+          description: 题目描述
+        input:
+          type: string
+          description: 输入格式
+        output:
+          type: string
+          description: 输出格式
+        example_input:
+          type: string
+          description: 样例输入
+        example_output:
+          type: string
+          description: 样例输出
+        data_range:
+          type: string
+          description: 数据范围
+        languages_accepted:
+          type: array
+          description: 允许提交的语言
+          items:
+            $ref: '#/components/schemas/submission-language'
+        allow_public_submissions:
+          type: boolean
+          description: 是否允许公开代码
+    ProblemBrief:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1000
+        title:
+          type: string
+          example: A+B
+        url:
+          type: string
+          example: '/OnlineJudge/api/v1/problem/42'
+        submit_url:
+          type: string
+          example: '/OnlineJudge/api/v1/problem/42/submit'
+        html_url:
+          type: string
+          example: '/OnlineJudge/problem/42'
     Submission:
       type: object
       properties:
         id:
           type: integer
+          example: 42
+        friendly_name:
+          type: string
+          example: ACM
+          description: 提交者昵称
+        problem:
+          $ref: '#/components/schemas/ProblemBrief'
         public:
           type: boolean
           description: 代码是否公开可见
         language:
-          type: string
-          example: cpp
-        problem_id:
-          type: string
-          example: 1000
+          $ref: '#/components/schemas/submission-language'
         score:
           type: integer
           example: 100
         message:
           type: string
+        details:
+          type: object
+          description: 评测点详情。格式可能在未来变动，请以 API 实际返回值为准。
         time_msecs:
           type: integer
           example: 2233
@@ -165,34 +615,190 @@ components:
           type: integer
           example: 1048576
         status:
-          type: string
-          enum:
-            - accepted
-            - wrong_answer
-            - compile_error
-            - runtime_error
-            - time_limit_exceeded
-            - memory_limit_exceeded
-            - disk_limit_exceeded
-            - memory_leak
-            - pending
-            - compiling
-            - judging
-            - void
-            - aborted
-            - skipped
-            - system_error
-            - bad_problem
-            - unknown_error
+          $ref: '#/components/schemas/submission-status'
         should_show_score:
           type: boolean
+          description: 是否应该显示分数（如评测未完成、中止、分数无效等情况不应显示分数）
+        created_at:
+          type: string
+          format: date-time
         code_url:
           type: string
-          example: /OnlineJudge/oj-submissions/465210.code?X-Amz-Algorithm=...
+          example: /OnlineJudge/oj-submissions/42.code?X-Amz-Algorithm=...
+        abort_url:
+          type: string
+          example: /OnlineJudge/api/v1/submission/42/abort
+          description: 若不能中止，则为 null
+        html_url:
+          type: string
+          example: /OnlineJudge/code/42/
+    SubmissionBrief:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
         friendly_name:
           type: string
           example: ACM
           description: 提交者昵称
+        problem:
+          $ref: '#/components/schemas/ProblemBrief'
+        status:
+          $ref: '#/components/schemas/submission-status'
+        language:
+          $ref: '#/components/schemas/submission-language'
+        created_at:
+          type: string
+          format: date-time
+        url:
+          type: string
+          example: '/OnlineJudge/api/v1/submission/42'
+          description: 若无权限访问则为 null
+        html_url:
+          type: string
+          example: '/OnlineJudge/code/42'
+          description: 若无权限访问则为 null
+    Problemset:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        course:
+          $ref: '#/components/schemas/Course'
+        name:
+          type: string
+        description:
+          type: string
+        allowed_languages:
+          type: array
+          description: 计入分数的语言
+          items:
+            $ref: '#/components/schemas/submission-language'
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        type:
+          $ref: '#/components/schemas/problemset-type'
+        problems:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemBrief'
+        url:
+          type: string
+          example: '/OnlineJudge/api/v1/problemset/42'
+        join_url:
+          type: string
+          example: '/OnlineJudge/api/v1/problemset/42/join'
+        quit_url:
+          type: string
+          example: '/OnlineJudge/api/v1/problemset/42/quit'
+        html_url:
+          type: string
+          example: '/OnlineJudge/problemset/42'
+    CourseTag:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        name:
+          type: string
+    Term:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        name:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+    Course:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        name:
+          type: string
+        description:
+          type: string
+        tag:
+          $ref: '#/components/schemas/CourseTag'
+        term:
+          $ref: '#/components/schemas/Term'
+        url:
+          type: string
+          example: '/OnlineJudge/api/v1/course/42'
+        join_url:
+          type: string
+          example: '/OnlineJudge/api/v1/course/42/join'
+        quit_url:
+          type: string
+          example: '/OnlineJudge/api/v1/course/42/quit'
+        html_url:
+          type: string
+          example: '/OnlineJudge/course/42'
+
+    problemset-type:
+      type: string
+      enum:
+        - contest
+        - homework
+        - exam
+    submission-language:
+      type: string
+      enum:
+        - cpp
+        - python
+        - git
+        - verilog
+        - quiz
+    submission-status:
+      type: string
+      enum:
+        - accepted
+        - wrong_answer
+        - compile_error
+        - runtime_error
+        - time_limit_exceeded
+        - memory_limit_exceeded
+        - disk_limit_exceeded
+        - memory_leak
+        - pending
+        - compiling
+        - judging
+        - void
+        - aborted
+        - skipped
+        - system_error
+        - bad_problem
+        - unknown_error
+    next:
+      type: string
+      example: '/OnlineJudge/api/v1/endpoint?cursor=42'
+      description: 下一页的地址
+    scope:
+      type: string
+      enum:
+        - user:profile
+        - problem:read
+        - submission:read
+        - submission:create
+        - submission:write
+        - course:read
+        - course:membership
+        - problemset:read
+        - problemset:membership
 
   securitySchemes:
     acmoj-oauth:
@@ -202,10 +808,15 @@ components:
           authorizationUrl: /OnlineJudge/oauth/authorize
           tokenUrl: /OnlineJudge/api/v1/oauth/token
           scopes:
-            user:read: 获取用户基本信息
+            user:profile: 获取用户基本信息
+            problem:read: 查看题目
             submission:read: 查看评测状态
             submission:create: 提交代码
-            submission:write: 修改评测状态（例如中止评测）
+            submission:write: 控制评测过程（例如中止评测）
+            course:read: 获取用户加入的班级
+            course:membership: 加入、退出班级
+            problemset:read: 查看比赛与作业
+            problemset:membership: 加入、退出比赛与作业
     token:
       type: http
       scheme: bearer

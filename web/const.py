@@ -95,15 +95,24 @@ runner_status_info = {
     'busy': RunnerStatus('Busy', 'orange'),
 }
 
+# Please keep api_scopes_order in sync
 api_scopes = {
-    'user:read': '获取您的用户名、昵称、学号',
+    'user:profile': '获取您的个人信息',
+    'problem:read': '查看题目',
     'submission:create': '以您的身份提交代码',
     'submission:read': '查看评测状态',
     'submission:write': '控制评测过程（例如中止评测）',
+    'course:read': '获取您加入的班级信息',
+    'course:membership': '加入、退出班级',
+    'problemset:read': '查看比赛与作业',
+    'problemset:membership': '加入、退出比赛与作业',
 }
 api_scopes_order = [
-    'user:read',
+    'user:profile',
+    'problem:read',
     'submission:read', 'submission:create', 'submission:write',
+    'course:read', 'course:membership',
+    'problemset:read', 'problemset:membership',
 ]
 
 @dataclass

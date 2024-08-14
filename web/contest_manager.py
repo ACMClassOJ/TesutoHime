@@ -2,9 +2,10 @@ __all__ = ('ContestManager',)
 
 from datetime import datetime, timedelta
 from functools import cmp_to_key, wraps
+from http.client import FORBIDDEN
 from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
-from flask import g
+from flask import abort, g
 from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.orm import defer
 
@@ -75,6 +76,10 @@ class ContestManager:
     def can_write(contest: Contest):
         return UserManager.get_contest_privilege(g.user, contest) >= PrivilegeType.owner
 
+    @classmethod
+    def problems_visible(cls, contest: Contest):
+        return g.time >= contest.start_time or cls.can_read(contest)
+
 
     @classmethod
     def get_unfinished_exam_info_for_player(cls, user: User) -> Tuple[int, bool]:
@@ -102,9 +107,11 @@ class ContestManager:
         else:
             return 'Going On'
 
-    @staticmethod
-    def list_problem_for_contest(contest_id: int) -> Sequence[int]:
-        stmt = select(ContestProblem.problem_id).where(ContestProblem.contest_id == contest_id)
+    @classmethod
+    def list_problem_for_contest(cls, contest: Contest) -> Sequence[int]:
+        if not cls.problems_visible(contest):
+            return []
+        stmt = select(ContestProblem.problem_id).where(ContestProblem.contest_id == contest.id)
         data = db.scalars(stmt).all()
         return data
 
@@ -175,6 +182,22 @@ class ContestManager:
         contests = set(user.external_contests).union(cls.get_implicit_contests(user, include_admin, include_unofficial))
         g.user_contests[cache_key] = contests
         return contests
+
+    @classmethod
+    def join(cls, contest: Contest):
+        if not cls.can_join(contest):
+            abort(FORBIDDEN, 'cannot join contest now')
+        if g.user not in contest.external_players:
+            contest.external_players.add(g.user)
+        cls.flush_cache(contest)
+
+    @classmethod
+    def quit(cls, contest: Contest):
+        if g.time >= contest.end_time:
+            abort(FORBIDDEN, 'contest has ended')
+        if g.user in contest.external_players:
+            contest.external_players.remove(g.user)
+        cls.flush_cache(contest)
 
     @staticmethod
     def get_contest(contest_id: int) -> Optional[Contest]:

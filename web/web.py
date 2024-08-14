@@ -25,13 +25,14 @@ from werkzeug.routing import BaseConverter
 import commons.task_typing
 import web.const as consts
 import web.utils as utils
-from commons.models import (AccessToken, CompletionCriteriaType, Contest, Course, CourseTag,
-                            Enrollment, Group, JudgeRecordV2, JudgeStatus,
-                            Problem, ProblemPrivilege, ProblemPrivilegeType,
+from commons.models import (AccessToken, CompletionCriteriaType, Contest,
+                            Course, CourseTag, Enrollment, Group,
+                            JudgeRecordV2, JudgeStatus, Problem,
+                            ProblemPrivilege, ProblemPrivilegeType,
                             RealnameReference, Term, User)
 from commons.task_typing import ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
-from web.api import abort_json, api, api_get_user, token_is_valid
+from web.api import api, api_get_user, token_is_valid
 from web.config import (JudgeConfig, LoginConfig, NewsConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
@@ -51,9 +52,11 @@ from web.realname_manager import RealnameManager
 from web.session_manager import SessionManager
 from web.tracker import tracker
 from web.user_manager import UserManager
-from web.utils import (SqlSession, db, gen_page, gen_page_for_problem_list,
-                       generate_s3_public_url, is_api_call, paged_search_limitoffset, readable_lang_v1,
-                       readable_time, s3_internal, sort_scopes)
+from web.utils import (SqlSession, abort_converter, db, gen_page, gen_page_for_problem_list,
+                       generate_s3_public_url, is_api_call, not_logged_in,
+                       paged_search_limitoffset, readable_lang_v1,
+                       readable_time, require_logged_in, s3_internal,
+                       sort_scopes)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(api, url_prefix='/api/v1')
@@ -172,19 +175,6 @@ def errorhandler(exc: Exception):
     resp.content_type = 'text/plain'
     return resp
 
-
-def not_logged_in():
-    if is_api_call():
-        abort_json(UNAUTHORIZED, 'access token missing or invalid')
-    return redirect(url_for('web.login', next=request.full_path), SEE_OTHER)
-
-def require_logged_in(func):
-    @wraps(func)
-    def wrapped(*args, **kwargs):
-        if g.user is None:
-            return not_logged_in()
-        return func(*args, **kwargs)
-    return wrapped
 
 def set_tab(tab):
     g.current_tab = tab
@@ -330,6 +320,7 @@ def problem_list():
 
     res = paged_search_limitoffset(WebConfig.Problems_Each_Page, ProblemManager.ProblemSearch)
     count_under_11000 = db.scalar(res.query.where(Problem.id <= 11000).with_only_columns(sa.func.count()))
+    assert count_under_11000 is not None
     max_page_under_11000 = ceil(count_under_11000 / WebConfig.Problems_Each_Page)
 
     return render_template('problem_list.html', problems=res.entities,
@@ -829,7 +820,7 @@ def homework(contest_id):
 
 @web.route('/problemset/<contest:contest>')
 def problemset(contest: Contest):
-    problems_visible = g.time >= contest.start_time or ContestManager.can_read(contest)
+    problems_visible = ContestManager.problems_visible(contest)
     data = ContestManager.get_board_view(contest)
     student_ids = set(x['student_id'] for x in data)
     real_name_map = dict((s, RealnameManager.query_realname_for_contest(s, contest)) for s in student_ids)
@@ -1079,20 +1070,12 @@ def problemset_problem_remove(contest: Contest):
 
 @web.route('/problemset/<contest:contest>/quit', methods=['POST'])
 def problemset_quit(contest: Contest):
-    if g.time >= contest.end_time:
-        abort(BAD_REQUEST, '比赛已结束')
-    if g.user in contest.external_players:
-        contest.external_players.remove(g.user)
-    ContestManager.flush_cache(contest)
+    ContestManager.quit(contest)
     return redirect(request.form['back'], SEE_OTHER)
 
 @web.route('/problemset/<contest:contest>/join', methods=['POST'])
 def problemset_join(contest: Contest):
-    if not ContestManager.can_join(contest):
-        abort(BAD_REQUEST)
-    if g.user not in contest.external_players:
-        contest.external_players.add(g.user)
-    ContestManager.flush_cache(contest)
+    ContestManager.join(contest)
     return redirect(url_for('.problemset', contest=contest), SEE_OTHER)
 
 @require_logged_in
@@ -1178,23 +1161,12 @@ def course_ignore(course: Course):
 
 @web.route('/course/<course:course>/join', methods=['POST'])
 def course_join(course: Course):
-    if not CourseManager.can_join(course):
-        abort(BAD_REQUEST)
-    if g.user not in course.users:
-        db.add(Enrollment(user_id=g.user.id, course_id=course.id))
-        db.flush()
+    CourseManager.join(course)
     return redirect(url_for('.course', course=course), SEE_OTHER)
 
 @web.route('/course/<course:course>/quit', methods=['POST'])
 def course_quit(course: Course):
-    if not CourseManager.can_join(course):
-        abort(BAD_REQUEST)
-    enrollment = db.get(Enrollment, int(request.form['id']))
-    if enrollment is None or enrollment.realname_reference is not None:
-        abort(BAD_REQUEST)
-    if enrollment.user_id != g.user.id or enrollment.course_id != course.id:
-        abort(BAD_REQUEST)
-    db.delete(enrollment)
+    CourseManager.quit(course)
     return redirect(request.form['back'], SEE_OTHER)
 
 @ignore_alert_fail
@@ -1427,7 +1399,7 @@ def process_settings_api():
         token.scopes = scopes
         token.expires_at = g.time + timedelta(days=365)
         db.add(token)
-        alert_success(f'访问令牌已创建。请记下您的令牌： {token.token} 此令牌以后不会再次展示给您。')
+        alert_success(f'访问令牌已创建。请记下您的令牌： {token.token} 。此令牌以后不会再次展示给您。')
     elif action == 'pat:revoke':
         id = int(form['id'])
         t = db.get(AccessToken, id)
@@ -1675,11 +1647,11 @@ class ModelConverter(BaseConverter):
     def to_python(self, value: str):
         setup_appcontext()
         if g.user is None:
-            abort(not_logged_in())
+            not_logged_in()
         try:
             return self.get(int(value))
         except ValueError:
-            abort(BAD_REQUEST)
+            abort_converter(BAD_REQUEST, 'invalid argument')
 
     def to_url(self, value) -> str:
         if isinstance(value, int):
@@ -1690,7 +1662,7 @@ class ProblemConverter(ModelConverter):
     def get(self, model_id: int) -> Problem:
         problem = ProblemManager.get_problem(model_id)
         if not ProblemManager.can_show(problem):
-            abort(NOT_FOUND)
+            abort_converter(NOT_FOUND)
         g.can_read = ProblemManager.can_read(problem)
         g.can_write = ProblemManager.can_write(problem)
         g.in_exam = problem_in_exam(problem.id)
@@ -1700,7 +1672,7 @@ class SubmissionConverter(ModelConverter):
     def get(self, model_id: int) -> JudgeRecordV2:
         submission = JudgeManager.get_submission(model_id)
         if not JudgeManager.can_show(submission):
-            abort(NOT_FOUND)
+            abort_converter(NOT_FOUND)
         g.can_write = JudgeManager.can_write(submission)
         g.can_abort = JudgeManager.can_abort(submission)
         return submission
@@ -1709,7 +1681,7 @@ class ContestConverter(ModelConverter):
     def get(self, model_id: int) -> Contest:
         contest = ContestManager.get_contest(model_id)
         if contest is None:
-            abort(NOT_FOUND)
+            abort_converter(NOT_FOUND)
         g.can_read = ContestManager.can_read(contest)
         g.can_write = ContestManager.can_write(contest)
         return contest
@@ -1718,7 +1690,7 @@ class CourseConverter(ModelConverter):
     def get(self, model_id: int) -> Course:
         course = CourseManager.get_course(model_id)
         if course is None:
-            abort(NOT_FOUND)
+            abort_converter(NOT_FOUND)
         g.can_read = CourseManager.can_read(course)
         g.can_write = CourseManager.can_write(course)
         return course

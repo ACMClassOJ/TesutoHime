@@ -1,14 +1,16 @@
 __all__ = ('CourseManager',)
 
+from http.client import BAD_REQUEST, FORBIDDEN
 from typing import Optional, Sequence, Set, Tuple
 
-from flask import g
+import sqlalchemy as sa
+from flask import abort, g
 from sqlalchemy import select
 
-from commons.models import Course, Group, RealnameReference, User
+from commons.models import Course, Enrollment, Group, RealnameReference, User
 from web.const import PrivilegeType
 from web.user_manager import UserManager
-from web.utils import db
+from web.utils import SearchDescriptor, db
 
 
 class CourseManager:
@@ -89,3 +91,41 @@ class CourseManager:
             .where(Group.course_id == course.id) \
             .where(Group.name == group_name)
         return db.scalar(stmt)
+
+    @classmethod
+    def join(cls, course: Course):
+        if not cls.can_join(course):
+            abort(FORBIDDEN, 'cannot join course now')
+        if g.user not in course.users:
+            db.add(Enrollment(user_id=g.user.id, course_id=course.id))
+            db.flush()
+
+    @classmethod
+    def quit(cls, course: Course):
+        if not cls.can_join(course):
+            abort(FORBIDDEN, 'cannot quit course now')
+        enrollment = db.scalar(
+            select(Enrollment)
+            .where(Enrollment.user_id == g.user.id)
+            .where(Enrollment.course_id == course.id)
+        )
+        if enrollment is None:
+            abort(BAD_REQUEST, 'you are not enrolled')
+        if enrollment.realname_reference is not None:
+            abort(FORBIDDEN, 'cannot quit course now')
+        db.delete(enrollment)
+
+    class CourseSearch(SearchDescriptor):
+        __model__ = Course
+
+        @staticmethod
+        def keyword(keyword: str):
+            return sa.func.strpos(Course.name, keyword) > 0
+
+        @staticmethod
+        def term(id: int):
+            return Course.term_id == id
+
+        @staticmethod
+        def tag(id: int):
+            return Course.tag_id == id

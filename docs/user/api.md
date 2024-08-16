@@ -34,7 +34,7 @@ ACMOJ 采用业界通用的 [OAuth 2.0 Authorization Code Grant][oauth2] 进行�
 - scope: 必填，希望获得的[授权范围](#授权范围)，以空格分隔
 - state: 选填，返回 redirect_uri 时将带有 state，开发者可以利用此机制防止攻击
 
-例如：https://acm.sjtu.edu.cn/OnlineJudge/oauth/authorize?client_id=XXXXXX&redirect_uri=https%3A%2F%2Fexample.com%2Fcallback&scope=user%3Aprofile%20problem%3Aread&state=YYYYYY 授权后将重定向至 https://example.com/callback?state=YYYYYY&code=ZZZZZZ 。
+例如：https://acm.sjtu.edu.cn/OnlineJudge/oauth/authorize?response_type=code&client_id=XXXXXX&redirect_uri=https%3A%2F%2Fexample.com%2Fcallback&scope=user%3Aprofile%20problem%3Aread&state=YYYYYY 授权后将重定向至 https://example.com/callback?state=YYYYYY&code=ZZZZZZ 。
 
 服务端获得 code 后，需请求 ACMOJ 服务器换取 access token；code 不是访问凭证，不能直接用于授权请求。获取 access token 的地址为 https://acm.sjtu.edu.cn/OnlineJudge/api/v1/oauth/token 。具体接口请参见 [API 详情][swagger]。code 的有效期为一分钟，请及时换取 access token。
 

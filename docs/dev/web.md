@@ -175,7 +175,7 @@ alembic 会自动对比数据库内容和当前 model 的差异，生成 migrati
 - `id`: 用户 id；
 - `username`: 用户名；
 - `username_lower`: 用户名的小写形式；
-- `student_id`: 学号；
+- `student_id`: 学工号；
 - `friendly_name`: 昵称；
 - `password`: 密码；
 - `privilege`: 用户权限；
@@ -231,7 +231,7 @@ alembic 会自动对比数据库内容和当前 model 的差异，生成 migrati
 *另请参见[实名数据管理](#实名数据管理)章节。*
 
 - `id`: 条目 id；
-- `student_id`: 学号；
+- `student_id`: 学工号；
 - `real_name`: 实名；
 - `course_id`: 所属课程 id。
 
@@ -388,5 +388,5 @@ alembic 会自动对比数据库内容和当前 model 的差异，生成 migrati
   - data[i]['problems'][j]['count'] 存储第 j 道题的提交次数。
   - data[i]['problems'][j]['accepted'] 存储第 j 道题通过与否。
 - data[i]['realname'] 存储第 i 个用户的真实姓名（Realname reference）。
-- data[i]['student_id'] 存储第 i 个用户的学号。
+- data[i]['student_id'] 存储第 i 个用户的学工号。
 - data[i]['username'] 存储第 i 个用户的用户名。

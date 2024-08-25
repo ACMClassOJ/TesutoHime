@@ -24,8 +24,8 @@
                 <input class="form-control" type="text" name="friendly_name" id="friendly_name" required="required" pattern="[a-zA-Z0-9_]{1,32}" title="昵称要求：32 位以内的大小写字母、数字、下划线" autocomplete="nickname">
             </div>
             <div class="form-group">
-                <label for="student_id">学号</label>
-                <input class="form-control" type="text" name="student_id" id="student_id" required="required" pattern="[0-9]{12}" title="12 位学号（博士生学号以 0 开头）">
+                <label for="student_id">学工号</label>
+                <input class="form-control" type="text" name="student_id" id="student_id" required="required" pattern="[0-9]{12}|[0-9]{5}" title="12 位学号（博士生学号以 0 开头）或 5 位工号">
             </div>
             <br>
             <input class="btn btn-block btn-primary" type="submit" value="注册">

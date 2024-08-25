@@ -47,13 +47,13 @@ formRealnameCreate.addEventListener('submit', e => {
       if (line.includes('，')) {
         alert(`请使用西文逗号 ',' 而非中文逗号 '，'`)
       } else {
-        alert(`学号 '${line}' 没有对应的姓名`)
+        alert(`学工号 '${line}' 没有对应的姓名`)
       }
       e.preventDefault()
       return
     }
     if (!isIntegral(cols[0])) {
-      alert(`学号 '${cols[0]}' 不是一个数${isIntegral(cols[1]) ? `；姓名 '${cols[1]}' 似乎是一个学号。您是否填反了学号和姓名的顺序？` : '，请检查您输入的数据。'}`)
+      alert(`学工号 '${cols[0]}' 不是一个数${isIntegral(cols[1]) ? `；姓名 '${cols[1]}' 似乎是一个学号。您是否填反了学号和姓名的顺序？` : '，请检查您输入的数据。'}`)
       e.preventDefault()
       return
     }

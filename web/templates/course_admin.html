@@ -145,7 +145,7 @@
                     <table class="table table-striped table-bordered table-hover">
                         <thead>
                             <tr>
-                                <th>学号</th>
+                                <th>学工号</th>
                                 <th>姓名</th>
                                 <th>分组</th>
                                 <th>操作</th>
@@ -172,7 +172,7 @@
                     <form method="POST">
                         {{ g.csrf() }}
                         <div>
-                            <label for="group-student-{{ group.id }}">需要添加/移除的学号，每行一个学号；学号需存在对应的实名信息</label>
+                            <label for="group-student-{{ group.id }}">需要添加/移除的学工号，每行一个学工号；学工号需存在对应的实名信息</label>
                         </div>
                         <textarea class="form-control mb-3" rows="5" id="group-student-{{ group.id }}" name="data"></textarea>
                         <div class="float-right d-flex mb-3 ml-auto">
@@ -256,7 +256,7 @@
                 <table class="table table-striped table-bordered table-hover">
                     <thead>
                         <tr>
-                            <th>学号</th>
+                            <th>学工号</th>
                             <th>姓名</th>
                             <th>用户名</th>
                             {%- if course.groups | length > 0 -%}
@@ -287,8 +287,8 @@
             </div>
             <hr>
             <h3>批量添加/修改实名信息</h3>
-            <p>每行一条信息，格式为「学号,姓名,分组（可不填）」。请使用半角（西文）逗号。一位同学可以有多个分组，以竖线「|」分隔。</p>
-            <p>如需删除实名信息，请填写需要删除的学号，并将姓名填写为「delete」（不含引号）。</p>
+            <p>每行一条信息，格式为「<code>学工号,姓名,分组（可不填）</code>」。请使用半角（西文）逗号。一位同学可以有多个分组，以竖线「|」分隔。</p>
+            <p>如需删除实名信息，请填写需要删除的学工号，并将姓名填写为「delete」（不含引号）。</p>
             <p>为便于 OJ 的管理，请勿修改或删除班级管理员的实名信息。</p>
             <form id="form-realname-create" method="POST" class="clearfix">
                 {{ g.csrf() }}
@@ -303,7 +303,7 @@
             <hr>
             <h3>移除班级成员</h3>
             <p>管理员不能手动向班级添加成员用户，所有学生需自行加入。如有批量添加用户的需求，请联系 OJ 运维组。</p>
-            <p>您可以使用此表单批量移除班级成员。每行一个用户名（用户名不是学号，也不是昵称）。</p>
+            <p>您可以使用此表单批量移除班级成员。每行一个用户名（用户名不是学工号，也不是昵称）。</p>
             <form method="POST" class="clearfix" onsubmit="return confirm('确定要移除成员？')">
                 {{ g.csrf() }}
                 <input type="hidden" name="action" value="user-delete">
@@ -343,7 +343,7 @@
             </div>
             <hr>
             <h3>添加管理员</h3>
-            <p>请在下方输入待添加管理员的用户名，一行一个用户名。用户名不是学号或昵称。</p>
+            <p>请在下方输入待添加管理员的用户名，一行一个用户名。用户名不是学工号或昵称。</p>
             <p>在添加管理员之前，请先给管理员添加实名信息，并作为学生加入本班级。</p>
             <form method="POST" class="clearfix" onsubmit="return confirm('确定要添加管理员？')">
                 {{ g.csrf() }}

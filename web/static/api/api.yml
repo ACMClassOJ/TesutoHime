@@ -837,6 +837,7 @@ components:
 
   securitySchemes:
     acmoj-oauth:
+      description: '测试用 client_id=swaggerui client_secret=acmoj 仅可用于 Swagger UI（即此页面）'
       type: oauth2
       flows:
         authorizationCode:

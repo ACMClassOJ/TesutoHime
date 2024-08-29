@@ -24,7 +24,7 @@ Web 模块使用 [Redis](https://redis.io/) 缓存数据、中转数据，关于
 
 ## CSRF 防护
 
-[Cross-Site Request Forgery (简称 CSRF 或 XSRF)][csrf] 是一类比较常见的网络攻击方式。攻击者诱导用户访问一个第三方网页，第三方网页会向 OJ 发起请求。由于早起浏览器同源政策不是很规范，导致 GET 或 POST 请求都可以直接由其他域名发起，无需用户确认，且请求中会携带用户的 cookies。这种攻击方式下，第三方网页无法获取到生成的请求返回的响应，攻击者的目的是请求所带来的副作用。
+[Cross-Site Request Forgery (简称 CSRF 或 XSRF)][csrf] 是一类比较常见的网络攻击方式。攻击者诱导用户访问一个第三方网页，第三方网页会向 OJ 发起请求。由于早期浏览器同源政策不是很规范，导致 GET 或 POST 请求都可以直接由其他域名发起，无需用户确认，且请求中会携带用户的 cookies。这种攻击方式下，第三方网页无法获取到生成的请求返回的响应，攻击者的目的是请求所带来的副作用。
 
 [csrf]: https://en.wikipedia.org/wiki/Cross-site_request_forgery
 

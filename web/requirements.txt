@@ -1,5 +1,6 @@
 boto3==1.28.76
-Flask>=2
+Flask==2.2.5
+Werkzeug==2.2.3
 blinker==1.6.3
 pymysql==1.1.0
 redis==4.6.0

@@ -30,10 +30,15 @@ def token_is_valid(token: Optional[AccessToken]) -> TypeGuard[AccessToken]:
 
 def api_get_user() -> Optional[User]:
     g.token = None
-    auth = request.authorization
-    if auth is None: return None
-    if auth.type == 'bearer':
-        token = db.scalar(select(AccessToken).where(AccessToken.token == auth.token))
+    auth_header = request.headers.get('Authorization')
+    if auth_header is None: return None
+    
+    scheme, _, token = auth_header.partition(' ')
+    scheme = scheme.lower()
+    token = token.strip()
+
+    if scheme == 'bearer':
+        token = db.scalar(select(AccessToken).where(AccessToken.token == token))
         if not token_is_valid(token): return None
         g.token = token
         return token.user

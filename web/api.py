@@ -33,12 +33,12 @@ def api_get_user() -> Optional[User]:
     auth_header = request.headers.get('Authorization')
     if auth_header is None: return None
     
-    scheme, _, token = auth_header.partition(' ')
+    scheme, _, token_str = auth_header.partition(' ')
     scheme = scheme.lower()
-    token = token.strip()
+    token_str = token_str.strip()
 
     if scheme == 'bearer':
-        token = db.scalar(select(AccessToken).where(AccessToken.token == token))
+        token = db.scalar(select(AccessToken).where(AccessToken.token == token_str))
         if not token_is_valid(token): return None
         g.token = token
         return token.user

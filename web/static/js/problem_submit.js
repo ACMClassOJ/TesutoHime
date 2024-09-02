@@ -23,7 +23,7 @@ $(function() {
 
     const form = document.getElementById('problem-submit-form')
     form.addEventListener('submit', function () {
-        const el = document.querySelector('#lang')
+        const el = document.querySelector('#language')
         if (el.value == 'autodetect') {
             const languagesAllowed = Array.from(el.options).map(x => x.value).filter(x => x != 'autodetect')
             const code = document.querySelector('#code').value

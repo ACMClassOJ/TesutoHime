@@ -865,7 +865,8 @@ def export_problemset(contest: Contest):
         ext = language_info[s.language].extension
         ext = '.' + ext if ext is not None else ''
         user = player_by_id[s.user_id]
-        return f'{user.student_id}-{names[user.id]}-{user.username}-{s.id}-P{s.problem_id}-{s.status.name}-{s.score}{ext}'
+        late_phrase = '-late' if ContestManager.is_late(contest, s.created_at) else ''
+        return f'{user.student_id}-{names[user.id]}-{user.username}-{s.id}-P{s.problem_id}-{s.status.name}-{s.score}{late_phrase}{ext}'
 
     def process_prelude(content: str, language: str):
         prelude_formatting = {
@@ -888,10 +889,13 @@ def export_problemset(contest: Contest):
             details: ProblemJudgeResult = deserialize(s.details)
             details_message = '\n'.join(f'{group.name}: {group.score} {group.result}' for group in details.groups)
         user = player_by_id[s.user_id]
+        late_phrase = ''
+        if ContestManager.is_late(contest, s.created_at):
+            late_phrase = ' (Late Submission)'
         content = f'''
 {user.student_id} {names[user.id]} ({user.username})
 Problem {s.problem_id} - {problem_by_id[s.problem_id].title}
-Time: {s.created_at.strftime('%Y-%m-%d %H:%M:%S')}
+Time: {s.created_at.strftime('%Y-%m-%d %H:%M:%S')}{late_phrase}
 Status: {s.status.name}
 Score: {s.score}
 Message: {message}
@@ -922,10 +926,10 @@ Message: {message}
     f = ZipFile(zip_filename, 'w')
     for _, tries_i in groupby(submissions, lambda x: (x.user_id, x.problem_id)):
         tries = list(tries_i)
-        problem_data = scores[tries[0].user_id]['problems'][tries[0].problem_id]
+        problem_data = [ x for x in scores[tries[0].user_id]['problems'] if x['id'] == tries[0].problem_id ][0]
         if not problem_data['late']:
             tries = [ x for x in tries if not ContestManager.is_late(contest, x.created_at) ]
-            # TODO: testing
+            if len(tries) == 0: continue
         score = max(x.score for x in tries)
         score_tries = list(sorted(filter(lambda x: x.score == score, tries), key=lambda x: x.id))
         s = score_tries[-1]

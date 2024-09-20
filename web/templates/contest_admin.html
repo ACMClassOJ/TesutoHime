@@ -306,6 +306,22 @@
     </form>
     <hr>
 
+    <h3>创建比赛副本</h3>
+    <p>这将会创建一个新的比赛，并复制此比赛的所有设置。稍后您将跳转到新创建的比赛。请在下方文本框中输入 <code>duplicate</code> 以确认：</p>
+    <form method="POST">
+        {{ g.csrf() }}
+        <div class="form-row">
+            <input type="hidden" name="action" value="duplicate">
+            <div class="col-md-3">
+                <input class="form-control" type="text" name="confirm" pattern="duplicate" required>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline-primary" type="submit">创建比赛副本</button>
+            </div>
+        </div>
+    </form>
+    <hr>
+
     <h3>删除比赛</h3>
     <p>删除比赛将会不可逆地从数据库中删除比赛相关的所有信息，但不会删除提交的代码。如您确认要删除比赛，请在下方文本框中输入比赛编号以确认：</p>
     <form method="POST">

@@ -37,6 +37,28 @@ class ContestManager:
         return contest
 
     @staticmethod
+    def duplicate_contest(contest: Contest) -> Contest:
+        new_contest = Contest(name=contest.name + ' 副本',
+                              description=contest.description,
+                              start_time=contest.start_time,
+                              end_time=contest.end_time,
+                              late_submission_deadline=contest.late_submission_deadline,
+                              type=contest.type,
+                              ranked=contest.ranked,
+                              rank_penalty=contest.rank_penalty,
+                              rank_partial_score=contest.rank_partial_score,
+                              course_id=contest.course_id,
+                              group_ids=contest.group_ids,
+                              rank_all_users=contest.rank_all_users,
+                              completion_criteria_type=contest.completion_criteria_type,
+                              completion_criteria=contest.completion_criteria,
+                              allowed_languages=contest.allowed_languages,
+                              problems=contest.problems)
+        db.add(new_contest)
+        db.flush()
+        return new_contest
+
+    @staticmethod
     def delete_contest(contest: Contest):
         db.delete(contest)
         db.flush()

@@ -1012,6 +1012,11 @@ def process_problemset_admin(contest: Contest):
         alert_success('分组已保存')
     elif action == 'export':
         return export_problemset(contest)
+    elif action == 'duplicate':
+        if form.get('confirm') != 'duplicate':
+            abort(BAD_REQUEST)
+        new_contest = ContestManager.duplicate_contest(contest)
+        return redirect(url_for('.problemset_admin', contest=new_contest), SEE_OTHER)
     else:
         abort(BAD_REQUEST)
 

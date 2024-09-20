@@ -4,6 +4,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/bootstrap-select.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -111,7 +112,10 @@
 
 
         <div {{ begin_tab('group') }}>
-            <h3>分组</h3>
+            <h3 class="d-flex align-items-center">
+                分组
+                <a class="font-size-normal ml-2" href="{{ url_for('.help', page='admin/interface') }}#修改分组"><i class="fa fa-question-circle mr-1"></i>帮助</a>
+            </h3>
             {%- for group in course.groups -%}
             <details{{ ' open' if g.expand_group == group.id | string }}>
                 <summary>{{ group.name }}</summary>
@@ -206,7 +210,10 @@
 
         <div {{ begin_tab('user') }}>
             <h3 class="mb-3">
-                实名信息
+                <span class="d-inline-flex align-items-center">
+                    实名信息
+                    <a class="font-size-normal ml-2" href="{{ url_for('.help', page='admin/interface') }}#修改成员"><i class="fa fa-question-circle mr-1"></i>帮助</a>
+                </span>
                 <a class="btn btn-outline-primary float-right" href="{{ url_for('.course_realname_export', course=course) }}">导出</a>
             </h3>
             {%- if course.groups | length > 0 -%}

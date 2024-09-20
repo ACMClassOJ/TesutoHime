@@ -295,7 +295,7 @@ class ContestManager:
         not_completed = False
         if contest.completion_criteria_type != CompletionCriteriaType.none and is_enrolled:
             if scores is not None and scores['completed']:
-                retval['status'] = 'completed-late' if scores['late'] else 'completed'
+                retval['status'] = 'completed-late' if scores['late_time'] is not None else 'completed'
                 return retval
             not_completed = True
         if contest.end_time < g.time:
@@ -378,7 +378,7 @@ class ContestManager:
                 'student_id': user.student_id,
                 'id': user.id,
                 'completed': False,
-                'late': False,
+                'late_time': None,
                 'username': user.username,
                 'is_external': user not in implicit_players,
             } for user in players
@@ -421,9 +421,7 @@ class ContestManager:
             is_ac = status == JudgeStatus.accepted
             submit_count = problem['count']
 
-            if (int(score) > max_score or is_ac) and late and not user_data['completed']:
-                problem['late'] = True
-                user_data['late'] = True
+            late_update = late and not user_data['completed'] and (int(score) > max_score or is_ac)
 
             if int(score) > max_score:
                 user_data['score'] -= max_score
@@ -445,6 +443,12 @@ class ContestManager:
 
             problem['score'] = max_score
             problem['count'] = submit_count
+
+            if late_update:
+                problem['late'] = True
+                user_data['late_time'] = submit.created_at.isoformat()
+                user = user_id_to_user[user_data['id']]  # type: ignore
+                user_data['completed'] = cls.user_has_completed_by_scores(contest, user_data, user, code)  # type: ignore
 
         for player in data:
             if player['completed']: continue

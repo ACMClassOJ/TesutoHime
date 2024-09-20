@@ -912,12 +912,20 @@ Message: {message}
         for x in players)
     submissions = ContestManager.get_contest_submissions(contest, players)
     submissions = sorted(submissions, key=lambda x: (x.user_id, x.problem_id))
+    scores_list = ContestManager.get_scores(contest)
+    scores = {}
+    for player in scores_list:
+        scores[player['id']] = player
 
     zip_filename = f'/tmp/export-{contest.id}-{uuid4()}.zip'
     g.export_filename = zip_filename
     f = ZipFile(zip_filename, 'w')
     for _, tries_i in groupby(submissions, lambda x: (x.user_id, x.problem_id)):
         tries = list(tries_i)
+        problem_data = scores[tries[0].user_id]['problems'][tries[0].problem_id]
+        if not problem_data['late']:
+            tries = [ x for x in tries if not ContestManager.is_late(contest, x.created_at) ]
+            # TODO: testing
         score = max(x.score for x in tries)
         score_tries = list(sorted(filter(lambda x: x.score == score, tries), key=lambda x: x.id))
         s = score_tries[-1]
@@ -982,12 +990,9 @@ def process_problemset_admin(contest: Contest):
             if form.get(f'lang-{lang}', 'off') == 'on':
                 languages.append(lang)
         contest.allowed_languages = None if len(languages) == len(language_info) or len(languages) == 0 else languages
-        db.flush()
-        ContestManager.flush_cache(contest)
-        alert_success('作业要求已保存')
-    elif action == 'late-submission':
-        enable = form.get('enable', 'no') == 'yes'
-        if enable:
+
+        late_submission_enable = form.get('enable', 'no') == 'yes'
+        if late_submission_enable:
             ddl_string = form.get('deadline', '')
             if ddl_string == '':
                 alert_fail('请填写迟交截止时间')
@@ -997,8 +1002,10 @@ def process_problemset_admin(contest: Contest):
             contest.late_submission_deadline = ddl
         else:
             contest.late_submission_deadline = None
+
+        db.flush()
         ContestManager.flush_cache(contest)
-        alert_success('迟交设置已保存')
+        alert_success('作业要求已保存')
     elif action == 'groups':
         if form.get('all', 'off') == 'on':
             contest.group_ids = None

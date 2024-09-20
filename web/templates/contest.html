@@ -134,8 +134,11 @@
                             {%- if player['completed'] is string -%}
                             <td>错误：{{ player['completed'] }}</td>
                             {%- elif player['completed'] == True -%}
-                            {%- if player['late'] -%}
-                            <td>已补交</td>
+                            {%- if player['late_time'] is not None -%}
+                            <td>
+                                已补交<br>
+                                {{ g.utils.readable_time_minutes(g.utils.datetime.fromisoformat(player['late_time'])) }}
+                            </td>
                             {%- else -%}
                             <td>已完成</td>
                             {%- endif -%}

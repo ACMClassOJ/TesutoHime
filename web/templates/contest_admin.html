@@ -168,7 +168,13 @@
         <a class="font-size-normal ml-2" href="{{ url_for('.help', page='admin/interface') }}#设置作业要求"><i class="fa fa-question-circle mr-1"></i>帮助</a>
     </h3>
     {%- if contest.completion_criteria_type.name != 'none' -%}
-    <p>共 {{ completion_stats['total'] }} 人需完成，有 {{ completion_stats['completed'] }} 人已完成。</p>
+    <p>
+        共 {{ completion_stats['total'] }} 人需完成，有 {{ completion_stats['completed'] }} 人已{{ '按时' if contest.late_submission_deadline is not None }}完成
+        {%- if contest.late_submission_deadline is not None -%}
+        ，{{ completion_stats['completed-late'] }} 人已补交完成
+        {%- endif -%}
+        。
+    </p>
     {%- endif -%}
     {%- if completion_stats['errors'] | length > 0 -%}
     <h4>检查过程中出现运行时错误：</h4>

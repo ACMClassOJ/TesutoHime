@@ -1044,7 +1044,7 @@ def problemset_admin(contest: Contest):
     scores = ContestManager.get_scores(contest)
     # problem id -> (try count, ac count)
     problem_stats = dict((problem.id, { 'try': 0, 'ac': 0 }) for problem in contest.problems)
-    completion_stats = { 'total': 0, 'completed': 0, 'errors': set() }
+    completion_stats = { 'total': 0, 'completed': 0, 'completed-late': 0, 'errors': set() }
     for player in scores:
         if player['is_external'] and not contest.rank_all_users:
             continue
@@ -1053,7 +1053,10 @@ def problemset_admin(contest: Contest):
             if type(player['completed']) == str:
                 completion_stats['errors'].add(player['completed'])  # type: ignore
             elif player['completed'] == True:  # can also be str
-                completion_stats['completed'] += 1  # type: ignore
+                if player['late_time'] is not None:
+                    completion_stats['completed-late'] += 1  # type: ignore
+                else:
+                    completion_stats['completed'] += 1  # type: ignore
         for problem in player['problems']:
             if problem['count'] > 0:
                 problem_stats[problem['id']]['try'] += 1

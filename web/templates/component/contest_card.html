@@ -4,7 +4,9 @@
 {%- set (class_, icon, status_text) = {
   'future': ('info', 'clock', '未开始'),
   'completed': ('success', 'check-circle', '已完成'),
-  'past-not-completed': ('danger', 'exclamation', '未完成'),
+  'completed-late': ('ended', 'calendar-check', '已补交'),
+  'late-submission-period': ('warning', 'exclamation', '可补交'),
+  'past-not-completed': ('danger', 'calendar-times', '未完成'),
   'past': ('ended', 'calendar-check', '已结束'),
   'in-progress': ('primary', 'spinner', '正在进行'),
   'near-end': ('warning', 'stopwatch', '即将结束'),

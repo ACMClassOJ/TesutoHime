@@ -80,6 +80,11 @@ class ContestManager:
     def problems_visible(cls, contest: Contest):
         return g.time >= contest.start_time or cls.can_read(contest)
 
+    @staticmethod
+    def is_late(contest: Contest, time: datetime):
+        return contest.late_submission_deadline is not None and \
+            contest.end_time <= time < contest.late_submission_deadline
+
 
     @classmethod
     def get_unfinished_exam_info_for_player(cls, user: User) -> Tuple[int, bool]:
@@ -268,11 +273,17 @@ class ContestManager:
         not_completed = False
         if contest.completion_criteria_type != CompletionCriteriaType.none and is_enrolled:
             if scores is not None and scores['completed']:
-                retval['status'] = 'completed'
+                retval['status'] = 'completed-late' if scores['late'] else 'completed'
                 return retval
             not_completed = True
         if contest.end_time < g.time:
-            retval['status'] = 'past-not-completed' if not_completed else 'past'
+            if not_completed:
+                if cls.is_late(contest, g.time):
+                    retval['status'] = 'late-submission-period'
+                else:
+                    retval['status'] = 'past-not-completed'
+            else:
+                retval['status'] = 'past'
             return retval
         maxdelta = min(
             (contest.end_time - contest.start_time) / 5,
@@ -290,13 +301,16 @@ class ContestManager:
         if no_details:
             stmt = stmt \
                 .options(defer(JudgeRecordV2.details), defer(JudgeRecordV2.message))
+        end_time = contest.end_time if contest.late_submission_deadline is None else contest.late_submission_deadline
         stmt = stmt \
             .where(JudgeRecordV2.problem_id.in_([x.id for x in contest.problems])) \
             .where(JudgeRecordV2.user_id.in_([x.id for x in players])) \
             .where(JudgeRecordV2.created_at >= contest.start_time) \
-            .where(JudgeRecordV2.created_at < contest.end_time)
+            .where(JudgeRecordV2.created_at < end_time)
         if contest.allowed_languages is not None:
             stmt = stmt.where(JudgeRecordV2.language.in_(contest.allowed_languages))
+        # ASSUMPTION: submission time is monotonic
+        stmt = stmt.order_by(JudgeRecordV2.id.asc())
         return db.scalars(stmt).all()
 
     _cache = Cache('contest', 14, json=True)
@@ -335,12 +349,14 @@ class ContestManager:
                         'score': 0,
                         'count': 0,
                         'pending_count': 0,
+                        'late': False,
                         'accepted': False,
                     } for problem in contest.problems
                 ],
                 'student_id': user.student_id,
                 'id': user.id,
                 'completed': False,
+                'late': False,
                 'username': user.username,
                 'is_external': user not in implicit_players,
             } for user in players
@@ -348,8 +364,21 @@ class ContestManager:
         user_id_to_user = dict((user.id, user) for user in players)
         user_id_to_num = dict((user.id, i) for i, user in enumerate(players))
         problem_to_num = dict((problem.id, i) for i, problem in enumerate(contest.problems))
+        late = False
+
+        code = None
+        if contest.completion_criteria_type == CompletionCriteriaType.python:
+            if contest.completion_criteria is not None:
+                code = cls._py_sanitizer.safe_compile(contest.completion_criteria)
 
         for submit in cls.get_contest_submissions(contest, players):
+            if not late and cls.is_late(contest, submit.created_at):
+                # This is the first late submission
+                for player in data:
+                    user = user_id_to_user[player['id']]  # type: ignore
+                    player['completed'] = cls.user_has_completed_by_scores(contest, player, user, code)  # type: ignore
+                late = True
+
             user_id = submit.user_id
             problem_id = submit.problem_id
             status = submit.status
@@ -364,11 +393,15 @@ class ContestManager:
             user_data = data[rank]
             problem = user_data['problems'][problem_index]  # type: ignore
 
-            if problem['accepted']:
+            if problem['accepted'] or (late and user_data['completed']):
                 continue
             max_score = problem['score']
             is_ac = status == JudgeStatus.accepted
             submit_count = problem['count']
+
+            if (int(score) > max_score or is_ac) and late and not user_data['completed']:
+                problem['late'] = True
+                user_data['late'] = True
 
             if int(score) > max_score:
                 user_data['score'] -= max_score
@@ -391,11 +424,8 @@ class ContestManager:
             problem['score'] = max_score
             problem['count'] = submit_count
 
-        code = None
-        if contest.completion_criteria_type == CompletionCriteriaType.python:
-            if contest.completion_criteria is not None:
-                code = cls._py_sanitizer.safe_compile(contest.completion_criteria)
         for player in data:
+            if player['completed']: continue
             user = user_id_to_user[player['id']]  # type: ignore
             player['completed'] = cls.user_has_completed_by_scores(contest, player, user, code)  # type: ignore
 

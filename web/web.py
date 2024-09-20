@@ -36,7 +36,8 @@ from web.api import api, api_get_user, token_is_valid
 from web.config import (JudgeConfig, LoginConfig, NewsConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
-from web.const import (Privilege, ReturnCode, api_scopes, language_info,
+from web.const import (Privilege, ReturnCode, api_scopes,
+                       completion_criteria_max_length, language_info,
                        runner_status_info)
 from web.contest_manager import ContestManager
 from web.course_manager import CourseManager
@@ -52,11 +53,11 @@ from web.realname_manager import RealnameManager
 from web.session_manager import SessionManager
 from web.tracker import tracker
 from web.user_manager import UserManager
-from web.utils import (SqlSession, abort_converter, db, gen_page, gen_page_for_problem_list,
-                       generate_s3_public_url, is_api_call, not_logged_in,
-                       paged_search_limitoffset, readable_lang_v1,
-                       readable_time, require_logged_in, s3_internal,
-                       sort_scopes)
+from web.utils import (SqlSession, abort_converter, db, gen_page,
+                       gen_page_for_problem_list, generate_s3_public_url,
+                       is_api_call, not_logged_in, paged_search_limitoffset,
+                       readable_lang_v1, readable_time, require_logged_in,
+                       s3_internal, sort_scopes)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(api, url_prefix='/api/v1')
@@ -938,8 +939,6 @@ def export_problemset_cleanup(resp):
             pass
     return resp
 
-completion_criteria_max_length = 512
-
 @ignore_alert_fail
 def process_problemset_admin(contest: Contest):
     form = request.form
@@ -955,7 +954,7 @@ def process_problemset_admin(contest: Contest):
         contest.rank_partial_score = form.get('rank_partial_score', 'off') == 'on'
         contest.rank_all_users = form.get('rank_all_users', 'off') == 'on'
         ContestManager.flush_cache(contest)
-        alert_success('已编辑比赛')
+        alert_success('基本信息已保存')
     elif action == 'delete':
         if request.form['confirm'] != str(contest.id):
             alert_fail('输入的比赛编号不正确')
@@ -985,7 +984,21 @@ def process_problemset_admin(contest: Contest):
         contest.allowed_languages = None if len(languages) == len(language_info) or len(languages) == 0 else languages
         db.flush()
         ContestManager.flush_cache(contest)
-        alert_success('已更改作业要求')
+        alert_success('作业要求已保存')
+    elif action == 'late-submission':
+        enable = form.get('enable', 'no') == 'yes'
+        if enable:
+            ddl_string = form.get('deadline', '')
+            if ddl_string == '':
+                alert_fail('请填写迟交截止时间')
+            ddl = datetime.fromisoformat(ddl_string)
+            if ddl <= contest.end_time:
+                alert_fail('迟交截止时间需晚于结束时间')
+            contest.late_submission_deadline = ddl
+        else:
+            contest.late_submission_deadline = None
+        ContestManager.flush_cache(contest)
+        alert_success('迟交设置已保存')
     elif action == 'groups':
         if form.get('all', 'off') == 'on':
             contest.group_ids = None
@@ -996,7 +1009,7 @@ def process_problemset_admin(contest: Contest):
                     gs.append(group.id)
             contest.group_ids = gs
         ContestManager.flush_cache(contest)
-        alert_success('已更改分组')
+        alert_success('分组已保存')
     elif action == 'export':
         return export_problemset(contest)
     else:

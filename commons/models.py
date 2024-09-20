@@ -244,6 +244,7 @@ class Contest(UseTimestamps, Base):
 
     start_time: Mapped[datetime]
     end_time: Mapped[datetime]
+    late_submission_deadline: Mapped[Optional[datetime]]
     type: Mapped[int] = mapped_column(index=True)
     ranked: Mapped[bool]
     rank_penalty: Mapped[bool]

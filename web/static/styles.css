@@ -116,6 +116,10 @@ body .card-header {
         display: inline-block;
         float: none;
     }
+    .problemset-progress__late {
+        display: block;
+        float: none;
+    }
     .problemset-course {
         text-align: center;
     }

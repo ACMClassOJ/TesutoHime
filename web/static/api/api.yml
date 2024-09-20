@@ -710,6 +710,11 @@ components:
         end_time:
           type: string
           format: date-time
+        late_submission_deadline:
+          type: string
+          description: null 表示不允许迟交
+          format: date-time
+          nullable: true
         type:
           $ref: '#/components/schemas/problemset-type'
         problems:

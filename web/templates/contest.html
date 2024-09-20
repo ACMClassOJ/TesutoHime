@@ -20,6 +20,9 @@
             </div>
             <div class="problemset-progress__text">
                 <span class="problemset-progress__times">{{ g.utils.readable_time_minutes(contest.start_time) }}&ndash;{{ g.utils.readable_time_minutes(contest.end_time) }}</span>
+                {%- if contest.late_submission_deadline is not None -%}
+                <span class="problemset-progress__late">（补交截止于 {{ g.utils.readable_time_minutes(contest.late_submission_deadline) }}）</span>
+                {%- endif -%}
                 <span class="problemset-progress__percentage">{{ percentage }}% {{ status }}</span>
             </div>
         </div>
@@ -71,7 +74,7 @@
                                 <button class="btn btn-sm btn-outline-primary" type="submit">评测状态</button>
                             </form>
                             {%- endif -%}
-                            {%- if g.time <= contest.end_time -%}
+                            {%- if g.time <= contest.end_time or (contest.late_submission_deadline is not None and g.time <= contest.late_submission_deadline) -%}
                             <form action="{{ url_for('.problem_submit', problem=contest.problems[j]) }}" class="d-inline">
                                 <button class="btn btn-sm btn-outline-primary" type="submit">提交</button>
                             </form>
@@ -131,7 +134,11 @@
                             {%- if player['completed'] is string -%}
                             <td>错误：{{ player['completed'] }}</td>
                             {%- elif player['completed'] == True -%}
+                            {%- if player['late'] -%}
+                            <td>已补交</td>
+                            {%- else -%}
                             <td>已完成</td>
+                            {%- endif -%}
                             {%- else -%}
                             <td>未完成</td>
                             {%- endif -%}
@@ -147,10 +154,18 @@
                                         {%- endmacro -%}
                                         {%- macro status() -%}
                                             {%- if problem['accepted'] %}
+                                            {%- if problem['late'] %}
+                                                <span class="text-orange" title="Accepted in {{ plural_submit(problem['count']) }}, late">(L{{ problem['count'] }}Y)</span>
+                                            {%- else %}
                                                 <span class="text-green" title="Accepted in {{ plural_submit(problem['count']) }}">({{ problem['count'] }}Y)</span>
+                                            {%- endif -%}
                                             {%- else -%}
                                                 {%- if problem['count'] > 0 %}
+                                                {%- if problem['late'] %}
+                                                <span class="text-red" title="{{ plural_submit(problem['count']) }}, not accepted, late">(L-{{ problem['count'] }})</span>
+                                                {%- else %}
                                                 <span class="text-red" title="{{ plural_submit(problem['count']) }}, not accepted">(-{{ problem['count'] }})</span>
+                                                {%- endif -%}
                                                 {%- endif -%}
                                                 {%- if problem['pending_count'] > 0 %}
                                                 <span class="text-blue" title="{{ plural_submit(problem['pending_count']) }} pending">({{ problem['pending_count'] }}?)</span>

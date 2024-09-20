@@ -127,6 +127,7 @@ def problemset_tojson(contest: Contest):
         'allowed_languages': contest.allowed_languages,
         'start_time': contest.start_time.isoformat(),
         'end_time': contest.end_time.isoformat(),
+        'late_submission_deadline': contest.late_submission_deadline.isoformat() if contest.late_submission_deadline is not None else None,
         'type': contest_type_string(contest.type),
         'problems': problems,
         'url': url_for('.problemset', contest=contest),

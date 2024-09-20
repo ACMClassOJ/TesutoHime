@@ -8,13 +8,13 @@
 
 {% block content %}
 <div class="card card-body" id="main">
+    {{ show_alert() }}
     <h1 class="title-nav">
         <span class="title-nav__title">{{ contest.id }}. {{ contest.name }}</span>
         <span class="title-nav__nav btn-group--title-nav">
             <a href="{{ url_for('.problemset', contest=contest) }}" class="btn btn-outline-primary">返回比赛</a>
         </span>
     </h1>
-    {{ show_alert() }}
     <hr>
 
     <h3>基本信息</h3>
@@ -230,6 +230,38 @@
     </form>
     <hr>
 
+    <h3>迟交</h3>
+    <style>
+        #late-submission-container:has(#late-submission-enable option[value="no"]:checked) #late-submission-input-container {
+            display: none;
+        }
+        #late-submission-input-container:has(*) .css-has-hide {
+            display: none;
+        }
+    </style>
+    <form method="post">
+        {{ g.csrf() }}
+        <input type="hidden" name="action" value="late-submission">
+        <div class="form-row" id="late-submission-container">
+            <div class="form-group col-md-3">
+                <label for="late-submission-enable">是否允许迟交</label>
+                <select class="form-control selectpicker" name="enable" id="late-submission-enable"
+                        data-style="form-control font-weight-normal border-grey shadow-none">
+                    {{ option_list({ 'no': '不允许', 'yes': '允许' }, 'no' if contest.late_submission_deadline is None else 'yes') }}
+                </select>
+            </div>
+            <div class="form-group col-md-5" id="late-submission-input-container">
+                <label for="late-submission-deadline">迟交截止时间 (<span class="css-has-hide">允许迟交时</span>必填，YYYY-MM-DDThh:mm:ss)</label>
+                <input class="form-control" name="deadline" type="datetime-local" id="late-submission-deadline"
+                       value="{{ datetime_local(contest.late_submission_deadline) if contest.late_submission_deadline is not None }}">
+            </div>
+            <div class="form-group float-right ml-auto mt-auto">
+                <button class="btn btn-outline-primary">保存</button>
+            </div>
+        </div>
+    </form>
+    <hr>
+
     {%- if contest.course.groups | length > 0 -%}
     <h3>人员与分组</h3>
     <style>
@@ -265,7 +297,7 @@
     {%- endif -%}
 
     <h3>导出提交数据</h3>
-    <p>您可以在此处导出所有正式选手在比赛中提交的代码。将会导出每个学生每道题目符合要求（包括时间范围和提交语言）的最晚一次最高分提交；例如，四次提交得分分别为 40、80、80、60，则将导出第三次提交的代码。</p>
+    <p>您可以在此处导出所有正式选手在比赛中提交的代码。将会导出每个学生每道题目符合要求（包括时间范围和提交语言，若允许迟交则包括迟交）的最晚一次最高分提交；例如，四次提交得分分别为 40、80、80、60，则将导出第三次提交的代码。</p>
     <p>此功能将会使用较多的服务器资源，请勿频繁进行导出，请勿连续多次点击此按钮。</p>
     <form method="POST">
         {{ g.csrf() }}

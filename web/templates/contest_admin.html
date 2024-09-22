@@ -20,7 +20,7 @@
 
     <h3 class="d-flex align-items-center">
         基本信息
-        <a class="font-size-normal ml-2" href="{{ url_for('.help', page='admin/interface') }}#比赛与作业管理"><i class="fa fa-question-circle mr-1"></i>帮助</a>
+        <a class="font-size-normal ml-2" target="_blank" href="{{ url_for('.help', page='admin/interface') }}#比赛与作业管理"><i class="fa fa-question-circle mr-1"></i>帮助</a>
     </h3>
     <p>所属班级：<a href="{{ url_for('.course', course=contest.course) }}">{{ contest.course.name }}</a> <a href="{{ url_for('.course_admin', course=contest.course) }}" class="btn btn-sm btn-outline-primary ml-2">管理</a></p>
     <form method="POST">
@@ -165,7 +165,7 @@
 
     <h3 class="d-flex align-items-center">
         作业要求
-        <a class="font-size-normal ml-2" href="{{ url_for('.help', page='admin/interface') }}#设置作业要求"><i class="fa fa-question-circle mr-1"></i>帮助</a>
+        <a class="font-size-normal ml-2" target="_blank" href="{{ url_for('.help', page='admin/interface') }}#设置作业要求"><i class="fa fa-question-circle mr-1"></i>帮助</a>
     </h3>
     {%- if contest.completion_criteria_type.name != 'none' -%}
     <p>
@@ -315,7 +315,7 @@
 
     <h3 class="d-flex align-items-center">
         导出提交数据
-        <a class="font-size-normal ml-2" href="{{ url_for('.help', page='admin/interface') }}#导出提交数据"><i class="fa fa-question-circle mr-1"></i>帮助</a>
+        <a class="font-size-normal ml-2" target="_blank" href="{{ url_for('.help', page='admin/interface') }}#导出提交数据"><i class="fa fa-question-circle mr-1"></i>帮助</a>
     </h3>
     <p>您可以在此处导出所有正式选手在比赛中提交的代码。将会导出每个学生每道题目符合要求（包括时间范围和提交语言，若允许迟交则包括迟交）的最晚一次最高分提交；例如，四次提交得分分别为 40、80、80、60，则将导出第三次提交的代码。</p>
     <p>此功能将会使用较多的服务器资源，请勿频繁进行导出，请勿连续多次点击此按钮。</p>

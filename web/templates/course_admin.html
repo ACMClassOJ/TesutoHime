@@ -114,7 +114,7 @@
         <div {{ begin_tab('group') }}>
             <h3 class="d-flex align-items-center">
                 分组
-                <a class="font-size-normal ml-2" href="{{ url_for('.help', page='admin/interface') }}#修改分组"><i class="fa fa-question-circle mr-1"></i>帮助</a>
+                <a class="font-size-normal ml-2" target="_blank" href="{{ url_for('.help', page='admin/interface') }}#修改分组"><i class="fa fa-question-circle mr-1"></i>帮助</a>
             </h3>
             {%- for group in course.groups -%}
             <details{{ ' open' if g.expand_group == group.id | string }}>
@@ -212,7 +212,7 @@
             <h3 class="mb-3">
                 <span class="d-inline-flex align-items-center">
                     实名信息
-                    <a class="font-size-normal ml-2" href="{{ url_for('.help', page='admin/interface') }}#修改成员"><i class="fa fa-question-circle mr-1"></i>帮助</a>
+                    <a class="font-size-normal ml-2" target="_blank" href="{{ url_for('.help', page='admin/interface') }}#修改成员"><i class="fa fa-question-circle mr-1"></i>帮助</a>
                 </span>
                 <a class="btn btn-outline-primary float-right" href="{{ url_for('.course_realname_export', course=course) }}">导出</a>
             </h3>

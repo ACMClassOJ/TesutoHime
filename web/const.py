@@ -37,6 +37,7 @@ class ContestType:
 FAR_FUTURE_TIME = datetime(9999, 12, 31, 8, 42, 42)
 
 completion_criteria_max_length = 512
+max_pic_size = 10485760
 
 
 @dataclass

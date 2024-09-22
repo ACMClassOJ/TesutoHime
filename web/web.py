@@ -38,7 +38,7 @@ from web.config import (JudgeConfig, LoginConfig, NewsConfig,
                         WebConfig)
 from web.const import (Privilege, ReturnCode, api_scopes,
                        completion_criteria_max_length, language_info,
-                       runner_status_info)
+                       max_pic_size, runner_status_info)
 from web.contest_manager import ContestManager
 from web.course_manager import CourseManager
 from web.csrf import setup_csrf
@@ -1576,8 +1576,6 @@ def admin_mark_void():
 @web.route('/admin/abort-judge', methods=['POST'])
 def admin_abort_judge():
     return problem_admin_api(JudgeManager.abort_judge, ReturnCode.SUC_ABORT_JUDGE)
-
-max_pic_size = 10485760
 
 @web.route('/admin/pic-url', methods=['POST'])
 @require_admin

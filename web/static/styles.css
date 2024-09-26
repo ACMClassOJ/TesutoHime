@@ -413,6 +413,10 @@ html body a.card:focus {
     }
 }
 
+.example__input, .example__output {
+    font-family: monospace;
+}
+
 .contributor-card {
     display: flex;
     min-width: 0;

@@ -558,6 +558,28 @@ components:
           type: string
           description: 输出格式
           nullable: true
+        examples:
+          type: array
+          description: 样例（新版）
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: 样例名称
+                nullable: true
+              input:
+                type: string
+                description: 输入
+                nullable: true
+              output:
+                type: string
+                description: 输出
+                nullable: true
+              description:
+                type: string
+                description: 样例描述
+                nullable: true
         example_input:
           type: string
           description: 样例输入

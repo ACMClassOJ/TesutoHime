@@ -310,6 +310,7 @@ alembic 会自动对比数据库内容和当前 model 的差异，生成 migrati
 - `description`: 题目描述；
 - `input`: 输入格式；
 - `output`: 输出格式；
+- `examples`: 样例（新版）；
 - `example_input`: 样例输入；
 - `example_output`: 样例输出；
 - `data_range`: 数据范围；

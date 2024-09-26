@@ -256,7 +256,7 @@ def problem_list():
 @scope('problem:read')
 def problem(problem: Problem):
     res = {}
-    keys = ['id', 'title', 'description', 'input', 'output', 'example_input', 'example_output', 'data_range', 'languages_accepted', 'allow_public_submissions']
+    keys = ['id', 'title', 'description', 'input', 'output', 'examples', 'example_input', 'example_output', 'data_range', 'languages_accepted', 'allow_public_submissions']
     for key in keys:
         res[key] = getattr(problem, key)
     return jsonify(res)

@@ -231,14 +231,22 @@
                     <div class="init_editormd" id="iptOutput">
                         <textarea name="output" style="display: none"></textarea>
                     </div>
-                    <label for="iptExampleInput">样例输入</label>
-                    <div class="init_editormd" id="iptExampleInput">
-                        <textarea name="example_input" style="display: none"></textarea>
+                    <label for="iptExample">样例（新版）</label>
+                    <div id="examples-container"></div>
+                    <div class="mb-3">
+                        <button id="examples-add" class="btn btn-outline-primary w-100">添加样例</button>
                     </div>
-                    <label for="iptExampleOutput">样例输出</label>
-                    <div class="init_editormd" id="iptExampleOutput">
-                        <textarea name="example_output" style="display: none"></textarea>
-                    </div>
+                    <details id="example-input-output-container">
+                        <summary>样例（旧版）</summary>
+                        <label for="iptExampleInput">样例输入</label>
+                        <div class="init_editormd" id="iptExampleInput">
+                            <textarea name="example_input" style="display: none"></textarea>
+                        </div>
+                        <label for="iptExampleOutput">样例输出</label>
+                        <div class="init_editormd" id="iptExampleOutput">
+                            <textarea name="example_output" style="display: none"></textarea>
+                        </div>
+                    </details>
                     <label for="iptDataRange">数据范围</label>
                     <div class="init_editormd" id="iptDataRange">
                         <textarea name="data_range" style="display: none"></textarea>
@@ -495,5 +503,5 @@ window.problemId = {{ problem.id }}
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240402"></script>
+<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240926"></script>
 {% endblock %}

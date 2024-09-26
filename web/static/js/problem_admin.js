@@ -106,20 +106,118 @@ $(() => {
         })
     }
 
-    const reloadDescription = () => $.ajax({
-        dataType: 'text',
-        url: getUrl('description'),
-        success: response_text => {
-            const main_json = JSON.parse(response_text)
-            new_or_modify_content_in_editormd('iptDescription', main_json['description'])
-            new_or_modify_content_in_editormd('iptInput', main_json['input'])
-            new_or_modify_content_in_editormd('iptOutput', main_json['output'])
-            new_or_modify_content_in_editormd('iptExampleInput', main_json['example_input'])
-            new_or_modify_content_in_editormd('iptExampleOutput', main_json['example_output'])
-            new_or_modify_content_in_editormd('iptDataRange', main_json['data_range'])
+    // example container IDs
+    const Examples = {
+        examples: [],
+        nextExample: 0,
+        el: document.getElementById('examples-container'),
+        clear () {
+            this.examples = []
+            this.el.innerHTML = ''
         },
-        error: () => alert('无法获取题面，请刷新重试'),
+        add (obj) {
+            const id = `example-${this.nextExample++}`
+            this.examples.push(id)
+
+            const el = document.createElement('div')
+            el.id = id
+            el.classList.add('card', 'card-body', 'mb-3', 'border-grey')
+            el.innerHTML =
+`
+<div class="mb-3">
+    <label for="${id}-name">样例名称</label>
+    <input class="example__name form-control" type="text" id="${id}-name" placeholder="可不填">
+</div>
+<div class="mb-3">
+    <label for="${id}-input">输入</label>
+    <textarea class="example__input form-control" rows="5" id="${id}-input" placeholder="请仅填写输入内容，解释性文本在下方描述处填写"></textarea>
+</div>
+<div class="mb-3">
+    <label for="${id}-output">输出</label>
+    <textarea class="example__output form-control" rows="5" id="${id}-output" placeholder="请仅填写输出内容，解释性文本在下方描述处填写"></textarea>
+</div>
+<label for="${id}-description">样例描述</label>
+<div class="example__description" id="${id}-description">
+    <textarea style="display: none"></textarea>
+</div>
+<div>
+    <button class="example__delete btn btn-outline-primary float-right">删除样例</button>
+</div>
+`
+
+            const getChild = name => el.querySelector(`.example__${name}`)
+            for (const field of [ 'name', 'input', 'output' ]) {
+                getChild(field).value = obj[field] || ''
+            }
+            const descriptionEl = getChild('description')
+            setTimeout(() => new_or_modify_content_in_editormd(descriptionEl.id, obj.description || ''), 100)
+            getChild('delete').addEventListener('click', e => {
+                e.preventDefault()
+                if (!confirm('确认删除样例？')) return
+                this.delete(id)
+            })
+
+            this.el.appendChild(el)
+        },
+        delete (id) {
+            const el = document.getElementById(id)
+            el.parentElement.removeChild(el)
+            this.examples = this.examples.filter(x => x !== id)
+        },
+        getName (id) {
+            return document.getElementById(id).querySelector('.example__name').value
+        },
+        setName (id, content) {
+            document.getElementById(id).querySelector('.example__name').value = content
+        },
+        exportOne (id) {
+            const el = document.getElementById(id)
+            const getChild = name => el.querySelector(`.example__${name}`)
+            const obj = {}
+            for (const field of [ 'name', 'input', 'output' ]) {
+                obj[field] = getChild(field).value || null
+            }
+            obj.description = getChild('description').querySelector('textarea').value || null
+            return obj
+        },
+        export () {
+            return this.examples.map(x => this.exportOne(x))
+        },
+    }
+    document.getElementById('examples-add').addEventListener('click', e => {
+        e.preventDefault()
+        if (Examples.examples.length === 1) {
+            if (!Examples.getName(Examples.examples[0])) {
+                Examples.setName(Examples.examples[0], '样例 1')
+            }
+        }
+        const name = Examples.examples.length === 0 ? '' : `样例 ${Examples.examples.length + 1}`
+        Examples.add({ name })
     })
+
+    document.getElementById('example-input-output-container').addEventListener('toggle', e => {
+        if (e.currentTarget.open) {
+            for (const el of e.currentTarget.getElementsByClassName('init_editormd')) {
+                editors[el.id].recreate()
+            }
+        }
+    })
+
+    const reloadDescription = async () => {
+        try {
+            const desc = await (await fetch(getUrl('description'))).json()
+            for (const el of document.getElementsByClassName('init_editormd')) {
+                const key = el.querySelector('textarea').name
+                new_or_modify_content_in_editormd(el.id, desc[key])
+            }
+            Examples.clear()
+            for (const obj of desc.examples) {
+                Examples.add(obj)
+            }
+        } catch (e) {
+            alert(`无法获取题面，请刷新重试（${e}）`)
+        }
+    }
     document.getElementById('description-tab-btn').addEventListener('click', () => setTimeout(reloadDescription, 500))
 
     setInterval(function() {
@@ -140,7 +238,10 @@ $(() => {
     $('#form-description').submit(function (e) {
         e.preventDefault()
         e.stopPropagation()
+        const examples = Examples.export()
+        Examples.clear()
         const data = $(this).serializeObject()
+        data.examples = examples
         fetch(getUrl('description'), {
             method: 'put',
             headers: {

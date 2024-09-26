@@ -197,6 +197,7 @@ class Problem(UseTimestamps, Base):
     description: Mapped[Optional[str]]
     input: Mapped[Optional[str]]
     output: Mapped[Optional[str]]
+    examples: Mapped[List[Any]] = mapped_column(ARRAY(JSONB), server_default='{}')
     example_input: Mapped[Optional[str]]
     example_output: Mapped[Optional[str]]
     data_range: Mapped[Optional[str]]

@@ -603,7 +603,7 @@ def writes_problem(func):
 @web.route('/problem/<problem:problem>/description', methods=['GET', 'PUT'])
 @writes_problem
 def problem_description(problem: Problem):
-    rows = 'description', 'input', 'output', 'example_input', 'example_output', 'data_range'
+    rows = 'description', 'input', 'output', 'examples', 'example_input', 'example_output', 'data_range'
     if request.method == 'GET':
         data = {}
         for row in rows:

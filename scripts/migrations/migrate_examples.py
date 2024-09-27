@@ -22,7 +22,7 @@ def pattern_codeblock(problem: Problem):
         if not s.startswith('```'):
             raise NotMatched
         res = '\n'.join(s.splitlines()[1:])
-        res = res.split('```')
+        res = res.split('\n```')
         if len(res) != 2:
             raise NotMatched
         desc = res[1].strip()
@@ -31,7 +31,7 @@ def pattern_codeblock(problem: Problem):
             if description is not None:
                 raise NotMatched
             description = desc
-        return res[0] if res[0] != '' else None
+        return res[0].strip('\n') if res[0].strip('\n') != '' else None
 
     ex = {
         'name': None,
@@ -56,6 +56,8 @@ def pattern_vanilla_codeblock(problem: Problem):
                 code += line[4:]
             elif line.startswith('\t'):
                 code += line[1:]
+            elif line == '':
+                pass
             else:
                 raise NotMatched
         return code
@@ -142,6 +144,9 @@ def pattern_vanilla_codeblock_multi(problem: Problem):
                     code += '\n'
                     code += s[0][1:]
                     s = s[1:]
+                elif s[0] == '':
+                    code += '\n'
+                    s = s[1:]
                 else:
                     break
             code = code.strip('\n')
@@ -169,8 +174,8 @@ def pattern_raw(problem: Problem):
         if s is None:
             return None
         s = s.strip().replace('\r\n', '\n')
-        if re.match('^([0-9A-Z\-]|\s|\n)+$|^[!-~]+$', s, re.MULTILINE):
-            return re.subn('\n(\s*\n)+', '\n', s, flags=re.MULTILINE)[0]
+        if re.match('^([0-9A-Z\-]|\s|\n)+$|^[!-~]+$', s):
+            return re.subn('\n(\s*\n)+', '\n', s)[0]
         raise NotMatched
 
     ex = {
@@ -207,7 +212,7 @@ def infer_examples(problem: Problem):
     for pattern in patterns:
         try:
             pattern(problem)
-            print(f'ok   {problem.id}')
+            print(f'ok   {problem.id} {problem.title} ({pattern.__name__})')
             return
         except NotMatched as e:
             # import traceback

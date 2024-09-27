@@ -5,7 +5,7 @@ from typing import Optional
 from flask import request
 
 from commons.models import User
-from web.user_manager import UserManager
+from web.manager.user import UserManager
 from web.utils import RedisConfig, redis_connect
 
 

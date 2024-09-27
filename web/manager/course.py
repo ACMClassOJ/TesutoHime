@@ -9,7 +9,7 @@ from sqlalchemy import select
 
 from commons.models import Course, Enrollment, Group, RealnameReference, User
 from web.const import PrivilegeType
-from web.user_manager import UserManager
+from web.manager.user import UserManager
 from web.utils import SearchDescriptor, db
 
 

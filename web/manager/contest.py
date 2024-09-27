@@ -16,7 +16,7 @@ from commons.models import (CompletionCriteriaType, Contest, ContestProblem,
 from web.cache import Cache
 from web.const import ContestType, PrivilegeType
 from web.py_sanitize import PySanitizer
-from web.user_manager import UserManager
+from web.manager.user import UserManager
 from web.utils import SearchDescriptor, db
 
 

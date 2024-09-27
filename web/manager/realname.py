@@ -6,7 +6,7 @@ from flask import g
 from sqlalchemy import select
 
 from commons.models import Contest, Course, Group, RealnameReference, User
-from web.user_manager import UserManager
+from web.manager.user import UserManager
 from web.utils import db
 
 
@@ -50,7 +50,7 @@ class RealnameManager:
 
     @classmethod
     def query_realname_for_contest(cls, student_id: str, contest: Contest) -> Optional[RealnameReference]:
-        from web.contest_manager import ContestManager
+        from web.manager.contest import ContestManager
         if not ContestManager.can_read(contest):
             return None
         stmt = select(RealnameReference) \

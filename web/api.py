@@ -14,11 +14,11 @@ from commons.models import (AccessToken, Contest, Course, CourseTag,
                             JudgeRecordV2, Problem, Term, User)
 from web.config import JudgeConfig, WebConfig
 from web.const import api_scopes
-from web.contest_manager import ContestManager
-from web.course_manager import CourseManager
-from web.judge_manager import JudgeManager
-from web.oauth_manager import OauthManager
-from web.problem_manager import ProblemManager
+from web.manager.contest import ContestManager
+from web.manager.course import CourseManager
+from web.manager.judge import JudgeManager
+from web.manager.oauth import OauthManager
+from web.manager.problem import ProblemManager
 from web.utils import abort_json, db, paged_search_cursor, require_logged_in
 
 api = Blueprint('api', __name__)

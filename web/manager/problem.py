@@ -9,8 +9,8 @@ from typing_extensions import TypeGuard
 
 from commons.models import ContestProblem, Course, JudgeRecordV2, Problem
 from web.const import FAR_FUTURE_TIME, PrivilegeType, language_info
-from web.contest_manager import ContestManager
-from web.user_manager import UserManager
+from web.manager.contest import ContestManager
+from web.manager.user import UserManager
 from web.utils import SearchDescriptor, db
 
 

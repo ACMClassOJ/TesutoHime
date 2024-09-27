@@ -1,4 +1,4 @@
-from web.user_manager import UserManager
+from web.manager.user import UserManager
 from scripts.db.env import *
 
 username = input('username: ')

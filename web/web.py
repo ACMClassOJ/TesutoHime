@@ -39,20 +39,20 @@ from web.config import (JudgeConfig, LoginConfig, NewsConfig,
 from web.const import (Privilege, ReturnCode, api_scopes,
                        completion_criteria_max_length, language_info,
                        max_pic_size, runner_status_info)
-from web.contest_manager import ContestManager
-from web.course_manager import CourseManager
+from web.manager.contest import ContestManager
+from web.manager.course import CourseManager
 from web.csrf import setup_csrf
-from web.discuss_manager import DiscussManager
-from web.judge_manager import JudgeManager, NotFoundException
-from web.news_manager import NewsManager
-from web.oauth_manager import OauthManager, randtoken
-from web.old_judge_manager import OldJudgeManager
-from web.problem_manager import ProblemManager
-from web.quiz_manager import QuizManager
-from web.realname_manager import RealnameManager
-from web.session_manager import SessionManager
+from web.manager.discuss import DiscussManager
+from web.manager.judge import JudgeManager, NotFoundException
+from web.manager.news import NewsManager
+from web.manager.oauth import OauthManager, randtoken
+from web.manager.old_judge import OldJudgeManager
+from web.manager.problem import ProblemManager
+from web.manager.quiz import QuizManager
+from web.manager.realname import RealnameManager
+from web.manager.session import SessionManager
 from web.tracker import tracker
-from web.user_manager import UserManager
+from web.manager.user import UserManager
 from web.utils import (SqlSession, abort_converter, db, gen_page,
                        gen_page_for_problem_list, generate_s3_public_url,
                        is_api_call, not_logged_in, paged_search_limitoffset,

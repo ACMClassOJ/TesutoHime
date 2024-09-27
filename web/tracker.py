@@ -6,7 +6,7 @@ from typing import Any, Dict
 from flask import g, request
 
 from web.config import LogConfig
-from web.realname_manager import RealnameManager
+from web.manager.realname import RealnameManager
 
 
 class Tracker:

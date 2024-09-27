@@ -11,10 +11,10 @@ from typing_extensions import TypeGuard
 from commons.models import JudgeRecordV2, JudgeRunnerV2, JudgeStatus, Problem, User
 from commons.util import deserialize
 from web.config import ProblemConfig, S3Config, SchedulerConfig
-from web.contest_manager import ContestManager
-from web.old_judge_manager import OldJudgeManager
-from web.problem_manager import ProblemManager
-from web.user_manager import UserManager
+from web.manager.contest import ContestManager
+from web.manager.old_judge import OldJudgeManager
+from web.manager.problem import ProblemManager
+from web.manager.user import UserManager
 from web.utils import SearchDescriptor, db, generate_s3_public_url, s3_internal
 
 

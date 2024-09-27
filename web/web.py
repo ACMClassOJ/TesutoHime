@@ -1603,7 +1603,7 @@ help_cache: Dict[str, Optional[str]] = {}
 
 @web.route('/help/<path:page>')
 def help(page):
-    if re.search('[^a-zA-Z0-9\-_/]', page) is not None or page[0] == '/':
+    if re.search(r'[^-a-zA-Z0-9_/]', page) is not None or page[0] == '/':
         abort(NOT_FOUND)
     if page in help_cache:
         content = help_cache[page]

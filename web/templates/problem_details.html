@@ -78,16 +78,16 @@
         {%- if problem.limits is not None and problem.limits['time'] | length > 0 -%}
         <h3>时空磁盘限制（运行时）</h3>
         <div id="limits">
-            {%- set min_time = problem.limits['time'] | min -%}
-            {%- set max_time = problem.limits['time'] | max -%}
+            {%- set min_time = problem.limits['time'] | map('default', 1000, True) | min -%}
+            {%- set max_time = problem.limits['time'] | map('default', 1000, True) | max -%}
             {%- if min_time == max_time -%}
             <p>时间限制：{{ min_time }} ms</p>
             {%- else -%}
             <p>时间限制：{{ min_time }} ms min, {{ max_time }} max</p>
             {%- endif -%}
 
-            {%- set min_mem = (problem.limits['mem'] | min) // 1024 // 1024 -%}
-            {%- set max_mem = (problem.limits['mem'] | max) // 1024 // 1024 -%}
+            {%- set min_mem = (problem.limits['mem'] | map('default', 512 * 1048576, True) | min) // 1024 // 1024 -%}
+            {%- set max_mem = (problem.limits['mem'] | map('default', 512 * 1048576, True) | max) // 1024 // 1024 -%}
             {%- if min_mem == max_mem -%}
             <p>内存空间限制：{{ min_mem }} MiB</p>
             {%- else -%}
@@ -144,8 +144,8 @@
                         {%- for i in range(problem.limits['length']) -%}
                         <tr>
                             <td>{{ i + 1 }}</td>
-                            <td>{{ problem.limits['time'][i] }}</td>
-                            <td>{{ problem.limits['mem'][i] // 1024 // 1024 }}</td>
+                            <td>{{ problem.limits['time'][i] if problem.limits['time'][i] is not None else 1000 }}</td>
+                            <td>{{ problem.limits['mem'][i] // 1024 // 1024 if problem.limits['mem'][i] is not None else 512 }}</td>
                             {% if has_disk_limit -%}
                             <td>
                                 {%- set limit = problem.limits['disk'][i] // 1024 // 1024 -%}

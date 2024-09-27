@@ -1,6 +1,6 @@
 {%- macro problem_title(problem) -%}
 <h1 class="title-nav">
-  <span class="title-nav__title">{{ problem.id }}. {{ problem.title }}</span>
+  <span class="title-nav__title">{{ problem.id }}. <span class="problem__title">{{ problem.title }}</span></span>
   <ul class="title-nav__nav nav nav-pills flex-column flex-md-row">
     {%-
       set links = {

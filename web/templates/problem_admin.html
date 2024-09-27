@@ -217,6 +217,17 @@
         </div>
 
         <div {{ begin_tab('description') }}>
+            <h3>题面导入/导出</h3>
+            <p>您可以在此处从 Markdown 文件导入题面，或者将题面导出为 Markdown 文件。Markdown 格式需严格遵循 <a href="{{ url_for('.help', page='admin/problem-format') }}" target="_blank">题面格式规范</a>，否则可能无法导入，也可能造成题面格式混乱。</p>
+            <p>导入之后，<strong>请点击页面底部「保存」按钮</strong>以保存导入的题面。</p>
+            <div>
+                <input id="description-import-input" type="file" style="display: none">
+                <button id="description-import" class="btn btn-outline-primary">导入题面</button>
+                <button id="description-export" class="btn btn-outline-primary">导出题面</button>
+            </div>
+            <hr>
+
+            <h3>编辑题面</h3>
             <form id="form-description">
                 <div>
                     <label for="iptDescription">题目描述</label>
@@ -506,5 +517,5 @@ window.problemId = {{ problem.id }}
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240927"></script>
+<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240927v2"></script>
 {% endblock %}

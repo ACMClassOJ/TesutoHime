@@ -1,3 +1,7 @@
+const _Element = Element
+// HACK: raphael.min.js (some random library) fucks up window.Element
+setInterval(() => window.Element = _Element, 100)
+
 $.fn.serializeObject = function () {
     const data = {}
     this.serializeArray().forEach(function (e) {
@@ -63,7 +67,7 @@ const uploadData = async (file, progressBar) => {
 
 $(() => {
     // overview
-    const updateDisplayTitle = () => document.getElementById('problem-title').textContent = $('#iptTitle').val()
+    const updateDisplayTitle = () => document.querySelector('.problem__title').textContent = $('#iptTitle').val()
     $('#iptTitle').on('change', updateDisplayTitle)
     $('#iptTitle').on('keyup', updateDisplayTitle)
 
@@ -258,6 +262,331 @@ $(() => {
             }
             reloadDescription()
         })
+    })
+
+    const descriptionFields = [
+        ['description', '题目描述'],
+        ['input', '输入格式'],
+        ['output', '输出格式'],
+        ['examples', '样例'],
+        ['data_range', '数据范围'],
+    ]
+
+    const getTitle = () => document.querySelector('h1 .problem__title').textContent
+    const importFromMarkdown = md => {
+        const messages = []
+        let currentField = null
+        let currentValue = []
+        const record = {}
+        /** @type {string[]} */
+        const lines = md.trim().split('\n')
+
+        const endField = () => {
+            if (!currentField) return
+            record[currentField[0]] = currentValue.join('\n').trim()
+            currentField = null
+            currentValue = []
+        }
+
+        const setField = line => {
+            if (!/^##[^#]/.test(line)) return null
+            const m = /^##\s*(.+)$/.exec(line)
+            if (!m) return null
+            const type = m[1]
+            const field = descriptionFields.find(x => x[1] === type)
+            if (!field) {
+                messages.push([ 'warning', `未识别的二级标题：${type}` ])
+                return null
+            }
+
+            if (currentField) {
+                const newIndex = descriptionFields.indexOf(field)
+                const currentIndex = descriptionFields.indexOf(currentField)
+                if (newIndex === currentIndex || field[0] in record) {
+                    messages.push([ 'error', `字段「${field[1]}」重复` ])
+                } else if (newIndex < currentIndex) {
+                    messages.push([ 'error', `字段「${field[1]}」应在「${currentField[1]}」之前` ])
+                } else {
+                    endField()
+                }
+            }
+
+            messages.push([ 'info', `已解析字段「${field[1]}」` ])
+            currentField = field
+            return field
+        }
+
+        try {
+            // the main part
+            for (const line of lines) {
+                // first line
+                if (currentField === null) {
+                    if (line.trim() === '') continue
+                    if (/^##[^#]/.test(line)) {
+                        const field = setField(line)
+                        if (!field) {
+                            throw new Error(`无法解析首行：${line}`)
+                        }
+                    } else if (/^#[^#]/.test(line)) {
+                        const actual = line.substring(1).trim()
+                        const expected = getTitle()
+                        if (actual !== expected) {
+                            messages.push([ 'warning', `题面标题「${actual}」与题目标题「${expected}」不匹配` ])
+                        }
+                    } else {
+                        throw new Error(`无法解析首行：${line}`)
+                    }
+                    continue
+                }
+
+                if (!setField(line)) {
+                    // not a field line
+                    currentValue.push(line)
+                }
+            }
+
+            endField()
+
+            // parsing examples
+            if ('examples' in record) {
+                /** @type {string[]} */
+                const lines = record.examples.split('\n')
+                const examples = []
+                let currentExample = {}
+                let currentField = null
+                let pending = false
+                let currentValue = []
+
+                const endField = () => {
+                    let value = currentValue.join('\n')
+                    if (currentField === 'description') {
+                        value = value.trim()
+                    } else {
+                        if (value === '') value = null
+                    }
+                    if (currentField in currentExample) {
+                        const name = currentExample.name || '（无名）'
+                        messages.push([ 'error', `测试样例「${name}」中描述重复` ])
+                    }
+                    currentExample[currentField] = value
+                    currentField = currentField === 'output' ? 'description' : null
+                    pending = false
+                    currentValue = []
+                }
+
+                const endExample = () => {
+                    if (Object.keys(currentExample).length === 0) return
+                    const name = currentExample.name || '（无名）'
+                    if (!currentExample.input && !currentExample.output) {
+                        messages.push([ 'warning', `测试样例「${name}」既没有输入也没有输出` ])
+                    }
+                    for (const key of [ 'name', 'input', 'output', 'description' ]) {
+                        if (!currentExample[key]) {
+                            currentExample[key] = null
+                        }
+                    }
+                    messages.push([ 'info', `已解析样例「${name}」` ])
+                    examples.push(currentExample)
+                    currentExample = {}
+                }
+
+                const parseHeader = line => {
+                    if (!/^####?[^#]/.test(line)) return null
+                    const m = /^(####?)\s*(.+)$/.exec(line)
+                    if (!m) return null
+                    const lvl = m[1].length
+                    const type = m[2]
+                    const field = {
+                        输入: 'input',
+                        输出: 'output',
+                    }[type]
+                    if (lvl > 3 && !field) return null
+                    if (currentExample.name && lvl === 3 && field) {
+                        messages.push([ 'warning', `在样例「${currentExample.name}」中，输入/输出标题层级错误` ])
+                    }
+                    if (!currentExample.name && (Object.keys(currentExample).length > 0 || currentField) && !field) return null
+                    // [ is field?, field or example title ]
+                    return [ Boolean(field), field || type ]
+                }
+
+                for (const line of lines) {
+                    if (currentField === 'input' || currentField === 'output') {
+                        if (line.startsWith('```')) {
+                            if (pending) {
+                                pending = false
+                            } else {
+                                endField()
+                            }
+                        } else {
+                            if (pending) {
+                                if (/^[（(]?(无|null|none)[)）]?$/i.test(line.trim())) {
+                                    pending = false
+                                    endField()
+                                } else if (line.trim() !== '') {
+                                    messages.push([ 'error', `输入/输出前的垃圾行：${line}` ])
+                                }
+                            } else {
+                                currentValue.push(line)
+                            }
+                        }
+                        continue
+                    }
+
+                    // not inside input or output
+                    const hdr = parseHeader(line)
+                    if (!hdr) {
+                        if (!currentField) {
+                            if (line.trim() !== '') {
+                                currentField = 'description'
+                                currentValue.push(line)
+                            }
+                        } else {
+                            currentValue.push(line)
+                        }
+                        continue
+                    }
+                    const [ isField, field ] = hdr
+                    if (currentField) endField()
+                    if (isField) {
+                        currentField = field
+                        pending = true
+                    } else {
+                        endExample()
+                        currentExample.name = field
+                    }
+                }
+
+                endField()
+                endExample()
+
+                if (examples.length > 1 && examples.some(x => !x.name)) {
+                    messages.push([ 'warning', '有多组测试样例，但有的测试样例没有名称' ])
+                }
+                record.examples = examples
+            } // 'examples' in record
+
+            if (Object.keys(record).length === 0) {
+                throw new Error('文件为空')
+            }
+        } catch (e) {
+            messages.push([ 'error', String(e) ])
+        }
+
+        const showResult = () => {
+            let icon = 'success'
+            let title = '导入成功'
+            if (messages.some(x => x[0] === 'warning')) {
+                icon = 'warning'
+                title = '导入部分成功'
+            }
+            if (messages.some(x => x[0] === 'error')) {
+                icon = 'error'
+                title = '导入失败'
+            }
+
+            const content = document.createElement('div')
+            if (icon !== 'error') {
+                content.innerHTML = '<p>请检查下方题面导入是否正确，<strong>并点击页面底部「保存」按钮</strong>以完成导入。</p><p>导入信息：</p>'
+            }
+            for (const msg of messages) {
+                const p = document.createElement('p')
+                if (msg[0] === 'warning') {
+                    p.innerHTML = '<strong class="text-warning">警告：</strong>'
+                } else if (msg[0] === 'error') {
+                    p.innerHTML = '<strong class="text-danger">错误：</strong>'
+                }
+                const span = document.createElement('span')
+                span.textContent = msg[1]
+                p.appendChild(span)
+                content.appendChild(p)
+            }
+
+            swal({ icon, title, content })
+        }
+
+        if (messages.some(x => x[0] === 'error')) {
+            showResult()
+            return
+        }
+
+        // modify DOM
+        const descriptionForm = document.getElementById('form-description')
+        for (const [ key, _name ] of descriptionFields) {
+            if (key === 'examples') {
+                Examples.clear()
+                if (record.examples) {
+                    for (const ex of record.examples) {
+                        Examples.add(ex)
+                    }
+                }
+                continue
+            }
+            const el = descriptionForm.querySelector(`textarea[name="${key}"]`).parentElement
+            new_or_modify_content_in_editormd(el.id, record[key] || null)
+        }
+
+        showResult()
+    }
+    const descriptionImportInput = document.getElementById('description-import-input')
+    document.getElementById('description-import').addEventListener('click', e => {
+        e.preventDefault()
+        descriptionImportInput.click()
+    })
+    descriptionImportInput.addEventListener('change', e => {
+        e.preventDefault()
+        const file = descriptionImportInput.files[0]
+        descriptionImportInput.value = null
+        if (!file) return
+        const reader = new FileReader()
+        reader.addEventListener('error', () => {
+            alert('无法读取所选的文件')
+        })
+        reader.addEventListener('load', () => {
+            importFromMarkdown(reader.result)
+        })
+        reader.readAsText(file)
+    })
+
+    const exportToMarkdown = () => {
+        let md = `# ${getTitle()}\n\n`
+        const formEl = document.getElementById('form-description')
+        for (const [ key, name ] of descriptionFields) {
+            if (key === 'examples') {
+                const examples = Examples.export()
+                if (examples.length > 0) {
+                    md += `## ${name}\n\n`
+                }
+                for (const ex of examples) {
+                    if (ex.name) md += `### ${ex.name}\n\n`
+                    const headerLevel = ex.name ? '####' : '###'
+                    if (ex.input || ex.output) {
+                        const wrapCode = code => code ? '```\n' + code + '\n```' : '（无）'
+                        md += `${headerLevel} 输入\n\n${wrapCode(ex.input)}\n\n`
+                        md += `${headerLevel} 输出\n\n${wrapCode(ex.output)}\n\n`
+                    }
+                    if (ex.description) {
+                        md += ex.description
+                        md += '\n\n'
+                    }
+                }
+                continue
+            }
+            const value = formEl.querySelector(`textarea[name="${key}"]`).value
+            if (value.trim() !== '') {
+                md += `## ${name}\n\n${value}\n\n`
+            }
+        }
+        return md
+    }
+    document.getElementById('description-export').addEventListener('click', e => {
+        e.preventDefault()
+        const md = exportToMarkdown()
+        const blob = new Blob([md], { type: 'text/markdown' })
+        const url = URL.createObjectURL(blob)
+        const el = document.createElement('a')
+        el.href = url
+        el.download = 'description.md'
+        el.click()
     })
 
 

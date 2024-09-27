@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from typing_extensions import Annotated
+from typing_extensions import Annotated, TypedDict
 
 
 class Base(DeclarativeBase):
@@ -183,6 +183,12 @@ class GroupRealnameReference(UseTimestamps, Base):
     realname_reference_id: Mapped[realname_reference_fk]
 
 
+class ProblemExample(TypedDict):
+    name: Optional[str]
+    input: Optional[str]
+    output: Optional[str]
+    description: Optional[str]
+
 class Problem(UseTimestamps, Base):
     __table_args__ = (
         Index('release_time_id', 'release_time', 'id'),
@@ -197,7 +203,7 @@ class Problem(UseTimestamps, Base):
     description: Mapped[Optional[str]]
     input: Mapped[Optional[str]]
     output: Mapped[Optional[str]]
-    examples: Mapped[List[Any]] = mapped_column(ARRAY(JSONB), server_default='{}')
+    examples: Mapped[List[ProblemExample]] = mapped_column(ARRAY(JSONB), server_default='{}')
     example_input: Mapped[Optional[str]]
     example_output: Mapped[Optional[str]]
     data_range: Mapped[Optional[str]]

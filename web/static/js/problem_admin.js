@@ -128,13 +128,15 @@ $(() => {
     <label for="${id}-name">样例名称</label>
     <input class="example__name form-control" type="text" id="${id}-name" placeholder="可不填">
 </div>
-<div class="mb-3">
-    <label for="${id}-input">输入</label>
-    <textarea class="example__input form-control" rows="5" id="${id}-input" placeholder="请仅填写输入内容，解释性文本在下方描述处填写"></textarea>
-</div>
-<div class="mb-3">
-    <label for="${id}-output">输出</label>
-    <textarea class="example__output form-control" rows="5" id="${id}-output" placeholder="请仅填写输出内容，解释性文本在下方描述处填写"></textarea>
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="${id}-input">输入</label>
+        <textarea class="example__input form-control" rows="5" id="${id}-input" placeholder="请仅填写输入内容，解释性文本在下方描述处填写"></textarea>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label for="${id}-output">输出</label>
+        <textarea class="example__output form-control" rows="5" id="${id}-output" placeholder="请仅填写输出内容，解释性文本在下方描述处填写"></textarea>
+    </div>
 </div>
 <label for="${id}-description">样例描述</label>
 <div class="example__description" id="${id}-description">

@@ -231,7 +231,10 @@
                     <div class="init_editormd" id="iptOutput">
                         <textarea name="output" style="display: none"></textarea>
                     </div>
-                    <label for="iptExample">样例（新版）</label>
+                    <label for="iptExample">
+                        样例（新版）
+                        <a class="ml-2" target="_blank" href="{{ url_for('.help', page='admin/interface') }}#样例"><i class="fa fa-question-circle mr-1"></i>帮助</a>
+                    </label>
                     <div id="examples-container"></div>
                     <div class="mb-3">
                         <button id="examples-add" class="btn btn-outline-primary w-100">添加样例</button>
@@ -503,5 +506,5 @@ window.problemId = {{ problem.id }}
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240926"></script>
+<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240927"></script>
 {% endblock %}

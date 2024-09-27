@@ -32,7 +32,7 @@
         </div>
         {%- endif %}
         {% if submission.message is not None and submission.message != '' -%}
-        <pre><code>{{ submission.message }}</code></pre>
+        <pre><code class="plaintext">{{ submission.message }}</code></pre>
         {% endif -%}
         {% if submission.status.name == 'pending' or submission.status.name == 'compiling' or submission.status.name == 'judging' -%}
         <div class="row">

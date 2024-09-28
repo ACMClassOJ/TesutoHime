@@ -1,7 +1,3 @@
-const _Element = Element
-// HACK: raphael.min.js (some random library) fucks up window.Element
-setInterval(() => window.Element = _Element, 100)
-
 $.fn.serializeObject = function () {
     const data = {}
     this.serializeArray().forEach(function (e) {
@@ -100,10 +96,10 @@ $(() => {
             searchReplace: true,
             htmlDecode: 'style,script,iframe|onclick,title,onmouseover,onmouseout,style',
             taskList: true,
-            tocm: true,
+            tocm: false,
             tex: false,
-            flowChart: true,
-            sequenceDiagram: true,
+            flowChart: false,
+            sequenceDiagram: false,
             atLink: false,
             emailLink: true,
             pageBreak: true

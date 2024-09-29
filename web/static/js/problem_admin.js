@@ -270,6 +270,8 @@ $(() => {
 
     const getTitle = () => document.querySelector('h1 .problem__title').textContent
     const importFromMarkdown = md => {
+        md = md.replace(/\r\n/g, '\n')
+
         const messages = []
         let currentField = null
         let currentValue = []

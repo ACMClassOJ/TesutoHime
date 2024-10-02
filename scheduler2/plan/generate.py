@@ -5,7 +5,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from logging import getLogger
 from os import remove
-from typing import List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Union
 from zipfile import ZipFile
 
 from typing_extensions import Literal, Type
@@ -47,6 +47,7 @@ class ParseContext:
     compile_limits: Optional[ResourceUsage] = None
     compile_supp: Optional[List[str]] = None
     compile_tasks: List[CompileTask] = field(default_factory=lambda: [])
+    compile_artifacts: Dict[str, Artifact] = field(default_factory=lambda: {})
     files_to_upload: Set[str] = field(default_factory=lambda: set())
     plan: JudgePlan = field(default_factory=lambda: JudgePlan())
 
@@ -204,6 +205,8 @@ answer_name_template_alt = '{}.out'
 def generate_compile_task(ctx: ParseContext, source: str, target: str) -> Artifact:
     assert ctx.compile_limits is not None
     assert ctx.compile_supp is not None
+    if source in ctx.compile_artifacts:
+        return ctx.compile_artifacts[source]
     task = CompileTask(
         source=CompileSourceCpp(sign_url(ctx.file_url(source))),
         supplementary_files=[sign_url(f) for f in ctx.compile_supp],
@@ -211,7 +214,9 @@ def generate_compile_task(ctx: ParseContext, source: str, target: str) -> Artifa
         limits=ctx.compile_limits,
     )
     ctx.compile_tasks.append(task)
-    return Artifact(f'{url_scheme}{ctx.file_key(target)}')
+    artifact = Artifact(f'{url_scheme}{ctx.file_key(target)}')
+    ctx.compile_artifacts[source] = artifact
+    return artifact
 
 def artifact_from_spj_program(ctx: ParseContext, cfg: Optional[SpjProgram],
                               binary_name: str, source_name: str, exec_name: str) -> Artifact:

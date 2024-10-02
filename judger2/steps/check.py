@@ -70,13 +70,17 @@ async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker
 
 def checker_read_float(outfile: PosixPath, message: str = ''):
     try:
-        score = float(outfile.read_text(errors='replace'))
+        text = outfile.read_text(errors='replace').splitlines(keepends=True)
+        score = float(text[0])
+        message += ''.join(text[1:])
+    except IndexError:
+        return CheckResult('bad_problem', 'Invalid score: score is empty')
     except ValueError:
-        return CheckResult('bad_problem', 'Invalid SPJ checker: score not number')
+        return CheckResult('bad_problem', 'Invalid score: score not number')
     if isinf(score):
-        return CheckResult('bad_problem', 'Invalid SPJ checker: score is infinity')
+        return CheckResult('bad_problem', 'Invalid score: score is infinity')
     if isnan(score):
-        return CheckResult('bad_problem', 'Invalid SPJ checker: score is NaN')
+        return CheckResult('bad_problem', 'Invalid score: score is NaN')
 
     result: Literal['accepted', 'wrong_answer'] = 'accepted' if score >= 1.0 else 'wrong_answer'
     return CheckResult(result, message, score)
@@ -103,7 +107,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
 
         await copy_supplementary_files(checker.supplementary_files, cwd)
 
-        bindmount = ['/bin', '/usr/bin', str(outfile)]
+        bindmount = ['/usr', '/bin', '/etc', str(outfile)]
         if infile is None:
             infile = PosixPath(devnull)
         else:

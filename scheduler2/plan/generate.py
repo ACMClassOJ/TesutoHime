@@ -1,11 +1,11 @@
-__all__ = 'generate_plan', 'execute_plan', 'get_partial_result'
+__all__ = ('generate_plan',)
 
 import json
 from copy import deepcopy
 from dataclasses import dataclass, field
 from logging import getLogger
 from os import remove
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import List, Optional, Set, Union
 from zipfile import ZipFile
 
 from typing_extensions import Literal, Type
@@ -13,25 +13,27 @@ from typing_extensions import Literal, Type
 from commons.task_typing import (Artifact, Checker, CompareChecker,
                                  CompileSourceCpp, CompileSourceVerilog,
                                  CompileTask, CompileTaskPlan, DirectChecker,
-                                 FileUrl, JudgePlan, JudgeTask, JudgeTaskPlan,
-                                 QuizOption, QuizProblem, ResourceUsage,
-                                 RunArgs, SpjChecker, Testpoint,
-                                 TestpointGroup, UserCode)
+                                 FileUrl, InteractorOptions, JudgePlan,
+                                 JudgeTask, JudgeTaskPlan, QuizOption,
+                                 QuizProblem, ResourceUsage, RunArgs, RunType,
+                                 SpjChecker, Testpoint, TestpointGroup,
+                                 UserCode)
 from commons.util import format_exc
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
                                quiz_filename, s3_buckets, working_dir)
 from scheduler2.dispatch import TaskInfo, run_task
 from scheduler2.plan.util import InvalidProblemException, sign_url, url_scheme
-from scheduler2.problem_typing import Group, ProblemConfig, Spj
+from scheduler2.problem_typing import (Group, ProblemConfig, SpjConfig,
+                                       SpjConfigDesugared, SpjNumeric,
+                                       SpjProgram)
 from scheduler2.problem_typing import Testpoint as ConfigTestpoint
+from scheduler2.problem_typing import spj_config_from_numeric
 from scheduler2.s3 import download, sign_url_put, upload_obj
+from scheduler2.util import dataclass_from_json
 
 logger = getLogger(__name__)
 
-
-CompileType = Literal['classic', 'hpp', 'hpp-per-testpoint', 'none']
-CheckType = Literal['compare', 'direct', 'spj']
 
 @dataclass
 class ParseContext:
@@ -41,13 +43,11 @@ class ParseContext:
 
     quiz_problems: Optional[List[QuizProblem]] = None
     testpoint_count: Optional[int] = None
-    compile_type: Optional[CompileType] = None
-    check_type: Optional[CheckType] = None
+    compile_per_testpoint: bool = False
     compile_limits: Optional[ResourceUsage] = None
     compile_supp: Optional[List[str]] = None
+    compile_tasks: List[CompileTask] = field(default_factory=lambda: [])
     files_to_upload: Set[str] = field(default_factory=lambda: set())
-    checker_to_compile: Optional[str] = None
-    checker_artifact: Optional[Artifact] = None
     plan: JudgePlan = field(default_factory=lambda: JudgePlan())
 
     def file_key(self, filename: str):
@@ -76,6 +76,26 @@ class ParseContext:
         ]
 
 
+def desugar_spj_config(cfg) -> SpjConfigDesugared:
+    if isinstance(cfg, int):
+        spj = spj_config_from_numeric[SpjNumeric(cfg)]
+    elif isinstance(cfg, dict):
+        try:
+            spj = dataclass_from_json(cfg, SpjConfig)
+        except Exception as e:
+            raise InvalidProblemException(f'Invalid SPJ config: {e}') from e
+    else:
+        raise InvalidProblemException('Invalid SPJ config (int or object expected)')
+    args = {}
+    for k in SpjConfigDesugared.__annotations__:
+        v = getattr(spj, k)
+        typ = SpjConfigDesugared.__annotations__[k]
+        if isinstance(v, str):
+            args[k] = typ(Type=v)
+        else:
+            args[k] = v
+    return SpjConfigDesugared(**args)
+
 async def load_config(ctx: ParseContext):
     try:
         with ctx.open(problem_config_filename, 'r') as f:
@@ -97,44 +117,24 @@ async def load_config(ctx: ParseContext):
                 if 'options' in problem:
                     problem['options'] = [QuizOption(**x) for x in problem['options']]
             ctx.plan.quiz = [QuizProblem(**x) for x in quiz['problems']]
+        if 'SPJ' not in cfg:
+            cfg['SPJ'] = {}
+        cfg['SPJ'] = desugar_spj_config(cfg['SPJ'])
         ctx.cfg = ProblemConfig(**cfg)
         ctx.testpoint_count = len(ctx.cfg.Details)
     except Exception as e:
         raise InvalidProblemException(str(e))
 
+    if ctx.cfg.Scorer != 0:
+        raise InvalidProblemException(f'Scorers are not supported (yet)')
+
 
 checker_source_filename = 'spj.cpp'
 checker_precompiled_filename = 'spj_bin'
 checker_exec_filename = 'checker'
-
-async def parse_spj(ctx: ParseContext):
-    spj = ctx.cfg.SPJ
-    type_map: Dict[Spj, Tuple[CompileType, CheckType]] = {
-        Spj.CLASSIC_COMPARE: ('classic', 'compare'),
-        Spj.CLASSIC_SPJ: ('classic', 'spj'),
-        Spj.HPP_DIRECT: ('hpp', 'direct'),
-        Spj.HPP_COMPARE: ('hpp', 'compare'),
-        Spj.HPP_SPJ: ('hpp', 'spj'),
-        Spj.NONE_SPJ: ('none', 'spj'),
-    }
-    if not spj in type_map:
-        raise InvalidProblemException(f'Invalid SPJ type {spj}')
-    ctx.compile_type, ctx.check_type = type_map[spj]
-    if ctx.cfg.Scorer != 0:
-        raise InvalidProblemException(f'Scorers are not supported (yet)')
-
-    if ctx.check_type == 'spj':
-        # A custom checker is needed for judging, so
-        # register the checker executable artifact.
-        if checker_precompiled_filename in ctx.namelist():
-            ctx.checker_artifact = Artifact(
-                ctx.file_url(checker_precompiled_filename))
-        elif checker_source_filename in ctx.namelist():
-            ctx.checker_artifact = Artifact(
-                f'{url_scheme}{ctx.file_key(checker_exec_filename)}')
-            ctx.checker_to_compile = ctx.file_url(checker_source_filename)
-        else:
-            raise InvalidProblemException(f'{checker_source_filename} not found')
+interactor_source_filename = 'interactor.cpp'
+interactor_precompiled_filename = 'interactor'
+interactor_exec_filename = 'interactor'
 
 
 hpp_main_filename = 'main.cpp'
@@ -157,7 +157,9 @@ async def parse_compile(ctx: ParseContext) -> Optional[CompileTaskPlan]:
     ctx.compile_supp = supplementary_files[:]
     supplementary_files: List[Union[str, UserCode]] = supplementary_files  # type: ignore
 
-    if ctx.compile_type == 'none':
+    compile_cfg = ctx.cfg.SPJ.Compile
+
+    if compile_cfg.Type == 'skip':
         return None
 
     task = CompileTaskPlan(
@@ -166,8 +168,11 @@ async def parse_compile(ctx: ParseContext) -> Optional[CompileTaskPlan]:
         artifact=True,
         limits=limits,
     )
-    if ctx.compile_type == 'classic':
+    if compile_cfg.Type == 'classic':
         return task
+    if compile_cfg.Type != 'hpp':
+        raise InvalidProblemException(f'Unknown SPJ compile type {compile_cfg.Type}')
+
     src_filename = hpp_src_filename_vlog if ctx.cfg.Verilog \
         else hpp_src_filename
     task.supplementary_files.append(UserCode(src_filename))
@@ -179,7 +184,7 @@ async def parse_compile(ctx: ParseContext) -> Optional[CompileTaskPlan]:
     # a seperate compilation is needed per testpoint, and
     # the generated compile task is just a template.
     # the compile task will be set to None in parse_testpoints.
-    ctx.compile_type = 'hpp-per-testpoint'
+    ctx.compile_per_testpoint = True
     task.artifact = False
     return task
 
@@ -196,6 +201,40 @@ infile_name_template = '{}.in'
 answer_name_template = '{}.ans'
 answer_name_template_alt = '{}.out'
 
+def generate_compile_task(ctx: ParseContext, source: str, target: str) -> Artifact:
+    assert ctx.compile_limits is not None
+    assert ctx.compile_supp is not None
+    task = CompileTask(
+        source=CompileSourceCpp(sign_url(ctx.file_url(source))),
+        supplementary_files=[sign_url(f) for f in ctx.compile_supp],
+        artifact=Artifact(sign_url_put(s3_buckets.problems, ctx.file_key(target))),
+        limits=ctx.compile_limits,
+    )
+    ctx.compile_tasks.append(task)
+    return Artifact(f'{url_scheme}{ctx.file_key(target)}')
+
+def artifact_from_spj_program(ctx: ParseContext, cfg: Optional[SpjProgram],
+                              binary_name: str, source_name: str, exec_name: str) -> Artifact:
+    if cfg is None:
+        # autodetect location of checker
+        has_binary = binary_name in ctx.namelist()
+        has_source = source_name in ctx.namelist()
+        if has_binary and has_source:
+            raise InvalidProblemException(f'Both {source_name} and {binary_name} are found; please remove one of them.')
+        elif has_binary:
+            return Artifact(ctx.file_url(binary_name))
+        elif has_source:
+            return generate_compile_task(ctx, source_name, exec_name)
+        else:
+            raise InvalidProblemException(f'{source_name} not found')
+    else:
+        if cfg.Type == 'binary':
+            return Artifact(ctx.file_url(cfg.Path))
+        elif cfg.Type == 'cpp':
+            return generate_compile_task(ctx, cfg.Path, exec_name)
+        else:
+            raise InvalidProblemException(f'Invalid SPJ program type {cfg.Type}')
+
 # TODO: detect loops in dependent_on relations
 def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
     id = str(conf.ID)
@@ -211,14 +250,28 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
     if conf.DiskLimit is not None: run_limits.file_size_bytes = abs(conf.DiskLimit)
     if conf.FileNumberLimit is not None: run_limits.file_count = conf.FileNumberLimit
 
-    type: Literal['verilog', 'valgrind', 'elf'] = 'verilog' if ctx.cfg.Verilog else \
-        'valgrind' if conf.ValgrindTestOn else 'elf'
-    run = None if ctx.compile_type == 'none' else RunArgs(
-        type=type,
-        limits=run_limits,
-        infile=infile,
-        supplementary_files=[],
-    )
+    run_cfg = ctx.cfg.SPJ.Run
+    run_type: Union[Literal['skip'], RunType] = \
+        'elf' if run_cfg.Type == 'classic' or run_cfg.Type == 'interactive' else run_cfg.Type
+    if ctx.cfg.Verilog:
+        if run_type != 'elf':
+            raise InvalidProblemException(f'Verilog is not supported for RunType={run_type}')
+        run_type = 'verilog'
+    if conf.ValgrindTestOn:
+        if run_type != 'elf':
+            raise InvalidProblemException(f'Valgrind is not supported for RunType={run_type}')
+        run_type = 'valgrind'
+
+    if run_type == 'skip':
+        run: Optional[RunArgs] = None
+    else:
+        run = RunArgs(type=run_type, limits=run_limits, infile=infile, supplementary_files=[])
+        if run_cfg.Type == 'interactive':
+            interactor = artifact_from_spj_program(ctx, run_cfg.Interactor,
+                                                   interactor_precompiled_filename,
+                                                   interactor_source_filename,
+                                                   interactor_exec_filename)
+            run.interactor = InteractorOptions(executable=interactor, limits=run_limits, supplementary_files=[])
 
     def ans() -> Optional[FileUrl]:
         ans_filename = answer_name_template.format(id)
@@ -228,18 +281,23 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
         if ans_filename_alt in ctx.namelist():
             return ctx.file_url(ans_filename_alt)
         return None
-    if ctx.check_type == 'compare':
+
+    check_cfg = ctx.cfg.SPJ.Check
+    if check_cfg.Type == 'compare':
         answer = ans()
         if answer is None:
             raise InvalidProblemException(f'Answer file needed for testpoint {id}')
-        check: Checker = CompareChecker(True, answer)
-    elif ctx.check_type == 'direct':
+        check: Checker = CompareChecker(check_cfg.IgnoreWhitespace, answer)
+    elif check_cfg.Type == 'skip':
         check = DirectChecker()
-    elif ctx.check_type == 'spj':
-        assert ctx.checker_artifact is not None
+    elif check_cfg.Type == 'custom':
+        checker = artifact_from_spj_program(ctx, check_cfg.Checker,
+                                            checker_precompiled_filename,
+                                            checker_source_filename,
+                                            checker_exec_filename)
         check = SpjChecker(
             format='checker',
-            executable=ctx.checker_artifact,
+            executable=checker,
             answer=ans(),
             supplementary_files=[],
             limits=default_check_limits,
@@ -254,7 +312,7 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
         run=run,
         check=check,
     )
-    if ctx.compile_type == 'hpp-per-testpoint':
+    if ctx.compile_per_testpoint:
         assert ctx.plan.compile is not None
         main_template = hpp_main_template_vlog if ctx.cfg.Verilog \
             else hpp_main_template
@@ -268,7 +326,7 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
 async def parse_testpoints(ctx: ParseContext) -> List[JudgeTaskPlan]:
     testpoints = [parse_testpoint(ctx, x) for x in ctx.cfg.Details]
     testpoints_map = dict((tp.id, tp) for tp in testpoints)
-    if ctx.compile_type == 'hpp-per-testpoint':
+    if ctx.compile_per_testpoint:
         ctx.plan.compile = None
 
     if any(x.DiskLimit is not None and x.DiskLimit > 0 for x in ctx.cfg.Details):
@@ -336,25 +394,14 @@ async def upload_files(ctx: ParseContext):
             await upload_obj(s3_buckets.problems, ctx.file_key(file), f)
 
 
-async def compile_checker(ctx: ParseContext):
-    source = ctx.checker_to_compile
-    if source is None:
-        return
-    assert ctx.compile_supp is not None
-    assert ctx.compile_limits is not None
-    task = CompileTask(
-        source=CompileSourceCpp(sign_url(source)),
-        supplementary_files=list(map(sign_url, ctx.compile_supp)),
-        artifact=Artifact(sign_url_put(s3_buckets.problems,
-            ctx.file_key(checker_exec_filename))),
-        limits=ctx.compile_limits,
-    )
-    msg = f'Compiling SPJ for problem {ctx.problem_id}'
-    res = await run_task(TaskInfo(task, None, ctx.problem_id,
-                                  ctx.cfg.RunnerGroup, msg))
-    if res.result != 'compiled':
-        msg = f'Cannot compile checker ({res.result}): {res.message}'
-        raise InvalidProblemException(msg)
+async def execute_compile_tasks(ctx: ParseContext):
+    for task in ctx.compile_tasks:
+        msg = f'Compiling SPJ for problem {ctx.problem_id}'
+        res = await run_task(TaskInfo(task, None, ctx.problem_id,
+                                      ctx.cfg.RunnerGroup, msg))
+        if res.result != 'compiled':
+            msg = f'Cannot compile SPJ ({res.result}): {res.message}'
+            raise InvalidProblemException(msg)
 
 
 async def generate_plan(problem_id: str) -> JudgePlan:
@@ -369,12 +416,11 @@ async def generate_plan(problem_id: str) -> JudgePlan:
             ctx.plan.group = ctx.cfg.RunnerGroup
             if ctx.plan.quiz is not None:
                 return ctx.plan
-            await parse_spj(ctx)
             ctx.plan.compile = await parse_compile(ctx)
             ctx.plan.judge = await parse_testpoints(ctx)
             ctx.plan.score = await parse_groups(ctx)
             await upload_files(ctx)
-            await compile_checker(ctx)
+            await execute_compile_tasks(ctx)
             logger.debug(f'generated plan for {problem_id}: {ctx.plan}')
             return ctx.plan
     finally:

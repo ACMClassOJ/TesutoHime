@@ -53,15 +53,24 @@ Input = Union[CompileTask, Artifact]
 
 
 @dataclass
+class InteractorOptions:
+    executable: Input
+    limits: ResourceUsage
+    supplementary_files: List[FileUrl]
+
+RunType = Literal['elf', 'valgrind', 'verilog', 'python']
+
+@dataclass
 class RunArgs:
     # the value 'elf' has special meaning when used in a judge plan:
     # if type='elf' and code language is Python, then the type will be changed
     # to 'python' at plan execution time.
-    type: Literal['elf', 'valgrind', 'verilog', 'python']
+    type: RunType
     limits: ResourceUsage
     infile: Optional[FileUrl]
     supplementary_files: List[FileUrl]
     outfile: Optional[Artifact] = None
+    interactor: Optional[InteractorOptions] = None
 
 
 @dataclass
@@ -111,6 +120,7 @@ RunError = Literal[
     'disk_limit_exceeded',
     'memory_leak',
     'system_error',
+    'bad_problem',
 ]
 CheckError = Literal['wrong_answer', 'bad_problem']
 Skipped = Literal['skipped']

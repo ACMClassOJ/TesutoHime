@@ -1,3 +1,5 @@
+__all__ = 'execute_plan', 'get_partial_result'
+
 import json
 from asyncio import (FIRST_COMPLETED, CancelledError, Task, create_task, sleep,
                      wait)
@@ -190,6 +192,13 @@ async def get_judge_task(ctx: ExecutionContext, plan: JudgeTaskPlan) \
             if testpoint.run.type == 'elf':
                 if ctx.lang == CodeLanguage.PYTHON:
                     testpoint.run.type = 'python'
+
+            interactor_cfg = testpoint.run.interactor
+            if interactor_cfg is not None:
+                interactor_exe = interactor_cfg.executable
+                if isinstance(interactor_exe, Artifact):
+                    interactor_exe.url = sign_url(interactor_exe.url)
+
             if testpoint.run.infile is not None:
                 testpoint.run.infile = sign_url(testpoint.run.infile)
             testpoint.run.supplementary_files = \

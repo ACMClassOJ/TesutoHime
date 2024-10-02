@@ -121,6 +121,8 @@ async def run_with_limits(
     time_limit_nsjail = str(ceil(time_limit_scaled / 1000 * time_tolerance_ratio + 1))
     # memory_limit = str(limits.memory_bytes + 1048576)
     bindmount_ro = bindmount_ro_base + [str(x) for x in supplementary_paths]
+    if '/usr' in bindmount_ro:
+        bindmount_ro = [ x for x in bindmount_ro if not x.startswith('/usr/') ]
     bindmount_rw = bindmount_rw_base + [str(cwd)] \
         + [str(x) for x in supplementary_paths_rw]
     # get the absolute path for ./runner and ./du

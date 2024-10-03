@@ -114,6 +114,7 @@ Task = TypeVar('Task', CompileTask, JudgeTask[Input])
 
 CompileError = Literal['compile_error']
 RunError = Literal[
+    'wrong_answer',
     'runtime_error',
     'time_limit_exceeded',
     'memory_limit_exceeded',

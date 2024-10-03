@@ -1,12 +1,13 @@
 __all__ = ('run',)
 
-from asyncio import create_task, wait
+from asyncio import FIRST_COMPLETED, create_task, wait
 from dataclasses import dataclass
-from os import chmod, close, pipe
+from os import chmod, fdopen, pipe
 from pathlib import PosixPath
 from shutil import copy2
+from signal import SIGPIPE
 from subprocess import DEVNULL
-from typing import IO, Dict, List, Optional, Union
+from typing import IO, Dict, List, Optional, Tuple, Union
 
 from commons.task_typing import Input, RunArgs, RunResult
 from commons.util import TempDir
@@ -85,6 +86,49 @@ runners: Dict[str, BaseRunner] = {
 }
 
 
+def fpipe() -> Tuple[IO, IO]:
+    r, w = pipe()
+    return fdopen(r), fdopen(w)
+
+def runresult_is_sigpipe(res: RunResult) -> bool:
+    return res.error == 'runtime_error' and res.code == 256 + SIGPIPE
+
+def result_of_interactive(user: RunResult, interactor: RunResult) -> RunResult:
+    # system error overrides all
+    if user.error == 'system_error':
+        return user
+    if interactor.error == 'system_error':
+        return RunResult('system_error', interactor.message, user.resource_usage)
+
+    user_is_sigpipe = runresult_is_sigpipe(user)
+    interactor_is_sigpipe = runresult_is_sigpipe(interactor)
+
+    # interactor succeeded, how user behaves?
+    if interactor.error is None:
+        if user_is_sigpipe:
+            return RunResult('wrong_answer', 'Redundant output', user.resource_usage)
+        else:
+            return user
+
+    # interactor was killed by SIGPIPE:
+    # user program exited before interactor finishes its output
+    if interactor_is_sigpipe:
+        if user.error is None:
+            return RunResult('wrong_answer', 'Failed to accept input from interactor', user.resource_usage)
+        else:
+            return user
+
+    interactor_message = ': ' + interactor.message if interactor.message != '' else ''
+
+    # interactor timed out
+    if interactor.error == 'time_limit_exceeded':
+        if user.error != 'time_limit_exceeded':
+            return RunResult('time_limit_exceeded', f'Interactor timed out{interactor_message}', user.resource_usage)
+        else:
+            return user
+
+    return RunResult('bad_problem', f'Interactor error: {interactor.error}{interactor_message}', user.resource_usage)
+
 async def run_interactive(cwd: PosixPath,
                           exec_file: PosixPath, infile: Optional[PosixPath], outfile: PosixPath,
                           args: RunArgs) -> RunResult:
@@ -107,10 +151,10 @@ async def run_interactive(cwd: PosixPath,
         outfile.chmod(0o660)
 
         # make pipes
-        r1 = w1 = r2 = w2 = -1
+        r1 = w1 = r2 = w2 = None
         try:
-            r1, w1 = pipe()
-            r2, w2 = pipe()
+            r1, w1 = fpipe()
+            r2, w2 = fpipe()
 
             # run!
             runner = runners[args.type]
@@ -123,17 +167,26 @@ async def run_interactive(cwd: PosixPath,
             ))
             task_user = create_task(runner.run(cwd, exec_file, r2, w1, args))
 
-            await wait([task_interactor, task_user])
+            pending = set([task_interactor, task_user])
+            while len(pending) > 0:
+                done, pending = await wait([task_interactor, task_user], return_when=FIRST_COMPLETED)
+                for task in done:
+                    if task == task_interactor:
+                        r1.close()
+                        w2.close()
+                    elif task == task_user:
+                        r2.close()
+                        w1.close()
+                    else:
+                        assert False
             res_interactor = await task_interactor
             res_user = await task_user
         finally:
             for fd in [r1, w1, r2, w2]:
-                if fd >= 0:
-                    close(fd)
+                if fd is not None and not fd.closed:
+                    fd.close()
 
-        # We ignore any errors on the user program, but proceed with user's resource usage
-        res_interactor.resource_usage = res_user.resource_usage
-        return res_interactor
+        return result_of_interactive(res_user, res_interactor)
 
 
 async def run(oufdir: PosixPath, cwd: PosixPath, input: Input, args: RunArgs) \

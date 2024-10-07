@@ -125,7 +125,7 @@ async def compile_cpp(
     res = await run_with_limits(
         [cxx] + cxxflags + [str(code_file), '-o', str(exec_file)],
         cwd, limits,
-        supplementary_paths=['/bin', '/usr/bin', '/usr/include'],
+        supplementary_paths=['/usr', '/bin'],
     )
     if res.error is not None:
         return CompileLocalResult.from_run_failure(res)
@@ -158,7 +158,7 @@ async def prepare_git(
             tempfile.flush()
             chown_to_user(tempfile.name)
             bind = [
-                '/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc',
+                '/usr', '/bin', '/etc',
                 f'{git_ssh_config_path}:/etc/ssh/ssh_config',
                 f'{tempfile.name}:/id_acmoj',
             ]
@@ -198,7 +198,7 @@ async def compile_git(
     limits: ResourceUsage,
 ) -> CompileLocalResult:
     async def run_build_step(argv: List[str], *, output = DEVNULL):
-        bind = ['/bin', '/usr/bin', '/usr/include', '/usr/share', '/etc']
+        bind = ['/usr', '/bin', '/etc']
         if resolv_conf_path is not None:
             bind.append(resolv_conf_path)
         return await run_with_limits(

@@ -32,11 +32,13 @@ if platform != 'linux':
 
 
 nsjail = PosixPath(__file__).with_name('nsjail')
-if not nsjail.exists():
+nsjail_wrapper = PosixPath(__file__).with_name('stdenv') / 'bin' / 'nsjail'
+if not nsjail.exists() or not nsjail_wrapper.exists():
     raise Exception('nsjail executable not found')
 nsjail = str(nsjail)
+nsjail_wrapper = str(nsjail_wrapper)
 
-bindmount_ro_base = ['/lib', '/lib64', '/usr/lib', '/usr/lib64', '/dev/urandom']
+bindmount_ro_base = ['/dev/urandom']
 bindmount_rw_base = ['/dev/null', '/dev/zero']
 worker_uid_inside = 65534
 worker_uid_maps = [
@@ -98,7 +100,10 @@ class NsjailArgs:
 
 time_tolerance_ratio = 1.25
 
+Profile = Literal['std', 'libc', 'valgrind', 'python']
+
 async def run_with_limits(
+    profile: Profile,
     argv: List[str],
     cwd: PosixPath,
     limits: ResourceUsage,
@@ -121,8 +126,6 @@ async def run_with_limits(
     time_limit_nsjail = str(ceil(time_limit_scaled / 1000 * time_tolerance_ratio + 1))
     # memory_limit = str(limits.memory_bytes + 1048576)
     bindmount_ro = bindmount_ro_base + [str(x) for x in supplementary_paths]
-    if '/usr' in bindmount_ro:
-        bindmount_ro = [ x for x in bindmount_ro if not x.startswith('/usr/') ]
     bindmount_rw = bindmount_rw_base + [str(cwd)] \
         + [str(x) for x in supplementary_paths_rw]
     # get the absolute path for ./runner and ./du
@@ -159,14 +162,14 @@ async def run_with_limits(
         checker_time_limit = str(ceil(time_limit_scaled * time_tolerance_ratio + 500))
         run_args = [runner_path, checker_time_limit, str(result_file)] \
             + argv
-        nsjail_argv = format_args(asdict(args)) + ['--'] + run_args
+        nsjail_argv = [profile] + format_args(asdict(args)) + ['--'] + run_args
         argv_str = ' '.join(quote(x) for x in nsjail_argv)
         logger.debug(f'about to run nsjail with args {argv_str}')
 
         # execute
         time_start = time()
         proc = Popen(
-            [nsjail] + nsjail_argv,
+            [nsjail_wrapper, nsjail] + nsjail_argv,
             stdin=infile, stdout=outfile,
             stderr=DEVNULL if disable_stderr else errfile,
         )

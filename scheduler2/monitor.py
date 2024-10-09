@@ -1,4 +1,4 @@
-from asyncio import Task, create_task, sleep
+from asyncio import CancelledError, Task, create_task, sleep
 from dataclasses import dataclass
 from logging import getLogger
 from time import time
@@ -77,6 +77,8 @@ def wait_until_offline(runner_id: str):
         try:
             t.exception()
         except Exception:
+            pass
+        except CancelledError:
             pass
         del watch_tasks[runner_id]
     t.add_done_callback(cleanup)

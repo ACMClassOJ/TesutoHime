@@ -12,15 +12,15 @@ from typing import IO, Dict, List, Optional, Tuple, Union
 from commons.task_typing import Input, RunArgs, RunResult
 from commons.util import TempDir
 from judger2.cache import ensure_cached, upload
-from judger2.config import (python, valgrind, valgrind_args,
-                            valgrind_errexit_code, verilog_interpreter)
-from judger2.sandbox import run_with_limits
+from judger2.config import valgrind_args, valgrind_errexit_code
+from judger2.sandbox import Profile, run_with_limits
 from judger2.steps.compile_ import NotCompiledException, ensure_input
 from judger2.util import InvalidProblemException, copy_supplementary_files
 
 
 @dataclass
 class RunParams:
+    profile: Profile
     argv: List[str]
     supplementary_paths: List[str]
     disable_procfs: bool = True
@@ -36,7 +36,7 @@ class BaseRunner:
                   args: RunArgs) -> RunResult:
         params: RunParams = self.prepare(exec_file)
         return self.interpret_result(await run_with_limits(
-            params.argv, cwd, args.limits,
+            params.profile, params.argv, cwd, args.limits,
             supplementary_paths=[exec_file] + params.supplementary_paths,  # type: ignore
             infile=inf, outfile=ouf,
             disable_stderr=True,
@@ -49,19 +49,18 @@ elf_mode = 0o550
 class ElfRunner(BaseRunner):
     def prepare(self, program: PosixPath):
         chmod(program, elf_mode)
-        return RunParams([str(program)], [])
+        return RunParams('libc', [str(program)], [])
 
 class PythonRunner(BaseRunner):
     def prepare(self, program: PosixPath):
-        argv = [python, str(program)]
-        return RunParams(argv, ['/bin', '/usr/bin', '/usr/libexec'])
+        argv = ['/bin/python3', str(program)]
+        return RunParams('python', argv, [])
 
 class ValgrindRunner(BaseRunner):
     def prepare(self, program: PosixPath):
         chmod(program, elf_mode)
-        assert valgrind is not None
-        argv = [valgrind] + valgrind_args + [str(program)]
-        return RunParams(argv, ['/bin', '/usr/bin', '/usr/libexec'], False, True)
+        argv = ['/bin/valgrind'] + valgrind_args + [str(program)]
+        return RunParams('valgrind', argv, [], False, True)
 
     def interpret_result(self, result: RunResult):
         if result.error != 'runtime_error' \
@@ -74,9 +73,8 @@ class ValgrindRunner(BaseRunner):
 
 class VerilogRunner(BaseRunner):
     def prepare(self, program: PosixPath):
-        assert verilog_interpreter is not None
-        argv = [verilog_interpreter, str(program)]
-        return RunParams(argv, [verilog_interpreter])
+        argv = ['/bin/vvp', str(program)]
+        return RunParams('std', argv, [])
 
 runners: Dict[str, BaseRunner] = {
     'elf': ElfRunner(),
@@ -159,10 +157,11 @@ async def run_interactive(cwd: PosixPath,
             # run!
             runner = runners[args.type]
             task_interactor = create_task(run_with_limits(
+                'std',
                 [str(interactor_exe), str(infile) if infile is not None else '/dev/null', str(outfile)],
                 interactor_wd, interactor.limits,
                 infile=r1, outfile=w2,
-                supplementary_paths=['/usr', '/etc', str(interactor_exe)] + [str(infile)] if infile is not None else [],
+                supplementary_paths=[str(interactor_exe)] + [str(infile)] if infile is not None else [],
                 supplementary_paths_rw=[outfile],
             ))
             task_user = create_task(runner.run(cwd, exec_file, r2, w1, args))

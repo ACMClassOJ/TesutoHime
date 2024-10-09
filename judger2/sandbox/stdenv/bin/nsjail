@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Usage: bin/nsjail <nsjail path> <profile> [nsjail args...]
+
+set -e
+IFS=$'\n'
+
+nsjail="$1"
+shift
+profile="$1"
+shift
+
+wd="$(pwd)"
+cd "$(dirname $0)/.."
+basedir="$(pwd)"
+cd "$wd"
+profile_dir="$basedir/profiles/$profile"
+requisites_file="$profile_dir/requisites"
+result_dir="$profile_dir/result"
+
+if [ ! -e "$requisites_file" -o ! -e "$result_dir" ]; then
+  echo "Unable to start: profile not found" >&2
+  exit 1
+fi
+
+requisites="$(cat "$requisites_file")"
+extra_args=()
+for path in $requisites; do
+  extra_args+=('--bindmount_ro' "$path")
+done
+
+rootdirs="$(ls "$result_dir")"
+for dir in $rootdirs; do
+  extra_args+=('--bindmount_ro' "$result_dir/$dir:/$dir")
+done
+
+# write /acmoj/resolv.conf
+disable_clone_newnet=f
+chroot=""
+is_chroot_opt=f
+for opt in $@; do
+  if [ "$is_chroot_opt" = "t" ]; then
+    is_chroot_opt=f
+    chroot="$opt"
+  fi
+  case "$opt" in
+    --disable_clone_newnet|-N)
+      disable_clone_newnet=t ;;
+    --chroot|-c)
+      is_chroot_opt=t ;;
+    --)
+      break ;;
+  esac
+done
+
+if [ "$disable_clone_newnet" = "t" ]; then
+  if [ -z "$chroot" ]; then
+    echo "Unable to start: chroot needed" >&2
+    exit 1
+  fi
+
+  mkdir -p "$chroot/acmoj"
+  cat /etc/resolv.conf > "$chroot/acmoj/resolv.conf"
+  # we need the following line to make openssl work
+  extra_args+=('--env' 'NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt')
+fi
+
+exec "$nsjail" ${extra_args[@]} $@

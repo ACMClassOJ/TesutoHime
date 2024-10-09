@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from logging import getLogger
 from os import chmod, utime
 from pathlib import PosixPath
-from shutil import copy2, which
+from shutil import copy2
 from subprocess import DEVNULL
 from tempfile import NamedTemporaryFile
 from typing import Any, Callable, Coroutine, Dict, List, Type
@@ -17,12 +17,12 @@ from commons.task_typing import (CompileLocalResult, CompileResult,
                                  CompileSourceGit, CompileSourceVerilog,
                                  CompileTask, Input, ResourceUsage)
 from judger2.cache import CachedFile, ensure_cached, upload
-from judger2.config import (cache_dir, cxx, cxx_exec_name, cxx_file_name,
-                            cxxflags, exec_file_name, git_exec_name,
-                            git_ssh_private_key, gitflags, verilog,
-                            verilog_exec_name, verilog_file_name)
+from judger2.config import (cache_dir, cxx_exec_name, cxx_file_name, cxxflags,
+                            exec_file_name, git_exec_name, git_ssh_private_key,
+                            gitflags, verilog_exec_name, verilog_file_name)
 from judger2.sandbox import chown_back, chown_to_user, run_with_limits
-from judger2.util import TempDir, copy_supplementary_files, FileConflictException
+from judger2.util import (FileConflictException, TempDir,
+                          copy_supplementary_files)
 
 logger = getLogger(__name__)
 
@@ -121,27 +121,15 @@ async def compile_cpp(
 ) -> CompileLocalResult:
     code_file = cwd / cxx_file_name
     exec_file = cwd / cxx_exec_name
-    assert cxx is not None
     res = await run_with_limits(
-        [cxx] + cxxflags + [str(code_file), '-o', str(exec_file)],
+        'std',
+        ['/bin/g++'] + cxxflags + [str(code_file), '-o', str(exec_file)],
         cwd, limits,
-        supplementary_paths=['/usr', '/bin'],
     )
     if res.error is not None:
         return CompileLocalResult.from_run_failure(res)
     return CompileLocalResult.from_file(exec_file, res.message)
 
-
-def get_resolv_conf_path():
-    resolv_conf = PosixPath('/etc/resolv.conf')
-    if not resolv_conf.exists():
-        return None
-    if not resolv_conf.is_symlink():
-        return None
-    return str(resolv_conf.resolve())
-
-resolv_conf_path = get_resolv_conf_path()
-git_ssh_config_path = str(PosixPath(__file__).with_name('ssh_config'))
 
 async def prepare_git(
     cwd: PosixPath,
@@ -158,14 +146,10 @@ async def prepare_git(
             tempfile.flush()
             chown_to_user(tempfile.name)
             bind = [
-                '/usr', '/bin', '/etc',
-                f'{git_ssh_config_path}:/etc/ssh/ssh_config',
                 f'{tempfile.name}:/id_acmoj',
             ]
-            if resolv_conf_path is not None:
-                bind.append(resolv_conf_path)
             return await run_with_limits(
-                argv, cwd, limits,
+                'std', argv, cwd, limits,
                 outfile=output,
                 supplementary_paths=bind,
                 network_access=True,
@@ -182,9 +166,7 @@ async def prepare_git(
             tempfile.close()
     
     # clone
-    git = which('git')
-    assert git is not None
-    git_argv = [git, 'clone', source.url, '.'] + gitflags
+    git_argv = ['/bin/git', 'clone', source.url, '.'] + gitflags
     logger.debug(f'about to run {git_argv}')
     clone_res = await run_build_step(git_argv)
     if clone_res.error is not None:
@@ -198,13 +180,9 @@ async def compile_git(
     limits: ResourceUsage,
 ) -> CompileLocalResult:
     async def run_build_step(argv: List[str], *, output = DEVNULL):
-        bind = ['/usr', '/bin', '/etc']
-        if resolv_conf_path is not None:
-            bind.append(resolv_conf_path)
         return await run_with_limits(
-            argv, cwd, limits,
+            'std', argv, cwd, limits,
             outfile=output,
-            supplementary_paths=bind,
             network_access=False,
             env=[
                 'GIT_CONFIG_COUNT=2',
@@ -215,12 +193,9 @@ async def compile_git(
             ],
         )
 
-    git = which('git')
-    assert git is not None
-
     # get commit hash
     with TempDir() as d, open(d / 'commit-hash', 'w+b') as ouf:
-        commit_hash_argv = [git, 'log', '-1', '--pretty=%H']
+        commit_hash_argv = ['/bin/git', 'log', '-1', '--pretty=%H']
         commit_hash_res = await run_build_step(commit_hash_argv, output=ouf)
         if commit_hash_res.error is not None:
             return CompileLocalResult.from_run_failure(commit_hash_res)
@@ -233,9 +208,7 @@ async def compile_git(
     cmake_lists_path = cwd / 'CMakeLists.txt'
     if cmake_lists_path.is_file():
         logger.debug('CMake config found, invoking cmake')
-        cmake = which('cmake')
-        assert cmake is not None
-        res = await run_build_step([cmake, '.'])
+        res = await run_build_step(['/bin/cmake', '.'])
         if res.error is not None:
             return CompileLocalResult.from_run_failure(res)
     else:
@@ -245,9 +218,7 @@ async def compile_git(
     makefile_paths = [cwd / x for x in ['GNUmakefile', 'makefile', 'Makefile']]
     if any(x.is_file() for x in makefile_paths):
         logger.debug('makefile found, invoking make')
-        make = which('make')
-        assert make is not None
-        res = await run_build_step([make])
+        res = await run_build_step(['/bin/make'])
         if res.error is not None:
             return CompileLocalResult.from_run_failure(res)
     else:
@@ -286,11 +257,10 @@ async def compile_verilog(
 ) -> CompileLocalResult:
     code_file = cwd / verilog_file_name
     exec_file = cwd / verilog_exec_name
-    assert verilog is not None
     res = await run_with_limits(
-        [verilog, str(code_file), '-o', str(exec_file)],
+        'std',
+        ['/bin/iverilog', str(code_file), '-o', str(exec_file)],
         cwd, limits,
-        supplementary_paths=['/bin', '/usr/bin'],
         tmpfsmount=True,
     )
     if res.error is not None:

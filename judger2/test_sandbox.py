@@ -1,5 +1,4 @@
 from asyncio import CancelledError, Task, create_task, run, sleep
-from shutil import which
 
 from commons.task_typing import ResourceUsage
 
@@ -44,26 +43,20 @@ add_executable(code main.c)
             file_count=100,
             file_size_bytes=1048576,
         )
-        bin_files = ['/bin', '/usr/bin', '/usr/include', '/usr/share/cmake']
         with open('test.out', 'w') as outfile:
-            cmake = which('cmake')
-            make = which('make')
-            assert cmake is not None and make is not None
             res = await run_with_limits(
-                [cmake, '.'], cwd, limits,
-                supplementary_paths=bin_files,
+                'std', ['/bin/cmake', '.'], cwd, limits,
                 outfile=outfile,
             )
             print(res)
             if res.error is not None: return
             res = await run_with_limits(
-                [make], cwd, limits,
-                supplementary_paths=bin_files,
+                'std', ['/bin/make'], cwd, limits,
                 outfile=outfile,
             )
             print(res)
             if res.error is not None: return
-            res = await run_with_limits([str(exe)], cwd, limits, outfile=outfile)
+            res = await run_with_limits('libc', [str(exe)], cwd, limits, outfile=outfile)
             print(res)
 
 if __name__ == '__main__':

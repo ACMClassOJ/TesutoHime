@@ -1,0 +1,16 @@
+# nix-build artifact symlink
+result
+result-*
+
+# logs
+*.log
+*.log.*
+
+# built profiles
+profiles
+
+# misc
+.vscode
+
+# un-ignore
+!bin/nsjail

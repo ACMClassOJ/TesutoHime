@@ -1,21 +1,23 @@
-CC=gcc
+CC=stdenv/profiles/std/result/bin/gcc
 CFLAGS=-O2 -Wall -Wextra
 
-all: runner test mem du nsjail
+all: runner du nsjail stdenv
 	strip runner
-	strip test
-	strip mem
 
-test: test.o
-	ld test.o -o test
-test.o: test.s
-	as test.s -o test.o
-
+.PHONY: clean
 clean:
-	rm -f runner test test.o
+	rm -f runner
+	$(MAKE) -C stdenv clean
+
+runner: runner.c stdenv
+	$(CC) $(CFLAGS) $< -o $@
 
 du:
 	./build-du
 
 nsjail:
 	./build-nsjail
+
+.PHONY: stdenv
+stdenv:
+	$(MAKE) -C stdenv

@@ -1,5 +1,3 @@
-from shutil import which
-
 from commons.task_typing import ResourceUsage
 from commons.util import RedisQueues, load_config
 from redis.asyncio import Redis
@@ -41,13 +39,9 @@ task_envp = [
 
 exec_file_name = 'code'
 
-cxx = which('g++')
 cxxflags = ['-fmax-errors=10', '-O2', '-DONLINE_JUDGE', '-std=c++20']
 cxx_file_name = 'main.cpp'
 cxx_exec_name = exec_file_name
-
-# which('python3') does not work here inside the virtual env
-python = '/usr/bin/python3'
 
 git_exec_name = exec_file_name
 gitflags = [
@@ -58,12 +52,9 @@ gitflags = [
 ]
 git_ssh_private_key = config['git']['ssh']['private_key']
 
-verilog = which('iverilog')
 verilog_file_name = 'main.v'
 verilog_exec_name = exec_file_name
-verilog_interpreter = which('vvp')
 
-valgrind = which('valgrind')
 valgrind_errexit_code = 250
 valgrind_args = [
     '--tool=memcheck',

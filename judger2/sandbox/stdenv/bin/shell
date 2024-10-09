@@ -1,0 +1,60 @@
+#!/bin/bash
+
+set -e
+IFS=$'\n'
+
+wd="$(pwd)"
+target="$1"
+target="${target:=std}"
+cd "$(dirname "$0")/.."
+
+echo "Building environment..."
+make "profiles/$target-shell/requisites"
+echo "Environment built."
+
+cd "profiles/$target-shell"
+
+{ initscript="$(cat)"; } << 'EOF'
+set -e
+IFS=$'\n'
+
+bindmount () {
+  if [ ! -e "$2" ]; then
+    if [ -d "$1" ]; then
+      mkdir -p "$2"
+    else
+      mkdir -p "$(dirname "$2")"
+      touch "$2"
+    fi
+  fi
+  mount --rbind "$1" "$2"
+}
+
+rootdir=/tmp/acmoj-stdenv-chroot
+rm -rf $rootdir
+
+bindmount /dev "$rootdir/dev"
+bindmount /sys "$rootdir/sys"
+bindmount /proc "$rootdir/proc"
+mkdir -p "$rootdir/tmp"
+mount -t tmpfs tmp "$rootdir/tmp"
+
+for dir in $(cat requisites); do
+  bindmount "$dir" "$rootdir/$dir"
+done
+for dir in $(ls result); do
+  bindmount "result/$dir" "$rootdir/$dir"
+done
+bindmount "__WD__" "$rootdir/__WD__"
+
+resolvconf="$rootdir/acmoj/resolv.conf"
+mkdir "$(dirname "$resolvconf")"
+cat /etc/resolv.conf > "$resolvconf"
+
+export SHELL=/bin/bash
+export NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt
+chroot "$rootdir" /bin/bash -c "cd __WD__; /bin/bash"
+EOF
+initscript="${initscript//__WD__/"$wd"}"
+
+unshare --fork -ump --map-user=$(id -ru) --map-group=$(id -rg) --keep-caps /bin/bash -c "$initscript"

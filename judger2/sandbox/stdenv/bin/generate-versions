@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+./shell << 'EOF'
+cat << END
+<p>GCC version: <code>$(g++ --version | head -1)</code></p>
+<p>CMake version: <code>$(cmake --version | head -1)</code></p>
+<p>Python version: <code>$(python3 -V)</code></p>
+<p>Verilog version: <code>$(iverilog -V | head -1)</code></p>
+END
+EOF

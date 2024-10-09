@@ -6,7 +6,7 @@
 
 ```sh
 ssh 10.0.0.4 # 登录到 judge 机
-sudo apt install python3 python3-pip pkg-config autoconf bison flex libprotobuf-dev libnl-route-3-dev libtool protobuf-compiler uidmap build-essential cmake valgrind iverilog
+sudo apt install python3 python3-pip pkg-config autoconf bison flex libprotobuf-dev libnl-route-3-dev libtool protobuf-compiler uidmap build-essential cmake jq
 sudo adduser ojrunner
 sudo -iu ojrunner
 cd
@@ -45,8 +45,6 @@ vim runner.yml
 ```sh
 cd /path/to/TesutoHime/judger2/sandbox
 make
-cd ../checker
-scripts/build
 ```
 
 如果你的 git 版本严格低于 2.38.0, [则需要设置全局 git 配置][git]:

@@ -38,33 +38,25 @@ async def check(outfile: CheckInput, cwd: PosixPath, checker: Checker) -> CheckR
 
 
 checker_errexit_code = 1
-checker_exe = PosixPath(__file__).parent.parent / 'checker' / 'checker'
-if not checker_exe.exists():
-    raise Exception('checker executable not found')
-checker_exe = str(checker_exe)
+checker_exe = '/bin/acmoj-checker'
 
 
 async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker):
     ans = (await ensure_cached(checker.answer)).path
-    if not checker.ignore_whitespace:
-        return CheckResult('system_error', 'cannot check without ignore_whitespace')
     argv = [checker_exe, '-ZB', '--', str(outfile), str(ans)] if checker.ignore_whitespace \
         else [checker_exe, '--', str(outfile), str(ans)]
-    supplementary_paths = \
-        ['/bin', '/usr/bin', checker_exe, str(outfile), str(ans)]
     logger.debug(f'about to run {argv}')
     with TempDir() as cwd:
         res = await run_with_limits(
-            argv,
-            cwd,
+            'std', argv, cwd,
             checker_cmp_limits,
-            supplementary_paths=supplementary_paths,
+            supplementary_paths=[outfile, ans],
         )
     if res.error == 'runtime_error' and res.code == checker_errexit_code:
         return CheckResult('wrong_answer', '')
     if res.error is not None:
         logger.error(f'checker failed with {res.error}: {res.message}')
-        return CheckResult('system_error', f'checker B failed with {res.error}: {res.message}')
+        return CheckResult('system_error', f'checker failed with {res.error}: {res.message}')
     return CheckResult('accepted', '', 1.0)
 
 
@@ -107,7 +99,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
 
         await copy_supplementary_files(checker.supplementary_files, cwd)
 
-        bindmount = ['/usr', '/bin', '/etc', str(outfile)]
+        bindmount = [str(outfile)]
         if infile is None:
             infile = PosixPath(devnull)
         else:
@@ -123,9 +115,9 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
         argv = [str(x) for x in argv]
         logger.debug(f'about to run spj: {argv}')
 
-        res = await run_with_limits(argv, cwd, checker.limits,
+        res = await run_with_limits('std', argv, cwd, checker.limits,
                                     supplementary_paths=bindmount,
-                                    supplementary_paths_rw=[str(user_cwd)])
+                                    supplementary_paths_rw=[user_cwd])
         if res.error is not None:
             return CheckResult('bad_problem', f'checker error: {res.message}')
 

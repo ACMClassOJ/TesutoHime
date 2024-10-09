@@ -42,9 +42,6 @@ import <nixpkgs> {
           root = ../../checker;
           fileset = ../../checker;
         };
-        installPhase = ''
-          install -Dm755 checker $out/bin/acmoj-checker
-        '';
       };
 
       # /etc/ssh/ssh_config and /etc/passwd

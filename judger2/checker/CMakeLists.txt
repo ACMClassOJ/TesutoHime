@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_CXX_FLAGS "-O2")
 
-add_executable(checker
+add_executable(acmoj-checker
         main.cpp
         check.h
         check.cpp
@@ -19,7 +19,9 @@ add_executable(checker
 
 if (supported)
     message(STATUS "IPO / LTO enabled")
-    set_property(TARGET checker PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    set_property(TARGET acmoj-checker PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 else ()
     message(STATUS "IPO / LTO not supported: <${error}>")
 endif ()
+
+install(TARGETS acmoj-checker DESTINATION bin)

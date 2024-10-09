@@ -81,6 +81,10 @@ make
 iverilog answer.v -o code
 ```
 
+### 编译参数及编译器版本
+
+请参见 [关于页面](/OnlineJudge/about#environment)。
+
 ## 查看评测详情
 
 在「评测详情」列表中，找到需要查看的提交，点击提交的「评测状态」或「语言」栏即可跳转到提交详情。

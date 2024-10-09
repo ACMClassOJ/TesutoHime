@@ -6,7 +6,7 @@
 
 ```sh
 ssh 10.0.0.4 # 登录到 judge 机
-sudo apt install python3 python3-pip pkg-config autoconf bison flex libprotobuf-dev libnl-route-3-dev libtool protobuf-compiler uidmap build-essential cmake jq
+sudo apt install python3 python3-pip pkg-config autoconf bison flex libprotobuf-dev libnl-route-3-dev libtool protobuf-compiler uidmap build-essential cmake jq nix-setup-systemd
 sudo adduser ojrunner
 sudo -iu ojrunner
 cd
@@ -38,6 +38,15 @@ ssh-keygen -t ed25519
 ```sh
 cp runner.sample.yml runner.yml
 vim runner.yml
+```
+
+配置 nix:
+
+```sh
+usermod -aG nix-users "$(id -nu)"
+# 修改用户组后可能需要重新登录
+nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs
+nix-channel --update
 ```
 
 编译所需的二进制文件: (会编译一遍 coreutils 和 nsjail，耗时可能较长)

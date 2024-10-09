@@ -5,7 +5,7 @@ let
     glibc.out
     acmoj-gcc.cc.lib
   ];
-  python = python313;
+  python = python313Full;
 in {
   # for compile, interactor, checker
   std = [

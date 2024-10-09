@@ -81,6 +81,8 @@ import <nixpkgs> {
         };
       };
 
+      # gcc disregards /usr/include by default
+      # we need some tweaks to make it include testlib.h
       acmoj-gcc = wrapCCWith {
         cc = gcc13.cc;
         extraBuildCommands = ''

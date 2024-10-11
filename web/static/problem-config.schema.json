@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://acm.sjtu.edu.cn/OnlineJudge/static/problem-config.schema.json",
+  "title": "ACMOJ Problem config.json",
+  "type": "object",
+  "properties": {
+    "Details": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "integer"
+          },
+          "Dependency": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "default": null
+          },
+          "TimeLimit": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "default": null
+          },
+          "MemoryLimit": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "default": null
+          },
+          "DiskLimit": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "default": null
+          },
+          "FileNumberLimit": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "default": null
+          },
+          "ValgrindTestOn": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "ID"
+        ]
+      }
+    },
+    "Groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "GroupID": {
+            "type": "integer"
+          },
+          "GroupScore": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "TestPoints": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "GroupName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "GroupID",
+          "GroupScore",
+          "TestPoints"
+        ]
+      }
+    },
+    "SPJ": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "Compile": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "skip",
+                    "classic",
+                    "hpp"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "Type": {
+                      "enum": [
+                        "skip",
+                        "classic",
+                        "hpp"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "Type"
+                  ]
+                }
+              ],
+              "default": "classic"
+            },
+            "Run": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "skip",
+                    "classic",
+                    "verilog",
+                    "interactive"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "Type": {
+                      "enum": [
+                        "skip",
+                        "classic",
+                        "verilog",
+                        "interactive"
+                      ]
+                    },
+                    "Interactor": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "Type": {
+                          "enum": [
+                            "cpp",
+                            "binary"
+                          ]
+                        },
+                        "Path": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "Type",
+                        "Path"
+                      ],
+                      "default": null
+                    }
+                  },
+                  "required": [
+                    "Type"
+                  ]
+                }
+              ],
+              "default": "classic"
+            },
+            "Check": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "skip",
+                    "compare",
+                    "custom"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "Type": {
+                      "enum": [
+                        "skip",
+                        "compare",
+                        "custom"
+                      ]
+                    },
+                    "IgnoreInsignificantWhitespace": {
+                      "type": "boolean",
+                      "default": true
+                    },
+                    "Checker": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "Type": {
+                          "enum": [
+                            "cpp",
+                            "binary"
+                          ]
+                        },
+                        "Path": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "Type",
+                        "Path"
+                      ],
+                      "default": null
+                    }
+                  },
+                  "required": [
+                    "Type"
+                  ]
+                }
+              ],
+              "default": "compare"
+            }
+          },
+          "required": []
+        },
+        {
+          "enum": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "default": {}
+    },
+    "CompileTimeLimit": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "default": null
+    },
+    "Scorer": {
+      "enum": [
+        0
+      ],
+      "default": 0
+    },
+    "SupportedFiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "Verilog": {
+      "type": "boolean",
+      "default": false
+    },
+    "Quiz": {
+      "type": "boolean",
+      "default": false
+    },
+    "RunnerGroup": {
+      "type": "string",
+      "default": "default"
+    }
+  },
+  "required": [
+    "Details",
+    "Groups"
+  ]
+}

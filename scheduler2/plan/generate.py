@@ -121,6 +121,8 @@ async def load_config(ctx: ParseContext):
         if 'SPJ' not in cfg:
             cfg['SPJ'] = {}
         cfg['SPJ'] = desugar_spj_config(cfg['SPJ'])
+        if '$schema' in cfg:
+            del cfg['$schema']
         ctx.cfg = ProblemConfig(**cfg)
         ctx.testpoint_count = len(ctx.cfg.Details)
     except Exception as e:
@@ -292,7 +294,7 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
         answer = ans()
         if answer is None:
             raise InvalidProblemException(f'Answer file needed for testpoint {id}')
-        check: Checker = CompareChecker(check_cfg.IgnoreWhitespace, answer)
+        check: Checker = CompareChecker(check_cfg.IgnoreInsignificantWhitespace, answer)
     elif check_cfg.Type == 'skip':
         check = DirectChecker()
     elif check_cfg.Type == 'custom':

@@ -1,3 +1,11 @@
+'''
+Typing for config.json. Please run:
+
+    python3 -m scripts.generate_config_schema
+
+to update the corresponding JSON schema after modifying this file.
+'''
+
 from dataclasses import dataclass, field
 from enum import IntEnum, unique
 from typing import List, Optional, Union
@@ -39,7 +47,7 @@ class RunConfig:
 class CheckConfig:
     Type: CheckType
     # For compare
-    IgnoreWhitespace: bool = True
+    IgnoreInsignificantWhitespace: bool = True
     # For custom
     Checker: Optional[SpjProgram] = None
 

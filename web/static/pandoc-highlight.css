@@ -1,0 +1,125 @@
+pre code.sourceCode {
+  display: block;
+  overflow-x: auto;
+  padding: .5em;
+  color: #333;
+  background: #f8f8f8;
+}
+
+.sourceCode .kw,
+.sourceCode .im,
+.sourceCode .cf {
+  color: #333;
+  font-weight: 700
+}
+
+.sourceCode .dt {
+  color: #458;
+  font-weight: 700
+}
+
+.sourceCode .dv,
+.sourceCode .bn,
+.sourceCode .fl,
+.sourceCode .ch,
+.sourceCode .cn,
+.sourceCode .sc,
+.sourceCode .cv,
+.sourceCode .va {
+  color: teal
+}
+
+.sourceCode .st,
+.sourceCode .al,
+.sourceCode .re,
+.sourceCode .er,
+.sourceCode .vs,
+.sourceCode .do,
+.sourceCode .an,
+.sourceCode .in,
+.sourceCode .wa {
+  color: #d14
+}
+
+.sourceCode .co {
+  color: #998;
+  font-style: italic
+}
+
+.sourceCode .fu {
+  color: #900;
+  font-weight: 700
+}
+
+.sourceCode .bu {
+  color: #0086b3
+}
+
+.sourceCode .ex,
+.sourceCode .pp {
+  color: #999;
+  font-weight: 700
+}
+
+.sourceCode .at {
+  color: navy;
+  font-weight: 400
+}
+
+@media (prefers-color-scheme: dark) {
+
+pre code.sourceCode {
+  color: #abb2bf !important;
+  background: #2e2e2e !important;
+}
+
+.sourceCode .kw,
+.sourceCode .al,
+.sourceCode .re,
+.sourceCode .er,
+.sourceCode .im,
+.sourceCode .do,
+.sourceCode .an,
+.sourceCode .cf,
+.sourceCode .in,
+.sourceCode .wa {
+  color: #c678dd;
+}
+
+.sourceCode .dt,
+.sourceCode .cv,
+.sourceCode .va {
+  color: #d19a66;
+}
+
+.sourceCode .dv,
+.sourceCode .bn,
+.sourceCode .fl,
+.sourceCode .ch,
+.sourceCode .cn,
+.sourceCode .sc {
+  color: #56b6c2;
+}
+
+.sourceCode .st,
+.sourceCode .vs,
+.sourceCode .ex,
+.sourceCode .pp,
+.sourceCode .at {
+  color: #98c379;
+}
+
+.sourceCode .co {
+  color: #5c6370;
+  font-style: italic;
+}
+
+.sourceCode .fu {
+  color: #61aeee;
+}
+
+.sourceCode .bu {
+  color: #e6c07b;
+}
+
+}

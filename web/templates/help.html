@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
 {% set page=title %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'pandoc-highlight.css') }}">
+{% endblock %}
+
 {% block content %}
 <style>
 img {

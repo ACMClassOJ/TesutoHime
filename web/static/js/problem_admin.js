@@ -457,6 +457,10 @@ $(() => {
                 endField()
                 endExample()
 
+                if (examples.length === 1 && examples[0].name && examples[0].name.replace(/\s/g, '') === '样例1') {
+                    examples[0].name = null
+                }
+
                 if (examples.length > 1 && examples.some(x => !x.name)) {
                     messages.push([ 'warning', '有多组测试样例，但有的测试样例没有名称' ])
                 }

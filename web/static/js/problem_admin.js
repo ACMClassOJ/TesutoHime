@@ -138,7 +138,7 @@ $(() => {
         <textarea class="example__output form-control" rows="5" id="${id}-output" placeholder="请仅填写输出内容，解释性文本在下方描述处填写"></textarea>
     </div>
 </div>
-<label for="${id}-description">样例描述</label>
+<label for="${id}-description">样例描述<i class="fab fa-markdown ml-2" title="Markdown 格式"></i></label>
 <div class="example__description" id="${id}-description">
     <textarea style="display: none"></textarea>
 </div>
@@ -643,17 +643,16 @@ $(() => {
                 ValgrindTestOn: $(d[5]).find('input').is(':checked'),
             })
         });
-        let type = $('#iptSpjType');
-        if (type.val() === '3') {
-            swal('Error', 'scorers are not supported (for now)', 'error')
-            throw new Error('invalid spj')
+        const spj = {}
+        for (const key of [ 'Compile', 'Run', 'Check' ]) {
+            spj[key] = $(`#ipt${key}Type`).val()
         }
         return JSON.stringify({
             Groups,
             Details,
             CompileTimeLimit: Number($('#iptCompileTime').val()),
-            SPJ: Number(type.val()),
-            Scorer: type.val() === '3' ? 1 : 0,
+            SPJ: spj,
+            Scorer: 0,
         }, null, 2)
     }
 
@@ -702,9 +701,7 @@ $(() => {
         const folder = zip.folder(problemId);
         let data_files = $('#iptData')
         let description_md = $('#iptDescriptionMd')
-        let type = $('#iptSpjType')
         let spj = $('#iptSpj')
-        let scorer = $('#iptScorer')
         // let config = $('#iptConfig');
         if (data_files.val() !== null && data_files.val() !== '') {
             data_files = data_files[0].files
@@ -716,13 +713,10 @@ $(() => {
             description_md = description_md[0].files[0]
             folder.file(description_md.name, description_md)
         }
-        if (type.val() === 1 || type.val() === 2 && spj.val() !== null && spj.val() !== '') {
-            spj = spj[0].files[0]
-            folder.file(spj.name, spj)
-        }
-        if (type.val() === 3 && scorer.val() !== null && scorer.val() !== '') {
-            scorer = scorer[0].files[0]
-            folder.file(scorer.name, scorer)
+        if (spj.val() !== null && spj.val() !== '') {
+            for (const file of spj[0].files) {
+                folder.file(file.name, file)
+            }
         }
         folder.file('config.json', generateConfig())
         zip.generateAsync({ type: 'blob' }).then(blob => {

@@ -1,6 +1,5 @@
 <h1 id="数据格式规范">数据格式规范</h1>
 <p><em>By cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2024.10.11。</em></p>
-<p><strong>请注意：输出文件大于 256 MiB 时会报错 (File size limit exceeded)，请确保题目的标准答案不会超过 256 MiB。</strong></p>
 <h2 id="zip总格式">ZIP总格式</h2>
 <p><em>注：请尽量使用避免任何未在此处出现的特性或问题（特别是做出某个特定文件名的文件存在的假设），因为这可能在评测后端升级后发生变化。</em></p>
 <ul>
@@ -19,15 +18,58 @@
 <li>（可选）任意题目可能需要的文件，如：插图（<strong>请确保插图上传到 OJ 自带图床，能从互联网访问后引用 URL 而不是直接本地引用</strong>），数据生成脚本，<code>config.json</code> 生成脚本，数据随机种子，辅助网页等信息。</li>
 </ul></li>
 <li><a href="package-sample">数据包样例</a>中提供了一些常见的数据包结构，可供参考。但请注意，请<strong>务必先认真阅读本文档</strong>，数据包样例不能涵盖全部信息。</li>
+<li><strong>输出文件大小限制：</strong>输出文件大于 256 MiB 时会报错 (File size limit exceeded)，请确保题目的标准答案不会超过 256 MiB。</li>
+<li><strong>数据包大小限制：</strong>数据包压缩后总大小大于 100 MiB 时无法直接上传，最好不要使用如此大的数据包。如果您确实需要大于 100 MiB 的数据包，请联系 ACM 班服务器管理员提供权限。
+<ul>
+<li>不要使用极大的数据来卡常或卡 log。如果数据是均匀随机的，可以用每个测试点的随机数种子作为输入，运行时动态生成数据。</li>
+</ul></li>
 </ul>
 <h3 id="c-评测">C++ 评测</h3>
 <p>如果编译时需要包含任何题目提供的头文件（不包含选手提交的代码），需要将文件名填入 <code>config.json</code> 的 <code>SupportedFiles</code>，参见 <a href="#supportedfiles">SupportedFiles 部分</a>。</p>
 <h3 id="verilog-评测">Verilog 评测</h3>
 <p>若干 <code>数字.v</code>，他们将引用学生上传的 <code>.v</code> 模块（评测时保存在 <code>answer.v</code>）进行评测。<strong>文件名请采用连续编号的，从 1 开始的纯数字</strong>。你需要 <code>`include “answer.v”</code>。</p>
+<h2 id="description">description.md</h2>
+<ul>
+<li>题面信息请参考<a href="problem-format">题面格式规范</a>。</li>
+<li>在数据包中放 <code>description.md</code> 仅仅是为了数据包的完整性给以后的助教和管理员提供便利，其本身与数据库和网页题面显示并没有关联。</li>
+<li>因此重新上传数据包，<code>description.md</code> 中的改动并不会体现在网页上；</li>
+<li>通过网页或其他方式修改题面后，改动也不会同步到数据包里，请知悉；</li>
+<li>若 Markdown 格式不方便，也可以使用 txt/word 等文本格式。</li>
+<li>若无必要给出题面情况（比如大作业的题面在 GitHub 上），这一项可不放。</li>
+<li>若需要插入图片，建议上传到 ACM OJ 图床服务，建议使用 <code>&lt;img&gt;</code> 标签插入题面以更好的控制题目格式。</li>
+<li>建议将时空限制在数据范围中注明。</li>
+</ul>
+<h2 id="solution.cpp">solution.cpp</h2>
+<ul>
+<li>在数据包中放标程仅仅是为了数据包的完整性给以后的助教和管理员提供便利，其本身与评测并没有关联。</li>
+<li>若存在难以给出标程情况（比如大作业），这一项可不放。</li>
+<li>也欢迎放上部分分解法，命名可以是 <code>solution60.cpp</code>，<code>solution_n2.cpp</code> 等。</li>
+<li>对于所有评测 cpp 类题目，避免将标答命名为 <code>main.cpp</code>。</li>
+<li>对于评测头文件类题目，避免将标答命名为 <code>src.h</code>、<code>src.hpp</code>。</li>
+<li>对于评测 verilog 类题目，避免将标答命名为 <code>answer.v</code>。</li>
+<li>对于存在从 stdin 读取信息的评测，不需要 freopen。</li>
+<li>对于传统的输出 stdout 与各测试点简单比对结果的评测，不需要 freopen。</li>
+</ul>
+<h2 id="in">1.in</h2>
+<ul>
+<li>即传统 OI 题中从 stdin 输入的文件。</li>
+<li>命名规范：若干 <code>数字.in</code>，<strong>文件名请采用连续编号的，从1开始的纯数字</strong>，与 <code>.out/ans</code> 对应。</li>
+<li>在评测 <code>.h</code> 头文件时，可能不需要从 stdin 读取信息而将测试点嵌在各个 cpp（<code>1.cpp</code>）里，此时可不存在 <code>.in</code>。</li>
+<li>在使用 spj.cpp 时，可能不需要从 stdin 读取信息而将测试点嵌在 checker（<code>spj.cpp</code>）里，此时可不存在<code>.in</code>。</li>
+<li>在评测 verilog 时，尚不支持任何方式的读取输入，请将测试点内嵌至testbench（<code>1.v</code>）。</li>
+<li>注意：我们的 OJ 评测均采用 Linux 环境，默认 diff 时有行末空格过滤。虽然对于许多题目，换行符为 Windows 的 CRLF (<code>\r\n</code>) 还是 Linux 的 LF (<code>\n</code>) 并不会产生很大的影响，但请各位出数据的助教尽可能不要出现 CRLF。</li>
+</ul>
+<h2 id="ans-1.out">1.ans / 1.out</h2>
+<ul>
+<li>即传统 OI 题中的正确输出，他们将与程序的 stdout 输出进行比对。</li>
+<li>命名规范：若干 <code>数字.ans</code> 或 <code>数字.out</code>，<strong>文件名请采用连续编号的，从1开始的纯数字</strong>，与 <code>.in</code> 对应。同时存在 <code>.out</code> 和 <code>.ans</code> 时后者优先级高。</li>
+<li>在使用 spj.cpp 时，可能不需要比对 stdout，此时可不存在 <code>.ans</code>。</li>
+<li>注意：我们的 OJ 评测均采用 Linux 环境，默认 diff 时有行末空格过滤。虽然对于许多题目，换行符为 Windows 的 CRLF (<code>\r\n</code>) 还是 Linux 的 LF (<code>\n</code>) 并不会产生很大的影响，但请各位出数据的助教尽可能不要出现 CRLF。</li>
+</ul>
 <h2 id="config.json">config.json</h2>
 <p>如果您使用 VS Code，您可以在 config.json 中加入一行：</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;$schema&quot;</span><span class="fu">:</span> <span class="st">&quot;https://acm.sjtu.edu.cn/OnlineJudge/static/problem-config.schema.json&quot;</span><span class="fu">,</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;$schema&quot;</span><span class="fu">:</span> <span class="st">&quot;https://acm.sjtu.edu.cn/OnlineJudge/static/assets/problem-config.schema.json&quot;</span><span class="fu">,</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="er">...</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>以获得更好的代码补全体验。</p>
@@ -160,44 +202,6 @@
 <p>是否启用 Verilog 评测，启用为 <code>true</code>，否则为 <code>false</code> 。默认为 <code>false</code>。请注意，如果启用该选项，所有的提交的将会<strong>强制</strong>被视作 Verilog。关于 Verilog 评测的更多信息，请参阅 <a href="#verilog-评测">Verilog 评测章节</a>。</p>
 <h3 id="quiz">Quiz</h3>
 <p>是否是填选题，填选题为 <code>true</code>，否则为 <code>false</code>。默认为 <code>false</code>。</p>
-<h2 id="description">description.md</h2>
-<ul>
-<li>题面信息请参考<a href="problem-format">题面格式规范</a>。</li>
-<li>在数据包中放 <code>description.md</code> 仅仅是为了数据包的完整性给以后的助教和管理员提供便利，其本身与数据库和网页题面显示并没有关联。</li>
-<li>因此重新上传数据包，<code>description.md</code> 中的改动并不会体现在网页上；</li>
-<li>通过网页或其他方式修改题面后，改动也不会同步到数据包里，请知悉；</li>
-<li>若 Markdown 格式不方便，也可以使用 txt/word 等文本格式。</li>
-<li>若无必要给出题面情况（比如大作业的题面在 GitHub 上），这一项可不放。</li>
-<li>若需要插入图片，建议上传到 ACM OJ 图床服务，建议使用 <code>&lt;img&gt;</code> 标签插入题面以更好的控制题目格式。</li>
-<li>建议将时空限制在数据范围中注明。</li>
-</ul>
-<h2 id="solution.cpp">solution.cpp</h2>
-<ul>
-<li>在数据包中放标程仅仅是为了数据包的完整性给以后的助教和管理员提供便利，其本身与评测并没有关联。</li>
-<li>若存在难以给出标程情况（比如大作业），这一项可不放。</li>
-<li>也欢迎放上部分分解法，命名可以是 <code>solution60.cpp</code>，<code>solution_n2.cpp</code> 等。</li>
-<li>对于所有评测 cpp 类题目，避免将标答命名为 <code>main.cpp</code>。</li>
-<li>对于评测头文件类题目，避免将标答命名为 <code>src.h</code>、<code>src.hpp</code>。</li>
-<li>对于评测 verilog 类题目，避免将标答命名为 <code>answer.v</code>。</li>
-<li>对于存在从 stdin 读取信息的评测，不需要 freopen。</li>
-<li>对于传统的输出 stdout 与各测试点简单比对结果的评测，不需要 freopen。</li>
-</ul>
-<h2 id="in">1.in</h2>
-<ul>
-<li>即传统 OI 题中从 stdin 输入的文件。</li>
-<li>命名规范：若干 <code>数字.in</code>，<strong>文件名请采用连续编号的，从1开始的纯数字</strong>，与 <code>.out/ans</code> 对应。</li>
-<li>在评测 <code>.h</code> 头文件时，可能不需要从 stdin 读取信息而将测试点嵌在各个 cpp（<code>1.cpp</code>）里，此时可不存在 <code>.in</code>。</li>
-<li>在使用 spj.cpp 时，可能不需要从 stdin 读取信息而将测试点嵌在 checker（<code>spj.cpp</code>）里，此时可不存在<code>.in</code>。</li>
-<li>在评测 verilog 时，尚不支持任何方式的读取输入，请将测试点内嵌至testbench（<code>1.v</code>）。</li>
-<li>注意：我们的 OJ 评测均采用 Linux 环境，默认 diff 时有行末空格过滤。虽然对于许多题目，换行符为 Windows 的 CRLF (<code>\r\n</code>) 还是 Linux 的 LF (<code>\n</code>) 并不会产生很大的影响，但请各位出数据的助教尽可能不要出现 CRLF。</li>
-</ul>
-<h2 id="out-1.ans">1.out / 1.ans</h2>
-<ul>
-<li>即传统 OI 题中的正确输出，他们将与程序的 stdout 输出进行比对。</li>
-<li>命名规范：若干 <code>数字.out</code> 或 <code>数字.ans</code>，<strong>文件名请采用连续编号的，从1开始的纯数字</strong>，与 <code>.in</code> 对应。同时存在 <code>.out</code> 和 <code>.ans</code> 时后者优先级高。</li>
-<li>在使用 spj.cpp 时，可能不需要比对 stdout，此时可不存在 <code>.out</code>。</li>
-<li>注意：我们的 OJ 评测均采用 Linux 环境，默认 diff 时有行末空格过滤。虽然对于许多题目，换行符为 Windows 的 CRLF (<code>\r\n</code>) 还是 Linux 的 LF (<code>\n</code>) 并不会产生很大的影响，但请各位出数据的助教尽可能不要出现 CRLF。</li>
-</ul>
 <h2 id="io-交互题">I/O 交互题</h2>
 <p>评测 I/O 交互题时，将在一个评测机上同时运行选手提交的程序和题目提供的交互器（interactor），两者位于不同的沙箱中，仅可通过标准输入输出通信。选手的标准输出会接到交互器的标准输入，反之亦然。题目数据中的输入文件会从命令行传给交互器：</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./interactor</span> input output</span></code></pre></div>
@@ -205,7 +209,7 @@
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>output  <span class="op">=</span> fopen<span class="op">(</span>argv<span class="op">[</span><span class="dv">2</span><span class="op">],</span> <span class="st">&quot;w&quot;</span><span class="op">);</span> <span class="co">// 输出到此文件中</span></span></code></pre></div>
 <p>其中：</p>
 <ul>
-<li>input 是题目的输入文件（#.in）。如果不存在输入文件则为 /dev/null。</li>
+<li>input 是题目的输入文件（#.in），此文件对选手不可见。如果不存在输入文件则为 /dev/null。</li>
 <li>output 是输出。对此文件的输出会交给 checker 进行检查，若 Check=skip 则会直接作为评测结果：第一行应是一个 0 至 1 之间的数，表示得分占测试点总分的比例，0 为不得分，1 为满分（accepted），其余内容会作为测试点的评测消息展示给选手。</li>
 </ul>
 <p><strong>注意：</strong>为了使得评测能够进行下去，选手程序和裁判程序应当在输出每一行后主动 flush 输出流：例如 <code>fflush(stdout)</code> 或者使用 <code>std::cout &lt;&lt; std::endl</code> 换行。否则，可能会导致交互死锁造成 TLE。</p>
@@ -237,6 +241,11 @@
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="st">&quot;interactive&quot;</span><span class="fu">,</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="st">&quot;skip&quot;</span></span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span></code></pre></div>
+<p>在调试时，可以使用<a href="/OnlineJudge/static/assets/test-interactive.py">交互题测试工具</a>进行测试。这个工具可以同时启动两个通过 I/O 进行交互的程序，同时可以输出两个程序之间的交互（需要 <code>-v</code> 选项）。这个工具也可以稍作改动后下发给学生。</p>
+<figure>
+<img src="https://acm.sjtu.edu.cn/OnlineJudge/oj-images/e385707f-516d-4b73-9da0-cc42ded71745" alt="交互题测试工具" />
+<figcaption aria-hidden="true">交互题测试工具</figcaption>
+</figure>
 <h3 id="testlib">testlib</h3>
 <p>Interactor 可以使用 testlib.h 编写，具体参见 <a href="https://codeforces.com/blog/entry/18455">testlib.h 文档</a>。OJ 的编译环境中自带 testlib.h，无需在数据包中包含。本地调试时，请使用 <a href="https://github.com/ACMClassOJ/testlib">ACMOJ 专用的 testlib.h</a>，不要使用 Codeforces/DOMjudge 等版本。</p>
 <p><strong>注意：</strong>默认情况下，testlib 会认为不使用另外的 checker，需要在 config.json 中指定 SPJ.Check = skip。如果需要使用 compare 或者自定义 checker，需要在调用 <code>registerInteraction</code> 时传入第三个参数为 false：</p>

@@ -230,15 +230,15 @@
             <h3>编辑题面</h3>
             <form id="form-description">
                 <div>
-                    <label for="iptDescription">题目描述</label>
+                    <label for="iptDescription">题目描述<i class="fab fa-markdown ml-2" title="Markdown 格式"></i></label>
                     <div class="init_editormd" id="iptDescription">
                         <textarea name="description" style="display: none" autocomplete="off"></textarea>
                     </div>
-                    <label for="iptInput">输入格式</label>
+                    <label for="iptInput">输入格式<i class="fab fa-markdown ml-2" title="Markdown 格式"></i></label>
                     <div class="init_editormd" id="iptInput">
                         <textarea name="input" style="display: none"></textarea>
                     </div>
-                    <label for="iptOutput">输出格式</label>
+                    <label for="iptOutput">输出格式<i class="fab fa-markdown ml-2" title="Markdown 格式"></i></label>
                     <div class="init_editormd" id="iptOutput">
                         <textarea name="output" style="display: none"></textarea>
                     </div>
@@ -252,16 +252,16 @@
                     </div>
                     <details id="example-input-output-container">
                         <summary>样例（旧版）</summary>
-                        <label for="iptExampleInput">样例输入</label>
+                        <label for="iptExampleInput">样例输入<i class="fab fa-markdown ml-2" title="Markdown 格式"></i></label>
                         <div class="init_editormd" id="iptExampleInput">
                             <textarea name="example_input" style="display: none"></textarea>
                         </div>
-                        <label for="iptExampleOutput">样例输出</label>
+                        <label for="iptExampleOutput">样例输出<i class="fab fa-markdown ml-2" title="Markdown 格式"></i></label>
                         <div class="init_editormd" id="iptExampleOutput">
                             <textarea name="example_output" style="display: none"></textarea>
                         </div>
                     </details>
-                    <label for="iptDataRange">数据范围</label>
+                    <label for="iptDataRange">数据范围<i class="fab fa-markdown ml-2" title="Markdown 格式"></i></label>
                     <div class="init_editormd" id="iptDataRange">
                         <textarea name="data_range" style="display: none"></textarea>
                     </div>
@@ -382,39 +382,57 @@
                 <div class="form-row">
                     <input type="hidden" name="id" value="{{ problem.id }}">
                     <div class="form-group col-md-3 mb-3">
-                        <label for="iptCompileTime"> 编译时长限制 (ms) </label>
+                        <label for="iptCompileTime">编译时长限制 (ms)</label>
                         <input class="form-control" type="number" name="time" id="iptCompileTime" value="30000">
                     </div>
                     <div class="form-group col-md-3 mb-3">
-                        <label for="iptSpjType"> SPJ 类型 </label>
-                        <select class="form-control selectpicker" name="type" id="iptSpjType"
+                        <label for="iptCompileType">编译</label>
+                        <select class="form-control selectpicker" name="type" id="iptCompileType"
                                 data-style="form-control font-weight-normal border-grey shadow-none">
-                            <option value="0">Classic</option>
-                            <option value="1">Special Judge</option>
-                            <option value="2">Interaction</option>
-                            <option value="3">Scorer</option>
+                            <option value="skip">skip</option>
+                            <option value="classic" selected>classic</option>
+                            <option value="hpp">hpp</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3 mb-3">
+                        <label for="iptRunType">运行</label>
+                        <select class="form-control selectpicker" name="type" id="iptRunType"
+                                data-style="form-control font-weight-normal border-grey shadow-none">
+                            <option value="skip">skip</option>
+                            <option value="classic" selected>classic</option>
+                            <option value="verilog">verilog</option>
+                            <option value="interactive">interactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3 mb-3">
+                        <label for="iptCheckType">检查</label>
+                        <select class="form-control selectpicker" name="type" id="iptCheckType"
+                                data-style="form-control font-weight-normal border-grey shadow-none">
+                            <option value="skip">skip</option>
+                            <option value="compare" selected>compare</option>
+                            <option value="custom">custom</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group custom-file col-md-3 mb-3">
-                        <label class="custom-file-label ml-1 mr-1" for="iptDescriptionMd"> 题面 (md doc(x) txt) </label>
+                        <label class="custom-file-label ml-1 mr-1" for="iptDescriptionMd">题面 (md doc(x) pdf tex txt)</label>
                         <input class="custom-file-input" type="file" name="description_md" id="iptDescriptionMd" 
-                               accept=".md,.doc,.docx,.txt">
+                               accept=".md,.doc,.docx,.txt,.pdf,.tex">
                     </div>
                     <div class="form-group custom-file col-md-3 mb-3">
-                        <label class="custom-file-label ml-1 mr-1" for="iptData"> 测试数据 (in out ans 多选) </label>
+                        <label class="custom-file-label ml-1 mr-1" for="iptData">测试数据 (in out ans 多选)</label>
                         <input class="custom-file-input" type="file" name="data" id="iptData" accept=".in,.ans,.out"
                                multiple>
                     </div>
                     <div class="form-group custom-file col-md-3 mb-3">
-                        <label class="custom-file-label ml-1 mr-1" for="iptSolution"> 标答 std (cpp hpp v 多选) </label>
-                        <input class="custom-file-input" type="file" name="solution" id="iptSolution" accept=".cpp, .hpp, .v"
+                        <label class="custom-file-label ml-1 mr-1" for="iptSolution">标答 std (cpp hpp v 多选)</label>
+                        <input class="custom-file-input" type="file" name="solution" id="iptSolution" accept=".cpp, .h, .hpp, .v"
                                multiple>
                     </div>
                     <div class="form-group custom-file col-md-3 mb-3">
-                        <label class="custom-file-label ml-1 mr-1" for="iptSpj"> Special Judge (cpp) </label>
-                        <input class="custom-file-input" type="file" name="data" id="iptSpj">
+                        <label class="custom-file-label ml-1 mr-1" for="iptSpj">Special Judge (cpp 多选)</label>
+                        <input class="custom-file-input" type="file" name="spj" id="iptSpj" multiple>
                     </div>
                     <!-- <div class="form-group custom-file col-md-3 mb-3">
                         <label class="custom-file-label ml-1 mr-1" for="iptScorer"> Scorer </label>
@@ -517,5 +535,5 @@ window.problemId = {{ problem.id }}
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20240929"></script>
+<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20241012"></script>
 {% endblock %}

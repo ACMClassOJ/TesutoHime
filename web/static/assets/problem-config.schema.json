@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://acm.sjtu.edu.cn/OnlineJudge/static/problem-config.schema.json",
+  "$id": "https://acm.sjtu.edu.cn/OnlineJudge/static/assets/problem-config.schema.json",
   "title": "ACMOJ Problem config.json",
   "type": "object",
   "properties": {

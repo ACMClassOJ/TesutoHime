@@ -49,7 +49,7 @@ python3 -m scripts.rebuild_artifacts
 ACMOJ 的环境配置参考了 [洛谷][luogu-env] 和 [Hydro][hydro-env] 的配置（同样使用 nix）。
 
 [luogu-env]: https://github.com/luogu-dev/judge-env
-[hydro-env]: https://github.com/hydro-dev/nix-channel/blob/master/judge.nix
+[hydro-env]: https://github.com/hydro-dev/nix-channel/blob/6c2bc29efd08ab5982e3f40a4e294c0cd7971b67/judge.nix
 
 ## 沙箱
 

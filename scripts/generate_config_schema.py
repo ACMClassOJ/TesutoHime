@@ -1,6 +1,6 @@
 '''
 Generates JSON schema from dataclasses for problem config.json, and writes
-to /web/static/problem-config.schema.json.
+to /web/static/assets/problem-config.schema.json.
 
 Please run this script after modifying config.json format.
 '''
@@ -69,7 +69,7 @@ def schema(typ):
 def problem_config_schema():
     s = {
         '$schema': 'https://json-schema.org/draft/2020-12/schema',
-        '$id': 'https://acm.sjtu.edu.cn/OnlineJudge/static/problem-config.schema.json',
+        '$id': 'https://acm.sjtu.edu.cn/OnlineJudge/static/assets/problem-config.schema.json',
         'title': 'ACMOJ Problem config.json',
     }
     s1 = schema(ProblemConfig)
@@ -79,7 +79,7 @@ def problem_config_schema():
 
 def main():
     s = problem_config_schema()
-    with open(PosixPath(__file__).parent.parent / 'web' / 'static' / 'problem-config.schema.json', 'w') as f:
+    with open(PosixPath(__file__).parent.parent / 'web' / 'static' / 'assets' / 'problem-config.schema.json', 'w') as f:
         json.dump(s, f, indent=2)
 
 if __name__ == '__main__':

@@ -78,6 +78,10 @@ async def ensure_cached(url: str) -> CachedFile:
 
 async def upload(local_path: Union[str, PosixPath], url: str) -> CachedFile:
     cache = cached_from_url(url)
+    if type(local_path) is str:
+        local_path = PosixPath(local_path)
+    if not local_path.is_file() or local_path.is_symlink():
+        raise ValueError('File to upload is not regular file')
     copy(local_path, cache.path)
     chmod(cache.path, 0o640)
     utime(cache.path)

@@ -69,9 +69,17 @@ async def compile(task: CompileTask) -> CompileLocalResult:
             return CompileLocalResult(
                 result=CompileResult(
                     result='system_error',
-                    message='compilation succeeded without artifact'
+                    message='compilation succeeded without artifact',
                 ),
-                local_path=None
+                local_path=None,
+            )
+        if res.local_path.is_symlink():
+            return CompileLocalResult(
+                result=CompileResult(
+                    result='runtime_error',
+                    message='compile artifact cannot be a symlink',
+                ),
+                local_path=None,
             )
         # Chown back, or else we probably couldn't copy the
         # artifact in case the file is of mode like 0700

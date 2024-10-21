@@ -62,6 +62,10 @@ async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker
 
 def checker_read_float(outfile: PosixPath, message: str = ''):
     try:
+        if outfile.is_symlink():
+            return CheckResult('bad_problem', 'Invalid score: score cannot be a symlink')
+        if not outfile.is_file():
+            return CheckResult('bad_problem', 'Invalid score: score is not regular file')
         text = outfile.read_text(errors='replace').splitlines(keepends=True)
         score = float(text[0])
         message += ''.join(text[1:])
@@ -69,6 +73,8 @@ def checker_read_float(outfile: PosixPath, message: str = ''):
         return CheckResult('bad_problem', 'Invalid score: score is empty')
     except ValueError:
         return CheckResult('bad_problem', 'Invalid score: score not number')
+    except PermissionError:
+        return CheckResult('bad_problem', 'Invalid score: cannot read score file')
     if isinf(score):
         return CheckResult('bad_problem', 'Invalid score: score is infinity')
     if isnan(score):
@@ -121,7 +127,16 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
         if res.error is not None:
             return CheckResult('bad_problem', f'checker error: {res.message}')
 
-        msg = message.read_text(errors='replace') if message.exists() else ''
+        try:
+            msg = ''
+            if message.exists():
+                if message.is_symlink():
+                    return CheckResult('bad_problem', 'Message file cannot be a symlink')
+                if not message.is_file():
+                    return CheckResult('bad_problem', 'Message file is not a regular file')
+                msg = message.read_text(errors='replace')
+        except PermissionError:
+            return CheckResult('bad_problem', 'Unable to read message file')
         return checker_read_float(score, msg)
 
 

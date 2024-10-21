@@ -182,6 +182,8 @@ async def run_with_limits(
 
         # parse result file
         try:
+            if result_file.is_symlink() or not result_file.is_file():
+                raise Exception('Invalid result file')
             text = result_file.read_text(errors='replace').replace('\n', '')
             # 'run' code realtime mem
             params = text.split(' ')

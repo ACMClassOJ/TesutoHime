@@ -1,9 +1,12 @@
 with import ./nixpkgs.nix;
 
 let
+  antlr = import ./antlr.nix;
   libc = [
     glibc.out
     acmoj-gcc.cc.lib
+    # .a .so, for Homework Python Interpreter
+    antlr.antlr4_13_1.out
   ];
   python = python313Full;
 in {
@@ -29,6 +32,10 @@ in {
 
     # checker
     acmoj-checker
+
+    # For Homework Python Interpreter
+    antlr.antlr4_13_1.out # .a .so
+    antlr.antlr4_13_1.dev # Headers, CMake Files
   ];
 
   # for RunType=elf

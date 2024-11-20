@@ -32,7 +32,7 @@ if platform != 'linux':
 
 
 nsjail = PosixPath(__file__).with_name('nsjail')
-nsjail_wrapper = PosixPath(__file__).with_name('stdenv') / 'bin' / 'nsjail'
+nsjail_wrapper = PosixPath(__file__).with_name('stdenv') / 'bin' / 'nsjail-wrapper'
 if not nsjail.exists() or not nsjail_wrapper.exists():
     raise Exception('nsjail executable not found')
 nsjail = str(nsjail)

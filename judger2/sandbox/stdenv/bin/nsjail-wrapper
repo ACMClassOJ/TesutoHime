@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: bin/nsjail <nsjail path> <profile> [nsjail args...]
+# Usage: bin/nsjail-wrapper <nsjail path> <profile> [nsjail args...]
 
 set -e
 IFS=$'\n'

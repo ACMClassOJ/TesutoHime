@@ -2,20 +2,21 @@ with import ./nixpkgs.nix;
 
 let
   antlr = import ./antlr.nix;
+  gcc = gcc13;
   libc = [
     glibc.out
-    acmoj-gcc.cc.lib
-    # .a .so, for Homework Python Interpreter
-    antlr.antlr4_13_1.out
+    gcc.cc.lib
+    # For Homework Python Interpreter
+    antlr.antlr4_13_1.lib
   ];
   python = python313Full;
 in {
   # for compile, interactor, checker
   std = [
     # stdenv packages
-    gzip bzip2 xz zlib bash binutils coreutils diffutils findutils
-    gawk gmp gnumake gnused gnutar gnugrep gnupatch patchelf ed file glibc
-    attr acl libidn2 libunistring linuxHeaders fortify-headers
+    binutils
+    gzip bzip2 xz bash coreutils diffutils findutils gawk
+    gnumake gnused gnutar gnugrep gnupatch perl
 
     # generic utils
     curl wget procps busybox
@@ -25,7 +26,7 @@ in {
 
     # compiling
     git openssh acmoj-ssh-config cacert
-    acmoj-gcc testlib bits-pch
+    gcc testlib bits-pch
     cmake  # gnumake is in stdenv
     verilog
     python
@@ -34,8 +35,8 @@ in {
     acmoj-checker
 
     # For Homework Python Interpreter
-    antlr.antlr4_13_1.out # .a .so
-    antlr.antlr4_13_1.dev # Headers, CMake Files
+    antlr.antlr4_13_1
+    antlr.antlr4_13_1.lib
   ];
 
   # for RunType=elf

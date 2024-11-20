@@ -25,12 +25,15 @@ let
         src = source;
 
         patches = extraPatches;
-        # The lib(.a,.so) will be put in out
-        # The headers and cmake files will be put in dev
-        outputs = [ "out" "dev" ];
+
+        outputs = [ "lib" "out" ];
+
         nativeBuildInputs = [ cmake ninja pkg-config ];
+
         cmakeDir = "../runtime/Cpp";
+
         cmakeFlags = extraCppCmakeFlags;
+
         meta = with lib; {
           description = "C++ target for ANTLR 4";
           homepage = "https://www.antlr.org/";
@@ -47,10 +50,12 @@ in {
     extraCppCmakeFlags = [
       # Generate CMake config files, which are not installed by default.
       "-DANTLR4_INSTALL=ON"
-        "-DCMAKE_BUILD_TYPE=Release"
+
       # Disable tests, since they require downloading googletest, which is
       # not available in a sandboxed build.
-        "-DINSTALL_GTEST=OFF"
+      "-DINSTALL_GTEST=OFF"
+
+      "-DCMAKE_BUILD_TYPE=Release"
       "-DANTLR_BUILD_CPP_TESTS=OFF"
     ];
   }).runtime.cpp;

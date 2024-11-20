@@ -80,15 +80,6 @@ import <nixpkgs> {
           priority = 11;
         };
       };
-
-      # gcc disregards /usr/include by default
-      # we need some tweaks to make it include testlib.h
-      acmoj-gcc = wrapCCWith {
-        cc = gcc13.cc;
-        extraBuildCommands = ''
-          echo "-idirafter ${testlib}/include -idirafter ${bits-pch}/include" >> $out/nix-support/libc-cflags
-        '';
-      };
     })
   ];
 }

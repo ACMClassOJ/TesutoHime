@@ -10,6 +10,7 @@ cd "$(dirname "$0")/.."
 
 echo "Building environment..."
 make "profiles/$target-shell/requisites"
+make "profiles/$target-shell/env"
 echo "Environment built."
 
 cd "profiles/$target-shell"
@@ -41,6 +42,9 @@ mount -t tmpfs tmp "$rootdir/tmp"
 
 for dir in $(cat requisites); do
   bindmount "$dir" "$rootdir/$dir"
+done
+for env in $(cat env); do
+  export "$env"
 done
 for dir in $(ls result); do
   bindmount "result/$dir" "$rootdir/$dir"

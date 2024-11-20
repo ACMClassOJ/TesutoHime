@@ -16,9 +16,10 @@ basedir="$(pwd)"
 cd "$wd"
 profile_dir="$basedir/profiles/$profile"
 requisites_file="$profile_dir/requisites"
+env_file="$profile_dir/env"
 result_dir="$profile_dir/result"
 
-if [ ! -e "$requisites_file" -o ! -e "$result_dir" ]; then
+if [ ! -e "$requisites_file" -o ! -e "$env_file" -o ! -e "$result_dir" ]; then
   echo "Unable to start: profile not found" >&2
   exit 1
 fi
@@ -27,6 +28,11 @@ requisites="$(cat "$requisites_file")"
 extra_args=()
 for path in $requisites; do
   extra_args+=('--bindmount_ro' "$path")
+done
+
+envs="$(cat "$env_file")"
+for env in $envs; do
+  extra_args+=('--env' "$env")
 done
 
 rootdirs="$(ls "$result_dir")"

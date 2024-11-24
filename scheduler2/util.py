@@ -87,6 +87,8 @@ def dataclass_from_json(obj, typ: Type[T]) -> T:
         return int(obj)  # type: ignore
     if typ is str:
         return str(obj)  # type: ignore
+    if typ is bool:
+        return bool(obj)
     if get_origin(typ) is Union:
         for t in get_args(typ):
             try:

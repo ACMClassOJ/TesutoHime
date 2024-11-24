@@ -22,7 +22,7 @@ def languages_accepted(plan: JudgePlan) -> Optional[List[str]]:
                 if tp.run is not None:
                     has_compile_or_run = True
                     if tp.run.type == 'verilog':
-                        return ['verilog']
+                        return ['verilog', 'git']
                     if tp.run.type == 'valgrind':
                         # Python and Verilog cannot run Valgrind
                         languages = ['cpp', 'git']

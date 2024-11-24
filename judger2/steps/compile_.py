@@ -199,6 +199,7 @@ async def compile_git(
                 'GIT_CONFIG_KEY_1=url.git@github.com:.insteadOf',
                 'GIT_CONFIG_VALUE_1=https://github.com/'
             ],
+            tmpfsmount=True,
         )
 
     # get commit hash

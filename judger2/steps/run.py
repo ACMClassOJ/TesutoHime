@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from os import chmod, fdopen, pipe
 from pathlib import PosixPath
 from shutil import copy2
+import shutil
 from signal import SIGPIPE
 from subprocess import DEVNULL
 from typing import IO, Dict, List, Optional, Tuple, Union
@@ -75,6 +76,11 @@ class VerilogRunner(BaseRunner):
     def prepare(self, program: PosixPath):
         argv = ['/bin/vvp', str(program)]
         return RunParams('std', argv, [])
+    async def run(self, cwd: PosixPath,
+                  exec_file: PosixPath, inf: Union[IO, int], ouf: Union[IO, int],
+                  args: RunArgs) -> RunResult:
+        shutil.copy(args.infile, f"{cwd}/test.data")
+        return await super().run(cwd, exec_file, inf, ouf, args)
 
 runners: Dict[str, BaseRunner] = {
     'elf': ElfRunner(),
@@ -193,6 +199,7 @@ async def run(oufdir: PosixPath, cwd: PosixPath, input: Input, args: RunArgs) \
     # get infile
     infile = None if args.infile is None \
         else (await ensure_cached(args.infile)).path
+    args.infile = infile
     outfile_name = 'ouf'
     outfile = oufdir / outfile_name
 

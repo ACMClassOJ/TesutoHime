@@ -202,8 +202,7 @@ paths:
               required: ['language', 'code']
               properties:
                 public:
-                  type: string
-                  enum: [ 'true', 'false' ]
+                  type: boolean
                   example: false
                 language:
                   type: string

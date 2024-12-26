@@ -3,7 +3,7 @@ window.onload = function() {
 
   // the following lines will be replaced by docker/configurator, when it runs in a docker-container
   window.ui = SwaggerUIBundle({
-    url: "/OnlineJudge/static/api/api.yml",
+    url: document.querySelector('link[rel="x-openapi"]').href,
     dom_id: '#swagger-ui',
     deepLinking: true,
     presets: [

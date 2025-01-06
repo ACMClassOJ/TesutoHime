@@ -3,188 +3,185 @@
 {% set page='评测详情' %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
-    <link rel="stylesheet" href="{{ url_for('.static', filename = 'countdown_svg.css') }}">
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/github.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'dark.css') }}">
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'countdown_svg.css') }}">
 {% endblock %}
 
 {% block content %}
-    <div class="card card-body">
-        <h1>评测详情 {{ submission.id }}</h1>
-        
-        {{ status_table([submission], real_name_map={ submission.user.student_id: real_name }, show_links={ submission: False }, show_title={ submission: True }, show_time=submission.time_msecs is not None, show_memory=submission.memory_bytes is not None, show_score=show_score) }}
+<div class="card card-body">
+    <h1>评测详情 {{ submission.id }}</h1>
 
-        {% if details is not None -%}
-        <div class="row">
-            <div class="m-auto">
-                {% for group in details.groups %}
-                    {% for j in range(group.testpoints|length) -%}
-                        <a
-                            href="#{{ group.id }}_{{ j }}"
-                            class="badge badge-pill badge-{{ g.consts.judge_status_info[group.testpoints[j].result].badge_type }}"
-                        >
-                            {{ g.consts.judge_status_info[group.testpoints[j].result].abbrev }}
-                        </a>
-                    {%- endfor %}
-                {%- endfor %}
+    {{ status_table([submission], real_name_map={ submission.user.student_id: real_name }, show_links={ submission: False }, show_title={ submission: True }, show_time=submission.time_msecs is not None, show_memory=submission.memory_bytes is not None, show_score=show_score) }}
+
+    {% if details is not None -%}
+    <div class="m-auto w-auto">
+        {% for group in details.groups %}
+            {% for j in range(group.testpoints|length) -%}
+            <a
+                href="#{{ group.id }}_{{ j }}"
+                class="badge badge-pill badge-{{ g.consts.judge_status_info[group.testpoints[j].result].badge_type }}"
+            >
+                {{ g.consts.judge_status_info[group.testpoints[j].result].abbrev }}
+            </a>
+            {%- endfor %}
+        {%- endfor %}
+    </div>
+    {%- endif %}
+    {% if submission.message is not None and submission.message != '' -%}
+    <pre><code class="plaintext">{{ submission.message }}</code></pre>
+    {% endif -%}
+    {% if submission.status.name == 'pending' or submission.status.name == 'compiling' or submission.status.name == 'judging' -%}
+    <div class="row">
+        <div class="m-auto">
+            <div id="judge_detail_auto_refresh_svgcontainer">
+                <svg width="66" height="66" VIEWBOX="0 0 66 66">
+                    <circle cx="33" cy="33" r="15" stroke-width="2" stroke="#d1d3d7" fill="none"></circle>
+                    <circle id="judge_detail_auto_refresh_circle" cx="33" cy="33" r="15" stroke-width="6" stroke="#e77c8e" fill="none" transform="matrix(0,-1,1,0,0,66)" stroke-dasharray="100,0"></circle>
+                </svg>
             </div>
         </div>
+    </div>
+    <div class="row">
+        <div class="m-auto">
+            <p>auto refresh in <span id="judge_detail_auto_refresh_timeleft">?</span> second(s)</p>
+        </div>
+    </div>
+    {%- endif %}
+    <hr>
+    <div>
+        <span class="h6">代码：</span>
+        {% if submission.public == True -%}
+        <span class="badge badge-success">公开代码</span>
+        {% else -%}
+        <span class="badge badge-secondary">私有代码</span>
         {%- endif %}
-        {% if submission.message is not None and submission.message != '' -%}
-        <pre><code class="plaintext">{{ submission.message }}</code></pre>
-        {% endif -%}
-        {% if submission.status.name == 'pending' or submission.status.name == 'compiling' or submission.status.name == 'judging' -%}
-        <div class="row">
-            <div class="m-auto">
-                <div id="judge_detail_auto_refresh_svgcontainer">
-                    <svg width="66" height="66" VIEWBOX="0 0 66 66">
-                        <circle cx="33" cy="33" r="15" stroke-width="2" stroke="#d1d3d7" fill="none"></circle>
-                        <circle id="judge_detail_auto_refresh_circle" cx="33" cy="33" r="15" stroke-width="6" stroke="#e77c8e" fill="none" transform="matrix(0,-1,1,0,0,66)" stroke-dasharray="100,0"></circle>
-                    </svg>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="m-auto">
-                <p>auto refresh in <span id="judge_detail_auto_refresh_timeleft">?</span> second(s)</p>
-            </div>
-        </div>
+        </span>
+        {% if g.can_write and not g.can_abort and submission.status.name != 'void' -%}
+        <form action="void" method="POST" style="display: inline" onsubmit="return confirm('确认将此份代码标记为无效？')">
+            {{ g.csrf() }}
+            <button class="btn btn-secondary btn-sm">Void</button>
+        </form>
+        <form action="rejudge" method="POST" style="display: inline" onsubmit="return confirm('确认重测？')">
+            {{ g.csrf() }}
+            <button class="btn btn-secondary btn-sm">重测</button>
+        </form>
         {%- endif %}
-        <hr>
-        <div>
-            <span class="h6"> 代码： </span>
-            {% if submission.public == True -%}
-            <span class="badge badge-success"> 公开代码 </span>
-            {% else -%}
-            <span class="badge badge-secondary"> 私有代码 </span>
-            {%- endif %}    
-            </span>
-            {% if g.can_write and not g.can_abort and submission.status.name != 'void' -%}
-                <form action="void" method="POST" style="display: inline" onsubmit="return confirm('确认将此份代码标记为无效？')">
-                    {{ g.csrf() }}
-                    <button class="btn btn-secondary btn-sm">Void</button>
-                </form>
-                <form action="rejudge" method="POST" style="display: inline" onsubmit="return confirm('确认重测？')">
-                    {{ g.csrf() }}
-                    <button class="btn btn-secondary btn-sm">重测</button>
-                </form>
+        <span class="float-right">
+            {% if g.can_abort -%}
+            <form action="abort" method="POST" style="display: inline">
+                {{ g.csrf() }}
+                <button class="btn btn-secondary btn-sm">终止评测</button>
+            </form>
             {%- endif %}
-            <span class="float-right">
-                {% if g.can_abort -%}
-                <form action="abort" method="POST" style="display: inline">
-                    {{ g.csrf() }}
-                    <button class="btn btn-secondary btn-sm">终止评测</button>
-                </form>
-                {%- endif %}
-                <button id="copy_button" class="btn btn-primary btn-sm" data-clipboard-target="#judge_detail_code_highlighted">复制</button>
-            </span>
-        </div>
-        <pre><code id="judge_detail_code_highlighted" class="lang-{{ submission.language }}">Waiting for code</code></pre>
-        {% if details is not None -%}
-            <hr>
-            <div>
-                {% if details.groups|length > 0 -%}
-                <h5>测试点详情：</h5>
-                <div class="table-responsive">
-                    {% for group in details.groups %}
-                        <table class="table table-striped table-bordered">
-                            <thead>
-                            <tr>
-                                <th>
-                                    <span>Subtask {{ group.id }}: {{ group.name }}</span>
-                                    <span class="ml-2">Score: {{ group.score }}</span>
-                                </th>
-                            <tr>
-                            </thead>
-                            {% for testpoint in group.testpoints -%}
-                            {% set j = loop.index0 %}
-                                <tr>
-                                    <td>
-                                        <div class="row mr-0">
-                                            <div class="col-4">
-                                                Testpoint {{ testpoint.id }}: 
-                                                <b><span class="text-{{ g.consts.judge_status_info[testpoint.result].color }}" id="{{ group.id }}_{{ j }}">
-                                                    {{ g.consts.judge_status_info[testpoint.result].name }}
-                                                </span></b>
-                                            </div>
-                                            {% if testpoint.resource_usage is not None -%}
-                                            <div class="col-2"> <i class="fa fa-clock"></i> {{ testpoint.resource_usage.time_msecs }} ms </div>
-                                            <div class="col-2"> <i class="fa fa-memory"></i> {{ "%.0f" % (testpoint.resource_usage.memory_bytes / 1024) }} KiB </div>
-                                            {% if testpoint.resource_usage.file_size_bytes > 0 -%}
-                                            <div class="col-2"> <i class="fa fa-database"></i> {{ "%.2f" | format(testpoint.resource_usage.file_size_bytes / 1048576) }} MiB </div>
-                                            {%- endif %}
-                                            {%- endif %}
-                                        </div>
-                                        {% if testpoint.message != '' -%}
-                                        <div class="testpoint_msg" id="testpoint_msg-{{ j }}_{{ testpoint.id }}">
-                                            <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ testpoint.message }}</pre>
-                                        </div>
-                                        {% if testpoint.message != '' -%}
-                                        <div class="testpoint_msg_exp" id="testpoint_msg_exp-{{ j }}_{{ testpoint.id }}">
-                                            <span style="position: relative;"> Show more <i class="fa fa-caret-down"></i></span>
-                                        </div>
-                                        {%- endif %}
-                                        {%- endif %}
-                                    </td>
-                                </tr>
-                            {%- endfor %}
-                        </table>
+            <button id="copy_button" class="btn btn-primary btn-sm" data-clipboard-target="#judge_detail_code_highlighted">复制</button>
+        </span>
+    </div>
+    <pre><code id="judge_detail_code_highlighted" class="lang-{{ submission.language }}">Waiting for code</code></pre>
+    {% if details is not None -%}
+    <hr>
+    <div>
+        {% if details.groups|length > 0 -%}
+        <h5>测试点详情：</h5>
+        <div class="mt-2">
+            {% for group in details.groups %}
+            <div class="judge-group">
+                <div class="judge-group__header">
+                    <span>Subtask {{ group.id }}: {{ group.name }}</span>
+                    <span>Score: {{ group.score }}</span>
+                </div>
+                <div class="judge-group__testpoints">
+                    {% for testpoint in group.testpoints -%}
+                    <div class="judge-group__testpoint{{ ' judge-group__testpoint--has-message' if testpoint.message != '' }}">
+                        <span class="testpoint__name">
+                            Testpoint {{ testpoint.id }}:
+                            <strong>
+                                <span class="text-{{ g.consts.judge_status_info[testpoint.result].color }}" id="{{ group.id }}_{{ j }}">
+                                    {{ g.consts.judge_status_info[testpoint.result].name }}
+                                </span>
+                            </strong>
+                        </span>
+                        {% if testpoint.resource_usage is not None -%}
+                        <span class="testpoint__attr"><i class="fa fa-clock"></i> {{ testpoint.resource_usage.time_msecs }} ms</span>
+                        <span class="testpoint__attr"><i class="fa fa-memory"></i> {{ "%.3f" % (testpoint.resource_usage.memory_bytes / 1048576) }} MiB</span>
+                        {% if testpoint.resource_usage.file_size_bytes > 0 -%}
+                        <span class="testpoint__attr"><i class="fa fa-database"></i> {{ "%.3f" | format(testpoint.resource_usage.file_size_bytes / 1048576) }} MiB</span>
+                        {%- else -%}
+                        <span class="testpoint__attr testpoint__attr--hidden"></span>
+                        {%- endif -%}
+                        {%- else -%}
+                        <span class="testpoint__attr testpoint__attr--hidden"></span>
+                        <span class="testpoint__attr testpoint__attr--hidden"></span>
+                        <span class="testpoint__attr testpoint__attr--hidden"></span>
+                        {%- endif -%}
+                        <!-- file count always hidden -->
+                        <span class="testpoint__attr testpoint__attr--hidden"></span>
+
+                        {% if testpoint.message != '' -%}
+                        <div class="testpoint__message">
+                            <pre>{{ testpoint.message }}</pre>
+                            <div class="testpoint__message-expand">Show more <i class="fa fa-caret-down"></i></div>
+                        </div>
+                        {%- endif %}
+                    </div>
                     {%- endfor %}
                 </div>
-                {%- endif %}
             </div>
+            {%- endfor %}
+        </div>
         {%- endif %}
     </div>
+    {%- endif %}
+</div>
 {% endblock %}
 
 {% block script %}
-    <script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
-    <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
-    <script>
-        var clipboard = new ClipboardJS(document.getElementById('copy_button'));
-        $(function () {
-            $.ajax({
-                type: "GET",
-                dataType: "text",
-                url: "{{ code_url | safe }}",
-                success: function (response_text) {
-                    $("#judge_detail_code_highlighted").text(response_text);
-                    hljs.initHighlighting();
-                },
-            });
-        });
+<script src="{{ url_for('.static', filename = 'lib/clipboard.min.js') }}"></script>
+<script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
+<script>
+var clipboard = new ClipboardJS(document.getElementById('copy_button'));
+$(function () {
+    $.ajax({
+        type: "GET",
+        dataType: "text",
+        url: "{{ code_url | safe }}",
+        success: function (response_text) {
+            $("#judge_detail_code_highlighted").text(response_text);
+            hljs.initHighlighting();
+        },
+    });
+});
 
-        {% if submission.status.name == 'pending' or submission.status.name == 'compiling' or submission.status.name == 'judging' -%}
-        $(function () {
-            var count_down_time = 3;
-            var r = 15;
-            var origin_interval = 15;
-            var interval = origin_interval;
-            setInterval(function() {
-                interval--;
-                var percent = interval / origin_interval;
-                var perimeter = 2 * Math.PI * r;
-                $("#judge_detail_auto_refresh_circle").attr('stroke-dasharray', perimeter * percent + ',' + perimeter * (1 - percent));
-                $("#judge_detail_auto_refresh_timeleft").html(parseInt(count_down_time * interval / origin_interval))
-                if(interval == 0)
-                    window.location.reload();
-            }, count_down_time * 1000 / origin_interval); 
-        });
-        {%- endif %}
+{% if submission.status.name == 'pending' or submission.status.name == 'compiling' or submission.status.name == 'judging' -%}
+$(function () {
+    var count_down_time = 3;
+    var r = 15;
+    var origin_interval = 15;
+    var interval = origin_interval;
+    setInterval(function() {
+        interval--;
+        var percent = interval / origin_interval;
+        var perimeter = 2 * Math.PI * r;
+        $("#judge_detail_auto_refresh_circle").attr('stroke-dasharray', perimeter * percent + ',' + perimeter * (1 - percent));
+        $("#judge_detail_auto_refresh_timeleft").html(parseInt(count_down_time * interval / origin_interval))
+        if(interval == 0)
+            window.location.reload();
+    }, count_down_time * 1000 / origin_interval); 
+});
+{%- endif %}
 
-        $(".testpoint_msg").each(function(){
-            if($(this).height() < 60)
-            {
-                var testpoint_id = $(this).attr("id").split("-").at(-1);
-                $("#testpoint_msg_exp-" + testpoint_id).hide();
-            }
-        });
-
-        $(".testpoint_msg_exp").click(function(){
-           var testpoint_id = $(this).attr("id").split("-").at(-1);
-           $("#testpoint_msg-" + testpoint_id).css("max-height", "none");
-           $(this).hide();
-        });
-    </script>
+for (const el of document.getElementsByClassName('testpoint__message')) {
+    const expandButton = el.querySelector('.testpoint__message-expand')
+    const pre = el.querySelector('pre')
+    if (pre.clientHeight >= pre.scrollHeight) {
+        expandButton.setAttribute('hidden', true)
+    } else {
+        expandButton.addEventListener('click', () => {
+            el.classList.add('testpoint__message--expanded')
+            expandButton.setAttribute('hidden', true)
+        })
+    }
+}
+</script>
 {% endblock %}

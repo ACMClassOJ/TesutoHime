@@ -2,6 +2,7 @@
 {% set page=problem.title %}
 
 {% block head %}
+<link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}">
 {{ render_styles() }}
 {% endblock %}
 
@@ -75,95 +76,86 @@
         <h3>数据范围</h3>
         <div id="data-range">{{ render(problem.data_range) }}</div>
         {%- endif -%}
-        {%- if problem.limits is not None and problem.limits['time'] | length > 0 -%}
+        {%- if limits | length > 0 -%}
         <h3>时空磁盘限制（运行时）</h3>
-        <div id="limits">
-            {%- set min_time = problem.limits['time'] | map('default', 1000, True) | min -%}
-            {%- set max_time = problem.limits['time'] | map('default', 1000, True) | max -%}
-            {%- if min_time == max_time -%}
-            <p>时间限制：{{ min_time }} ms</p>
+        <div id="plan-summary">
+            {%- macro number_unit(number, unit, neg_is_inf = False, zero = None) -%}
+            {%- if number == g.utils.inf or (number < 0 and neg_is_inf) -%}
+            无限制
+            {%- elif number == 0 and zero is not None -%}
+            {{ zero }}
             {%- else -%}
-            <p>时间限制：{{ min_time }} ms min, {{ max_time }} max</p>
+            {{ number | int }} {{ unit }}
             {%- endif -%}
+            {%- endmacro -%}
 
-            {%- set min_mem = (problem.limits['mem'] | map('default', 512 * 1048576, True) | min) // 1024 // 1024 -%}
-            {%- set max_mem = (problem.limits['mem'] | map('default', 512 * 1048576, True) | max) // 1024 // 1024 -%}
-            {%- if min_mem == max_mem -%}
-            <p>内存空间限制：{{ min_mem }} MiB</p>
+            {%- set has_limit = {} -%}
+            {%- macro display_limit(attr, unit, neg_is_inf = False, ratio = 1, zero = None) -%}
+            {%- set seq = limits | map(attribute=attr) -%}
+            {%- set min, max = g.utils.min_max(seq, neg_is_inf) -%}
+            {%- do has_limit.update({ attr: min != 0 or max != 0 }) -%}
+            {%- if min == max -%}
+            {{ number_unit(min / ratio, unit, zero=zero) }}
             {%- else -%}
-            <p>内存空间限制：{{ min_mem }} MiB min, {{ max_mem }} MiB max</p>
+            {{ number_unit(min / ratio, unit, zero=zero) }} min, 
+            {{ number_unit(max / ratio, unit, zero=zero) }} max
             {%- endif -%}
+            {%- endmacro -%}
 
-            {%- set has_disk_limit = False -%}
-            {%- if 'disk' in problem.limits and problem.limits['disk'] | length > 0 -%}
-            {%- set min_disk = (problem.limits['disk'] | map('abs') | min) // 1024 // 1024 -%}
-            {%- set max_disk = (problem.limits['disk'] | map('abs') | max) // 1024 // 1024 -%}
-            {%- if min_disk == 0 and max_disk == 0 -%}
-            <p>磁盘空间限制：不可使用磁盘</p>
-            {%- elif min_disk == max_disk -%}
-            {%- set has_disk_limit = True -%}
-            <p>磁盘空间限制：{{ min_disk }} MiB</p>
-            {%- else -%}
-            {%- set has_disk_limit = True -%}
-            <p>磁盘空间限制：{{ min_disk }} MiB min, {{ max_disk }} MiB max</p>
-            {%- endif -%}
-            {%- endif -%}
-
-            {%- set has_file_limit = False -%}
-            {%- if 'file' in problem.limits and problem.limits['file'] | length > 0 -%}
-            {%- set min_file = problem.limits['file'] | min -%}
-            {%- set max_file = problem.limits['file'] | max -%}
-            {%- if min_file == 0 and max_file == 0 -%}
-            <p>文件数量限制：不可使用文件</p>
-            {%- elif min_file == max_file -%}
-            {%- set has_file_limit = True -%}
-            <p>文件数量限制：{{ min_file }} 个</p>
-            {%- else -%}
-            {%- set has_file_limit = True -%}
-            <p>文件数量限制：{{ min_file }} 个 min, {{ max_file }} 个 max</p>
-            {%- endif -%}
+            <p>时间限制：{{ display_limit('time_msecs', 'ms') }}</p>
+            <p>内存空间限制：{{ display_limit('memory_bytes', 'MiB', ratio=1048576) }}</p>
+            <p>磁盘空间限制：{{ display_limit('file_size_bytes', 'MiB', ratio=1048576, zero='不可使用磁盘') }}</p>
+            {%- if has_limit['file_size_bytes'] -%}
+            <p>文件数量限制：{{ display_limit('file_count', '个', neg_is_inf=True, zero='不可使用文件') }}</p>
             {%- endif -%}
 
             <details>
                 <summary>单个测试点时空限制详情</summary>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>测试点编号</th>
-                            <th>时间限制（ms）</th>
-                            <th>内存空间限制（MiB）</th>
-                            {% if has_disk_limit -%}
-                            <th>磁盘空间限制（MiB）</th>
-                            {%- endif %}
-                            {% if has_file_limit -%}
-                            <th>文件数量限制</th>
-                            {%- endif %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {%- for i in range(problem.limits['length']) -%}
-                        <tr>
-                            <td>{{ i + 1 }}</td>
-                            <td>{{ problem.limits['time'][i] if problem.limits['time'][i] is not None else 1000 }}</td>
-                            <td>{{ problem.limits['mem'][i] // 1024 // 1024 if problem.limits['mem'][i] is not None else 512 }}</td>
-                            {% if has_disk_limit -%}
-                            <td>
-                                {%- set limit = problem.limits['disk'][i] // 1024 // 1024 -%}
-                                {{ limit | abs }}
-                                {%- if limit < 0 -%}
-                                （新开空间）
+
+                <div class="mt-2 d-inline-block">
+                    {%- for group in plan_summary.subtasks -%}
+                    <div class="judge-group">
+                        <div class="judge-group__header">
+                            <span>Subtask {{ group.id }}: {{ group.name }}</span>
+                            <span>Score: {{ group.score }}</span>
+                        </div>
+                        <div class="judge-group__testpoints">
+                            {% for testpoint in group.testpoints -%}
+                            <div class="judge-group__testpoint">
+                                <span class="testpoint__name">Testpoint {{ testpoint.id }}</span>
+                                {%- if testpoint.limits is not None -%}
+                                <span class="testpoint__attr"><i class="fa fa-clock"></i> {{ testpoint.limits.time_msecs }} ms</span>
+                                <span class="testpoint__attr"><i class="fa fa-memory"></i> {{ testpoint.limits.memory_bytes // 1048576 }} MiB</span>
+
+                                {%- if has_limit['file_size_bytes'] -%}
+                                <span class="testpoint__attr">
+                                    <i class="fa fa-database"></i>
+                                    {{ testpoint.limits.file_size_bytes // 1048576 }} MiB
+                                </span>
+                                {%- else -%}
+                                <span class="testpoint__attr testpoint__attr--hidden"></span>
                                 {%- endif -%}
-                            </td>
-                            {%- endif %}
-                            {% if has_file_limit -%}
-                            <td>{{ problem.limits['file'][i] }}</td>
-                            {%- endif %}
-                        </tr>
-                        {%- endfor -%}
-                    </tbody>
-                </table>
-                <p>raw config data:</p>
-                <code>{{ problem.limits | tojson }}</code>
+
+                                {%- if has_limit['file_size_bytes'] and has_limit['file_count'] -%}
+                                <span class="testpoint__attr">
+                                    <i class="fa fa-file"></i> {{ number_unit(testpoint.limits.file_count, '个', neg_is_inf=True) }}
+                                </span>
+                                {%- else -%}
+                                <span class="testpoint__attr testpoint__attr--hidden"></span>
+                                {%- endif -%}
+
+                                {%- else -%}
+                                <span class="testpoint__attr testpoint__attr--hidden"></span>
+                                <span class="testpoint__attr testpoint__attr--hidden"></span>
+                                <span class="testpoint__attr testpoint__attr--hidden"></span>
+                                <span class="testpoint__attr testpoint__attr--hidden"></span>
+                                {%- endif -%}
+                            </div>
+                            {%- endfor %}
+                        </div>
+                    </div>
+                    {%- endfor %}
+                </div>
             </details>
         </div>
         {%- endif -%}

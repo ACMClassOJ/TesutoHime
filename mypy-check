@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MYPY_FLAGS='--check-untyped-defs --allow-redefinition --exclude stdenv'
+MYPY_FLAGS='--check-untyped-defs --allow-redefinition --exclude stdenv --exclude static'
 mypy $MYPY_FLAGS -p web
 mypy $MYPY_FLAGS -p scheduler2
 mypy $MYPY_FLAGS -p judger2

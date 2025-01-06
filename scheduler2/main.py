@@ -22,6 +22,7 @@ from scheduler2.monitor import get_runner_status
 from scheduler2.plan import (InvalidCodeException, InvalidProblemException,
                              execute_plan, generate_plan, get_partial_result)
 from scheduler2.plan.languages import languages_accepted
+from scheduler2.plan.summary import summarize
 from scheduler2.s3 import read_file, upload_str
 from scheduler2.util import make_request
 
@@ -70,6 +71,7 @@ async def update_problem(request: Request):
 
         plan = await generate_plan(problem_id)
         languages = languages_accepted(plan)
+        summary = dump_dataclass(summarize(plan))
         plan_str = serialize(plan)
         await upload_str(s3_buckets.problems, plan_key(problem_id), plan_str)
     except InvalidProblemException as e:
@@ -81,7 +83,7 @@ async def update_problem(request: Request):
     finally:
         for task1 in task_args:
             register_judge_task(*task1)
-    return json_response({'result': 'ok', 'error': None, 'languages': languages})
+    return json_response({'result': 'ok', 'error': None, 'languages': languages, 'summary': summary})
 
 
 async def run_judge(problem_id: str, submission_id: str,

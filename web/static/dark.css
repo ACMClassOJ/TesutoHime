@@ -342,7 +342,10 @@ html .table th,
 html .table td,
 html .table thead th,
 html .table tbody + tbody,
-html .table-bordered {
+html .table-bordered,
+html .judge-group,
+html .judge-group .judge-group__header,
+html .judge-group .judge-group__testpoint > * {
   border-color: #47494a;
 }
 
@@ -355,11 +358,13 @@ html .table-hover .table:hover > td,
   background-color: #2e2e2e;
 }
 
-html .table-striped tbody tr:nth-of-type(2n + 1) {
+html .table-striped tbody tr:nth-of-type(2n + 1),
+html .judge-group__testpoint:nth-of-type(2n + 1) > * {
   background-color: rgba(255, 255, 255, 0.035);
 }
 
-html .table {
+html .table,
+html .judge-group {
   color: rgba(255, 255, 255, 0.7);
 }
 

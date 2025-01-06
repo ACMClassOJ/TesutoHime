@@ -30,7 +30,7 @@ from commons.models import (AccessToken, CompletionCriteriaType, Contest,
                             JudgeRecordV2, JudgeStatus, Problem,
                             ProblemPrivilege, ProblemPrivilegeType,
                             RealnameReference, Term, User)
-from commons.task_typing import ProblemJudgeResult
+from commons.task_typing import JudgePlanSummary, ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
 from web.api import api, api_get_user, token_is_valid
 from web.config import (JudgeConfig, LoginConfig, NewsConfig,
@@ -334,7 +334,11 @@ def problem_list():
 @web.route('/problem/<problem:problem>')
 @require_logged_in
 def problem(problem: Problem):
-    return render_template('problem_details.html', problem=problem)
+    plan_summary: JudgePlanSummary = load_dataclass(problem.plan_summary, commons.task_typing.__dict__)
+    limits = []
+    if plan_summary is not None:
+        limits = [testpoint.limits for group in plan_summary.subtasks for testpoint in group.testpoints if testpoint.limits is not None]
+    return render_template('problem_details.html', problem=problem, plan_summary=plan_summary, limits=limits)
 
 
 @ignore_alert_fail
@@ -620,12 +624,6 @@ def problem_description(problem: Problem):
         setattr(problem, row, content)
     return make_response('', NO_CONTENT)
 
-@web.route('/problem/<problem:problem>/limit', methods=['put'])
-@writes_problem
-def problem_limit(problem: Problem):
-    problem.limits = request.json
-    return make_response('', NO_CONTENT)
-
 @web.route('/problem/<problem:problem>/upload-url')
 @writes_problem
 def problem_upload_url(problem: Problem):
@@ -641,6 +639,7 @@ def problem_update_plan(problem: Problem):
     res = requests.post(url).json()
     if res['result'] == 'ok':
         problem.languages_accepted = res['languages']
+        problem.plan_summary = res['summary']
         return 'ok'
     elif res['result'] == 'invalid problem':
         return f'Invalid problem: {res["error"]}'

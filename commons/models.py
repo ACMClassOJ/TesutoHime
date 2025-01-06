@@ -207,7 +207,7 @@ class Problem(UseTimestamps, Base):
     example_input: Mapped[Optional[str]]
     example_output: Mapped[Optional[str]]
     data_range: Mapped[Optional[str]]
-    limits: Mapped[Optional[Any]] = mapped_column(JSONB)
+    plan_summary: Mapped[Optional[Any]] = mapped_column(JSONB)
 
     release_time: Mapped[datetime]
     problem_type: Mapped[int] = mapped_column(server_default=text('0'))

@@ -12,6 +12,7 @@ from werkzeug.exceptions import BadRequest, HTTPException
 
 from commons.models import (AccessToken, Contest, Course, CourseTag,
                             JudgeRecordV2, Problem, Term, User)
+from commons.util import load_dataclass
 from web.config import JudgeConfig, WebConfig
 from web.const import api_scopes
 from web.manager.contest import ContestManager
@@ -259,6 +260,10 @@ def problem(problem: Problem):
     keys = ['id', 'title', 'description', 'input', 'output', 'examples', 'example_input', 'example_output', 'data_range', 'languages_accepted', 'allow_public_submissions']
     for key in keys:
         res[key] = getattr(problem, key)
+
+    import commons.task_typing
+    res['plan_summary'] = load_dataclass(problem.plan_summary, commons.task_typing.__dict__)
+
     return jsonify(res)
 
 

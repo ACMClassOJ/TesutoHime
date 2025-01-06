@@ -592,37 +592,6 @@ $(() => {
     })
 
 
-    // data-gui
-    function extract_limit() {
-        let tableDetails = $('#tableDetails');
-        let config = {};
-        config['length'] = tableDetails.children().length;
-        config['mem'] = [];
-        config['time'] = [];
-        config['disk'] = [];
-        tableDetails.children().each(function (i, e) {
-            let d = e.children;
-            config['time'].push(parseInt(d[2].innerHTML.replace('<br>', '')));
-            config['mem'].push(parseInt(d[3].innerHTML.replace('<br>', '')));
-            config['disk'].push(parseInt(d[4].innerHTML.replace('<br>', '')));
-        });
-        return config;
-    }
-
-    function uploadLimit (limit) {
-        fetch(getUrl('limit'), {
-            method: 'put',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(limit),
-        }).then(res => {
-            if (!res.ok) {
-                swal(`Error ${res.status}`, res.statusText, 'error')
-            }
-        })
-    }
-
     function generateConfig() {
         let tableGroups = $('#tableGroups'), tableDetails = $('#tableDetails')
         const Groups = []
@@ -700,7 +669,6 @@ $(() => {
     $('#formData').submit(function (e) {
         e.preventDefault()
         e.stopPropagation()
-        uploadLimit(extract_limit())
         const zip = new JSZip();
         const folder = zip.folder(problemId);
         let data_files = $('#iptData')
@@ -783,19 +751,6 @@ $(() => {
                     zipError(`无法解析 config.json: ${e}`, doUpload)
                     return
                 }
-                let limit_config = {}
-                limit_config.length = config_json.Details.length
-                limit_config.mem = []
-                limit_config.time = []
-                limit_config.disk = []
-                limit_config.file = []
-                config_json.Details.forEach(function (item) {
-                    limit_config.time.push(item.TimeLimit)
-                    limit_config.mem.push(item.MemoryLimit)
-                    if('DiskLimit' in item) limit_config.disk.push(item.DiskLimit)
-                    if('FileNumberLimit' in item) limit_config.file.push(item.FileNumberLimit)
-                });
-                uploadLimit(limit_config)
                 doUpload()
             })
         }, e => zipError(e.message, doUpload))

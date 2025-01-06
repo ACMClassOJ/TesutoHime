@@ -596,6 +596,10 @@ components:
           description: 允许提交的语言
           items:
             $ref: '#/components/schemas/submission-language'
+        plan_summary:
+          $ref: '#/components/schemas/JudgePlanSummary'
+          description: 评测及评分方式，含运行时限制
+          nullable: true
         allow_public_submissions:
           type: boolean
           description: 是否允许公开代码
@@ -808,6 +812,52 @@ components:
         html_url:
           type: string
           example: '/OnlineJudge/course/42'
+
+    ResourceUsage:
+      type: object
+      properties:
+        time_msecs:
+          type: integer
+          example: 2233
+        memory_bytes:
+          type: integer
+          example: 1048576
+        file_count:
+          type: integer
+          example: -1
+          description: 负数表示无限制
+        file_size_bytes:
+          type: integer
+          example: 1048576
+    TestpointSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        limits:
+          $ref: '#/components/schemas/ResourceUsage'
+          nullable: true
+    SubtaskSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        testpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/TestpointSummary'
+        score:
+          type: number
+          example: 10
+    JudgePlanSummary:
+      type: object
+      properties:
+        subtasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubtaskSummary'
 
     problemset-type:
       type: string

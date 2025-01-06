@@ -297,6 +297,24 @@ class JudgePlan:
     quiz: Optional[List[QuizProblem]] = None
 
 
+# Please sync changes to web/static/api/api.yml
+@dataclass
+class TestpointSummary:
+    id: str
+    limits: Optional[ResourceUsage]
+
+@dataclass
+class SubtaskSummary:
+    id: str
+    name: str
+    testpoints: List[TestpointSummary]
+    score: float
+
+@dataclass
+class JudgePlanSummary:
+    subtasks: List[SubtaskSummary]
+
+
 @dataclass
 class GroupJudgeResult:
     id: str

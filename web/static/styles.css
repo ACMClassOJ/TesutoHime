@@ -181,6 +181,95 @@ body .card-header {
     text-align: center;
 }
 
+.judge-group {
+    border: .0625rem solid #dee2e6;
+    border-bottom: none;
+    border-radius: 4px;
+    color: #525f7f;
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.judge-group__header {
+    border-bottom: .125rem solid #dee2e6;
+    vertical-align: bottom;
+    padding: .7rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+}
+
+.judge-group__testpoint:nth-of-type(2n+1) > * {
+    background-color: rgba(0,0,0,.05);
+}
+
+.judge-group__testpoints {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+}
+
+.judge-group__testpoint {
+    display: contents;
+}
+
+.judge-group__testpoint > * {
+    border-bottom: .0625rem solid #dee2e6;
+}
+
+.testpoint__name, .testpoint__attr, .testpoint__message {
+    padding: .7rem;
+}
+
+.judge-group__testpoint--has-message .testpoint__name,
+.judge-group__testpoint--has-message .testpoint__attr {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+.testpoint__message {
+    padding-top: 0;
+}
+
+.testpoint__attr--hidden {
+    padding: 0;
+    border: none;
+}
+
+.testpoint__message {
+    grid-column: 1 / 6;
+}
+
+.testpoint__message pre {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+
+    position: relative;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.testpoint__message.testpoint__message--expanded pre {
+    -webkit-line-clamp: unset;
+}
+
+
+@media (max-width: 767.99999px) {
+.judge-group__testpoints {
+    grid-template-columns: auto auto auto auto;
+}
+.testpoint__name, .testpoint__message {
+    grid-column: 1 / 5;
+}
+.testpoint__name {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.testpoint__attr {
+    padding-top: 0;
+}
+}
+
 .contest--participant {
     background-color: #fdf5e6;
 }

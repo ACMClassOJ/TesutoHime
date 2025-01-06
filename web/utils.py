@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
 from http.client import SEE_OTHER, UNAUTHORIZED
-from math import ceil
+from math import ceil, inf
 from typing import Any, Iterable, List, NoReturn, Optional
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
@@ -70,6 +70,10 @@ def readable_lang_v1(lang: int) -> str:
 def readable_lang(lang: str) -> str:
     return 'Unknown' if lang not in language_info \
             else language_info[lang].name
+
+def min_max(seq, neg_is_inf: bool = False):
+    l = [x if not neg_is_inf or x >= 0 else inf for x in seq]
+    return min(l), max(l)
 
 def is_api_call() -> bool:
     return request.path.startswith(url_for('web.api.index'))

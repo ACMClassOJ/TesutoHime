@@ -74,3 +74,11 @@ class LogConfig:
     Backup_Count = 3                                    #Web服务需要保存多少份滚动日志。
                                                         #例如当前日志写入tracker.log, maxBytes为128M，那么当128M被写满时，
                                                         #最早的日志将被写入tracker.log.1；tracker.log.2等依此类推，直到最早的日志被废弃
+
+class JAccountConfig:
+    CLIENT_ID = 'YOUR JACCOUNT CLIENT ID'
+    CLIENT_SECRET = 'YOUR JACCOUNT CLIENT SECRET'
+    AUTHORIZATION_BASE_URL = 'https://jaccount.sjtu.edu.cn/oauth2/authorize'
+    TOKEN_URL = 'https://jaccount.sjtu.edu.cn/oauth2/token'
+    LOGOUT_URL = 'https://jaccount.sjtu.edu.cn/oauth2/logout'
+    PROFILE_URL = 'https://api.sjtu.edu.cn/v1/me/profile'

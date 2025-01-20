@@ -78,6 +78,10 @@ class UserManager:
         return db.scalar(select(User).where(User.username_lower == func.lower(username)))
 
     @staticmethod
+    def get_users_by_student_id(student_id: str) -> list[User]:
+        return db.scalars(select(User).where(User.student_id == student_id)).all()
+
+    @staticmethod
     def has_user(username: str) -> bool:
         return UserManager.get_user_by_username(username) is not None
 

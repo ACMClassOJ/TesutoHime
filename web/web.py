@@ -3,7 +3,7 @@ import os
 import re
 from datetime import datetime, timedelta
 from functools import wraps
-from http.client import (BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR,
+from http.client import (BAD_REQUEST, FORBIDDEN, FOUND, INTERNAL_SERVER_ERROR,
                          NO_CONTENT, NOT_FOUND, OK, REQUEST_ENTITY_TOO_LARGE,
                          SEE_OTHER, UNAUTHORIZED)
 from itertools import groupby
@@ -14,6 +14,7 @@ from uuid import uuid4
 from zipfile import ZipFile
 
 import requests
+from requests.auth import HTTPBasicAuth
 import sqlalchemy as sa
 from flask import (Blueprint, Flask, abort, appcontext_pushed,
                    before_render_template, g, make_response, redirect,
@@ -21,6 +22,7 @@ from flask import (Blueprint, Flask, abort, appcontext_pushed,
                    template_rendered, url_for)
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 import commons.task_typing
 import web.const as consts
@@ -33,7 +35,7 @@ from commons.models import (AccessToken, CompletionCriteriaType, Contest,
 from commons.task_typing import JudgePlanSummary, ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
 from web.api import api, api_get_user, token_is_valid
-from web.config import (JudgeConfig, LoginConfig, NewsConfig,
+from web.config import (JAccountConfig, JudgeConfig, LoginConfig, NewsConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
 from web.const import (Privilege, ReturnCode, api_scopes,
@@ -247,6 +249,80 @@ def login():
         return create_session(user)
     except AlertFail:
         return render_template('login.html')
+
+# this function is used in template login.html
+@web.route("/login/jaccount")
+def login_jaccount():
+    next = request.args.get("next", "")
+    ja_query = urlencode({
+        "response_type": "code",
+        "scope": "openid",
+        "client_id": JAccountConfig.CLIENT_ID,
+        "redirect_uri": url_for("web.jaccount_callback", _external=True),
+        "state": next
+        })
+    ja_url = f"{JAccountConfig.AUTHORIZATION_BASE_URL}?{ja_query}"
+    return redirect(ja_url, FOUND)
+
+
+# jAccount callback
+@web.get("/oauth/callback/jaccount")
+def jaccount_callback():
+    code = request.args.get("code")
+    state = request.args.get("state")
+    data = {
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": url_for("web.jaccount_callback", _external=True),
+        "client_id": JAccountConfig.CLIENT_ID,
+        "client_secret": JAccountConfig.CLIENT_SECRET
+    }
+    res = requests.post(JAccountConfig.TOKEN_URL, data=data)
+    data = res.json()
+    if "access_token" not in data:
+        raise Exception("access_token not in data")
+    access_token = data["access_token"]
+    return redirect(url_for("web.reset_password", access_token=access_token, next=state))
+
+
+def get_student_id_from_access_token(access_token: str) -> str:
+    res = requests.get(
+        JAccountConfig.PROFILE_URL, headers={"Authorization": f"Bearer {access_token}"}
+    )
+    data = res.json()
+    student_id: str = data["entities"][0]["code"]
+    return student_id
+
+
+@web.route("/reset_password", methods=["GET", "POST"])
+def reset_password():
+    access_token: str = request.args["access_token"]
+    # request both in GET and POST,
+    # in POST, we need to validate it again to security
+    student_id: str = get_student_id_from_access_token(access_token)
+    users = UserManager.get_users_by_student_id(student_id)
+    def on_post():
+        user_id = request.form.getlist("user_id")
+        user_id = set(map(int, user_id))
+        password = request.form.get("password")
+        if user_id == set():
+            alert_fail("请选择要修改密码的用户")
+        if password is None or validate(password=password) is not None:
+            print(password)
+            alert_fail("密码不符合要求")
+        # set password
+        for user in users:
+            if user.id in user_id:
+                UserManager.set_password(user, password)
+        return redirect(url_for(".login", next=request.args.get("next", "")), code=SEE_OTHER)
+    if request.method == "POST":
+        try:
+            return on_post()
+        except AlertFail:
+            pass
+    # GET and error POST will render this
+    return render_template("reset_password.html", student_id=student_id, users=users, access_token=access_token)
+
 
 @web.route('/oauth/authorize', methods=['GET', 'POST'])
 @require_logged_in
@@ -1737,6 +1813,11 @@ oj.register_blueprint(web, url_prefix='/OnlineJudge')
 oj.jinja_env.add_extension('jinja2.ext.do')
 oj.jinja_env.tests['None'] = oj.jinja_env.tests['none']
 oj.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400
+
+# url_for(xxx,_external=True) should give correct scheme
+# nginx should set `proxy_set_header X-Forwarded-Proto $scheme;`
+oj.wsgi_app = ProxyFix(oj.wsgi_app, x_proto=1, x_host=1)
+
 
 def appcontext_pushed_log(*args, **kwargs):
     g.time = datetime.now()

@@ -24,6 +24,23 @@
                 <br>
                 <input type="submit" class="btn btn-block btn-primary" value="登录">
             </form>
+            
+            <br>
+            <details>
+                <summary>忘记密码？</summary>
+                <ul>
+                    <li>
+                        如果您拥有 jAccount 账号，且 ACMOJ 账号注册时填写的学工号与 jAccount 账号的学工号相同，可以进行 jAccount 验证以重置密码。
+                        <a href="{{ url_for('web.login_jaccount', next=request.args.get('next')) }}" target="_self">
+                            <button class="btn btn-block btn-primary">点击跳转至 jAccount 登陆页面</button>
+                        </a>
+                        <br>
+                    </li>
+                    <li>
+                        联系运维组重置密码。运维组列表见 <a href="{{ url_for('web.about') }}#mntners">关于</a>。
+                    </li>
+                </ul>
+            </details>
         {%- endif %}
     </div>
 {% endblock %}

@@ -17,7 +17,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 import sqlalchemy as sa
 from flask import (Blueprint, Flask, abort, appcontext_pushed,
-                   before_render_template, g, make_response, redirect,
+                   before_render_template, current_app, g, make_response, redirect,
                    render_template, request, send_file, send_from_directory,
                    template_rendered, url_for)
 from werkzeug.exceptions import HTTPException
@@ -171,7 +171,8 @@ def errorhandler(exc: Exception):
             g.db.rollback()
         except Exception as e:
             exc = e
-    if 'user' not in g or g.user is None or g.user.privilege < Privilege.SUPER:
+    if not current_app.debug and \
+        ('user' not in g or g.user is None or g.user.privilege < Privilege.SUPER):
         msg = 'We encountered an error serving your request. Please contact site maintainer.'
     resp = make_response(msg)
     resp.status_code = INTERNAL_SERVER_ERROR
@@ -224,13 +225,10 @@ def index2():
     return redirect(url_for('.index'))
 
 
-def create_session(user):
-    session_id = str(uuid4())
-    SessionManager.new_session(user, session_id)
+def create_session(user: User):
+    SessionManager.new_session(user)
     next = request.args.get('next', url_for('.index'))
-    ret = make_response(redirect(next, SEE_OTHER))
-    ret.set_cookie(key=SessionManager.session_cookie_name, value=session_id, max_age=LoginConfig.Login_Life_Time)
-    return ret
+    return redirect(next, SEE_OTHER)
 
 @web.route('/login', methods=['GET', 'POST'])
 def login():
@@ -357,12 +355,8 @@ def oauth_authorize():
 
 @web.route('/logout', methods=['POST'])
 def logout():
-    ret = make_response(redirect(url_for('.index'), SEE_OTHER))
-    if g.user is None:
-        return ret
     SessionManager.logout()
-    ret.delete_cookie(SessionManager.session_cookie_name)
-    return ret
+    return redirect(url_for('.index'), SEE_OTHER)
 
 
 @ignore_alert_fail

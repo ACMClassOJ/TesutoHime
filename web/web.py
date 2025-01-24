@@ -52,7 +52,7 @@ from web.manager.old_judge import OldJudgeManager
 from web.manager.problem import ProblemManager
 from web.manager.quiz import QuizManager
 from web.manager.realname import RealnameManager
-from web.manager.session import SessionManager
+from web.manager.session import SessionManager, TempSessionManager
 from web.tracker import tracker
 from web.manager.user import UserManager
 from web.utils import (SqlSession, abort_converter, db, gen_page,
@@ -263,6 +263,14 @@ def login_jaccount():
     return redirect(ja_url, FOUND)
 
 
+def get_student_id_from_access_token(access_token: str) -> str:
+    res = requests.get(
+        JAccountConfig.PROFILE_URL, headers={"Authorization": f"Bearer {access_token}"}
+    )
+    data = res.json()
+    student_id: str = data["entities"][0]["code"]
+    return student_id
+
 # jAccount callback
 @web.get("/oauth/callback/jaccount")
 def jaccount_callback():
@@ -280,25 +288,20 @@ def jaccount_callback():
     if "access_token" not in data:
         raise Exception("access_token not in data")
     access_token = data["access_token"]
-    return redirect(url_for("web.reset_password", access_token=access_token, next=state))
-
-
-def get_student_id_from_access_token(access_token: str) -> str:
-    res = requests.get(
-        JAccountConfig.PROFILE_URL, headers={"Authorization": f"Bearer {access_token}"}
-    )
-    data = res.json()
-    student_id: str = data["entities"][0]["code"]
-    return student_id
+    student_id = get_student_id_from_access_token(access_token)
+    TempSessionManager.new_session(student_id)
+    return redirect(url_for("web.reset_password", next=state))
 
 
 @web.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
-    access_token: str = request.args["access_token"]
     # request both in GET and POST,
     # in POST, we need to validate it again to security
-    student_id: str = get_student_id_from_access_token(access_token)
+    student_id = TempSessionManager.current_student_id()
+    if student_id is None:
+        abort(FORBIDDEN)
     users = UserManager.get_users_by_student_id(student_id)
+
     def on_post():
         user_id = request.form.getlist("user_id")
         user_id = set(map(int, user_id))
@@ -308,18 +311,23 @@ def reset_password():
         if password is None or validate(password=password) is not None:
             print(password)
             alert_fail("密码不符合要求")
+        # one time token
+        TempSessionManager.logout()
         # set password
         for user in users:
             if user.id in user_id:
                 UserManager.set_password(user, password)
-        return redirect(url_for(".login", next=request.args.get("next", "")), code=SEE_OTHER)
+        return redirect(
+            url_for(".login", next=request.args.get("next", "")), code=SEE_OTHER
+        )
+
     if request.method == "POST":
         try:
             return on_post()
         except AlertFail:
             pass
     # GET and error POST will render this
-    return render_template("reset_password.html", student_id=student_id, users=users, access_token=access_token)
+    return render_template("reset_password.html", student_id=student_id, users=users)
 
 
 @web.route('/oauth/authorize', methods=['GET', 'POST'])

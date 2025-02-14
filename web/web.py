@@ -249,68 +249,68 @@ def login():
         return render_template('login.html')
 
 # this function is used in template login.html
-@web.route("/login/jaccount")
+@web.route('/oauth/jaccount')
 def login_jaccount():
-    next = request.args.get("next", "")
+    next = request.args.get('next', '')
     ja_query = urlencode({
-        "response_type": "code",
-        "scope": "openid",
-        "client_id": JAccountConfig.CLIENT_ID,
-        "redirect_uri": url_for("web.jaccount_callback", _external=True),
-        "state": next
-        })
-    ja_url = f"{JAccountConfig.AUTHORIZATION_BASE_URL}?{ja_query}"
+        'response_type': 'code',
+        'scope': 'essential',
+        'client_id': JAccountConfig.CLIENT_ID,
+        'redirect_uri': url_for('web.jaccount_callback', _external=True),
+        'state': next,
+    })
+    ja_url = f'{JAccountConfig.AUTHORIZATION_BASE_URL}?{ja_query}'
     return redirect(ja_url, FOUND)
 
 
-def get_student_id_from_access_token(access_token: str) -> str:
+def get_student_id_from_access_token(access_token: str) -> Optional[str]:
     res = requests.get(
-        JAccountConfig.PROFILE_URL, headers={"Authorization": f"Bearer {access_token}"}
+        JAccountConfig.PROFILE_URL, headers={'Authorization': f'Bearer {access_token}'}
     )
     data = res.json()
-    student_id: str = data["entities"][0]["code"]
+    student_id: str = data['entities'][0]['code']
     return student_id
 
 # jAccount callback
-@web.get("/oauth/callback/jaccount")
+@web.get('/oauth/jaccount/callback')
 def jaccount_callback():
-    code = request.args.get("code")
-    state = request.args.get("state")
+    code = request.args.get('code')
+    state = request.args.get('state')
     data = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": url_for("web.jaccount_callback", _external=True),
-        "client_id": JAccountConfig.CLIENT_ID,
-        "client_secret": JAccountConfig.CLIENT_SECRET
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': url_for('web.jaccount_callback', _external=True),
+        'client_id': JAccountConfig.CLIENT_ID,
+        'client_secret': JAccountConfig.CLIENT_SECRET,
     }
     res = requests.post(JAccountConfig.TOKEN_URL, data=data)
     data = res.json()
-    if "access_token" not in data:
-        raise Exception("access_token not in data")
-    access_token = data["access_token"]
-    student_id = get_student_id_from_access_token(access_token)
+    try:
+        access_token = data['access_token']
+        student_id = get_student_id_from_access_token(access_token)
+    except KeyError:
+        return '登录状态无效，请重试或联系 OJ 运维组。', 403
     TempSessionManager.new_session(student_id)
-    return redirect(url_for("web.reset_password", next=state))
+    return redirect(url_for('web.reset_password', next=state))
 
 
-@web.route("/reset_password", methods=["GET", "POST"])
+@web.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
     # request both in GET and POST,
     # in POST, we need to validate it again to security
     student_id = TempSessionManager.current_student_id()
     if student_id is None:
-        abort(FORBIDDEN)
+        return redirect(url_for('.login_jaccount'))
     users = UserManager.get_users_by_student_id(student_id)
 
     def on_post():
-        user_id = request.form.getlist("user_id")
+        user_id = request.form.getlist('user_id')
         user_id = set(map(int, user_id))
-        password = request.form.get("password")
+        password = request.form.get('password')
         if user_id == set():
-            alert_fail("请选择要修改密码的用户")
+            alert_fail('请选择要修改密码的用户')
         if password is None or validate(password=password) is not None:
-            print(password)
-            alert_fail("密码不符合要求")
+            alert_fail('密码不符合要求')
         # one time token
         TempSessionManager.logout()
         # set password
@@ -318,16 +318,16 @@ def reset_password():
             if user.id in user_id:
                 UserManager.set_password(user, password)
         return redirect(
-            url_for(".login", next=request.args.get("next", "")), code=SEE_OTHER
+            url_for('.login', next=request.args.get('next', '')), code=SEE_OTHER
         )
 
-    if request.method == "POST":
+    if request.method == 'POST':
         try:
             return on_post()
         except AlertFail:
             pass
     # GET and error POST will render this
-    return render_template("reset_password.html", student_id=student_id, users=users)
+    return render_template('reset_password.html', student_id=student_id, users=users)
 
 
 @web.route('/oauth/authorize', methods=['GET', 'POST'])
@@ -390,7 +390,7 @@ def register():
         resp = process_register()
         if resp is not None:
             return resp
-    return render_template('register.html')
+    return render_template('register.html', student_id=request.args.get('student-id', ''))
 
 
 @web.route('/problem')

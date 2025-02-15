@@ -7,13 +7,11 @@ from os import chmod, path, remove, rename, scandir, stat, utime
 from pathlib import PosixPath
 from shutil import copy
 from time import time
-from typing import Union
 from urllib.parse import urlsplit
 from uuid import NAMESPACE_URL, uuid5
 
 from aiohttp import request
 
-from commons.util import format_exc
 from judger2.config import (cache_clear_interval_secs, cache_dir,
                             cache_max_age_secs)
 
@@ -39,7 +37,7 @@ utc_time_format = '%a, %d %b %Y %H:%M:%S GMT'
 
 async def ensure_cached(url: str) -> CachedFile:
     cache = cached_from_url(url)
-    logger.debug(f'caching file {cache.filename} to {cache.path}')
+    logger.debug('caching file %(filename)s to %(path)s', { 'filename': cache.filename, 'path': cache.path }, 'cache:ensure')
     headers = {}
     try:
         mtime = stat(cache.path).st_mtime
@@ -50,12 +48,12 @@ async def ensure_cached(url: str) -> CachedFile:
         mtime = time()
     async with request('GET', url, headers=headers) as resp:
         if resp.status == NOT_MODIFIED:
-            logger.debug(f'{cache.filename} is not modified, using cache')
+            logger.debug('%(filename)s is not modified, using cache', { 'filename': cache.filename, 'path': cache.path }, 'cache:hit')
             utime(cache.path, (time(), mtime))
             return cache
         if resp.status != OK:
             raise Exception(f'Unknown response status {resp.status} while fetching object')
-        logger.debug(f'{cache.filename} is modified, downloading file')
+        logger.debug('%(filename)s is modified, downloading file', { 'filename': cache.filename, 'path': cache.path }, 'cache:miss')
         part_path = cache.path.with_suffix('.part')
         try:
             with open(part_path, 'wb') as f:
@@ -98,16 +96,16 @@ def clear_cache():
         atime = max(st.st_atime, st.st_mtime)
         age = time() - atime
         if age > cache_max_age_secs:
-            logger.debug(f'removing file {file.path} from cache as age is {age}')
+            logger.debug('removing file %(path)s from cache as age is %(age)s', { 'path': file.path, 'age': age }, 'cache:purge')
             remove(file)
 
 async def clean_cache_worker():
     while True:
         try:
-            logger.info('clearing cache')
+            logger.info('clearing cache', {}, 'cache:clean')
             clear_cache()
         except CancelledError:
             return
         except Exception as e:
-            logger.error(f'error while clearing cache: {format_exc(e)}')
+            logger.error('error while clearing cache: %(error)s', { 'error': e }, 'cache:clean')
         await sleep(cache_clear_interval_secs)

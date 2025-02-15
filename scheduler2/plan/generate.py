@@ -412,7 +412,7 @@ async def execute_compile_tasks(ctx: ParseContext):
 
 
 async def generate_plan(problem_id: str) -> JudgePlan:
-    logger.info(f'generating plan for {problem_id}')
+    logger.info('generating plan for %(id)s', { 'id': problem_id }, 'plan:generate:start')
     zip_filename = f'{problem_id}.zip'
     zip_path = working_dir / zip_filename
     try:
@@ -428,10 +428,10 @@ async def generate_plan(problem_id: str) -> JudgePlan:
             ctx.plan.score = await parse_groups(ctx)
             await upload_files(ctx)
             await execute_compile_tasks(ctx)
-            logger.debug(f'generated plan for {problem_id}: {ctx.plan}')
+            logger.debug('generated plan for %(id)s: %(plan)s', { 'id': problem_id, 'plan': ctx.plan }, 'plan:generate:done')
             return ctx.plan
     finally:
         try:
             remove(zip_path)
         except Exception as e:
-            logger.error(f'cannot remove problem zip: {format_exc(e)}')
+            logger.error('cannot remove problem zip: %(error)s', { 'error': e }, 'plan:generate:cleanup')

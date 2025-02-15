@@ -78,18 +78,19 @@ async def update_problem(request: Request):
         return json_response({'result': 'invalid problem', 'error': str(e)})
     except Exception as e:
         err = format_exc(e)
-        logger.error(f'error updating problem: {err}')
+        logger.error('error updating problem %(id)s: %(error)s', { 'id': problem_id, 'error': err }, 'plan:update')
         return json_response({'result': 'system error', 'error': err})
     finally:
         for task1 in task_args:
             register_judge_task(*task1)
+    logger.info('plan for problem %(id)s updated', { 'id': problem_id }, 'plan:update')
     return json_response({'result': 'ok', 'error': None, 'languages': languages, 'summary': summary})
 
 
 async def run_judge(problem_id: str, submission_id: str,
     language: CodeLanguage, source: SourceLocation, rate_limit_group: str):
     res = None
-    logger.info(f'judging submission {submission_id} for problem {problem_id}')
+    logger.info('judging submission %(id)s for problem %(problem)s', { 'id': submission_id, 'problem': problem_id }, 'judge:start')
     try:
         plan_str = None
         try:
@@ -99,7 +100,7 @@ async def run_judge(problem_id: str, submission_id: str,
             res = ProblemJudgeResult(result='bad_problem', message=msg)
         if plan_str is not None:
             plan = deserialize(plan_str)
-            logger.debug(f'plan for problem {problem_id} loaded')
+            logger.debug('plan for problem %(id)s loaded', { 'id': problem_id }, 'plan:load')
             res = await execute_plan(plan, submission_id, problem_id, language,
                 source, rate_limit_group)
     except CancelledError:
@@ -109,7 +110,7 @@ async def run_judge(problem_id: str, submission_id: str,
         msg = f'Unknown error: {e}'
         res = ProblemJudgeResult(result='system_error', message=msg)
     except InvalidProblemException as e:
-        logger.warning(f'invalid problem encountered in judging: {format_exc(e)}')
+        logger.warning('invalid problem encountered in judging: %(error)s', { 'error': e }, 'judge:invalidproblem')
         if res is None:
             msg = f'Invalid problem: {e}'
             res = ProblemJudgeResult(result='bad_problem', message=msg)
@@ -119,7 +120,7 @@ async def run_judge(problem_id: str, submission_id: str,
             res = ProblemJudgeResult(result='compile_error', message=msg)
     except Exception as e:
         msg = f'Internal error: {format_exc(e)}'
-        logger.error(f'error judging problem: {msg}')
+        logger.error('error judging problem: %(message)s', { 'message': msg }, 'judge:error')
         if res is None:
             res = ProblemJudgeResult(result='system_error', message=msg)
     task = make_request(f'api/submission/{quote(submission_id)}/result', res)
@@ -162,7 +163,7 @@ async def abort_judge(request: Request):
         raise HTTPNotFound()
     task = judge_tasks_from_submission_id[submission_id]
     if not task.cancelled():
-        logger.info(f'aborting judge {submission_id}')
+        logger.info('aborting judge %(id)s', { 'id': submission_id }, 'judge:abort')
         task.cancel()
     return json_response({'result': 'ok', 'error': None})
 
@@ -207,8 +208,8 @@ async def runner_status(request: Request):
 
 
 if __name__ == '__main__':
-    logger.info('scheduler starting')
-    register(lambda: logger.info('scheduler stopping'))
+    logger.info('scheduler starting', {}, 'scheduler:start')
+    register(lambda: logger.info('scheduler stopping', {}, 'scheduler:stop'))
     app = Application()
     app.add_routes(routes)
     run_app(app, host=host, port=port, print=None)  # type: ignore

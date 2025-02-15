@@ -28,7 +28,7 @@ def _judger_before_tmpdir_exit(path: PosixPath):
         # removed by rmtree.
         chown_back(path)
     except Exception as e:
-        logger.error(f'error removing temp dir {path}: {format_exc(e)}')
+        logger.error('error removing temp dir %(path)s: %(error)s', { 'path': path, 'error': e }, 'tempdir:remove')
 
 TempDir.config(working_dir, _judger_before_tmpdir_exit)
 
@@ -38,7 +38,7 @@ class FileConflictException(Exception): pass
 
 async def copy_supplementary_files(files: List[FileUrl], cwd: PosixPath):
     if len(files) != 0:
-        logger.debug(f'copying supplementary files to {cwd}')
+        logger.debug('copying supplementary files to %(dest)s', { 'dest': cwd }, 'suppfiles:copy')
     for f in as_completed(map(ensure_cached, files)):
         try:
             file = await f

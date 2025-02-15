@@ -1,3 +1,5 @@
+import web.logging_
+
 import json
 import os
 import re
@@ -7,6 +9,7 @@ from http.client import (BAD_REQUEST, FORBIDDEN, FOUND, INTERNAL_SERVER_ERROR,
                          NO_CONTENT, NOT_FOUND, OK, REQUEST_ENTITY_TOO_LARGE,
                          SEE_OTHER, UNAUTHORIZED)
 from itertools import groupby
+from logging import getLogger
 from math import ceil
 from typing import Dict, Iterable, List, NoReturn, Optional
 from urllib.parse import urlencode, urljoin, urlsplit, urlunsplit
@@ -14,15 +17,14 @@ from uuid import uuid4
 from zipfile import ZipFile
 
 import requests
-from requests.auth import HTTPBasicAuth
 import sqlalchemy as sa
 from flask import (Blueprint, Flask, abort, appcontext_pushed,
-                   before_render_template, current_app, g, make_response, redirect,
-                   render_template, request, send_file, send_from_directory,
-                   template_rendered, url_for)
+                   before_render_template, current_app, g, make_response,
+                   redirect, render_template, request, send_file,
+                   send_from_directory, template_rendered, url_for)
 from werkzeug.exceptions import HTTPException
-from werkzeug.routing import BaseConverter
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.routing import BaseConverter
 
 import commons.task_typing
 import web.const as consts
@@ -35,15 +37,16 @@ from commons.models import (AccessToken, CompletionCriteriaType, Contest,
 from commons.task_typing import JudgePlanSummary, ProblemJudgeResult
 from commons.util import deserialize, format_exc, load_dataclass, serialize
 from web.api import api, api_get_user, token_is_valid
-from web.config import (JAccountConfig, JudgeConfig, LoginConfig, NewsConfig,
+from web.config import (JAccountConfig, JudgeConfig, NewsConfig,
                         QuizTempDataConfig, S3Config, SchedulerConfig,
                         WebConfig)
 from web.const import (Privilege, ReturnCode, api_scopes,
                        completion_criteria_max_length, language_info,
                        max_pic_size, runner_status_info)
+from web.csrf import setup_csrf
+from web.logging_ import log_request
 from web.manager.contest import ContestManager
 from web.manager.course import CourseManager
-from web.csrf import setup_csrf
 from web.manager.discuss import DiscussManager
 from web.manager.judge import JudgeManager, NotFoundException
 from web.manager.news import NewsManager
@@ -53,13 +56,14 @@ from web.manager.problem import ProblemManager
 from web.manager.quiz import QuizManager
 from web.manager.realname import RealnameManager
 from web.manager.session import SessionManager, TempSessionManager
-from web.tracker import tracker
 from web.manager.user import UserManager
 from web.utils import (SqlSession, abort_converter, db, gen_page,
                        gen_page_for_problem_list, generate_s3_public_url,
                        is_api_call, not_logged_in, paged_search_limitoffset,
                        readable_lang_v1, readable_time, require_logged_in,
                        s3_internal, sort_scopes)
+
+logger = getLogger(__name__)
 
 web = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 web.register_blueprint(api, url_prefix='/api/v1')
@@ -165,7 +169,7 @@ def errorhandler(exc: Exception):
     if isinstance(exc, HTTPException):
         return exc
     msg = format_exc(exc)
-    tracker.syslog.error(msg)
+    logger.error('error when handling request: %(error)s', { 'error': exc }, 'web:error')
     if 'db' in g:
         try:
             g.db.rollback()
@@ -526,7 +530,7 @@ def problem_submit(problem: Problem):
         public = bool(request.form.get('public', 0))  # 0 or 1
         lang_str = str(request.form.get('language'))
         if lang_str == 'quiz':
-            user_code = json.dumps(request.form.to_dict())
+            user_code = json.dumps(request.form.to_dict(), ensure_ascii=False)
         else:
             user_code = request.form['code']
         if not JudgeManager.can_create(problem, public, lang_str, user_code):
@@ -1841,7 +1845,7 @@ def before_request_log(*args, **kwargs):
 @oj.teardown_request
 def teardown_request_log(*args, **kwargs):
     g.timings['total'] = (datetime.now() - g.time).total_seconds()
-    tracker.log()
+    log_request()
     if 'db' in g:
         g.db.close()
         g.db = None

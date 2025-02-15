@@ -57,7 +57,7 @@ def dump_dataclass(object: Any):
     }
 
 def serialize(object: Any) -> str:
-    return json.dumps(dump_dataclass(object))
+    return json.dumps(dump_dataclass(object), ensure_ascii=False)
 
 
 def load_dataclass(object, classes: Dict[str, Type]) -> Any:
@@ -91,18 +91,18 @@ class TempDir:
             raise ValueError('TempDir is not initialized')
         self.path = PosixPath(working_dir) / str(uuid4())
     def __enter__(self) -> PosixPath:
-        logger.debug(f'entering temp dir {self.path}')
+        logger.debug('entering temp dir %(path)s', { 'path': self.path }, 'tempdir:enter')
         self.path.mkdir()
         self.path.chmod(0o770)
         return self.path
     def __exit__(self, *_args):
-        logger.debug(f'exiting temp dir {self.path}')
+        logger.debug('exiting temp dir %(path)s', { 'path': self.path }, 'tempdir:exit')
         try:
             if before_exit is not None:
                 before_exit(self.path)
             rmtree(self.path, ignore_errors=True)
         except Exception as e:
-            logger.error(f'error removing temp dir {self.path}: {format_exc(e)}')
+            logger.error('error removing temp dir %(path)s: %(error)s', { 'path': self.path, 'error': e }, 'tempdir:remove')
 
     @staticmethod
     def config(_working_dir, _before_exit = None):

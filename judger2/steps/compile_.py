@@ -144,7 +144,7 @@ async def prepare_git(
     source: CompileSourceGit,
     limits: ResourceUsage,
 ) -> StageResult:
-    logger.debug(f'about to compile git repo {repr(source.url)}')
+    logger.debug('about to compile git repo %(url)s', { 'url': source.url }, 'compile:git')
 
     async def run_build_step(argv: List[str], *, output = DEVNULL):
         tempfile = NamedTemporaryFile('w+')
@@ -175,7 +175,7 @@ async def prepare_git(
     
     # clone
     git_argv = ['/bin/git', 'clone', source.url, '.'] + gitflags
-    logger.debug(f'about to run {git_argv}')
+    logger.debug('about to run %(argv)s', { 'argv': git_argv }, 'compile:git:run')
     clone_res = await run_build_step(git_argv)
     if clone_res.error is not None:
         return StageResult(False, clone_res.message)
@@ -209,13 +209,13 @@ async def compile_git(
             return CompileLocalResult.from_run_failure(commit_hash_res)
         ouf.seek(0)
         commit_hash = ouf.read(128).decode().strip()
-        logger.debug(f'git commit hash: {commit_hash}')
+        logger.debug('git commit hash: %(commit)s', { 'commit': commit_hash }, 'compile:git:commit')
         message = f'Using git commit {commit_hash}'
 
     # configure
     cmake_lists_path = cwd / 'CMakeLists.txt'
     if cmake_lists_path.is_file():
-        logger.debug('CMake config found, invoking cmake')
+        logger.debug('CMake config found, invoking cmake', {}, 'compile:git:cmake')
         res = await run_build_step(['/bin/cmake', '.'])
         if res.error is not None:
             return CompileLocalResult.from_run_failure(res)
@@ -225,7 +225,7 @@ async def compile_git(
     # compile
     makefile_paths = [cwd / x for x in ['GNUmakefile', 'makefile', 'Makefile']]
     if any(x.is_file() for x in makefile_paths):
-        logger.debug('makefile found, invoking make')
+        logger.debug('makefile found, invoking make', {}, 'compile:git:make')
         res = await run_build_step(['/bin/make'])
         if res.error is not None:
             return CompileLocalResult.from_run_failure(res)

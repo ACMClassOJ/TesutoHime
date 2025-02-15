@@ -48,16 +48,16 @@ async def run_task(taskinfo, onprogress = None, rate_limit_group = None,
 
     async def retry(msg):
         if retries_left <= 0:
-            logger.warn(f'Task {task_id} failed: {msg}')
+            logger.warn('task %(id)s failed: %(message)s', { 'id': task_id, 'message': msg }, 'task:fail')
             raise Exception(msg)
-        logger.info(f'Task {task_id} failed: {msg}, retrying')
+        logger.info('task %(id)s failed: %(message)s, retrying', { 'id': task_id, 'message': msg }, 'task:retry')
         await sleep(task_retry_interval_secs)
         return await run_task(taskinfo, onprogress, rate_limit_group,
             retries_left - 1)
 
     try:
         async with rate_limiter.limit(rate_limit_group):
-            logger.debug(f'running task {task_id}: {task}')
+            logger.debug('running task %(id)s: %(task)s', { 'id': task_id, 'task': task }, 'task:start')
 
             queues = redis_queues.task(task_id)
             await redis.lpush(queues.task, serialize(task))
@@ -83,7 +83,7 @@ async def run_task(taskinfo, onprogress = None, rate_limit_group = None,
                         return await retry('Task timed out')
                     _, status = res
                     status: StatusUpdate = deserialize(status)  # type: ignore
-                    logger.debug(f'received status update from task {task_id}: {status}')
+                    logger.debug('received status update from task %(id)s: %(status)s', { 'id': task_id, 'status': status }, 'task:update')
 
                     if isinstance(status, StatusUpdateStarted):
                         offline_task = wait_until_offline(status.id)
@@ -102,7 +102,7 @@ async def run_task(taskinfo, onprogress = None, rate_limit_group = None,
                     else:
                         raise Exception(f'Unknown message from runner: {status}')
             except CancelledError:
-                logger.info(f'aborting task {task_id}')
+                logger.info('aborting task %(id)s', { 'id': task_id }, 'task:abort')
                 await redis.lpush(queues.abort, 1)
                 await redis.expire(queues.abort, task_timeout_secs)
                 raise

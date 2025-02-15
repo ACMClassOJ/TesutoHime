@@ -7,7 +7,7 @@ from time import time
 
 from commons.task_typing import (StatusUpdateDone, StatusUpdateError,
                                  StatusUpdateStarted)
-from commons.util import deserialize, format_exc, serialize
+from commons.util import deserialize, serialize
 
 from judger2.cache import clean_cache_worker
 from judger2.config import (heartbeat_interval_secs, poll_timeout_secs, queues,
@@ -25,7 +25,7 @@ async def send_heartbeats():
         except CancelledError:
             return
         except Exception as e:
-            logger.error(f'error sending heartbeat: {format_exc(e)}')
+            logger.error('error sending heartbeat: %(error)s', { 'error': e }, 'heartbeat')
         await sleep(heartbeat_interval_secs)
 
 
@@ -42,7 +42,7 @@ async def poll_for_tasks():
             if task_id is None: continue
             task_queues = queues.task(task_id)
             async def report_progress(status):
-                logger.debug(f'reporting progress for task {task_id}: {status}')
+                logger.debug('reporting progress for task %(id)s: %(status)s', { 'id': task_id, 'status': status }, 'task:progress')
                 await redis.lpush(task_queues.progress, serialize(status))
                 await redis.expire(task_queues.progress, task_timeout_secs)
 
@@ -64,18 +64,18 @@ async def poll_for_tasks():
                     except CancelledError:
                         return
                     except Exception as e:
-                        logger.error(f'Error processing signal: {format_exc(e)}')
+                        logger.error('error processing signal: %(error)s', { 'error': e }, 'task:abortsignal')
                         await sleep(2)
             abort_task = create_task(poll_for_abort_signal())
 
             try:
                 result = await aio_task
                 abort_task.cancel()
-                task_logger.debug(f'task {task_id} completed with {result}')
+                task_logger.debug('task %(id)s completed with %(result)s', { 'id': task_id, 'result': result }, 'task:complete')
                 await report_progress(StatusUpdateDone(result))
             except CancelledError:
                 abort_task.cancel()
-                task_logger.info(f'task {task_id} was aborted')
+                task_logger.info('task %(id)s was aborted', { 'id': task_id }, 'task:abort')
             normal_completion = True
         except CancelledError:
             normal_completion = False
@@ -84,24 +84,24 @@ async def poll_for_tasks():
         except Exception as e:
             normal_completion = False
             error = str(e)
-            task_logger.error(f'error processing task: {format_exc(e)}')
+            task_logger.error('error processing task: %(error)s', { 'error': e }, 'task:error')
             await sleep(2)
         finally:
             if task_id is not None:
                 try:
                     await redis.lrem(queues.in_progress, 0, task_id)
                 except Exception as e:
-                    task_logger.error(f'error removing task from queue: {format_exc(e)}')
+                    task_logger.error('error removing task from queue: %(error)s', { 'error': e }, 'task:remove')
                 if not normal_completion:
                     try:
                         await report_progress(StatusUpdateError(error))
                     except Exception as e:
-                        task_logger.error(f'error sending nack: {format_exc(e)}')
+                        task_logger.error('error sending nack: %(error)s', { 'error': e }, { 'task:nack' })
 
 
 async def main():
-    logger.info(f'runner {runner_id} starting')
-    register(lambda: logger.info(f'runner {runner_id} stopping'))
+    logger.info('runner %(id)s starting', { 'id': runner_id }, 'runner:start')
+    register(lambda: logger.info('runner %(id)s stopping', { 'id': runner_id }, 'runner:stop'))
     await wait([
         create_task(send_heartbeats()),
         create_task(poll_for_tasks()),

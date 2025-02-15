@@ -227,7 +227,7 @@ async def get_judge_tasks(ctx: ExecutionContext) -> List[JudgeTaskRecord]:
 async def upload_code(ctx: ExecutionContext):
     if ctx.code_key is not None:
         bucket = s3_buckets.artifacts
-        logger.debug(f'uploading user code to {bucket}/{ctx.code_key}')
+        logger.debug('uploading user code to %(bucket)s/%(key)s', { 'bucket': bucket, 'key': ctx.code_key }, 'code:upload')
         ctx.files_to_clean.add((bucket, ctx.code_key))
         await copy_file(ctx.code, bucket, ctx.code_key)
 
@@ -504,7 +504,7 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
             try:
                 await remove_file(bucket, key)
             except Exception as e:
-                logger.warn(f'Error clearing object: {format_exc(e)}')
+                logger.warn('Error clearing object: %(error)s', { 'error': e }, 'plan:execute:cleanup')
 
 async def get_partial_result(submission_id):
     if not submission_id in ctx_from_submission:

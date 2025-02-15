@@ -168,13 +168,7 @@ class QuizTempDataConfig:
     cache_dir = '/var/cache/oj/web'       #quiz_cache_dir，用于解压存放填选临时文件的本地目录
 
 class LogConfig:
-    name = 'tracker'                                    #Web服务日志名称
-    path = '/var/log/oj/web/tracker.log'                #web_log_url，Web服务日志存放的本地目录
-    Syslog_Path = '/var/log/oj/web/syslog.log'          #sys_log_url，其他系统服务日志存放的本地目录
-    Max_Bytes = 134217728                               #Web服务日志保存的最大空间
-    Backup_Count = 3                                    #Web服务需要保存多少份滚动日志。
-                                                        #例如当前日志写入tracker.log, maxBytes为128M，那么当128M被写满时，
-                                                        #最早的日志将被写入tracker.log.1；tracker.log.2等依此类推，直到最早的日志被废弃
+    log_dir = '/var/log/oj/web'
 ```
 
 测试 Web 服务是否可以运行，输入

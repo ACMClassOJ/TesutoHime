@@ -34,10 +34,12 @@ async def make_request(path, body):
             await do_request()
             return
         except Exception as e:
-            msg = f'Error sending request to {path}: {e}'
+            msg = 'Error sending request to %(path)s: %(error)s'
+            args = { 'path': path, 'error': e }
             if will_retry:
-                msg += f', will retry in {interval} seconds'
-            logger.error(msg)
+                msg += ', will retry in %(interval)s seconds'
+                args['interval'] = interval
+            logger.error(msg, args, 'request:fail')
             if not will_retry: raise
             await sleep(interval)
             interval *= 2
@@ -60,7 +62,7 @@ class RateLimiter:
         if key is None:
             return RateLimiter.Unlimited()
         if key not in self.semaphores:
-            logger.debug(f'creating rate limit group {key}')
+            logger.debug('creating rate limit group %(key)s', { 'key': key }, 'ratelimit:create')
             self.semaphores[key] = Semaphore(self.max)
         return self.semaphores[key]
 

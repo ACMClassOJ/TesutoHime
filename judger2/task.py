@@ -25,8 +25,7 @@ async def run_task(task: CompileTask, task_id: str) -> CompileResult: pass
 @overload
 async def run_task(task: JudgeTask[Input], task_id: str) -> JudgeResult: pass
 async def run_task(task, task_id):
-    task_logger.info(f'received task {task_id}')
-    task_logger.debug(f'received task {task_id}: {task}')
+    task_logger.info('received task %(task)s', { 'id': task_id, 'task': task }, 'task:start')
     if isinstance(task, CompileTask):
         return await compile_task(task)
     elif isinstance(task, JudgeTask):
@@ -75,7 +74,7 @@ async def judge_testpoint(testpoint: Testpoint[Input], result: JudgeResult, \
     cwd: PosixPath, rusage: Ref):
     skip_reason = get_skip_reason(testpoint, result.testpoints)
     if skip_reason is not None:
-        task_logger.debug(f'skipping {testpoint.id} due to {skip_reason}')
+        task_logger.debug('skipping testpoint %(id)s due to %(reason)s', { 'id': testpoint.id, 'reason': skip_reason }, 'testpoint:skip')
         return TestpointJudgeResult(
             id=testpoint.id,
             result='skipped',
@@ -88,7 +87,7 @@ async def judge_testpoint(testpoint: Testpoint[Input], result: JudgeResult, \
             await copy_supplementary_files(testpoint.run.supplementary_files,
                 cwd)
             output = await run(oufdir, cwd, testpoint.input, testpoint.run)
-            logger.debug(f'run result: {output}')
+            logger.debug('run result: %(result)s', { 'result': output }, 'testpoint:run')
             rusage.value = output.resource_usage
             if output.error is not None:
                 return TestpointJudgeResult(
@@ -101,13 +100,13 @@ async def judge_testpoint(testpoint: Testpoint[Input], result: JudgeResult, \
             output = testpoint.input
 
         check_res = await check(output, cwd, testpoint.check)
-        logger.debug(f'check result: {check_res}')
+        logger.debug('check result: %(result)s', { 'result': check_res }, 'testpoint:check')
         res = TestpointJudgeResult(
             **check_res.__dict__,
             id=testpoint.id,
             resource_usage=rusage.value,
         )
-        task_logger.debug(f'testpoint {testpoint.id} finished with {res}')
+        task_logger.debug('testpoint %(id)s finished with %(result)s', { 'id': testpoint.id, 'result': res }, 'testpoint:done')
         return res
 
 async def judge_task(task: JudgeTask[Input], task_id: str) -> JudgeResult:
@@ -122,7 +121,7 @@ async def judge_task(task: JudgeTask[Input], task_id: str) -> JudgeResult:
             except CancelledError:
                 return result
             except Exception as e:
-                logger.error(f'Error judging testpoint: {format_exc(e)}')
+                logger.error('error judging testpoint: %(error)s', { 'error': e }, 'testpoint:error')
                 result.testpoints[i] = TestpointJudgeResult(
                     id=testpoint.id,
                     result='system_error',

@@ -19,7 +19,7 @@ logger = getLogger(__name__)
 
 
 async def check(outfile: CheckInput, cwd: PosixPath, checker: Checker) -> CheckResult:
-    logger.debug(f'checking with {checker}')
+    logger.debug('checking with %(checker)s', { 'checker': checker }, 'check:start')
     # get output file to check
     if not isinstance(outfile, RunResult):
         try:
@@ -45,7 +45,7 @@ async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker
     ans = (await ensure_cached(checker.answer)).path
     argv = [checker_exe, '-ZB', '--', str(outfile), str(ans)] if checker.ignore_whitespace \
         else [checker_exe, '--', str(outfile), str(ans)]
-    logger.debug(f'about to run {argv}')
+    logger.debug('about to run %(argv)s', { 'argv': argv }, 'checker:cmp')
     with TempDir() as cwd:
         res = await run_with_limits(
             'std', argv, cwd,
@@ -55,7 +55,7 @@ async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker
     if res.error == 'runtime_error' and res.code == checker_errexit_code:
         return CheckResult('wrong_answer', '')
     if res.error is not None:
-        logger.error(f'checker failed with {res.error}: {res.message}')
+        logger.error('checker failed with %(error)s: %(message)s', { 'error': res.error, 'message': res.message }, 'checker:cmp')
         return CheckResult('system_error', f'checker failed with {res.error}: {res.message}')
     return CheckResult('accepted', '', 1.0)
 
@@ -119,7 +119,7 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
         message = cwd / 'message'
         argv = [exec_file, infile, outfile, ans, score, message, user_cwd]
         argv = [str(x) for x in argv]
-        logger.debug(f'about to run spj: {argv}')
+        logger.debug('about to run spj: %(argv)s', { 'argv': argv }, 'checker:spj')
 
         res = await run_with_limits('std', argv, cwd, checker.limits,
                                     supplementary_paths=bindmount,

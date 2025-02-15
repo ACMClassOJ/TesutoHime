@@ -27,7 +27,7 @@ logger = getLogger(__name__)
 
 
 if platform != 'linux':
-    logger.critical(f'This judger runs only on Linux systems, but your system seems to be {platform}.')
+    logger.critical('This judger runs only on Linux systems, but your system seems to be %(platform)s.', { 'platform': platform }, 'sandbox:invalidplatform')
     exit(2)
 
 
@@ -164,7 +164,7 @@ async def run_with_limits(
             + argv
         nsjail_argv = [profile] + format_args(asdict(args)) + ['--'] + run_args
         argv_str = ' '.join(quote(x) for x in nsjail_argv)
-        logger.debug(f'about to run nsjail with args {argv_str}')
+        logger.debug('about to run nsjail with args %(args)s', { 'args': argv_str }, 'nsjail:run')
 
         # execute
         time_start = time()
@@ -177,8 +177,9 @@ async def run_with_limits(
         code = waitstatus_to_exitcode(status)
         approx_time = time() - time_start
         approx_mem = rusage.ru_maxrss * 1024
-        logger.debug(f'nsjail run finished')
-        logger.debug(f'{code=} {approx_time=} {approx_mem=}')
+        logger.debug('nsjail run finished with code=%(code)s approx_time=%(approx_time)s approx_mem=%(approx_mem)s',
+                     { 'code': code, 'approx_time': approx_time, 'approx_mem': approx_mem },
+                     'nsjail:done')
 
         # parse result file
         try:
@@ -188,7 +189,7 @@ async def run_with_limits(
             # 'run' code realtime mem
             params = text.split(' ')
             if len(params) < 4 or params[0] != 'run':
-                logger.error(f'invalid runner output {repr(text)}')
+                logger.error('invalid runner output %(output)s', { 'output': repr(text) }, 'runner:output')
                 raise Exception('Invalid runner output')
             program_code, realtime, mem = [int(x) for x in params[1:4]]
             usage_is_accurate = True
@@ -281,7 +282,7 @@ assert chown is not None
 chown: str
 
 def chown_back(path: Union[PosixPath, str]):
-    logger.debug(f'about to chown_back {path}')
+    logger.debug('about to chown_back %(path)s', { 'path': path }, 'tempdir:chown_back')
     cwd = PosixPath(path)
     if not cwd.is_dir():
         cwd = cwd.parent
@@ -298,7 +299,7 @@ def chown_back(path: Union[PosixPath, str]):
         .wait(timeout=10.0)
 
 def chown_to_user(path: Union[PosixPath, str]):
-    logger.debug(f'about to chown_to_user {path}')
+    logger.debug('about to chown_to_user %(path)s', { 'path': path }, 'tempdir:chown_to_user')
     cwd = PosixPath(path)
     if not cwd.is_dir():
         cwd = cwd.parent

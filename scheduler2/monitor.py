@@ -52,7 +52,7 @@ async def get_runner_status(runner_id: str):
         if not isinstance(heartbeat, float):
             heartbeat = None
         msg = f'Cannot get runner status: {format_exc(e)}'
-        logger.warn(msg)
+        logger.warn(msg, { 'error': e }, 'runner:status')
         return RunnerStatus('invalid', msg, heartbeat)
 
 
@@ -61,7 +61,7 @@ watch_tasks: Dict[str, Task] = {}
 def wait_until_offline(runner_id: str):
     if runner_id in watch_tasks:
         return watch_tasks[runner_id]
-    logger.debug(f'Polling runner {runner_id} for offline signal')
+    logger.debug('Polling runner %(id)s for offline signal', { 'id': runner_id }, 'runner:poll')
     async def task():
         runner_info = RedisQueues.RunnerInfo(runner_id, '')
         key = redis_queues.runner(runner_info).heartbeat

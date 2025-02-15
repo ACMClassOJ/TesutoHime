@@ -13,4 +13,4 @@ setup_logging(log_dir)
 access_logger = getLogger('aiohttp.access')
 access_logger.propagate = False
 access_log_file = log_dir / 'access.log'
-add_handler(INFO, WatchedFileHandler(access_log_file), access_logger)
+add_handler(INFO, WatchedFileHandler(access_log_file), access_logger, json_output=True)

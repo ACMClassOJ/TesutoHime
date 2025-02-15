@@ -5,6 +5,7 @@ After=network.target
 [Service]
 Type=idle
 User=ojsched
+Group=ojsched
 WorkingDirectory=/opt/TesutoHime/
 ExecStart=/opt/TesutoHime/venv/python3 -m scheduler2.main
 Restart=always

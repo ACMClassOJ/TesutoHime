@@ -16,7 +16,7 @@ from commons.util import format_exc
 class JsonFormatter(Formatter):
     def __init__(self, json_output = False):
         super().__init__('%(message)s', '%c')
-        self.x_amz_regex = compile('\?X-Amz.+')
+        self.x_amz_regex = compile(r'\?X-Amz.+')
         self.json_output = json_output
 
     def serialize(self, object):

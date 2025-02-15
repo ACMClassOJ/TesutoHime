@@ -176,9 +176,6 @@ class SchedulerConfig:
 
 class JudgeConfig:
     Judge_Each_Page = 15                  #评测详情界面每页显示多少题目
-    Max_Duration = 120                    #judger上次向web发送心跳超过这个时间判定为下线，单位s
-    Web_Server_Secret = 'web_secret'      #web_secret，judger需要此密钥来向web服务器通信
-                                            #建议生成随机字符串构成一个较强的密钥
 
 class ProblemConfig:
     Max_Code_Length = 16384 * 8           #代码提交最多接受长度上限

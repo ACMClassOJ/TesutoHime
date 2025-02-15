@@ -11,7 +11,7 @@ Type=notify
 NotifyAccess=main
 # the specific user that our service will run as
 User=ojweb
-Group=nogroup
+Group=ojweb
 # this user can be transiently created by systemd
 # DynamicUser=true
 RuntimeDirectory=gunicorn

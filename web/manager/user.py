@@ -78,7 +78,7 @@ class UserManager:
         return db.scalar(select(User).where(User.username_lower == func.lower(username)))
 
     @staticmethod
-    def get_users_by_student_id(student_id: str) -> list[User]:
+    def get_users_by_student_id(student_id: str) -> Sequence[User]:
         return db.scalars(select(User).where(User.student_id == student_id)).all()
 
     @staticmethod

@@ -11,9 +11,10 @@ class DatabaseConfig:
 class RedisConfig:
     host = 'localhost'
     port = 6379
+    username = 'web'
     password = 'Progynova'
     db = 0
-    prefix = 'oj:'
+    prefix = 'web:'
 
 
 class S3Config:

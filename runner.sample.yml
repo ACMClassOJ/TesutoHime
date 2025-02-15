@@ -9,10 +9,11 @@ log_dir: /var/log/oj/runner
 worker_uid: 100001
 
 redis:
-  prefix: oj
+  prefix: 'task:'
   connection:
     host: 10.0.0.2
     port: 6379
+    username: runner
     password: xxxxxxxx
     db: 1
 

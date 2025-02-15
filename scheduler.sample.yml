@@ -20,9 +20,10 @@ s3:
     artifacts: oj-artifacts
 
 redis:
-  prefix: oj
+  prefix: 'task:'
   connection:
     host: 10.0.0.2
     port: 6379
+    username: scheduler
     password: xxxxxxxx
     db: 1

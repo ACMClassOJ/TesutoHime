@@ -1,4 +1,4 @@
-import web.logging_
+import web.logging_ as logging_
 
 import json
 import os
@@ -267,7 +267,7 @@ def login_jaccount():
     return redirect(ja_url, FOUND)
 
 
-def get_student_id_from_access_token(access_token: str) -> Optional[str]:
+def get_student_id_from_access_token(access_token: str) -> str:
     res = requests.get(
         JAccountConfig.PROFILE_URL, headers={'Authorization': f'Bearer {access_token}'}
     )
@@ -1822,7 +1822,7 @@ oj.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400
 
 # url_for(xxx,_external=True) should give correct scheme
 # nginx should set `proxy_set_header X-Forwarded-Proto $scheme;`
-oj.wsgi_app = ProxyFix(oj.wsgi_app, x_proto=1, x_host=1)
+oj.wsgi_app = ProxyFix(oj.wsgi_app, x_proto=1, x_host=1)  # type: ignore
 
 
 def appcontext_pushed_log(*args, **kwargs):

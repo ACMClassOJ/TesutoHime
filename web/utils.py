@@ -39,7 +39,7 @@ def generate_s3_public_url(*args, **kwargs):
 
 
 def redis_connect():
-    return redis.StrictRedis(host=RedisConfig.host, port=RedisConfig.port, password=RedisConfig.password, db=RedisConfig.db, decode_responses=True)
+    return redis.StrictRedis(decode_responses=True, **RedisConfig.connection)  # type: ignore
 
 
 def readable_date(time) -> str:

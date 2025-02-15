@@ -66,14 +66,33 @@ python3 -m scripts.db.init
 
 ## 配置 redis
 
-修改 redis 的配置文件（一般位于 `/etc/redis/redis.conf`），添加如下这一行来设置密码。
+修改 redis 的配置文件（一般位于 `/etc/redis/redis.conf`），添加如下这一行来设置密码文件。
 ```
-requirepass Progynova
+aclfile /etc/redis/users.acl
 ```
+
+为了权限最小化，我们给评测机、调度机和 web 各分配一个 redis 用户。
+
+首先在命令行打开 redis cli:
+
+```sh
+redis-cli
+```
+
+然后执行:
+
+```
+ACL SETUSER default >xxxxxxxx
+ACL SETUSER runner on >xxxxxxxx ~task:* +lrem +expire +del +brpoplpush +set +lpush +brpop +rpop
+ACL SETUSER scheduler on >xxxxxxxx ~task:* +expire +get +lpush +brpop +lrange
+ACL SETUSER web on >xxxxxxxx ~web:* +expire +del +get +set +hget +hset
+```
+
+其中 xxxxxxxx 是密码。
 
 ## 配置 Web 服务器
 
-创建 Web 运行日志目录、填选服务缓存目录，（路径可自定义） 下文分别称其路径为``web_log_url``、``quiz_cache_dir``
+创建 Web 运行日志目录、填选服务缓存目录，（路径可自定义） 下文分别称其路径为 ``web_log_url``、``quiz_cache_dir``
 
 ```sh
 sudo mkdir -p /var/log/oj/web/ /var/cache/oj/web/
@@ -106,9 +125,10 @@ class DatabaseConfig:
 class RedisConfig:
     host = 'localhost'
     port = 6379
+    username = 'web'
     password = 'Progynova'
     db = 0
-    prefix = 'OJ_'
+    prefix = 'web:'
 
 class S3Config: # 文件存储配置
     # S3 反代地址

@@ -2,7 +2,7 @@ from asyncio import Semaphore, sleep
 from dataclasses import dataclass, is_dataclass
 from http.client import OK
 from logging import getLogger
-from typing import Dict, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Optional, Type, TypeVar, Union
 from urllib.parse import quote, urljoin
 
 from aiohttp import request
@@ -18,7 +18,7 @@ logger = getLogger(__name__)
 
 async def make_request(path, body):
     if isinstance(body, str):
-        args = {'data': body}
+        args: Dict[Any, Any] = {'data': body}
     else:
         args = {'json': dump_dataclass(body)}
     url = urljoin(web_base_url, path)

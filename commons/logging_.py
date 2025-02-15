@@ -32,7 +32,9 @@ class JsonFormatter(Formatter):
             return { k: self.serialize(v) for k, v in object.items() }
         if not is_dataclass(object):
             return self.remove_signatures(str(object))
-        return { k: self.serialize(v) for k, v in object.__dict__.items() } + { '$type': object.__class__.__name__ }
+        d = { k: self.serialize(v) for k, v in object.__dict__.items() }
+        d['$type'] = object.__class__.__name__
+        return d
 
     def remove_signatures(self, msg):
         return self.x_amz_regex.sub('\'', msg)

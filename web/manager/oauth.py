@@ -1,15 +1,16 @@
 __all__ = ('OauthManager',)
 
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 from datetime import timedelta
-from typing import Iterable, List, Optional, Tuple
-from base64 import urlsafe_b64encode, urlsafe_b64decode
-from urllib.parse import SplitResult, urlsplit
 from os import urandom
+from typing import Iterable, List, Optional, Tuple
+from urllib.parse import SplitResult, urlsplit
 
 from flask import g
 from sqlalchemy import select, update
 
 from commons.models import AccessToken, OauthApp
+from web.config import RedisConfig
 from web.const import api_scopes
 from web.utils import db, redis_connect
 
@@ -54,13 +55,13 @@ class OauthManager:
         code = randtoken()
         redirect_uri = urlsafe_b64encode(redirect_uri.encode()).decode()
         scope = urlsafe_b64encode(' '.join(scopes).encode()).decode()
-        redis.set(f'oauth:code:{code}', f'{app.id}:{g.user.id}:{redirect_uri}:{scope}', ex=60)
+        redis.set(f'{RedisConfig.prefix}oauth:code:{code}', f'{app.id}:{g.user.id}:{redirect_uri}:{scope}', ex=60)
         return code
 
     # returns userid, scopes
     @staticmethod
     def use_code(app: OauthApp, redirect_uri: Optional[str], code: str) -> Optional[Tuple[int, List[str]]]:
-        key = f'oauth:code:{code}'
+        key = f'{RedisConfig.prefix}oauth:code:{code}'
         info = redis.get(key)
         delcount = redis.delete(key)
         if delcount < 1: return None

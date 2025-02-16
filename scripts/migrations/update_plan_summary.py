@@ -1,4 +1,5 @@
 from asyncio import run
+from traceback import print_exception
 
 from botocore.exceptions import ClientError
 from sqlalchemy import select, update
@@ -18,6 +19,10 @@ async def process_problem(problem_id):
         summary = dump_dataclass(summarize(plan))
     except ClientError:
         print(f'Unable to get judge plan for problem {problem_id}')
+        summary = None
+    except Exception as e:
+        print(f'Unable to generate plan summary for problem {problem_id}')
+        print_exception(e)
         summary = None
     stmt = update(Problem) \
         .where(Problem.id == problem_id) \

@@ -11,6 +11,10 @@ h1 {
     font-size: 1rem;
 }
 
+.d-contents {
+    display: contents;
+}
+
 .form-text {
     margin-top: .25rem;
     font-size: .875em;
@@ -181,6 +185,19 @@ body .card-header {
     text-align: center;
 }
 
+@keyframes countdown-circle {
+    from {
+        /* 2 * pi * r = 30 * pi */
+        stroke-dasharray: 94.24777960769379,0;
+    }
+    to {
+        stroke-dasharray: 0,94.24777960769379;
+    }
+}
+.auto-refresh--animate .auto-refresh__circle {
+    animation: 3s countdown-circle linear;
+}
+
 .judge-group {
     border: .0625rem solid #dee2e6;
     border-bottom: none;
@@ -197,6 +214,8 @@ body .card-header {
     font-weight: bold;
     display: flex;
     justify-content: space-between;
+    column-gap: 1em;
+    flex-wrap: wrap;
 }
 
 .judge-group__testpoint:nth-of-type(2n+1) > * {

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+set -e
+IFS=$'\n'
+
+bindmount () {
+  if [ ! -e "$2" ]; then
+    if [ -d "$1" ]; then
+      mkdir -p "$2"
+    else
+      mkdir -p "$(dirname "$2")"
+      touch "$2"
+    fi
+  fi
+  mount --rbind "$1" "$2"
+}
+
+rootdir=/tmp/acmoj-stdenv-chroot
+datadir="$ACMOJ_STDENV_DATA_DIR"
+wd="$ACMOJ_STDENV_WORKING_DIR"
+rm -rf $rootdir
+
+bindmount "$datadir/nix" "$rootdir/nix"
+mkdir -p "$rootdir/tmp"
+mount -t tmpfs tmp "$rootdir/tmp"
+
+for env in $(cat "$datadir/env"); do
+  export "$env"
+done
+for dir in $(ls "$datadir/result"); do
+  bindmount "$datadir/result/$dir" "$rootdir/$dir"
+done
+IFS=' '
+for dir in /home /var /run /mnt /srv /dev /sys /proc; do
+  if [ -e "$dir" ]; then
+    bindmount "$dir" "$rootdir/$dir"
+  fi
+done
+IFS=$'\n'
+if [ ! -e "$rootdir/$wd" ]; then
+  bindmount "$wd" "$rootdir/$wd"
+fi
+
+resolvconf="$rootdir/acmoj/resolv.conf"
+mkdir "$(dirname "$resolvconf")"
+cat /etc/resolv.conf > "$resolvconf"
+
+export SHELL=/bin/bash
+
+if [ $# -gt 0 ]; then
+  exec chroot "$rootdir" /bin/bash -c "cd '$wd'; exec \$@" -- $@
+else
+  exec chroot "$rootdir" /bin/bash -c "cd '$wd'; exec /bin/bash --login --noprofile -i"
+fi

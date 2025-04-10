@@ -1,0 +1,39 @@
+#!/bin/bash
+
+set -e
+IFS=$'\n'
+
+wd="$(pwd)"
+target="$1"
+target="${target:=all}"
+cd "$(dirname "$0")/.."
+
+echo "Building environment..."
+make "profiles/$target-shell/requisites"
+make "profiles/$target-shell/env"
+echo "Environment built."
+
+tempdir="$(mktemp -d)"
+out="$tempdir/acmoj-stdenv"
+echo "Packing into $out..."
+
+mkdir -p "$out/data"
+cp "bin/pack-scripts/shell" "$out/shell"
+cp "bin/pack-scripts/init" "$out/data/init"
+chmod +x "$out/shell" "$out/data/init"
+
+cd "profiles/$target-shell"
+
+for dir in $(cat requisites); do
+  mkdir -p "$out/data/$(dirname "$dir")"
+  cp -R "$dir" "$out/data/$(dirname "$dir")"
+done
+cp env "$out/data/env"
+ln -s ".$(readlink result)" "$out/data/result"
+
+echo "Making tarball..."
+tar -I zstd -cf "$wd/acmoj-stdenv.tar.zst" -C "$tempdir" .
+
+echo "Removing temp dir..."
+chmod -R u+w "$out"
+rm -rf "$tempdir"

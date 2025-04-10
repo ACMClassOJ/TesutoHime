@@ -39,6 +39,7 @@ FAR_FUTURE_TIME = datetime(9999, 12, 31, 8, 42, 42)
 completion_criteria_max_length = 512
 max_pic_size = 10485760
 
+MAX_ATTACHMENT_SIZE_BYTES = 100 * 1024 ** 2  # 100 MiB
 
 @dataclass
 class JudgeStatusInfo:

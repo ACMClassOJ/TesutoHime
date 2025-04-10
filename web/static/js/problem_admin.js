@@ -592,6 +592,236 @@ $(() => {
     })
 
 
+    // attachments
+
+    ; {
+        const listEl = document.querySelector('.attachments__list')
+        const filePickerContainer = document.querySelector('.attachments__file-picker')
+        const filePickerInput = filePickerContainer.querySelector('input')
+        const uploadDetailsEl = document.querySelector('.attachments__upload')
+        const uploadList = uploadDetailsEl.querySelector('tbody')
+        const uploadActionsEl = document.querySelector('.attachments__upload__actions')
+        const uploadButton = uploadActionsEl.querySelector('.action__upload')
+        const uploadStatusEl = document.querySelector('.attachments__upload__status')
+        const uploadStatusErrors = document.querySelector('.attachments__upload__errors')
+        const uploadStatusText = uploadStatusEl.querySelector('.status__text')
+        const uploadStatusCount = uploadStatusEl.querySelector('.status__count')
+
+        const formatFileSize = size => {
+            for (const unit of [ 'B', 'KiB', 'MiB', 'GiB', 'TiB' ]) {
+                if (size < 2048 || unit === 'TiB') {
+                    if (unit === 'B') return `${Math.floor(size)} ${unit}`
+                    if (size < 10) return `${size.toFixed(2)} ${unit}`
+                    return `${size.toFixed(1)} ${unit}`
+                }
+                size /= 1024
+            }
+        }
+
+        let attachments = []
+
+        const reloadAttachments = async () => {
+            try {
+                attachments = await (await fetch(getUrl('attachment'))).json()
+                if (attachments.length === 0) {
+                    listEl.setAttribute('hidden', '')
+                } else {
+                    listEl.removeAttribute('hidden')
+                }
+
+                const container = listEl.querySelector('tbody')
+                container.innerHTML = ''
+                for (const { name, size, user, url } of attachments) {
+                    const tr = document.createElement('tr')
+                    container.appendChild(tr)
+                    ; {
+                        const td = document.createElement('td')
+                        tr.appendChild(td)
+                        const a = document.createElement('a')
+                        td.appendChild(a)
+                        a.href = url
+                        a.target = '_blank'
+                        a.textContent = name
+                    }
+                    for (const x of [ formatFileSize(size), user ]) {
+                        const td = document.createElement('td')
+                        tr.appendChild(td)
+                        td.textContent = x
+                    }
+                    const td = document.createElement('td')
+                    tr.appendChild(td)
+                    const button = document.createElement('button')
+                    td.appendChild(button)
+                    button.textContent = '删除'
+                    button.className = 'btn btn-primary btn-sm'
+                    button.addEventListener('click', async e => {
+                        e.preventDefault()
+                        if (!confirm(`确定要删除附件“${name}”吗？`)) return
+                        const res = await fetch(url, { method: 'delete' })
+                        if (!res.ok) {
+                            alert(`删除附件出错（${res.status}）：${await res.text()}`)
+                        }
+                        await reloadAttachments()
+                        validateForm()
+                    })
+                }
+            } catch (e) {
+                alert(`无法获取附件列表，请刷新重试（${e}）`)
+            }
+        }
+        document.getElementById('attachments-tab-btn').addEventListener('click', reloadAttachments)
+
+        const validateForm = () => {
+            const filenames = new Set(attachments.map(x => x.name))
+            const inputs = Array.from(uploadList.querySelectorAll('input'))
+            let valid = true
+            for (const input of inputs) {
+                const name = input.value.normalize('NFKC').trim()
+                let inputValid = false
+                if (name.length === 0) {
+                    input.title = '文件名不能为空'
+                } else if (name === '.' || name === '..') {
+                    input.title = '文件名不能为 . 或 ..'
+                } else if (name.includes('/')) {
+                    input.title = '文件名中不能包含 /'
+                } else if (filenames.has(name)) {
+                    input.title = '文件名与已有附件重复，请删除现有附件后上传'
+                } else {
+                    filenames.add(name)
+                    inputValid = true
+                    input.classList.remove('is-invalid')
+                    input.title = ''
+                }
+                if (!inputValid) {
+                    input.classList.add('is-invalid')
+                }
+                valid &&= inputValid
+            }
+            uploadButton.disabled = !valid
+        }
+
+        const uploadFile = async (el, name) => {
+            const file = el.file
+            const urlRes = await fetch(getUrl('attachment'), {
+                method: 'POST',
+                body: new URLSearchParams({
+                    name,
+                    length: file.size,
+                }),
+            })
+            if (!urlRes.ok) {
+                throw new Error(`无法创建文件 (${urlRes.status}): ${await urlRes.text()}`)
+            }
+            const url = (await urlRes.text()).trim()
+            return await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest()
+                xhr.open('PUT', url, true)
+                xhr.setRequestHeader('If-None-Match', '*')
+                xhr.upload.onprogress = xhr.onprogress = event => {
+                    const progress = event.loaded / event.total
+                    el.style.setProperty('--progress', String(progress))
+                }
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState !== 4) return
+                    if (xhr.status === 413) {
+                        reject(new Error('文件过大'))
+                        return
+                    }
+                    if (xhr.status < 200 || xhr.status > 299) {
+                        reject(new Error(`未知错误 (${xhr.status})`))
+                        return
+                    }
+                    el.style.setProperty('--progress', '1')
+                    resolve()
+                }
+                xhr.onerror = e => {
+                    reject(new Error(`未知错误：${e}`))
+                }
+                xhr.send(file)
+            })
+        }
+
+        filePickerInput.addEventListener('change', () => {
+            const files = Array.from(filePickerInput.files)
+            if (files.length === 0) return
+            filePickerInput.value = null
+
+            filePickerContainer.setAttribute('hidden', '')
+            uploadDetailsEl.removeAttribute('hidden')
+            uploadActionsEl.removeAttribute('hidden')
+            uploadStatusEl.setAttribute('hidden', '')
+
+            uploadList.innerHTML = ''
+            for (const file of files) {
+                const tr = document.createElement('tr')
+                uploadList.appendChild(tr)
+                tr.file = file
+                ; {
+                    const td = document.createElement('td')
+                    tr.appendChild(td)
+                    const input = document.createElement('input')
+                    td.appendChild(input)
+                    input.className = 'form-control'
+                    input.value = file.name
+                    input.addEventListener('change', validateForm)
+                }
+                for (const x of [ formatFileSize(file.size), '待上传' ]) {
+                    const td = document.createElement('td')
+                    tr.appendChild(td)
+                    td.textContent = x
+                }
+            }
+            validateForm()
+        })
+        const back = () => {
+            uploadButton.removeAttribute('hidden')
+            uploadDetailsEl.setAttribute('hidden', '')
+            uploadStatusErrors.innerHTML = ''
+            uploadDetailsEl.querySelector('tbody').innerHTML = ''
+            filePickerContainer.removeAttribute('hidden', '')
+        }
+        uploadActionsEl.querySelector('.action__back').addEventListener('click', back)
+        uploadButton.addEventListener('click', async e => {
+            e.preventDefault()
+            const files = Array.from(uploadList.querySelectorAll('tr')).map(el => {
+                const input = el.querySelector('input')
+                const name = input.value.trim()
+                input.replaceWith(name)
+                return { el, name }
+            })
+            uploadStatusErrors.innerHTML = ''
+            uploadActionsEl.setAttribute('hidden', '')
+            uploadStatusEl.removeAttribute('hidden')
+            for (const [ i, { el, name } ] of files.entries()) {
+                const statusEl = el.querySelector('td:last-child')
+                statusEl.textContent = '上传中'
+                uploadStatusText.textContent = `正在上传 ${name}`
+                uploadStatusCount.textContent = `(${i + 1}/${files.length})`
+                try {
+                    await uploadFile(el, name)
+                    statusEl.textContent = '完成'
+                } catch (e) {
+                    statusEl.textContent = '失败'
+                    const li = document.createElement('li')
+                    uploadStatusErrors.appendChild(li)
+                    li.textContent = `上传文件 ${name} 失败：${e}`
+                }
+            }
+
+            uploadActionsEl.removeAttribute('hidden')
+            uploadStatusEl.setAttribute('hidden', '')
+            reloadAttachments()
+            if (uploadStatusErrors.children.length === 0) {
+                alert('上传成功！')
+                back()
+            } else {
+                uploadButton.setAttribute('hidden', '')
+                alert('部分文件上传失败')
+            }
+        })
+    }
+
+
     function generateConfig() {
         let tableGroups = $('#tableGroups'), tableDetails = $('#tableDetails')
         const Groups = []

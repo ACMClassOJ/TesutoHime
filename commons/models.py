@@ -99,6 +99,8 @@ class Course(UseTimestamps, Base):
     term_id: Mapped[Optional[term_fk]]
     term: Mapped[Optional[Term]] = relationship(back_populates='courses')
 
+    attachment_quota_bytes: Mapped[int] = mapped_column(server_default='1073741824')
+
     groups: Mapped[List['Group']] = relationship(back_populates='course', order_by='Group.id')
     enrollments: Mapped[Set['Enrollment']] = relationship(back_populates='course')
     admin_enrollments: Mapped[Set['Enrollment']] = relationship(primaryjoin='and_(Course.id == Enrollment.course_id, Enrollment.admin)', viewonly=True)
@@ -214,6 +216,7 @@ class Problem(UseTimestamps, Base):
     languages_accepted: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text), server_default='{}')
     allow_public_submissions: Mapped[bool] = mapped_column(server_default=text('true'))
 
+    attachments: Mapped[List['ProblemAttachment']] = relationship(back_populates='problem', order_by='asc(ProblemAttachment.name)')
     contests: Mapped[Set['Contest']] = relationship(
         secondary='contest_problem',
         passive_deletes=True,
@@ -223,6 +226,21 @@ class Problem(UseTimestamps, Base):
     privileges: Mapped[Set['ProblemPrivilege']] = relationship(back_populates='problem')
 
 problem_fk = Annotated[int, mapped_column(ForeignKey(Problem.id), index=True)]
+
+
+class ProblemAttachment(UseTimestamps, Base):
+    __table_args__ = (
+        Index('ix_problem_attachment_problem_id_name', 'problem_id', 'name', unique=True),
+    )
+
+    id: Mapped[intpk]
+    problem_id: Mapped[problem_fk]
+    problem: Mapped[Problem] = relationship(back_populates='attachments')
+    user_id: Mapped[user_fk]
+    user: Mapped[User] = relationship()
+
+    name: Mapped[str] = mapped_column(index=True)
+    size_bytes: Mapped[int]
 
 
 class ProblemPrivilegeType(Enum):

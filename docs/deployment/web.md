@@ -157,6 +157,8 @@ class S3Config: # 文件存储配置
         submissions = 'oj-submissions'
         # 图床
         images = 'oj-images'
+        # 题目附件
+        attachments = 'oj-attachments'
 
 
 class LoginConfig:                        #登录过期时间，单位s
@@ -216,6 +218,10 @@ location /OnlineJudge/oj-problems/ {
 }
 location /OnlineJudge/oj-images/ {
   proxy_pass http://10.0.0.1:9000/oj-images/;
+  add_header Content-Disposition "attachment";
+}
+location /OnlineJudge/oj-attachments/ {
+  proxy_pass http://10.0.0.1:9000/oj-attachments/;
   add_header Content-Disposition "attachment";
 }
 location /OnlineJudge/oj-submissions/ {

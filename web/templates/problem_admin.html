@@ -14,6 +14,7 @@
 <link rel="upload-url" href="{{ url_for('.problem_upload_url', problem=problem) }}">
 <link rel="update-plan" href="{{ url_for('.problem_update_plan', problem=problem) }}">
 <link rel="description" href="{{ url_for('.problem_description', problem=problem) }}">
+<link rel="attachment" href="{{ url_for('.problem_attachment_index', problem=problem) }}">
 <link rel="pic-url" href="{{ url_for('.admin_pic_url') }}">
 <link rel="editor.md-lib" href="{{ url_for('.static', filename='lib/editor.md/lib/') }}">
 {% endblock %}
@@ -27,6 +28,7 @@
             'overview': '基本信息',
             'privileges': '权限',
             'description': '题面',
+            'attachments': '附件',
             'data-zip': '数据（zip）',
             'data-gui': '数据（GUI）',
             'judge': '评测',
@@ -122,15 +124,12 @@
             </ul>
             {% endif %}
             <h3>删除题目</h3>
-            {% if submission_count > 0 or problem.contests | length > 0 %}
-            {% if submission_count > 0 and problem.contests | length > 0 %}
-            当前题目已有提交记录，且已存在于比赛/作业中，
-            {% elif submission_count > 0 %}
-            当前题目已有提交记录，
-            {% elif problem.contests | length > 0 %}
-            当前题目已存在于比赛/作业中，
-            {% endif %}
-            删除题目可能会导致不可预料的后果，请联系 OJ 运维组删除题目。
+            {%- set bad_phrases = [] -%}
+            {%- if submission_count > 0             %}{% do bad_phrases.append('已有提交记录') %}{% endif -%}
+            {%- if problem.contests | length > 0    %}{% do bad_phrases.append('已存在于比赛/作业中') %}{% endif -%}
+            {%- if problem.attachments | length > 0 %}{% do bad_phrases.append('存有附件') %}{% endif -%}
+            {% if bad_phrases | length > 0 %}
+            <p>当前题目{{ '、'.join(bad_phrases) }}，删除题目可能会导致不可预料的后果，请联系 OJ 运维组删除题目。</p>
             {% else %}
             <p>删除题目将会不可逆地从数据库中删除题目的基本信息及题面信息。如您确认要删除题目，请在下方文本框中输入本题编号以确认：</p>
             <form method="POST">
@@ -269,6 +268,69 @@
                     <button class="btn btn-outline-primary mt-auto" type="submit">保存</button>
                 </div>
             </form>
+        </div>
+
+        <div {{ begin_tab('attachments') }}>
+            <div class="attachments__list" hidden>
+                <h3>题目附件</h3>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>文件名</th>
+                                <th>大小</th>
+                                <th>上传者</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <hr>
+            </div>
+            <h3>上传附件</h3>
+            <div class="attachments__file-picker">
+                <p>您可以将题目的下发文件包、公开的大样例等题目相关文件上传至 ACMOJ，题目发布后，用户即可直接下载这些文件。</p>
+                <p>禁止上传的内容：</p>
+                <ul>
+                    <li>违反法律法规、公序良俗，或侵犯他人合法权益的</li>
+                    <li>与题目显著无关的</li>
+                    <li>互联网上可以公开下载的（请勿将附件功能用于加速下载 GitHub 等网站上已有的文件）</li>
+                </ul>
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <div class="custom-file">
+                            <label class="custom-file-label" for="attachments-input">选择文件</label>
+                            <input class="custom-file-input" type="file" name="file" id="attachments-input" multiple>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="attachments__upload" hidden>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>文件名</th>
+                                <th>大小</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="attachments__upload__status" hidden>
+                    <p>
+                        <span class="status__text"></span>
+                        <span class="status__count float-right"></span>
+                    </p>
+                </div>
+                <ul class="attachments__upload__errors text-red"></ul>
+                <div class="attachments__upload__actions float-right">
+                    <button class="btn btn-outline-primary action__back">返回</button>
+                    <button class="btn btn-primary action__upload">上传</button>
+                </div>
+            </div>
         </div>
 
         <div {{ begin_tab('data-zip') }}>
@@ -534,5 +596,5 @@ window.problemId = {{ problem.id }}
 <script src="{{ url_for('.static', filename = 'lib/highlight.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/marked.min.js') }}"></script>
 <script src="{{ url_for('.static', filename = 'lib/editor.md/editormd.min.js') }}"></script>
-<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20241012"></script>
+<script src="{{ url_for('.static', filename = 'js/problem_admin.js') }}?v=20250410"></script>
 {% endblock %}

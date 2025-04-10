@@ -36,6 +36,7 @@ class S3Config:
         problems = 'oj-problems'
         submissions = 'oj-submissions'
         images = 'oj-images'
+        attachments = 'oj-attachments'
 
 
 class LoginConfig:                        #登录过期时间，单位s

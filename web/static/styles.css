@@ -564,3 +564,24 @@ code h-hws, code h-hws[hidden], h-hws.quote-inner, h-hws.quote-outer:lang(zh-CN)
     cursor: help;
     text-decoration: underline dashed;
 }
+
+.attachments__upload tbody tr {
+    position: relative;
+}
+.attachments__upload tbody td {
+    position: relative;
+    z-index: 2;
+    vertical-align: middle;
+}
+.attachments__upload tbody tr::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(201, 78, 109, .1);
+    transform: scaleX(var(--progress, 0));
+    transform-origin: 0 0;
+    transition: transform 0.1s ease;
+}

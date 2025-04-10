@@ -753,6 +753,41 @@ def problem_data_zip(problem: Problem):
     }, ExpiresIn=3600)
     return redirect(url, SEE_OTHER)
 
+@web.route('/problem/<problem:problem>/attachment/', methods=['GET', 'POST'])
+def problem_attachment_index(problem: Problem):
+    if request.method == 'POST':
+        if not g.can_write:
+            abort(FORBIDDEN)
+        name = request.form['name']
+        size_bytes = int(request.form['length'])
+        try:
+            attachment = ProblemManager.create_attachment(problem, name, size_bytes)
+        except ValueError as e:
+            abort(make_response(str(e), BAD_REQUEST))
+        return ProblemManager.upload_url_of_attachment(attachment)
+
+    return [
+        {
+            'name': x.name,
+            'size': x.size_bytes,
+            'user': x.user.username if g.can_write else None,
+            'url': url_for('.problem_attachment', problem=problem, name=x.name),
+        } for x in problem.attachments
+    ]
+
+@web.route('/problem/<problem:problem>/attachment/<name>', methods=['GET', 'DELETE'])
+def problem_attachment(problem: Problem, name: str):
+    attachment = ProblemManager.get_attachment(problem, name)
+    if attachment is None: abort(NOT_FOUND)
+
+    if request.method == 'DELETE':
+        if not g.can_write:
+            abort(FORBIDDEN)
+        ProblemManager.delete_attachment(attachment)
+        return make_response('', NO_CONTENT)
+
+    return redirect(ProblemManager.download_url_of_attachment(attachment))
+
 
 @web.route('/status')
 @require_logged_in

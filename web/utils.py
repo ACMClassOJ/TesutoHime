@@ -75,6 +75,21 @@ def min_max(seq, neg_is_inf: bool = False):
     l = [x if not neg_is_inf or x >= 0 else inf for x in seq]
     return min(l), max(l)
 
+def format_file_size(size_bytes: int) -> str:
+    if size_bytes < 0:
+        raise ValueError('File size cannot be negative')
+    units = [ 'B', 'KiB', 'MiB', 'GiB', 'TiB' ]
+    size = float(size_bytes)
+    for unit in units:
+        if size < 2048 or unit == 'TiB':
+            if unit == 'B':
+                return f'{size:.0f} {unit}'
+            if size < 10:
+                return f'{size:.2f} {unit}'
+            else:
+                return f'{size:.1f} {unit}'
+        size = size / 1024
+
 def is_api_call() -> bool:
     return request.path.startswith(url_for('web.api.index'))
 

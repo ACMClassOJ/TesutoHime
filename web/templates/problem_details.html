@@ -160,6 +160,21 @@
         </div>
         {%- endif -%}
 
+        {%- if problem.attachments | length > 0 -%}
+        <h3>附件</h3>
+        <ul>
+            {%- for file in problem.attachments -%}
+            <li>
+                <a href="{{ url_for('.problem_attachment', problem=problem, name=file.name) }}" target="_blank">
+                    <i class="fa fa-download"></i>
+                    <span dir="ltr">{{ file.name }}</span>
+                    <span>({{ g.utils.format_file_size(file.size_bytes) }})</span>
+                </a>
+            </li>
+            {%- endfor -%}
+        </ul>
+        {%- endif -%}
+
         {%- if g.is_admin -%}
         <h3>题目归属信息</h3>
         <p>题目属于的班级：<a href="{{ url_for('.course', course=problem.course) }}">{{ problem.course.name }}</a></p>

@@ -89,6 +89,7 @@ def format_file_size(size_bytes: int) -> str:
             else:
                 return f'{size:.1f} {unit}'
         size = size / 1024
+    assert False  # make mypy happy
 
 def is_api_call() -> bool:
     return request.path.startswith(url_for('web.api.index'))

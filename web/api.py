@@ -1,6 +1,6 @@
 from functools import wraps
 from http.client import (BAD_REQUEST, CREATED, FORBIDDEN,
-                         INTERNAL_SERVER_ERROR, NO_CONTENT, UNAUTHORIZED)
+                         INTERNAL_SERVER_ERROR, NO_CONTENT, NOT_FOUND, UNAUTHORIZED)
 from typing import NoReturn, Optional
 from urllib.parse import parse_qsl, urlencode
 
@@ -263,6 +263,13 @@ def problem(problem: Problem):
 
     import commons.task_typing
     res['plan_summary'] = load_dataclass(problem.plan_summary, commons.task_typing.__dict__)
+    res['attachments'] = [
+        {
+            'name': x.name,
+            'size_bytes': x.size_bytes,
+            'url': ProblemManager.download_url_of_attachment(x),
+        } for x in problem.attachments
+    ]
 
     return jsonify(res)
 

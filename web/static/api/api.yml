@@ -600,6 +600,21 @@ components:
           $ref: '#/components/schemas/JudgePlanSummary'
           description: 评测及评分方式，含运行时限制
           nullable: true
+        attachments:
+          type: array
+          description: 题目附件
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: 'handout.tar.gz'
+              size_bytes:
+                type: integer
+              url:
+                type: string
+                example: '/OnlineJudge/oj-attachments/1000/handout.tar.gz?X-Amz-Algorithm=...'
+                description: 此 URL 自带授权，使用时请勿携带 Authorization header
         allow_public_submissions:
           type: boolean
           description: 是否允许公开代码
@@ -675,6 +690,7 @@ components:
         code_url:
           type: string
           example: /OnlineJudge/oj-submissions/42.code?X-Amz-Algorithm=...
+          description: 此 URL 自带授权，使用时请勿携带 Authorization header
         abort_url:
           type: string
           example: /OnlineJudge/api/v1/submission/42/abort

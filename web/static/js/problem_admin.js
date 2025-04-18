@@ -650,20 +650,30 @@ $(() => {
                     }
                     const td = document.createElement('td')
                     tr.appendChild(td)
-                    const button = document.createElement('button')
-                    td.appendChild(button)
-                    button.textContent = '删除'
-                    button.className = 'btn btn-primary btn-sm'
-                    button.addEventListener('click', async e => {
-                        e.preventDefault()
-                        if (!confirm(`确定要删除附件“${name}”吗？`)) return
-                        const res = await fetch(url, { method: 'delete' })
-                        if (!res.ok) {
-                            alert(`删除附件出错（${res.status}）：${await res.text()}`)
-                        }
-                        await reloadAttachments()
-                        validateForm()
-                    })
+                    ; {
+                        const button = document.createElement('button')
+                        td.appendChild(button)
+                        button.textContent = '复制链接'
+                        button.className = 'btn btn-primary btn-sm'
+                        button.setAttribute('data-clipboard-text', `[attachment]${name}[/attachment]`)
+                        new ClipboardJS(button)
+                    }
+                    ; {
+                        const button = document.createElement('button')
+                        td.appendChild(button)
+                        button.textContent = '删除'
+                        button.className = 'btn btn-primary btn-sm'
+                        button.addEventListener('click', async e => {
+                            e.preventDefault()
+                            if (!confirm(`确定要删除附件“${name}”吗？`)) return
+                            const res = await fetch(url, { method: 'delete' })
+                            if (!res.ok) {
+                                alert(`删除附件出错（${res.status}）：${await res.text()}`)
+                            }
+                            await reloadAttachments()
+                            validateForm()
+                        })
+                    }
                 }
             } catch (e) {
                 alert(`无法获取附件列表，请刷新重试（${e}）`)

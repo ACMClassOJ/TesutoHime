@@ -1,9 +1,26 @@
 ; {
+  const attachmentsEl = document.querySelectorAll('li.attachment')
+  let preprocess = src => src
+  if (attachmentsEl.length > 0) {
+    const attachments = {}
+    for (const el of attachmentsEl) {
+      const name = el.querySelector('.attachment__name').textContent
+      attachments[name] = el.innerHTML.trim()
+    }
+
+    preprocess = src => src.replace(/\[attachment](.+?)\[\/attachment]/g, (_text, name) => {
+      const attachment = attachments[name]
+      if (attachment) return attachment
+      const escapedName = name.replace(/[<>&"']/g, t => `&#${t.codePointAt(0)};`)
+      return `<strong class="text-red">错误：题目附件 ${escapedName} 不存在</strong>`
+    })
+  }
+
   const sanitize = function (text) {
     return DOMPurify.sanitize(text, { FORCE_BODY: true })
   }
   const render = function (text) {
-    return sanitize(marked(text))
+    return sanitize(marked(preprocess(text)))
   }
 
   const elementsToRender = document.querySelectorAll('script[language="text/markdown"]')

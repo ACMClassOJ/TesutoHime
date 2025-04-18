@@ -1,6 +1,6 @@
 from functools import wraps
 from http.client import (BAD_REQUEST, CREATED, FORBIDDEN,
-                         INTERNAL_SERVER_ERROR, NO_CONTENT, NOT_FOUND, UNAUTHORIZED)
+                         INTERNAL_SERVER_ERROR, NO_CONTENT, UNAUTHORIZED)
 from typing import NoReturn, Optional
 from urllib.parse import parse_qsl, urlencode
 

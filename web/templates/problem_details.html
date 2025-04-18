@@ -162,13 +162,14 @@
 
         {%- if problem.attachments | length > 0 -%}
         <h3>附件</h3>
-        <ul>
+        <ul id="attachments">
+            <!-- These classes are vital for markdown rendering to work! Consult render.js before changing the code below. -->
             {%- for file in problem.attachments -%}
-            <li>
+            <li class="attachment">
                 <a href="{{ url_for('.problem_attachment', problem=problem, name=file.name) }}" target="_blank">
                     <i class="fa fa-download"></i>
-                    <span dir="ltr">{{ file.name }}</span>
-                    <span>({{ g.utils.format_file_size(file.size_bytes) }})</span>
+                    <span class="attachment__name" dir="ltr">{{ file.name }}</span>
+                    <span>({{ g.utils.format_file_size(file.size_bytes) }})</span>{#- avoid spaces after link -#}
                 </a>
             </li>
             {%- endfor -%}

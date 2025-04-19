@@ -613,8 +613,7 @@ components:
                 type: integer
               url:
                 type: string
-                example: '/OnlineJudge/oj-attachments/1000/handout.tar.gz?X-Amz-Algorithm=...'
-                description: 此 URL 自带授权，使用时请勿携带 Authorization header
+                example: '/OnlineJudge/api/v1/problem/1000/attachment/handout.tar.gz'
         allow_public_submissions:
           type: boolean
           description: 是否允许公开代码
@@ -689,8 +688,8 @@ components:
           format: date-time
         code_url:
           type: string
-          example: /OnlineJudge/oj-submissions/42.code?X-Amz-Algorithm=...
-          description: 此 URL 自带授权，使用时请勿携带 Authorization header
+          example: /OnlineJudge/api/v1/submission/42/code
+          description: 使用时需要携带 Authorization header
         abort_url:
           type: string
           example: /OnlineJudge/api/v1/submission/42/abort

@@ -1,6 +1,6 @@
 from functools import wraps
 from http.client import (BAD_REQUEST, CREATED, FORBIDDEN,
-                         INTERNAL_SERVER_ERROR, NO_CONTENT, UNAUTHORIZED)
+                         INTERNAL_SERVER_ERROR, NO_CONTENT, NOT_FOUND, UNAUTHORIZED)
 from typing import NoReturn, Optional
 from urllib.parse import parse_qsl, urlencode
 
@@ -19,6 +19,7 @@ from web.manager.contest import ContestManager
 from web.manager.course import CourseManager
 from web.manager.judge import JudgeManager
 from web.manager.oauth import OauthManager
+from web.manager.old_judge import OldJudgeManager
 from web.manager.problem import ProblemManager
 from web.utils import abort_json, db, paged_search_cursor, require_logged_in
 
@@ -267,11 +268,19 @@ def problem(problem: Problem):
         {
             'name': x.name,
             'size_bytes': x.size_bytes,
-            'url': ProblemManager.download_url_of_attachment(x),
+            'url': url_for('.problem_attachment', problem=problem, name=x.name),
         } for x in problem.attachments
     ]
 
     return jsonify(res)
+
+@api.route('/problem/<problem:problem>/attachment/<name>')
+@scope('problem:read')
+def problem_attachment(problem: Problem, name: str):
+    attachment = ProblemManager.get_attachment(problem, name)
+    if attachment is None:
+        abort(NOT_FOUND)
+    return redirect(ProblemManager.download_url_of_attachment(attachment))
 
 
 # routes: submission
@@ -312,7 +321,7 @@ def submission(submission: JudgeRecordV2):
         'should_show_score': JudgeManager.should_show_score(submission),
         'friendly_name': submission.user.friendly_name,
         'created_at': submission.created_at.isoformat(),
-        'code_url': JudgeManager.sign_code_url(submission),
+        'code_url': url_for('.submission_code', submission=submission),
         'abort_url': url_for('.submission_abort', submission=submission) if g.can_abort else None,
         'html_url': url_for('web.submission', submission=submission),
     }
@@ -320,6 +329,18 @@ def submission(submission: JudgeRecordV2):
     for key in keys:
         res[key] = getattr(submission, key)
     return jsonify(res)
+
+@api.route('/submission/<submission:submission>/code')
+@scope('submission:read')
+def submission_code(submission: JudgeRecordV2):
+    if submission.id <= OldJudgeManager.max_id():
+        detail = OldJudgeManager.query_judge(submission.id)
+        if detail is not None:
+            resp = make_response(detail.code)
+            resp.mimetype = 'text/plain'
+            return resp
+
+    return redirect(JudgeManager.sign_code_url(submission))
 
 @api.route('/submission/<submission:submission>/abort', methods=['POST'])
 @scope('submission:write')

@@ -214,18 +214,22 @@ https://acm.sjtu.edu.cn/OnlineJudge/* -> http://10.0.0.2:5000/OnlineJudge/*
 client_max_body_size 4096M; # 最大上传文件大小为 4 GiB
 location /OnlineJudge/oj-problems/ {
   proxy_pass http://10.0.0.1:9000/oj-problems/;
+  proxy_set_header Authorization '';
   add_header Content-Disposition "attachment";
 }
 location /OnlineJudge/oj-images/ {
   proxy_pass http://10.0.0.1:9000/oj-images/;
+  proxy_set_header Authorization '';
   add_header Content-Disposition "attachment";
 }
 location /OnlineJudge/oj-attachments/ {
   proxy_pass http://10.0.0.1:9000/oj-attachments/;
+  proxy_set_header Authorization '';
   add_header Content-Disposition "attachment";
 }
 location /OnlineJudge/oj-submissions/ {
   proxy_pass http://10.0.0.1:9000/oj-submissions/;
+  proxy_set_header Authorization '';
   add_header Content-Disposition "attachment";
 }
 location /OnlineJudge/ {

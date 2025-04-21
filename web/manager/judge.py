@@ -1,6 +1,6 @@
 from http.client import NOT_FOUND, OK
 from typing import List, Optional
-from urllib.parse import quote, urljoin
+from urllib.parse import quote, urlencode, urljoin
 
 import requests
 from flask import abort, g
@@ -224,6 +224,35 @@ class JudgeManager:
             .where(JudgeRunnerV2.visible) \
             .order_by(JudgeRunnerV2.id) \
             .all()
+
+    @classmethod
+    def get_runner_status(cls) -> Optional[List[dict]]:
+        runners = cls.list_runners()
+        if len(runners) == 0:
+            return []
+
+        query = urlencode({'id': ','.join(str(x.id) for x in runners)})
+        url = urljoin(SchedulerConfig.base_url, f'status?{query}')
+        try:
+            runner_res = requests.get(url)
+        except Exception as e:
+            print(e)
+            return None
+        if runner_res is None or runner_res.status_code != OK:
+            return None
+
+        runner_dict = runner_res.json()
+        return [
+            {
+                'id': str(runner.id),
+                'name': runner.name,
+                'hardware': runner.hardware,
+                'provider': runner.provider,
+                'status': runner_dict[str(runner.id)]['status'],
+                'message': runner_dict[str(runner.id)]['message'],
+                'last_seen': runner_dict[str(runner.id)]['last_seen'],
+            } for runner in runners
+        ]
 
     class SubmissionSearch(SearchDescriptor):
         __model__ = JudgeRecordV2

@@ -45,8 +45,9 @@ MAX_ATTACHMENT_SIZE_BYTES = 100 * 1024 ** 2  # 100 MiB
 class JudgeStatusInfo:
     name: str
     color: str
-    abbrev: Optional[str] = None
-    badge_type: Optional[str] = None
+    abbrev: str
+    badge_type: str
+    should_auto_reload: bool = False
 
 judge_status_info = {
     'accepted': JudgeStatusInfo('Accepted', 'green', 'AC', 'success'),
@@ -59,9 +60,9 @@ judge_status_info = {
     'disk_limit_exceeded': JudgeStatusInfo('Disk Limit Exceeded', 'purple', 'DLE', 'warning'),
     'memory_leak': JudgeStatusInfo('Memory Leak', 'purple', 'Leak', 'warning'),
 
-    'pending': JudgeStatusInfo('Pending', 'gray-dark', 'Pending', 'secondary'),
-    'compiling': JudgeStatusInfo('Compiling', 'blue', 'Compiling', 'info'),
-    'judging': JudgeStatusInfo('Judging', 'blue', 'Judging', 'info'),
+    'pending': JudgeStatusInfo('Pending', 'gray-dark', 'Pending', 'secondary', should_auto_reload=True),
+    'compiling': JudgeStatusInfo('Compiling', 'blue', 'Compiling', 'info', should_auto_reload=True),
+    'judging': JudgeStatusInfo('Judging', 'blue', 'Judging', 'info', should_auto_reload=True),
     'void': JudgeStatusInfo('Voided', 'brown', 'Void', 'warning'),
     'aborted': JudgeStatusInfo('Aborted', 'gray-dark', 'Aborted', 'secondary'),
 

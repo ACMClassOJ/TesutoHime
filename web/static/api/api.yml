@@ -21,6 +21,8 @@ tags:
     description: 比赛与作业
   - name: course
     description: 班级
+  - name: meta
+    description: OJ 配置及状态
 paths:
   /oauth/token:
     post:
@@ -480,6 +482,101 @@ paths:
       security:
         - token: []
         - acmoj-oauth: []
+  /meta/info/judge-status:
+    get:
+      tags:
+        - meta
+        - submission
+      summary: 显示评测状态所需要的信息 (无需 scope)
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: Accepted
+                    name_short:
+                      type: string
+                      example: AC
+                    color:
+                      type: string
+                      description: Bootstrap 颜色名
+                      example: green
+      security:
+        - token: []
+        - acmoj-oauth: []
+  /meta/info/language:
+    get:
+      tags:
+        - meta
+      summary: 显示代码语言所需要的信息 (无需 scope)
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: C++
+                    extension:
+                      type: string
+                      example: cpp
+                      nullable: true
+      security:
+        - token: []
+        - acmoj-oauth: []
+  /meta/runner-status:
+    get:
+      tags:
+        - meta
+      summary: 查询评测机状态 (无需 scope)
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    hardware:
+                      type: string
+                    provider:
+                      type: string
+                    status:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: Idle
+                        color:
+                          type: string
+                          description: Bootstrap 颜色名
+                          example: blue
+                    message:
+                      type: string
+                    last_seen:
+                      type: string
+                      format: date-time
+      security:
+        - token: []
+        - acmoj-oauth: []
 
 components:
   parameters:
@@ -680,6 +777,9 @@ components:
           nullable: true
         status:
           $ref: '#/components/schemas/submission-status'
+        should_auto_reload:
+          type: boolean
+          description: 是否应该轮询评测状态（为 true 表示评测尚未结束）
         should_show_score:
           type: boolean
           description: 是否应该显示分数（如评测未完成、中止、分数无效等情况不应显示分数）

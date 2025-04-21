@@ -1746,41 +1746,8 @@ def help_index():
 
 @web.route('/about')
 def about():
-    runners = JudgeManager.list_runners()
-    if len(runners) == 0:
-        runner_dict = {}
-        runner_list: List[dict] = []
-        runner_success = True
-    else:
-        query = urlencode({'id': ','.join(str(x.id) for x in runners)})
-        url = urljoin(SchedulerConfig.base_url, f'status?{query}')
-        try:
-            runner_res = requests.get(url)
-            runner_success = True
-        except Exception as e:
-            print(e)
-            runner_res = None
-        if runner_res is None or runner_res.status_code != OK:
-            runner_success = False
-            runner_list = []
-        else:
-            runner_dict = runner_res.json()
-            runner_list = []
-            for runner in runners:
-                r = runner_dict[str(runner.id)]
-                r['id'] = str(runner.id)
-                r['name'] = runner.name
-                r['hardware'] = runner.hardware
-                r['provider'] = runner.provider
-                if r['last_seen'] is not None:
-                    r['last_seen'] = readable_time(r['last_seen'])
-                else:
-                    r['last_seen'] = 'N/A'
-                status_info = runner_status_info[r['status']]
-                r['status'] = status_info.name
-                r['status_color'] = status_info.color
-                runner_list.append(r)
-    return render_template('about.html', runners=runner_list, runner_success=runner_success)
+    runners = JudgeManager.get_runner_status()
+    return render_template('about.html', runners=runners)
 
 
 @web.route('/favicon.ico')

@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import wraps
 from http.client import (BAD_REQUEST, CREATED, FORBIDDEN,
                          INTERNAL_SERVER_ERROR, NO_CONTENT, NOT_FOUND, UNAUTHORIZED)
@@ -14,7 +15,7 @@ from commons.models import (AccessToken, Contest, Course, CourseTag,
                             JudgeRecordV2, Problem, Term, User)
 from commons.util import load_dataclass
 from web.config import JudgeConfig, WebConfig
-from web.const import api_scopes
+from web.const import api_scopes, judge_status_info, language_info, runner_status_info
 from web.manager.contest import ContestManager
 from web.manager.course import CourseManager
 from web.manager.judge import JudgeManager
@@ -318,6 +319,7 @@ def submission(submission: JudgeRecordV2):
         'problem': problem_brief(submission.problem),
         'details': details,
         'status': submission.status.name,
+        'should_auto_reload': judge_status_info[submission.status.name].should_auto_reload,
         'should_show_score': JudgeManager.should_show_score(submission),
         'friendly_name': submission.user.friendly_name,
         'created_at': submission.created_at.isoformat(),
@@ -404,3 +406,40 @@ def course_problemset_list(course: Course):
     return {
         'problemsets': [problemset_tojson(c) for c in course.contests],
     }
+
+
+# routes: meta
+
+@api.route('/meta/info/judge-status')
+@require_logged_in
+def meta_judge_status_info():
+    return {
+        k: {
+            'name': v.name,
+            'name_short': v.abbrev,
+            'color': v.color,
+        } for k, v in judge_status_info.items()
+    }
+
+@api.route('/meta/info/language')
+@require_logged_in
+def meta_language_info():
+    return {
+        k: {
+            'name': v.name,
+            'extension': v.extension,
+        } for k, v in language_info.items()
+    }
+
+@api.route('/meta/runner-status')
+@require_logged_in
+def meta_runner_status():
+    runners = JudgeManager.get_runner_status()
+    if runners is None:
+        abort(INTERNAL_SERVER_ERROR, 'cannot fetch runner status')
+    for r in runners:
+        info = runner_status_info[r['status']]
+        r['status'] = { 'name': info.name, 'color': info.color }
+        if r['last_seen']:
+            r['last_seen'] = datetime.fromtimestamp(r['last_seen']).isoformat()
+    return jsonify(runners)

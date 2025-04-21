@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% set page='评测详情' %}
-{% set should_auto_refresh = submission.status.name == 'pending' or submission.status.name == 'compiling' or submission.status.name == 'judging' -%}
+{% set should_auto_reload = g.consts.judge_status_info[submission.status.name].should_auto_reload -%}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('.static', filename = 'lib/font-awesome/css/all.min.css') }}">
@@ -36,7 +36,7 @@
         {% endif -%}
     </div>
 
-    {% if should_auto_refresh -%}
+    {% if should_auto_reload -%}
     <div class="m-auto text-center auto-refresh" hidden>
         <svg width="66" height="66" VIEWBOX="0 0 66 66">
             <circle cx="33" cy="33" r="15" stroke-width="2" stroke="#d1d3d7" fill="none"></circle>
@@ -171,7 +171,7 @@ const hydrate = () => {
 }
 hydrate()
 
-{% if should_auto_refresh -%}
+{% if should_auto_reload -%}
 ; {
     const container = document.querySelector('.auto-refresh')
     const countdown = container.querySelector('.auto-refresh__countdown')

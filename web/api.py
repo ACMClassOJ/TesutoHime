@@ -323,7 +323,7 @@ def submission(submission: JudgeRecordV2):
         'should_show_score': JudgeManager.should_show_score(submission),
         'friendly_name': submission.user.friendly_name,
         'created_at': submission.created_at.isoformat(),
-        'code_url': url_for('.submission_code', submission=submission),
+        'code_url': JudgeManager.sign_code_url(submission),
         'abort_url': url_for('.submission_abort', submission=submission) if g.can_abort else None,
         'html_url': url_for('web.submission', submission=submission),
     }

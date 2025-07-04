@@ -59,6 +59,9 @@ def dump_dataclass(object: Any):
 def serialize(object: Any) -> str:
     return json.dumps(dump_dataclass(object), ensure_ascii=False)
 
+def serialize_to_dict(object: Any):
+    return dump_dataclass(object)
+
 
 def load_dataclass(object, classes: Dict[str, Type]) -> Any:
     if isinstance(object, int) \
@@ -77,8 +80,11 @@ def load_dataclass(object, classes: Dict[str, Type]) -> Any:
     return ctor(**values)
 
 def deserialize(data: str) -> Any:
+    return deserialize_from_dict(json.loads(data))
+
+def deserialize_from_dict(data) -> Any:
     classes = commons.task_typing.__dict__
-    return load_dataclass(json.loads(data), classes)
+    return load_dataclass(data, classes)
 
 
 working_dir = None

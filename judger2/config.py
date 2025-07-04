@@ -1,6 +1,8 @@
 from commons.task_typing import ResourceUsage
-from commons.util import RedisQueues, load_config
+from commons.util import load_config
 from redis.asyncio import Redis
+
+from judger2.rpc import RedisTransport, RunnerInfo
 
 config = load_config('runner', 'v3')
 
@@ -17,8 +19,6 @@ worker_uid = int(config['worker_uid'])
 heartbeat_interval_secs = 2.0
 task_timeout_secs = 3600
 
-runner_info = RedisQueues.RunnerInfo(runner_id, runner_group)
-queues = RedisQueues(config['redis']['prefix'], runner_info)
 poll_timeout_secs = 10
 redis = Redis(
     **config['redis']['connection'],
@@ -27,6 +27,7 @@ redis = Redis(
     socket_connect_timeout=5,
     socket_keepalive=True,
 )
+rpc = RedisTransport(RunnerInfo(runner_id, runner_group), config['redis']['prefix'])
 
 # env vars for task runner
 task_envp = [

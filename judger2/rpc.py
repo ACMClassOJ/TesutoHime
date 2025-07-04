@@ -1,0 +1,70 @@
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from enum import Enum, auto
+from time import time
+from typing import Optional
+
+from commons.task_typing import StatusUpdate, TaskWithId
+from commons.util import RedisQueues, deserialize, serialize
+from judger2.config import poll_timeout_secs, redis, task_timeout_secs
+
+class AbortSignal(Enum):
+    doAbort = auto()
+    dontAbort = auto()
+
+@dataclass
+class RunnerInfo:
+    id: str
+    group: str
+
+class BaseTransport(ABC):
+    info: RunnerInfo
+
+    def __init__(self, info: RunnerInfo) -> None:
+        super().__init__()
+        self.info = info
+
+    @abstractmethod
+    async def put_heartbeat(self) -> None: pass
+    @abstractmethod
+    async def delete_task(self) -> None: pass
+
+    @abstractmethod
+    async def get_task(self) -> Optional[TaskWithId]: pass
+    @abstractmethod
+    async def put_progress(self, task_id: str, progress: StatusUpdate) -> None: pass
+    @abstractmethod
+    async def poll_for_abort_signal(self, task_id: str) -> AbortSignal: pass
+
+class RedisTransport(BaseTransport):
+    def __init__(self, info: RunnerInfo, prefix: str) -> None:
+        super().__init__(info)
+        self.queues = RedisQueues(prefix, RedisQueues.RunnerInfo(info.id, info.group))
+
+    async def put_heartbeat(self) -> None:
+        await redis.set(self.queues.heartbeat, time())
+    async def delete_task(self) -> None:
+        await redis.delete(self.queues.in_progress)
+
+    async def get_task(self) -> Optional[TaskWithId]:
+        id = await redis.brpoplpush(
+            self.queues.tasks,
+            self.queues.in_progress,
+            poll_timeout_secs,
+        )
+        if id is None: return None
+        task_serialised = await redis.rpop(self.queues.task(id).task)
+        if task_serialised is None:
+            await self.delete_task()
+            return None
+        return deserialize(task_serialised)
+
+    async def put_progress(self, task_id: str, progress: StatusUpdate) -> None:
+        q = self.queues.task(task_id).progress
+        await redis.lpush(q, serialize(progress))
+        await redis.expire(q, task_timeout_secs)
+
+    async def poll_for_abort_signal(self, task_id: str) -> AbortSignal:
+        message = await redis.brpop(self.queues.task(task_id).abort)
+        if message is None: return AbortSignal.dontAbort
+        else:               return AbortSignal.doAbort

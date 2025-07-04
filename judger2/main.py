@@ -3,16 +3,14 @@ __import__('judger2.logging_')
 from asyncio import CancelledError, create_task, run, sleep, wait
 from atexit import register
 from logging import getLogger
-from time import time
 
 from commons.task_typing import (StatusUpdateDone, StatusUpdateError,
                                  StatusUpdateStarted)
-from commons.util import deserialize, serialize
 
 from judger2.cache import clean_cache_worker
-from judger2.config import (heartbeat_interval_secs, poll_timeout_secs, queues,
-                            redis, runner_id, task_timeout_secs)
+from judger2.config import (heartbeat_interval_secs, rpc, runner_id)
 from judger2.logging_ import task_logger
+from judger2.rpc import AbortSignal
 from judger2.task import run_task
 
 logger = getLogger(__name__)
@@ -21,7 +19,7 @@ logger = getLogger(__name__)
 async def send_heartbeats():
     while True:
         try:
-            await redis.set(queues.heartbeat, time())
+            await rpc.put_heartbeat()
         except CancelledError:
             return
         except Exception as e:
@@ -30,35 +28,29 @@ async def send_heartbeats():
 
 
 async def poll_for_tasks():
-    await redis.delete(queues.in_progress)
+    await rpc.delete_task()
     while True:
         task_id = None
         try:
-            task_id = await redis.brpoplpush(
-                queues.tasks,
-                queues.in_progress,
-                poll_timeout_secs,
-            )
-            if task_id is None: continue
-            task_queues = queues.task(task_id)
+            task_with_id = await rpc.get_task()
+            if task_with_id is None: continue
+            task = task_with_id.task
+            task_id = task_with_id.id
+
             async def report_progress(status):
                 logger.debug('reporting progress for task %(id)s: %(status)s', { 'id': task_id, 'status': status }, 'task:progress')
-                await redis.lpush(task_queues.progress, serialize(status))
-                await redis.expire(task_queues.progress, task_timeout_secs)
+                assert task_id is not None  # make mypy happy
+                await rpc.put_progress(task_id, status)
 
-            task_serialized = await redis.rpop(task_queues.task)
-            if task_serialized is None:
-                continue
-            task = deserialize(task_serialized)
             await report_progress(StatusUpdateStarted(runner_id))
             aio_task = create_task(run_task(task, task_id))
 
             async def poll_for_abort_signal():
                 while True:
                     try:
-                        message = await redis.brpop(task_queues.abort,
-                            poll_timeout_secs)
-                        if message is None: continue
+                        assert task_id is not None  # make mypy happy
+                        signal = await rpc.poll_for_abort_signal(task_id)
+                        if signal == AbortSignal.dontAbort: continue
                         aio_task.cancel()
                         return
                     except CancelledError:
@@ -89,12 +81,12 @@ async def poll_for_tasks():
         finally:
             if task_id is not None:
                 try:
-                    await redis.lrem(queues.in_progress, 0, task_id)
+                    await rpc.delete_task()
                 except Exception as e:
                     task_logger.error('error removing task from queue: %(error)s', { 'error': e }, 'task:remove')
-                if not normal_completion:
+                if not normal_completion:  # type: ignore
                     try:
-                        await report_progress(StatusUpdateError(error))
+                        await report_progress(StatusUpdateError(error))  # type: ignore
                     except Exception as e:
                         task_logger.error('error sending nack: %(error)s', { 'error': e }, { 'task:nack' })
 

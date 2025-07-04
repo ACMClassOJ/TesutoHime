@@ -109,6 +109,11 @@ class JudgeTask(Generic[_TestpointInput]):
 
 Task = TypeVar('Task', CompileTask, JudgeTask[Input])
 
+@dataclass
+class TaskWithId(Generic[Task]):
+    id: str
+    task: Task
+
 
 # runner -> scheduler, runner internal state
 

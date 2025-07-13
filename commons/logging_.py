@@ -3,7 +3,7 @@ __all__ = 'add_handler', 'setup_logging'
 import json
 from dataclasses import is_dataclass
 from datetime import datetime
-from logging import (DEBUG, INFO, NOTSET, WARNING, Formatter, LogRecord,
+from logging import (DEBUG, INFO, NOTSET, WARNING, Formatter, LogRecord, Logger,
                      StreamHandler, root)
 from logging.handlers import WatchedFileHandler
 from os import environ
@@ -68,7 +68,7 @@ class JsonFormatter(Formatter):
             record.asctime = self.formatTime(record)
             return '%(asctime)s [%(levelname)s] %(name)s: %(message)s' % record.__dict__
 
-def add_handler(level, handler, target = root, json_output = False):
+def add_handler(level, handler, target: Logger = root, json_output = False):
     handler.setLevel(level)
     handler.setFormatter(JsonFormatter(json_output))
     handler.addFilter(no_boto_filter)

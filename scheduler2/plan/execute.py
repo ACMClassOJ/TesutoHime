@@ -24,25 +24,17 @@ from commons.task_typing import (Artifact, CodeLanguage, CompareChecker,
                                  StatusUpdateProgress, StatusUpdateStarted,
                                  Testpoint, TestpointGroup,
                                  TestpointJudgeResult, UserCode)
-from commons.util import format_exc
 from scheduler2.config import s3_buckets
-from scheduler2.dispatch import TaskInfo, run_task
+from scheduler2.dispatch import run_task
 from scheduler2.plan.util import (InvalidCodeException,
                                   InvalidProblemException, sign_url)
+from scheduler2.rpc.web.client import update_status
 from scheduler2.s3 import (copy_file, read_file, remove_file, sign_url_get,
                            sign_url_put)
-from scheduler2.util import update_status
+from scheduler2.state.judge_tasks import JudgeTaskArgs
+from scheduler2.state.runner_tasks import RunnerTaskInfo
 
 logger = getLogger(__name__)
-
-
-# typing shim for Python 3.7
-try:
-    Task[None]
-except TypeError:
-    class _Task:
-        def __getitem__(self, _): return Any
-    Task = _Task()  # type: ignore
 
 
 class UrlType(Enum):
@@ -132,8 +124,7 @@ async def prepare_compile(ctx, plan):
     if plan is None:
         return None
 
-    user_codes = list(filter(lambda x: isinstance(x, UserCode),
-        [plan.source] + plan.supplementary_files))
+    user_codes = [ x for x in [plan.source] + plan.supplementary_files if isinstance(x, UserCode) ]
     if len(user_codes) == 0:
         raise InvalidProblemException('Compile task with no user input')
     if len(user_codes) > 1:
@@ -145,11 +136,12 @@ async def prepare_compile(ctx, plan):
     filename = user_codes[0].filename
     if filename is None: filename = fallback_filename
     if isinstance(plan.source, UserCode):
+        if filename is None:
+            raise InvalidCodeException('Cannot determine filename of code')
         source = await get_compile_source(ctx, filename)
         if isinstance(source, Artifact):
             ctx.compile_artifact = source
             return source
-        source: CompileSource
     else:
         source = deepcopy(plan.source)
         if isinstance(source, CompileSourceCpp) \
@@ -166,7 +158,7 @@ async def prepare_compile(ctx, plan):
     artifact = Artifact(ctx.file_url(UrlType.ARTIFACT, artifact_filename)) \
         if plan.artifact else None
     limits = deepcopy(plan.limits)
-    return CompileTask(source, supplementary_files, artifact, limits)
+    return CompileTask(source, supplementary_files, artifact, limits)  # type: ignore
 
 
 async def get_judge_task(ctx: ExecutionContext, plan: JudgeTaskPlan) \
@@ -239,7 +231,7 @@ async def run_compile_task(ctx: ExecutionContext) -> Optional[CompileResult]:
         if isinstance(status, StatusUpdateStarted):
             await update_status(ctx.id, 'compiling')
     msg = f'Compiling code for submission #{ctx.id}'
-    task = TaskInfo(ctx.compile, ctx.id, ctx.problem_id, ctx.plan.group, msg)
+    task = RunnerTaskInfo(ctx.compile, ctx.id, ctx.problem_id, ctx.plan.group, msg)
     return await run_task(task, onprogress, ctx.rate_limit_group)
 
 
@@ -286,17 +278,19 @@ def remove_skipped_testpoints_from_task(ctx: ExecutionContext,
             remove_skipped_testpoints_from_task(ctx, rec.plan, [],
                                                 removed_testpoints)
 
+
+ResType: TypeAlias = Union[
+    Tuple[JudgeTaskRecord, Literal[True], JudgeResult],
+    Tuple[JudgeTaskRecord, Literal[False], Exception],
+]
+
 async def run_judge_tasks(ctx: ExecutionContext):
     await update_status(ctx.id, 'judging')
     records = ctx.judge
     assert records is not None
     ready = list(filter(ctx.dependencies_satisfied, records))
-    ResType: TypeAlias = Task[Union[
-        Tuple[JudgeTaskRecord, Literal[True], JudgeResult],
-        Tuple[JudgeTaskRecord, Literal[False], Exception],
-    ]]
-    tasks_running: List[ResType] = []
-    def run(task: JudgeTaskRecord) -> Optional[ResType]:
+    tasks_running: List[Task[ResType]] = []
+    def run(task: JudgeTaskRecord) -> Optional[Task[ResType]]:
         if len(task.task.testpoints) == 0:
             return None
         async def onprogress(status: StatusUpdate):
@@ -304,7 +298,7 @@ async def run_judge_tasks(ctx: ExecutionContext):
                 for testpoint in task.task.testpoints:
                     if not testpoint.id in ctx.results:
                         ctx.results[testpoint.id] = TestpointJudgeResult(
-                            testpoint.id, 'judging', 'Judging')
+                            testpoint.id, 'judging', '')
             elif isinstance(status, StatusUpdateProgress):
                 assert isinstance(status.result, JudgeResult)
                 for testpoint1 in status.result.testpoints:
@@ -313,11 +307,11 @@ async def run_judge_tasks(ctx: ExecutionContext):
                         or ctx.results[testpoint1.id].result
                             in ('pending', 'judging')):
                         ctx.results[testpoint1.id] = testpoint1
-        async def run_with_rec():
+        async def run_with_rec() -> ResType:
             try:
                 msg = f'Running test for submission #{ctx.id}'
-                taskinfo = TaskInfo(task.task, ctx.id, ctx.problem_id,
-                                    ctx.plan.group, msg)
+                taskinfo = RunnerTaskInfo(task.task, ctx.id, ctx.problem_id,
+                                          ctx.plan.group, msg)
                 return (task, True, await run_task(taskinfo, onprogress,
                     ctx.rate_limit_group))
             except CancelledError:
@@ -395,18 +389,18 @@ def synthesize_rusage(rusages: Iterable[ResourceUsage]) -> ResourceUsage:
         file_size_bytes=max((x.file_size_bytes for x in rusages), default=-1),
     )
 
-def aborted_result(name):
-    return TestpointJudgeResult(name, 'aborted', 'Aborted')
-def pending_result(name):
-    return TestpointJudgeResult(name, 'pending', 'Pending')
+def aborted_result(id):
+    return TestpointJudgeResult(id, 'aborted', '')
+def pending_result(id):
+    return TestpointJudgeResult(id, 'pending', '')
 
 def synthesize_scores(ctx: ExecutionContext, *, aborted: bool = False,
     in_progress: bool = False) -> ProblemJudgeResult:
     testpoints = ctx.results
     rusage = synthesize_rusage(x.resource_usage for x in  # type: ignore
         filter(lambda x: x is not None and x.resource_usage is not None, testpoints.values()))
-    def fallback_result(_):
-        raise InvalidProblemException('Loop detected in dependent_on relations')
+    def fallback_result(id) -> TestpointJudgeResult:
+        raise InvalidProblemException(f'Testpoint {id} not judged; maybe there is a loop in dependent_on relations.')
     if aborted: fallback_result = aborted_result
     if in_progress: fallback_result = pending_result
     def get_group_result(group: TestpointGroup):
@@ -433,9 +427,9 @@ def synthesize_scores(ctx: ExecutionContext, *, aborted: bool = False,
 
 async def judge_quiz(quiz: List[QuizProblem], answer: Dict[str, str]):
     def ac(id):
-        return TestpointJudgeResult(id, 'accepted', 'Accepted', 1.0)
+        return TestpointJudgeResult(id, 'accepted', '', 1.0)
     def wa(id):
-        return TestpointJudgeResult(id, 'wrong_answer', 'Wrong Answer')
+        return TestpointJudgeResult(id, 'wrong_answer', '')
     correct = dict((x.id, x.type == 'SELECT' and x.answer == answer.get(x.id, None)) for x in quiz)
     testpoints = [ac(id) if correct[id] else wa(id) for id in correct]
     result: Literal['accepted', 'wrong_answer'] = \
@@ -446,17 +440,16 @@ async def judge_quiz(quiz: List[QuizProblem], answer: Dict[str, str]):
 
 ctx_from_submission: Dict[str, ExecutionContext] = {}
 
-async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
-    lang: CodeLanguage, code: SourceLocation, rate_limit_group: str) \
-    -> ProblemJudgeResult:
-    ctx = ExecutionContext(plan, id, problem_id, lang, code, rate_limit_group)
-    ctx_from_submission[id] = ctx
+async def execute_plan(plan: JudgePlan, args: JudgeTaskArgs) -> ProblemJudgeResult:
+    ctx = ExecutionContext(plan, args.submission_id, args.problem_id,
+                           args.language, args.source, args.rate_limit_group)
+    ctx_from_submission[args.submission_id] = ctx
     compiled = False
 
-    if lang == CodeLanguage.QUIZ:
+    if args.language == CodeLanguage.QUIZ:
         if plan.quiz is None:
             raise InvalidCodeException('This problem is not a quiz.')
-        answer = await read_file(code.bucket, code.key)
+        answer = await read_file(args.source.bucket, args.source.key)
         try:
             answer = json.loads(answer)
         except Exception as e:
@@ -499,12 +492,12 @@ async def execute_plan(plan: JudgePlan, id: str, problem_id: str,
         return ProblemJudgeResult('aborted', message=None)
     finally:
         # perform some cleanup
-        del ctx_from_submission[id]
+        del ctx_from_submission[args.submission_id]
         for bucket, key in ctx.files_to_clean:
             try:
                 await remove_file(bucket, key)
             except Exception as e:
-                logger.warn('Error clearing object: %(error)s', { 'error': e }, 'plan:execute:cleanup')
+                logger.warning('Error clearing object: %(error)s', { 'error': e }, 'plan:execute:cleanup')
 
 async def get_partial_result(submission_id):
     if not submission_id in ctx_from_submission:

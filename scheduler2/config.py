@@ -1,20 +1,41 @@
 from dataclasses import dataclass
 from pathlib import PosixPath
+from typing import Dict
 
 from commons.task_typing import ResourceUsage
 from commons.util import RedisQueues, load_config
 from redis.asyncio import Redis
 
-config = load_config('scheduler', 'v2')
+config = load_config('scheduler', 'v3')
 
 working_dir = PosixPath(config['working_dir'])
 cache_dir = PosixPath(config['cache_dir'])
 log_dir = PosixPath(config['log_dir'])
 
-host = config['host']
-port = int(config['port'])
+@dataclass
+class ListenAddress:
+    host: str
+    port: int
+
+class listen:
+    web = ListenAddress(**config['listen']['web'])
+    runner = ListenAddress(**config['listen']['runner'])
+
 web_base_url = config['web']['base_url']
 web_auth = config['web']['auth']
+
+@dataclass
+class RunnerInfo:
+    id: str
+    name: str
+    group: str
+    hardware: str
+    provider: str
+    key: str
+
+runner_info: Dict[str, RunnerInfo] = {}
+for id in config['runners']:
+    runner_info[id] = RunnerInfo(**config['runners'][id], id=id)
 
 s3_connection = config['s3']['connection']
 

@@ -2,16 +2,35 @@ from asyncio import CancelledError, Task, create_task, sleep
 from dataclasses import dataclass
 from logging import getLogger
 from time import time
-from typing import Dict, Optional
+from typing import Dict, Literal, Never, Optional
+from commons.task_typing import StatusUpdate
+from commons.util import RedisQueues, deserialize, format_exc, serialize
+from scheduler2.config import redis, redis_queues, runner_heartbeat_interval_secs, task_timeout_secs
+from scheduler2.state.runner_tasks import RunnerTaskInfo, runner_task_from_id
 
-from typing_extensions import Literal
-
-from commons.util import RedisQueues, format_exc
-from scheduler2.config import (redis, redis_queues,
-                               runner_heartbeat_interval_secs)
-from scheduler2.util import RunnerOfflineException, taskinfo_from_task_id
 
 logger = getLogger(__name__)
+
+
+async def task_enqueue(taskinfo: RunnerTaskInfo):
+    queues = redis_queues.task(taskinfo.id)
+    await redis.lpush(queues.task, serialize(taskinfo.task))
+    await redis.expire(queues.task, task_timeout_secs)
+    await redis.lpush(redis_queues.tasks_group(taskinfo.group), taskinfo.id)
+
+async def task_abort(task_id: str):
+    queues = redis_queues.task(task_id)
+    await redis.lpush(queues.abort, 1)
+    await redis.expire(queues.abort, task_timeout_secs)
+
+async def task_progress_wait(task_id: str, timeout_secs: float) -> Optional[StatusUpdate]:
+    res = await redis.brpop(redis_queues.task(task_id).progress, int(timeout_secs))
+    if res is None: return None
+    _, status = res
+    return deserialize(status)
+
+
+class RunnerOfflineException (Exception): pass
 
 
 @dataclass
@@ -20,7 +39,7 @@ class RunnerStatus:
     message: str
     last_seen: Optional[float]
 
-async def get_runner_status(runner_id: str):
+async def get_runner_status(runner_id: str) -> RunnerStatus:
     heartbeat = None
     try:
         runner_info = RedisQueues.RunnerInfo(runner_id, '')
@@ -39,11 +58,11 @@ async def get_runner_status(runner_id: str):
         elif len(task_ids) == 1:
             status = 'busy'
             task_id = task_ids[0]
-            if not task_id in taskinfo_from_task_id:
-                msg = 'Busy'
-            else:
-                taskinfo = taskinfo_from_task_id[task_id]
+            try:
+                taskinfo = runner_task_from_id(task_id)
                 msg = taskinfo.message
+            except KeyError:
+                msg = 'Busy'
         else:
             status = 'invalid'
             msg = 'Multiple tasks are running on this runner'
@@ -52,13 +71,13 @@ async def get_runner_status(runner_id: str):
         if not isinstance(heartbeat, float):
             heartbeat = None
         msg = f'Cannot get runner status: {format_exc(e)}'
-        logger.warn(msg, { 'error': e }, 'runner:status')
+        logger.warning(msg, { 'error': e }, 'runner:status')
         return RunnerStatus('invalid', msg, heartbeat)
 
 
 watch_tasks: Dict[str, Task] = {}
 
-def wait_until_offline(runner_id: str):
+def wait_until_offline(runner_id: str) -> Task[Never]:
     if runner_id in watch_tasks:
         return watch_tasks[runner_id]
     logger.debug('Polling runner %(id)s for offline signal', { 'id': runner_id }, 'runner:poll')

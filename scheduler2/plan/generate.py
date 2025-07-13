@@ -18,11 +18,10 @@ from commons.task_typing import (Artifact, Checker, CompareChecker,
                                  QuizProblem, ResourceUsage, RunArgs, RunType,
                                  SpjChecker, Testpoint, TestpointGroup,
                                  UserCode)
-from commons.util import format_exc
 from scheduler2.config import (default_check_limits, default_compile_limits,
                                default_run_limits, problem_config_filename,
                                quiz_filename, s3_buckets, working_dir)
-from scheduler2.dispatch import TaskInfo, run_task
+from scheduler2.dispatch import run_task
 from scheduler2.plan.util import InvalidProblemException, sign_url, url_scheme
 from scheduler2.problem_typing import (Group, ProblemConfig, SpjConfig,
                                        SpjConfigDesugared, SpjNumeric,
@@ -30,6 +29,7 @@ from scheduler2.problem_typing import (Group, ProblemConfig, SpjConfig,
 from scheduler2.problem_typing import Testpoint as ConfigTestpoint
 from scheduler2.problem_typing import spj_config_from_numeric
 from scheduler2.s3 import download, sign_url_put, upload_obj
+from scheduler2.state.runner_tasks import RunnerTaskInfo
 from scheduler2.util import dataclass_from_json
 
 logger = getLogger(__name__)
@@ -153,11 +153,11 @@ async def parse_compile(ctx: ParseContext) -> Optional[CompileTaskPlan]:
         limits.time_msecs = time_msecs
     ctx.compile_limits = limits
 
-    supplementary_files = list(map(ctx.file_url, ctx.cfg.SupportedFiles))
+    supplementary_files = [ ctx.file_url(x) for x in ctx.cfg.SupportedFiles ]
     # make a copy here since we may want to append UserCode()
     # into supplementary_files, and there is no user code
     # during SPJ compilation.
-    ctx.compile_supp = supplementary_files[:]
+    ctx.compile_supp = supplementary_files[:]  # type: ignore
     supplementary_files: List[Union[str, UserCode]] = supplementary_files  # type: ignore
 
     compile_cfg = ctx.cfg.SPJ.Compile
@@ -310,7 +310,7 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
             limits=default_check_limits,
         )
     else:
-        raise InvalidProblemException(f'Unknown check type {ctx.check_type}')
+        raise InvalidProblemException(f'Unknown check type {check_cfg.Type}')
 
     testpoint = Testpoint(
         id=id,
@@ -404,8 +404,8 @@ async def upload_files(ctx: ParseContext):
 async def execute_compile_tasks(ctx: ParseContext):
     for task in ctx.compile_tasks:
         msg = f'Compiling SPJ for problem {ctx.problem_id}'
-        res = await run_task(TaskInfo(task, None, ctx.problem_id,
-                                      ctx.cfg.RunnerGroup, msg))
+        res = await run_task(RunnerTaskInfo(task, None, ctx.problem_id,
+                                            ctx.cfg.RunnerGroup, msg))
         if res.result != 'compiled':
             msg = f'Cannot compile SPJ ({res.result}): {res.message}'
             raise InvalidProblemException(msg)

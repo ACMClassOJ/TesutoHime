@@ -1,14 +1,28 @@
-scheduler_config: v2
+scheduler_config: v3
 
 working_dir: /var/oj/scheduler
 cache_dir: /var/cache/oj/scheduler
 log_dir: /var/log/oj/scheduler
-host: 0.0.0.0
-port: 5100
+
+listen:
+  web:
+    host: 0.0.0.0
+    port: 5100
+  runner:
+    host: 0.0.0.0
+    port: 5101
 
 web:
   base_url: http://10.0.0.2:5000/OnlineJudge/
   auth: Bearer xxxxxxxxxxxxxxxx
+
+runners:
+  1:  # id: 1
+    name: Runner 1
+    group: default
+    hardware: PotatOS v1.0
+    provider: Aperture Science LLC
+    key: xxxxxxxxxxxxxxxx
 
 s3:
   connection:

@@ -138,7 +138,7 @@ class Contributor:
 def gh(x): return f'https://github.com/{x}'
 
 mntners = [
-    Mntner('Wankupi', gh('Wankupi'), 'kunpengwang@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/847be529-0157-4e06-8920-48bbd4735032'),
+    Mntner('TheUnknownThing', gh('TheUnknownThing'), 'theunknownthing@sjtu.edu.cn', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/c6d49a40-bf36-429e-bdd4-6e53b387c197'),
 ]
 
 contributors = [
@@ -155,4 +155,5 @@ contributors = [
     Contributor('LauYeeYu', 21, gh('LauYeeYu'), '文档 & 前端', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/3d435e1d-274a-491b-9f36-f1433c3ccade'),
     Contributor('Wankupi', 22, gh('Wankupi'), '前端', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/847be529-0157-4e06-8920-48bbd4735032'),
     Contributor('Conless', 22, gh('Conless'), '前端', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/fb8c8a4e-1730-4bf7-a700-da30fc0f1d89'),
+    Contributor('TheUnknownThing', 24, gh('TheUnknownThing'), 'VS Code 插件', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/c6d49a40-bf36-429e-bdd4-6e53b387c197'),
 ]

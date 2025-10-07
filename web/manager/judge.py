@@ -147,6 +147,8 @@ class JudgeManager:
         key = JudgeManager.key_from_submission_id(submission_id)
         bucket = S3Config.Buckets.submissions
         s3_internal.put_object(Bucket=bucket, Key=key, Body=code.encode())
+        db.commit()
+        rec = db.get(JudgeRecordV2, submission_id)
         JudgeManager.schedule_judge(problem_id, submission_id, language,
                                     str(user.id))
         return rec

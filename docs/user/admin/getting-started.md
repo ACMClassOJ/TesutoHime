@@ -1,6 +1,6 @@
 # ACMOJ 管理入门
 
-*By TheUnknownThing，更新于 2025.9.3。*
+*By Alan-Liang，更新于 2025.9.3。*
 
 欢迎使用 ACM Class OnlineJudge！
 

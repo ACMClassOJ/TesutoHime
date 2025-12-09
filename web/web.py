@@ -275,6 +275,8 @@ def get_student_id_from_access_token(access_token: str) -> str:
     )
     data = res.json()
     student_id: str = data['entities'][0]['code']
+    if student_id.startswith('AA'):
+        student_id = student_id[2:]
     return student_id
 
 # jAccount callback

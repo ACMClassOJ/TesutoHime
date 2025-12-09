@@ -246,6 +246,8 @@ def login():
         user = UserManager.get_user_by_username(username)
         if user is None:
             alert_fail('用户名或密码错误')
+        if user.password == 'INVALID':
+            alert_fail('出于安全考虑，此用户需要重置密码。请点击下方「忘记密码」，通过 jAccount 完成密码重置。如果您已无法使用 jAccount，请联系 OJ 运维组手动处理。')
         if not UserManager.check_login(user, password):
             alert_fail('用户名或密码错误')
         return create_session(user)

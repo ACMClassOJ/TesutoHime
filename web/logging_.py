@@ -28,7 +28,9 @@ def log_request():
         g.timings[k] = round(g.timings[k], 4)
 
     post_args = request.form.copy()
-    if 'password' in post_args: del post_args['password']
+    for k in post_args:
+        if 'password' in k:
+            post_args[k] = '***'
     if 'code' in post_args: del post_args['code']
 
     entry: Dict[Any, Any] = {

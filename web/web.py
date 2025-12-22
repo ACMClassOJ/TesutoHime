@@ -1238,7 +1238,7 @@ def course_list_generic(title: str, description: str, query,
                         show_tag: bool = True,
                         show_term: bool = True):
     page = request.args.get('page')
-    page = int(page) if page else 1
+    page = max(1, int(page)) if page else 1
 
     limit = WebConfig.Courses_Each_Page
     offset = (page - 1) * limit

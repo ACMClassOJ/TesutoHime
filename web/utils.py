@@ -239,7 +239,7 @@ class LimitOffsetSearchResult:
 def paged_search_limitoffset(per_page: int, descriptor) -> LimitOffsetSearchResult:
     query = paged_search_make_query(descriptor)
 
-    page = int(request.args.get('page', '1'))
+    page = max(1, int(request.args.get('page', '1')))
     offset = (page - 1) * per_page
     order = descriptor.__order_phrase__()
 

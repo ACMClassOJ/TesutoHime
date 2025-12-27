@@ -404,6 +404,8 @@ def synthesize_scores(ctx: ExecutionContext, *, aborted: bool = False,
     if aborted: fallback_result = aborted_result
     if in_progress: fallback_result = pending_result
     def get_group_result(group: TestpointGroup):
+        if len(group.testpoints) == 0:
+            raise InvalidProblemException(f'synthesize_scores: Group {group.id} has no testpoints')
         res = [testpoints[x] if x in testpoints else fallback_result(x)
             for x in group.testpoints]
         if aborted:

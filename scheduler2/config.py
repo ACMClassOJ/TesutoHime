@@ -37,6 +37,9 @@ runner_info: Dict[str, RunnerInfo] = {}
 for id in config['runners']:
     runner_info[id] = RunnerInfo(**config['runners'][id], id=id)
 
+poll_timeout_secs = 8
+task_confirm_delay_secs = 2
+
 s3_connection = config['s3']['connection']
 
 @dataclass

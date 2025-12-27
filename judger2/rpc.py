@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto
-from http.client import GONE, NOT_FOUND, REQUEST_TIMEOUT
+from http.client import FORBIDDEN, GONE, NO_CONTENT, NOT_FOUND
 from time import time
 from typing import Optional
 from urllib.parse import quote
@@ -105,8 +105,8 @@ class HttpTransport(BaseTransport):
             'runner': self.info.__dict__,
         }
         timeout = ClientTimeout(total=poll_timeout_secs)
-        async with self._sess().post(f'task', json=payload, timeout=timeout, raise_for_status=False) as resp:
-            if resp.status == REQUEST_TIMEOUT:
+        async with self._sess().post('task', json=payload, timeout=timeout, raise_for_status=False) as resp:
+            if resp.status == NO_CONTENT:
                 return None
             resp.raise_for_status()
             text = await resp.json()
@@ -114,12 +114,12 @@ class HttpTransport(BaseTransport):
 
     async def put_progress(self, task_id: str, progress: StatusUpdate) -> None:
         payload = serialize_to_dict(progress)
-        await self._sess().put(f'task/{quote(task_id)}/progress', json=payload)
+        await self._sess().post(f'task/{quote(task_id)}/progress', json=payload)
 
     async def poll_for_abort_signal(self, task_id: str) -> AbortSignal:
         timeout = ClientTimeout(total=poll_timeout_secs)
         async with self._sess().head(f'task/{quote(task_id)}/poll', timeout=timeout, raise_for_status=False) as resp:
-            if resp.status == GONE or resp.status == NOT_FOUND:
+            if resp.status == GONE or resp.status == NOT_FOUND or resp.status == FORBIDDEN:
                 return AbortSignal.doAbort
             resp.raise_for_status()
             return AbortSignal.dontAbort

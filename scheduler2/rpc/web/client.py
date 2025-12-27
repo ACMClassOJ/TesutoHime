@@ -31,11 +31,11 @@ async def make_request(path, body):
             return
         except Exception as e:
             msg = 'Error sending request to %(path)s: %(error)s'
-            args = { 'path': path, 'error': e }
+            log_args = { 'path': path, 'error': e }
             if will_retry:
                 msg += ', will retry in %(interval)s seconds'
-                args['interval'] = interval
-            logger.error(msg, args, 'request:fail')
+                log_args['interval'] = interval
+            logger.error(msg, log_args, 'request:fail')
             if not will_retry: raise
             await sleep(interval)
             interval *= 2

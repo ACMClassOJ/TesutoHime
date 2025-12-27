@@ -4,19 +4,16 @@ from logging import getLogger
 from time import time
 from typing import Dict, Literal, Never, Optional
 from commons.task_typing import StatusUpdate
-from commons.util import RedisQueues, deserialize, format_exc, serialize
+from commons.util import RedisQueues, deserialize, format_exc
 from scheduler2.config import redis, redis_queues, runner_heartbeat_interval_secs, task_timeout_secs
-from scheduler2.state.runner_tasks import RunnerTaskInfo, runner_task_from_id
+from scheduler2.state.runner_tasks import RunnerTaskInfo, get_queue, runner_task_from_id
 
 
 logger = getLogger(__name__)
 
 
 async def task_enqueue(taskinfo: RunnerTaskInfo):
-    queues = redis_queues.task(taskinfo.id)
-    await redis.lpush(queues.task, serialize(taskinfo.task))
-    await redis.expire(queues.task, task_timeout_secs)
-    await redis.lpush(redis_queues.tasks_group(taskinfo.group), taskinfo.id)
+    await get_queue(taskinfo.group).put(taskinfo)
 
 async def task_abort(task_id: str):
     queues = redis_queues.task(task_id)
@@ -30,7 +27,7 @@ async def task_progress_wait(task_id: str, timeout_secs: float) -> Optional[Stat
     return deserialize(status)
 
 
-class RunnerOfflineException (Exception): pass
+class RunnerOfflineException(Exception): pass
 
 
 @dataclass

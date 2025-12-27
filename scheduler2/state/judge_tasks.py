@@ -1,5 +1,6 @@
 
 from asyncio import Task, create_task
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Callable, Coroutine, Dict, Set
 from commons.task_typing import CodeLanguage, SourceLocation
@@ -13,7 +14,7 @@ class JudgeTaskArgs:
     source: SourceLocation
     rate_limit_group: str
 
-_judge_tasks_from_problem_id: Dict[str, Set[Task]] = {}
+_judge_tasks_from_problem_id: Dict[str, Set[Task]] = defaultdict(set)
 _judge_task_from_submission_id: Dict[str, Task] = {}
 _judge_task_args: Dict[Task, JudgeTaskArgs] = {}
 
@@ -23,8 +24,6 @@ def create_judge_task(args: JudgeTaskArgs, run_judge: Callable[[JudgeTaskArgs], 
         # should not raise error, or the submission will temporarily be System Error
         return
     task = create_task(run_judge(args))
-    if not args.problem_id in _judge_tasks_from_problem_id:
-        _judge_tasks_from_problem_id[args.problem_id] = set()
     _judge_tasks_from_problem_id[args.problem_id].add(task)
     _judge_task_from_submission_id[args.submission_id] = task
     _judge_task_args[task] = args
@@ -35,8 +34,6 @@ def create_judge_task(args: JudgeTaskArgs, run_judge: Callable[[JudgeTaskArgs], 
     task.add_done_callback(cleanup)
 
 def judge_tasks_from_problem_id(id: str) -> Set[Task]:
-    if id not in _judge_tasks_from_problem_id:
-        _judge_tasks_from_problem_id[id] = set()
     return _judge_tasks_from_problem_id[id]
 
 def judge_task_from_submission_id(id: str) -> Task:

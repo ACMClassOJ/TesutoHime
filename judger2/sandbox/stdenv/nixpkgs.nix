@@ -1,11 +1,11 @@
-import <nixpkgs> {
+{
   overlays = [
     (self: super: with super; {
       # testlib.h
       testlib = stdenv.mkDerivation {
         pname = "acmoj-testlib";
         version = "0.9.44";
-        nativeBuildInputs = [ gcc13.cc ];
+        nativeBuildInputs = [ gcc15.cc ];
         src = fetchgit {
           url = "https://github.com/ACMClassOJ/testlib.git";
           sparseCheckout = [ "testlib.h" "Makefile" ];
@@ -19,7 +19,7 @@ import <nixpkgs> {
 
       # precompile <bits/stdc++.h>
       bits-pch = runCommand "acmoj-bits-pch" {
-        nativeBuildInputs = [ gcc13.cc which ];
+        nativeBuildInputs = [ gcc15.cc which ];
       } ''
         mkdir -p $out/include/bits
         cd $out/include/bits
@@ -37,7 +37,7 @@ import <nixpkgs> {
       # checker
       acmoj-checker = stdenv.mkDerivation {
         name = "acmoj-checker";
-        nativeBuildInputs = [ gcc13 cmake ];
+        nativeBuildInputs = [ gcc15 cmake ];
         src = lib.fileset.toSource {
           root = ../../checker;
           fileset = ../../checker;

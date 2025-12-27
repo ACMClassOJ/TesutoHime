@@ -56,7 +56,6 @@ mkdir "$(dirname "$resolvconf")"
 cat /etc/resolv.conf > "$resolvconf"
 
 export SHELL=/bin/bash
-export NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt
 chroot "$rootdir" /bin/bash -c "cd __WD__; /bin/bash"
 EOF
 initscript="${initscript//__WD__/"$wd"}"

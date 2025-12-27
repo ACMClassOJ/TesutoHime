@@ -67,8 +67,6 @@ if [ "$disable_clone_newnet" = "t" ]; then
 
   mkdir -p "$chroot/acmoj"
   cat /etc/resolv.conf > "$chroot/acmoj/resolv.conf"
-  # we need the following line to make openssl work
-  extra_args+=('--env' 'NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt')
 fi
 
 exec "$nsjail" ${extra_args[@]} $@

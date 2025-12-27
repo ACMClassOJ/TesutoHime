@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "$0")"
-./shell << 'EOF'
+./shell all << 'EOF'
 cat << END
 <p>GCC version: <code>$(g++ --version | head -1)</code></p>
 <p>CMake version: <code>$(cmake --version | head -1)</code></p>

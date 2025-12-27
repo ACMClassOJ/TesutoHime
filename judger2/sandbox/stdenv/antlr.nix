@@ -2,7 +2,7 @@
 # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/tools/parsing/antlr/4.nix
 # some java related code is removed
 
-with import ./nixpkgs.nix;
+nixpkgs: with nixpkgs;
 
 let
   mkAntlr = {

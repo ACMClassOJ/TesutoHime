@@ -2,7 +2,7 @@
 
 # For packed stdenv only. Not for use directly inside the source tree. 
 
-export ACMOJ_STDENV_WORKING_DIR="$(pwd)"
+export ACMOJ_STDENV_WORKING_DIR="$(realpath "$(pwd)")"
 export ACMOJ_STDENV_DATA_DIR="$(dirname -- "$(realpath -- "$0")")/data"
 
 exec unshare --fork -ump --map-user="$(id -ru)" --map-group="$(id -rg)" --keep-caps /bin/bash "$ACMOJ_STDENV_DATA_DIR/init" $@

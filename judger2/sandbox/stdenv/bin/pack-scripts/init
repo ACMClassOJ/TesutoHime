@@ -9,7 +9,14 @@ bindmount () {
       mkdir -p "$2"
     else
       mkdir -p "$(dirname "$2")"
-      touch "$2"
+      if [ -L "$1" ]; then
+        # Bindmount source path is canonicalised before mount
+        # but we just want an ordinary symlink
+        ln -s "$(readlink "$1")" "$2"
+        return
+      else
+        touch "$2"
+      fi
     fi
   fi
   mount --rbind "$1" "$2"
@@ -46,6 +53,7 @@ mkdir "$(dirname "$resolvconf")"
 cat /etc/resolv.conf > "$resolvconf"
 
 export SHELL=/bin/bash
+export PS1='[acmoj@\h \W]\$ '
 
 if [ $# -gt 0 ]; then
   exec chroot "$rootdir" /bin/bash -c "cd '$wd'; exec \$@" -- $@

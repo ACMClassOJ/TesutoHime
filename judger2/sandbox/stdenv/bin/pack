@@ -32,7 +32,7 @@ cp env "$out/data/env"
 ln -s ".$(readlink result)" "$out/data/result"
 
 echo "Making tarball..."
-tar -I zstd -cf "$wd/acmoj-stdenv.tar.zst" -C "$tempdir" .
+tar -I zstd -cf "$wd/acmoj-stdenv.tar.zst" -C "$tempdir" acmoj-stdenv
 
 echo "Removing temp dir..."
 chmod -R u+w "$out"

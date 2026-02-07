@@ -91,7 +91,7 @@ def validate(username: Optional['str'] = None,
     username_reg = '([a-zA-Z][a-zA-Z0-9_]{0,19})$'
     password_reg = '([\x20-\x7e]{6,128})$'
     friendly_name_reg = '([a-zA-Z0-9_]{1,60})$'
-    student_id_reg = '([0-9]{12}|[0-9]{5})$'
+    student_id_reg = '([0-9]{12}|[0-9]{5,6})$'
     if username is not None and re.match(username_reg, username) is None:
         return '用户名不符合要求。用户名要求：20 位以内的大小写字母或数字（第一位必须是字母）。'
     if password is not None and re.match(password_reg, password) is None:
@@ -99,7 +99,7 @@ def validate(username: Optional['str'] = None,
     if friendly_name is not None and re.match(friendly_name_reg, friendly_name) is None:
         return '昵称不符合要求。昵称要求：60 位以内的大小写字母、数字、下划线。'
     if student_id is not None and re.match(student_id_reg, student_id) is None:
-        return '学工号不符合注册要求。学工号要求：5 或 12 位数字（如果不够可以用0补全）。'
+        return '学工号不符合注册要求。学工号要求：5、6 或 12 位数字。'
     if username is not None and UserManager.has_user(username):
         return '用户名已被注册。'
     return None

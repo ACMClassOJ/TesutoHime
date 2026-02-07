@@ -25,7 +25,7 @@
             </div>
             <div class="form-group">
                 <label for="student_id">学工号</label>
-                <input class="form-control" type="text" name="student_id" value="{{ student_id }}" required="required" pattern="[0-9]{12}|[0-9]{5}" title="12 位学号（博士生学号以 0 开头）或 5 位工号">
+                <input class="form-control" type="text" name="student_id" value="{{ student_id }}" required="required" pattern="[0-9]{12}|[0-9]{5,6}" title="12 位学号（博士生学号以 0 开头）或 5–6 位工号">
             </div>
             <br>
             <input class="btn btn-block btn-primary" type="submit" value="注册">

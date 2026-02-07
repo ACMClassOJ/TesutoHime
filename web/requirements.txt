@@ -1,11 +1,11 @@
 boto3==1.37.31
-Flask==2.2.5
-Werkzeug==2.2.3
-blinker==1.6.3
+Flask==3.1.2
+Werkzeug==3.1.5
+blinker==1.9.0
 pymysql==1.1.0
 redis==4.6.0
 requests==2.31.0
-SQLAlchemy==2.0.40
+SQLAlchemy==2.0.46
 alembic==1.15.2
 alembic-postgresql-enum==1.7.0
 argon2-cffi==23.1.0

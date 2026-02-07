@@ -154,6 +154,6 @@ contributors = [
     Contributor('Alan Liang', 21, gh('Alan-Liang'), '评测端 & 全栈', 'https://acm.sjtu.edu.cn/OnlineJudge-pic/20211124-010333-292122.png'),
     Contributor('LauYeeYu', 21, gh('LauYeeYu'), '文档 & 前端', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/3d435e1d-274a-491b-9f36-f1433c3ccade'),
     Contributor('Wankupi', 22, gh('Wankupi'), '前端', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/847be529-0157-4e06-8920-48bbd4735032'),
-    Contributor('Conless', 22, gh('Conless'), '前端', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/fb8c8a4e-1730-4bf7-a700-da30fc0f1d89'),
+    Contributor('Conless', 22, gh('Conless'), '前端', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/29e652f9-2cc3-4df8-81f4-d250d85089af'),
     Contributor('TheUnknownThing', 24, gh('TheUnknownThing'), 'VS Code 插件', 'https://acm.sjtu.edu.cn/OnlineJudge/oj-images/c6d49a40-bf36-429e-bdd4-6e53b387c197'),
 ]

@@ -12,7 +12,7 @@ from typing import IO, Dict, List, Optional, Tuple, Union
 from commons.task_typing import Input, RunArgs, RunResult
 from commons.util import TempDir
 from judger2.cache import ensure_cached, upload
-from judger2.config import valgrind_args, valgrind_errexit_code
+from judger2.config import config
 from judger2.sandbox import Profile, run_with_limits
 from judger2.steps.compile_ import NotCompiledException, ensure_input
 from judger2.util import InvalidProblemException, copy_supplementary_files
@@ -59,12 +59,12 @@ class PythonRunner(BaseRunner):
 class ValgrindRunner(BaseRunner):
     def prepare(self, program: PosixPath):
         chmod(program, elf_mode)
-        argv = ['/bin/valgrind'] + valgrind_args + [str(program)]
+        argv = ['/bin/valgrind'] + config.valgrind.args + [str(program)]
         return RunParams('valgrind', argv, [], False, True)
 
     def interpret_result(self, result: RunResult):
         if result.error != 'runtime_error' \
-        or result.code != valgrind_errexit_code:
+        or result.code != config.valgrind.errexit_code:
             return result
         res_dict = result.__dict__
         res_dict['error'] = 'memory_leak'

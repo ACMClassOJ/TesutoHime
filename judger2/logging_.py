@@ -6,10 +6,10 @@ from pathlib import PosixPath
 
 from commons.logging_ import add_handler, setup_logging
 
-from judger2.config import log_dir
+from judger2.config import config
 
-setup_logging(log_dir)
+setup_logging(str(config.log_dir))
 
 task_logger = getLogger('tasks')
-taskslog_file = PosixPath(log_dir) / 'tasks.log'
+taskslog_file = PosixPath(config.log_dir) / 'tasks.log'
 add_handler(INFO, WatchedFileHandler(taskslog_file), task_logger)

@@ -10,7 +10,7 @@ from commons.task_typing import (Checker, CheckInput, CheckResult,
                                  CompareChecker, DirectChecker, RunResult, SpjChecker)
 
 from judger2.cache import ensure_cached
-from judger2.config import checker_cmp_limits
+from judger2.config import config
 from judger2.sandbox import run_with_limits
 from judger2.steps.compile_ import NotCompiledException, ensure_input
 from judger2.util import TempDir, copy_supplementary_files
@@ -49,7 +49,7 @@ async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker
     with TempDir() as cwd:
         res = await run_with_limits(
             'std', argv, cwd,
-            checker_cmp_limits,
+            config.checker.cmp_limits,
             supplementary_paths=[outfile, ans],
         )
     if res.error == 'runtime_error' and res.code == checker_errexit_code:

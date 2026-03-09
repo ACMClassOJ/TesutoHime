@@ -17,9 +17,7 @@ from commons.task_typing import (CompileLocalResult, CompileResult,
                                  CompileSourceGit, CompileSourceVerilog,
                                  CompileTask, Input, ResourceUsage)
 from judger2.cache import CachedFile, ensure_cached, upload
-from judger2.config import (cache_dir, cxx_exec_name, cxx_file_name, cxxflags,
-                            exec_file_name, git_exec_name, git_ssh_private_key,
-                            gitflags, verilog_exec_name, verilog_file_name)
+from judger2.config import config
 from judger2.sandbox import chown_back, chown_to_user, run_with_limits
 from judger2.util import (FileConflictException, TempDir,
                           copy_supplementary_files)
@@ -90,7 +88,7 @@ async def compile(task: CompileTask) -> CompileLocalResult:
         if task.artifact is not None:
             local_path = (await upload(res.local_path, task.artifact.url)).path
         else:
-            local_path = PosixPath(cache_dir) / str(uuid4())
+            local_path = PosixPath(config.cache_dir) / str(uuid4())
             copy2(res.local_path, local_path)
             # touch the local file so the file will be eventually deleted
             utime(local_path)
@@ -107,7 +105,7 @@ async def ensure_input(input: Input) -> CachedFile:
         if res.result.result != 'compiled':
             raise NotCompiledException(res.result.message)
         assert res.local_path is not None
-        return CachedFile(res.local_path, exec_file_name)
+        return CachedFile(res.local_path, config.task.exec_file_name)
     return await ensure_cached(input.url)
 
 
@@ -118,7 +116,7 @@ async def prepare_cpp(
     limits: ResourceUsage,
 ) -> StageResult:
     main_file = (await ensure_cached(source.main)).path
-    code_file = cwd / cxx_file_name
+    code_file = cwd / config.compiler.cxx.file_name
     copy2(main_file, code_file)
     return StageResult(True, '')
 
@@ -127,11 +125,11 @@ async def compile_cpp(
     source: CompileSourceCpp,
     limits: ResourceUsage,
 ) -> CompileLocalResult:
-    code_file = cwd / cxx_file_name
-    exec_file = cwd / cxx_exec_name
+    code_file = cwd / config.compiler.cxx.file_name
+    exec_file = cwd / config.compiler.cxx.exec_name
     res = await run_with_limits(
         'std',
-        ['/bin/g++'] + cxxflags + [str(code_file), '-o', str(exec_file)],
+        ['/bin/g++'] + config.compiler.cxx.flags + [str(code_file), '-o', str(exec_file)],
         cwd, limits,
     )
     if res.error is not None:
@@ -150,7 +148,7 @@ async def prepare_git(
         tempfile = NamedTemporaryFile('w+')
         try:
             chmod(tempfile.name, 0o600)
-            tempfile.write(git_ssh_private_key)
+            tempfile.write(config.git.ssh.private_key)
             tempfile.flush()
             chown_to_user(tempfile.name)
             bind = [
@@ -174,7 +172,7 @@ async def prepare_git(
             tempfile.close()
     
     # clone
-    git_argv = ['/bin/git', 'clone', source.url, '.'] + gitflags
+    git_argv = ['/bin/git', 'clone', source.url, '.'] + config.git.flags
     logger.debug('about to run %(argv)s', { 'argv': git_argv }, 'compile:git:run')
     clone_res = await run_build_step(git_argv)
     if clone_res.error is not None:
@@ -233,11 +231,11 @@ async def compile_git(
         message += '\nWarning: Makefile not found, skipping make invocation'
 
     # check
-    exe = cwd / git_exec_name
+    exe = cwd / config.git.exec_name
     if not exe.is_file():
         msg = message + '\n' + \
-            f'Executable \'{git_exec_name}\' not found in built files; ' \
-            f'please ensure your compile output is named \'{git_exec_name}\' ' \
+            f'Executable \'{config.git.exec_name}\' not found in built files; ' \
+            f'please ensure your compile output is named \'{config.git.exec_name}\' ' \
             'in the root directory of the repository.'
         return CompileLocalResult(
             CompileResult('runtime_error', msg),
@@ -254,7 +252,7 @@ async def prepare_verilog(
     limits: ResourceUsage,
 ) -> StageResult:
     main_file = (await ensure_cached(source.main)).path
-    code_file = cwd / verilog_file_name
+    code_file = cwd / config.compiler.verilog.file_name
     copy2(main_file, code_file)
     return StageResult(True, '')
 
@@ -263,8 +261,8 @@ async def compile_verilog(
     source: CompileSourceVerilog,
     limits: ResourceUsage,
 ) -> CompileLocalResult:
-    code_file = cwd / verilog_file_name
-    exec_file = cwd / verilog_exec_name
+    code_file = cwd / config.compiler.verilog.file_name
+    exec_file = cwd / config.compiler.verilog.exec_name
     res = await run_with_limits(
         'std',
         ['/bin/iverilog', str(code_file), '-o', str(exec_file)],

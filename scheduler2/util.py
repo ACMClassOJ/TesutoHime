@@ -8,7 +8,7 @@ from urllib.parse import quote, urljoin
 from aiohttp import request
 from typing_extensions import Generic, Literal, get_args, get_origin
 
-from commons.task_typing import Task
+from commons.task_typing import TaskType
 from commons.util import dump_dataclass
 from scheduler2.config import (request_retries, request_retry_interval_secs,
                                web_auth, web_base_url)
@@ -68,7 +68,7 @@ class RateLimiter:
 
 
 @dataclass
-class TaskInfo(Generic[Task]):
+class TaskInfo[Task: TaskType]:
     task: Task
     submission_id: Optional[str]
     problem_id: str

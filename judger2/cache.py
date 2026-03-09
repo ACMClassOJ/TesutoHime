@@ -12,8 +12,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from aiohttp import request
 
-from judger2.config import (cache_clear_interval_secs, cache_dir,
-                            cache_max_age_secs)
+from judger2.config import config
 
 logger = getLogger(__name__)
 
@@ -27,7 +26,7 @@ class CachedFile:
 def cached_from_url(url: str) -> CachedFile:
     key = urlsplit(url).path
     cache_id = str(uuid5(NAMESPACE_URL, key))
-    p = PosixPath(path.join(cache_dir, cache_id))
+    p = PosixPath(path.join(config.cache_dir, cache_id))
     filename = PosixPath(key).name
     return CachedFile(p, filename)
 
@@ -89,13 +88,13 @@ async def upload(local_path: PosixPath, url: str) -> CachedFile:
 
 
 def clear_cache():
-    for file in scandir(cache_dir):
+    for file in scandir(config.cache_dir):
         if not file.is_file():
             continue
         st = file.stat()
         atime = max(st.st_atime, st.st_mtime)
         age = time() - atime
-        if age > cache_max_age_secs:
+        if age > config.cache.max_age_secs:
             logger.debug('removing file %(path)s from cache as age is %(age)s', { 'path': file.path, 'age': age }, 'cache:purge')
             remove(file)
 
@@ -108,4 +107,4 @@ async def clean_cache_worker():
             return
         except Exception as e:
             logger.error('error while clearing cache: %(error)s', { 'error': e }, 'cache:clean')
-        await sleep(cache_clear_interval_secs)
+        await sleep(config.cache.clear_interval_secs)

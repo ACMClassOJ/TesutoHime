@@ -8,7 +8,7 @@ from commons.task_typing import FileUrl
 from commons.util import TempDir, format_exc
 
 from judger2.cache import ensure_cached
-from judger2.config import working_dir
+from judger2.config import config
 
 logger = getLogger(__name__)
 
@@ -30,7 +30,7 @@ def _judger_before_tmpdir_exit(path: PosixPath):
     except Exception as e:
         logger.error('error removing temp dir %(path)s: %(error)s', { 'path': path, 'error': e }, 'tempdir:remove')
 
-TempDir.config(working_dir, _judger_before_tmpdir_exit)
+TempDir.config(str(config.working_dir), _judger_before_tmpdir_exit)
 
 
 class InvalidProblemException(Exception): pass

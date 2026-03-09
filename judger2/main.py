@@ -4,10 +4,11 @@ from asyncio import CancelledError, create_task, run, sleep, wait
 from atexit import register
 from logging import getLogger
 from time import time
+from pydantic import TypeAdapter
 
 from commons.task_typing import (StatusUpdateDone, StatusUpdateError,
-                                 StatusUpdateStarted)
-from commons.util import deserialize, serialize
+                                 StatusUpdateStarted, TaskType)
+from commons.util import serialize
 
 from judger2.cache import clean_cache_worker
 from judger2.config import config, redis
@@ -48,7 +49,7 @@ async def poll_for_tasks():
             task_serialized = await redis.rpop(task_queues.task)
             if task_serialized is None:
                 continue
-            task = deserialize(task_serialized)
+            task = TypeAdapter(TaskType).validate_json(task_serialized)
             await report_progress(StatusUpdateStarted(str(config.id)))
             aio_task = create_task(run_task(task, task_id))
 

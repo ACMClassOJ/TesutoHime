@@ -1,338 +1,378 @@
-from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import PosixPath
-from typing import List, Optional, TypeVar, Union
-
-from typing_extensions import Generic, Literal
+from typing import Any, Self
+from typing_extensions import Literal
+from pydantic import ModelWrapValidatorHandler, model_validator
+from pydantic.dataclasses import dataclass
+from dataclasses import field
 
 # scheduler -> runner
 
-Url = str
-FileUrl = Url
+type Url = str
+type FileUrl = Url
+
 
 @dataclass
-class CompileSourceCpp:
+class DataclassBase:
+    """
+    The base class of all task related dataclasses, a compatibility layer to parsing from the old self-defined serialization format.
+    It might be removed in the future.
+    """
+
+    @model_validator(mode="wrap")
+    @classmethod
+    def validate(cls, val: Any, handler: ModelWrapValidatorHandler[Self]) -> Self:
+        match val:
+            case {"type": str(t), "value": v}:
+                if t != cls.__name__:
+                    raise ValueError(f"Expected type {cls.__name__}, got {t}")
+                return handler(v)
+            case _:
+                return handler(val)
+
+
+@dataclass
+class CompileSourceCpp(DataclassBase):
     main: FileUrl
 
+
 @dataclass
-class CompileSourceGit:
+class CompileSourceGit(DataclassBase):
     url: Url
 
+
 @dataclass
-class CompileSourceVerilog:
+class CompileSourceVerilog(DataclassBase):
     main: FileUrl
 
 
-CompileSource = Union[
-    CompileSourceCpp,
-    CompileSourceGit,
-    CompileSourceVerilog,
-]
+type CompileSource = CompileSourceCpp | CompileSourceGit | CompileSourceVerilog
 
 
 @dataclass
-class Artifact:
+class Artifact(DataclassBase):
     url: FileUrl
 
+
 @dataclass
-class ResourceUsage:
+class ResourceUsage(DataclassBase):
     time_msecs: int
     memory_bytes: int
     file_count: int
     file_size_bytes: int
 
+
 @dataclass
-class CompileTask:
+class CompileTask(DataclassBase):
     source: CompileSource
-    supplementary_files: List[FileUrl]
-    artifact: Optional[Artifact]
+    supplementary_files: list[FileUrl]
+    artifact: Artifact | None
     limits: ResourceUsage
 
 
-Input = Union[CompileTask, Artifact]
+type Input = CompileTask | Artifact
 
 
 @dataclass
-class InteractorOptions:
+class InteractorOptions(DataclassBase):
     executable: Input
     limits: ResourceUsage
-    supplementary_files: List[FileUrl]
+    supplementary_files: list[FileUrl]
 
-RunType = Literal['elf', 'valgrind', 'verilog', 'python']
+
+type RunType = Literal["elf", "valgrind", "verilog", "python"]
+
 
 @dataclass
-class RunArgs:
+class RunArgs(DataclassBase):
     # the value 'elf' has special meaning when used in a judge plan:
     # if type='elf' and code language is Python, then the type will be changed
     # to 'python' at plan execution time.
     type: RunType
     limits: ResourceUsage
-    infile: Optional[FileUrl]
-    supplementary_files: List[FileUrl]
-    outfile: Optional[Artifact] = None
-    interactor: Optional[InteractorOptions] = None
+    infile: FileUrl | None
+    supplementary_files: list[FileUrl]
+    outfile: Artifact | None = None
+    interactor: InteractorOptions | None = None
 
 
 @dataclass
-class CompareChecker:
+class CompareChecker(DataclassBase):
     ignore_whitespace: bool
     answer: FileUrl
 
-@dataclass
-class DirectChecker: pass
 
 @dataclass
-class SpjChecker:
-    format: Literal['checker', 'scorer']
+class DirectChecker(DataclassBase):
+    pass
+
+
+@dataclass
+class SpjChecker(DataclassBase):
+    format: Literal["checker", "scorer"]
     executable: Input
-    answer: Optional[FileUrl]
-    supplementary_files: List[FileUrl]
+    answer: FileUrl | None
+    supplementary_files: list[FileUrl]
     limits: ResourceUsage
 
-Checker = Union[CompareChecker, DirectChecker, SpjChecker]
-InputPlan = Union[Input, 'UserCode', 'CompileTaskPlan']
-_TestpointInput = TypeVar('_TestpointInput', Input, InputPlan)
+
+type Checker = CompareChecker | DirectChecker | SpjChecker
+type InputPlan = Input | UserCode | CompileTaskPlan
 
 
 @dataclass
-class Testpoint(Generic[_TestpointInput]):
+class Testpoint[T: (Input, InputPlan)](DataclassBase):
     id: str
-    dependent_on: Optional[str] # id
-    input: _TestpointInput      # program to run
-    run: Optional[RunArgs]
+    dependent_on: str | None  # id
+    input: T  # program to run
+    run: RunArgs | None
     check: Checker
 
+
 @dataclass
-class JudgeTask(Generic[_TestpointInput]):
-    testpoints: List[Testpoint[_TestpointInput]]
+class JudgeTask[T: (Input, InputPlan)](DataclassBase):
+    testpoints: list[Testpoint[T]]
 
 
-Task = TypeVar('Task', CompileTask, JudgeTask[Input])
+type TaskType = CompileTask | JudgeTask[Input]
 
 
 # runner -> scheduler, runner internal state
 
-CompileError = Literal['compile_error']
-RunError = Literal[
-    'wrong_answer',
-    'runtime_error',
-    'time_limit_exceeded',
-    'memory_limit_exceeded',
-    'disk_limit_exceeded',
-    'memory_leak',
-    'system_error',
-    'bad_problem',
+type CompileError = Literal["compile_error"]
+type RunError = Literal[
+    "wrong_answer",
+    "runtime_error",
+    "time_limit_exceeded",
+    "memory_limit_exceeded",
+    "disk_limit_exceeded",
+    "memory_leak",
+    "system_error",
+    "bad_problem",
 ]
-CheckError = Literal['wrong_answer', 'bad_problem']
-Skipped = Literal['skipped']
-Void = Literal['void']
-Aborted = Literal['aborted']
-Judging = Literal['judging']
-Pending = Literal['pending']
-MiscError = Literal[
-    'unknown_error',
-]
-Accepted = Literal['accepted']
-ResultType = Union[
-    CompileError,
-    RunError,
-    CheckError,
-    Skipped,
-    Void,
-    Aborted,
-    Judging,
-    Pending,
-    MiscError,
-    Accepted,
-]
+type CheckError = Literal["wrong_answer", "bad_problem"]
+type Skipped = Literal["skipped"]
+type Void = Literal["void"]
+type Aborted = Literal["aborted"]
+type Judging = Literal["judging"]
+type Pending = Literal["pending"]
+type MiscError = Literal["unknown_error",]
+type Accepted = Literal["accepted"]
+type ResultType = (
+    CompileError
+    | RunError
+    | CheckError
+    | Skipped
+    | Void
+    | Aborted
+    | Judging
+    | Pending
+    | MiscError
+    | Accepted
+)
 
-Compiled = Literal['compiled']
-CompileResultType = Union[
-    CompileError,
-    RunError,
-    Aborted,
-    MiscError,
-    Compiled,
-]
+
+type Compiled = Literal["compiled"]
+type CompileResultType = CompileError | RunError | Aborted | MiscError | Compiled
+
 
 @dataclass
-class CompileResult:
+class CompileResult(DataclassBase):
     result: CompileResultType
     message: str
 
-@dataclass
-class RunResult:
-    error: Optional[Union[CompileError, RunError]]
-    message: str
-    resource_usage: Optional[ResourceUsage] = None
-    code: Optional[int] = None # for runtime errors
-    output_path: Optional[PosixPath] = None
-    input_path: Optional[PosixPath] = None
 
 @dataclass
-class CompileLocalResult:
+class RunResult(DataclassBase):
+    error: (CompileError | RunError) | None
+    message: str
+    resource_usage: ResourceUsage | None = None
+    code: int | None = None  # for runtime errors
+    output_path: PosixPath | None = None
+    input_path: PosixPath | None = None
+
+
+@dataclass
+class CompileLocalResult(DataclassBase):
     result: CompileResult
-    local_path: Optional[PosixPath]
+    local_path: PosixPath | None
 
     @staticmethod
-    def from_run_failure(res: RunResult):
-        if res.error is None: raise Exception
+    def from_run_failure(res: RunResult) -> CompileLocalResult:
+        if res.error is None:
+            raise Exception
         return CompileLocalResult(
             CompileResult(res.error, res.message),
             None,
         )
 
     @staticmethod
-    def from_file(file: PosixPath, message: str = ''):
+    def from_file(file: PosixPath, message: str = "") -> CompileLocalResult:
         return CompileLocalResult(
-            CompileResult('compiled', message),
+            CompileResult("compiled", message),
             file,
         )
 
-CheckInput = Union[Input, RunResult]
+
+type CheckInput = Input | RunResult
 
 
 @dataclass
-class TestpointJudgeResult:
+class TestpointJudgeResult(DataclassBase):
     id: str
     result: ResultType
     message: str
     score: float = 0.0
-    resource_usage: Optional[ResourceUsage] = None
+    resource_usage: ResourceUsage | None = None
+
 
 @dataclass
-class CheckResult:
+class CheckResult(DataclassBase):
     result: ResultType
     message: str
     score: float = 0.0
 
 
 @dataclass
-class JudgeResult:
-    testpoints: List[TestpointJudgeResult]
+class JudgeResult(DataclassBase):
+    testpoints: list[TestpointJudgeResult | None]
 
-Result = Union[CompileResult, JudgeResult]
 
-class InvalidTaskException(Exception): pass
+type Result = CompileResult | JudgeResult
+
+
+class InvalidTaskException(Exception):
+    pass
+
 
 @dataclass
-class StatusUpdateStarted:
+class StatusUpdateStarted(DataclassBase):
     id: str
+
+
 @dataclass
-class StatusUpdateProgress:
+class StatusUpdateProgress(DataclassBase):
     result: Result
+
+
 @dataclass
-class StatusUpdateDone:
+class StatusUpdateDone(DataclassBase):
     result: Result
+
+
 @dataclass
-class StatusUpdateError:
+class StatusUpdateError(DataclassBase):
     message: str
 
-StatusUpdate = Union[
-    StatusUpdateStarted,
-    StatusUpdateProgress,
-    StatusUpdateDone,
-    StatusUpdateError,
-]
+
+type StatusUpdate = StatusUpdateStarted | StatusUpdateProgress | StatusUpdateDone | StatusUpdateError
 
 
 # scheduler internal state
 
+
 class CodeLanguage(Enum):
-    CPP = 'cpp'
-    PYTHON = 'python'
-    GIT = 'git'
-    VERILOG = 'verilog'
-    QUIZ = 'quiz'
+    CPP = "cpp"
+    PYTHON = "python"
+    GIT = "git"
+    VERILOG = "verilog"
+    QUIZ = "quiz"
 
 
 @dataclass
-class UserCode:
-    filename: Optional[str] = None
+class UserCode(DataclassBase):
+    filename: str | None = None
+
 
 @dataclass
-class CompileTaskPlan:
-    source: Union[CompileSource, UserCode]
-    supplementary_files: List[Union[FileUrl, UserCode]]
+class CompileTaskPlan(DataclassBase):
+    source: CompileSource | UserCode
+    supplementary_files: list[FileUrl | UserCode]
     artifact: bool
     limits: ResourceUsage
 
+
 @dataclass
-class JudgeTaskPlan:
+class JudgeTaskPlan(DataclassBase):
     task: JudgeTask[InputPlan]
-    dependencies: List[int]
-    dependents: List[int]
+    dependencies: list[int]
+    dependents: list[int]
 
 
 @dataclass
-class TestpointGroup:
+class TestpointGroup(DataclassBase):
     id: str
     name: str
-    testpoints: List[str]
+    testpoints: list[str]
     score: float
 
 
 @dataclass
-class QuizOption:
+class QuizOption(DataclassBase):
     value: str
     text: str
 
+
 @dataclass
-class QuizProblem:
+class QuizProblem(DataclassBase):
     id: str
-    type: Literal['SELECT', 'FILL']
+    type: Literal["SELECT", "FILL"]
     title: str
-    answer: Optional[str] = None
-    options: Optional[List[QuizOption]] = None
+    answer: str | None = None
+    options: list[QuizOption] | None = None
 
 
-DEFAULT_GROUP = 'default'
+DEFAULT_GROUP = "default"
+
 
 @dataclass
-class JudgePlan:
+class JudgePlan(DataclassBase):
     group: str = DEFAULT_GROUP
-    compile: Optional[CompileTaskPlan] = None
-    judge: List[JudgeTaskPlan] = field(default_factory=lambda: [])
-    score: List[TestpointGroup] = field(default_factory=lambda: [])
-    quiz: Optional[List[QuizProblem]] = None
+    compile: CompileTaskPlan | None = None
+    judge: list[JudgeTaskPlan] = field(default_factory=lambda: [])
+    score: list[TestpointGroup] = field(default_factory=lambda: [])
+    quiz: list[QuizProblem] | None = None
 
 
 # Please sync changes to web/static/api/api.yml
 @dataclass
-class TestpointSummary:
+class TestpointSummary(DataclassBase):
     id: str
-    limits: Optional[ResourceUsage]
+    limits: ResourceUsage | None
+
 
 @dataclass
-class SubtaskSummary:
+class SubtaskSummary(DataclassBase):
     id: str
     name: str
-    testpoints: List[TestpointSummary]
+    testpoints: list[TestpointSummary]
     score: float
 
+
 @dataclass
-class JudgePlanSummary:
-    subtasks: List[SubtaskSummary]
+class JudgePlanSummary(DataclassBase):
+    subtasks: list[SubtaskSummary]
 
 
 @dataclass
-class GroupJudgeResult:
+class GroupJudgeResult(DataclassBase):
     id: str
     name: str
     result: ResultType
-    testpoints: List[TestpointJudgeResult]
+    testpoints: list[TestpointJudgeResult]
     score: float
 
+
 @dataclass
-class ProblemJudgeResult:
+class ProblemJudgeResult(DataclassBase):
     result: ResultType
-    message: Optional[str]
+    message: str | None
     score: float = 0.0
-    resource_usage: Optional[ResourceUsage] = None
-    groups: List[GroupJudgeResult] = field(default_factory=lambda: [])
+    resource_usage: ResourceUsage | None = None
+    groups: list[GroupJudgeResult] = field(default_factory=lambda: [])
 
 
 @dataclass
-class SourceLocation:
+class SourceLocation(DataclassBase):
     bucket: str
     key: str

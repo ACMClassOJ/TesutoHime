@@ -2,15 +2,12 @@ from asyncio import CancelledError
 from logging import getLogger
 from pathlib import PosixPath
 from typing import List, Optional, Sequence, Union
-
-from typing_extensions import overload
-
 from commons.task_typing import (Artifact, CompileResult, CompileTask, Input,
                                  InvalidTaskException, JudgeResult, JudgeTask,
                                  RunResult, StatusUpdateProgress, Testpoint,
                                  TestpointJudgeResult)
-from commons.util import format_exc, serialize
-from judger2.config import config, redis
+from commons.util import format_exc
+from judger2.judger import ProgressReporter
 from judger2.logging_ import task_logger
 from judger2.steps.check import check
 from judger2.steps.compile_ import compile
@@ -18,21 +15,6 @@ from judger2.steps.run import run
 from judger2.util import TempDir, copy_supplementary_files
 
 logger = getLogger(__name__)
-
-
-@overload
-async def run_task(task: CompileTask, task_id: str) -> CompileResult: pass
-@overload
-async def run_task(task: JudgeTask[Input], task_id: str) -> JudgeResult: pass
-async def run_task(task, task_id):
-    task_logger.info('received task %(task)s', { 'id': task_id, 'task': task }, 'task:start')
-    if isinstance(task, CompileTask):
-        return await compile_task(task)
-    elif isinstance(task, JudgeTask):
-        return await judge_task(task, task_id)
-    else:
-        raise InvalidTaskException(f'Unknown task type')
-
 
 async def compile_task(task: CompileTask) -> CompileResult:
     try:
@@ -109,8 +91,8 @@ async def judge_testpoint(testpoint: Testpoint[Input], result: JudgeResult, \
         task_logger.debug('testpoint %(id)s finished with %(result)s', { 'id': testpoint.id, 'result': res }, 'testpoint:done')
         return res
 
-async def judge_task(task: JudgeTask[Input], task_id: str) -> JudgeResult:
-    result = JudgeResult([None for _ in task.testpoints])  # type: ignore
+async def judge_task(reporter: ProgressReporter, task: JudgeTask[Input]) -> JudgeResult:
+    result = JudgeResult([None for _ in task.testpoints])
     with TempDir() as cwd:
         for i, testpoint in enumerate(task.testpoints):
             rusage = Ref(None)
@@ -129,8 +111,6 @@ async def judge_task(task: JudgeTask[Input], task_id: str) -> JudgeResult:
                     resource_usage=rusage.value,
                 )
 
-            queue = config.queues.task(task_id).progress
-            await redis.lpush(queue, serialize(StatusUpdateProgress(result)))
-            await redis.expire(queue, config.task.timeout_secs)
+            await reporter(StatusUpdateProgress(result))
 
     return result

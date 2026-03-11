@@ -1,21 +1,24 @@
 import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine
-from dataclasses import field
+from dataclasses import field, dataclass
+import functools
 import json
 from logging import getLogger
 from time import time
 from pydantic import validate_call
-from pydantic.dataclasses import dataclass
 from typing import Any, NoReturn
+from redis.asyncio import Redis
 
+from commons.util import serialize
 from judger2.cache import clean_cache_worker
-from judger2.config import redis, config
+from judger2.config import config
+
 
 logger = getLogger(__name__)
 
-# (judger, task, task_id) -> None
-type JudgerHandler[T] = Callable[[Judger, T, str], Coroutine[None, Any, None]]
+type ProgressReporter = Callable[[Any], Coroutine[None, Any, None]]
+type JudgerHandler[T] = Callable[[ProgressReporter, T, str], Coroutine[None, Any, None]]
 
 
 @dataclass
@@ -24,6 +27,15 @@ class Judger:
     task_handlers: dict[str, JudgerHandler[Any]] = field(
         default_factory=dict[str, JudgerHandler[Any]]
     )
+    redis: Redis[str] = field(
+        default_factory=lambda: Redis(
+            decode_responses=True,
+            health_check_interval=30,
+            socket_connect_timeout=5,
+            socket_keepalive=True,
+            **config.redis.connection.model_dump(),
+        ),
+    )
 
     def register_task_handler[T](self, name: str, handler: JudgerHandler[T]):
         self.task_handlers[name] = validate_call(handler)
@@ -31,7 +43,7 @@ class Judger:
     async def send_heartbeats(self):
         while True:
             try:
-                await redis.set(config.queues.heartbeat, time())
+                await self.redis.set(config.queues.heartbeat, time())
             except asyncio.CancelledError:
                 return
             except Exception as e:
@@ -41,7 +53,7 @@ class Judger:
     async def _wait_cancel(self, task_id: str):
         while True:
             try:
-                message = await redis.brpop(
+                message = await self.redis.brpop(
                     config.queues.task(task_id).abort, timeout=config.task.poll_timeout_secs
                 )
                 if message is None:
@@ -52,6 +64,16 @@ class Judger:
             except Exception as e:
                 logger.error("error processing signal: %(error)s", {"error": e}, "task:abortsignal")
                 await asyncio.sleep(2)
+
+    async def report_progress(self, task_id: str, status: Any):
+        """
+        A wrapper for pushing status to redis.
+        This method is provided for task handlers to report progress,
+        so that they don't need to care about the detail of communication.
+        """
+        task_queues = config.queues.task(task_id)
+        await self.redis.lpush(task_queues.progress, serialize(status))
+        await self.redis.expire(task_queues.progress, config.task.timeout_secs)
 
     async def task_loop(self) -> NoReturn:
         queue_list = deque[str]()
@@ -69,29 +91,44 @@ class Judger:
             try:
                 queue_list.rotate()  # fairness
                 # start polling for tasks
-                queue_id, task_id = await redis.brpop(queue_list, timeout=0)
-                await redis.rpush(config.queues.in_progress, task_id)
-                _, task_serialized = await redis.brpop(config.queues.task(task_id).task, timeout=0)
+                queue_id, task_id = await self.redis.brpop(queue_list, timeout=0)
+                await self.redis.rpush(config.queues.in_progress, task_id)
+                _, task_serialized = await self.redis.brpop(
+                    config.queues.task(task_id).task, timeout=0
+                )
                 logger.info(f"received task {task_id} in queue {queue_id}")
 
                 # dispatch task to handler
                 handler = queue2handler[queue_id]
+                reporter = functools.partial(self.report_progress, task_id)
                 task = json.loads(task_serialized)
-                works = [handler(self, task, task_id), self._wait_cancel(task_id)]
+                works = [handler(reporter, task, task_id), self._wait_cancel(task_id)]
+
                 # wait for task finish or cancel
                 works = map(asyncio.create_task, works)
                 done, pending = await asyncio.wait(works, return_when=asyncio.FIRST_COMPLETED)
-                for p in pending:
-                    p.cancel()
+                if pending:
+                    for p in pending:
+                        p.cancel()
+                    res_cancels = await asyncio.gather(*pending, return_exceptions=True)
+                    for res in res_cancels:
+                        # Exception is not base class of CancelledError
+                        assert not isinstance(
+                            res, Exception
+                        ), "Throw exception after cancel. Code has bad design. Terminating."
                 for p in done:
                     exc = p.exception()
                     if exc is not None:
-                        logger.error("error occurred while processing task: %(error)s", {"error": exc}, "task:process")
+                        logger.error(
+                            "error occurred while processing task: %(error)s",
+                            {"error": exc},
+                            "task:process",
+                        )
                         raise exc
                 logger.info(f"finished task {task_id}")
             finally:
                 if task_id is not None:
-                    await redis.lrem(config.queues.in_progress, 0, task_id)
+                    await self.redis.lrem(config.queues.in_progress, 0, task_id)
 
     async def online(self):
         logger.info("starting judger")

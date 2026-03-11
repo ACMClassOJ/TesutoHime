@@ -1,9 +1,9 @@
-from asyncio import CancelledError, sleep
+from asyncio import sleep
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from http.client import NOT_MODIFIED, OK
 from logging import getLogger
-from os import chmod, path, remove, rename, scandir, stat, utime
+from os import chmod, path, remove, rename, scandir, stat, unlink, utime
 from pathlib import PosixPath
 from shutil import copy
 from time import time
@@ -37,7 +37,7 @@ utc_time_format = '%a, %d %b %Y %H:%M:%S GMT'
 async def ensure_cached(url: str) -> CachedFile:
     cache = cached_from_url(url)
     logger.debug('caching file %(filename)s to %(path)s', { 'filename': cache.filename, 'path': cache.path }, 'cache:ensure')
-    headers = {}
+    headers: dict[str, str] = {}
     try:
         mtime = stat(cache.path).st_mtime
         date = datetime.fromtimestamp(mtime).astimezone(timezone.utc)
@@ -64,11 +64,8 @@ async def ensure_cached(url: str) -> CachedFile:
                 .timestamp()
             utime(part_path, (time(), last_modified))
             rename(part_path, cache.path)
-        except CancelledError:
-            try:
-                remove(part_path)
-            except Exception:
-                pass
+        except:
+            unlink(part_path)
             raise
         return cache
 
@@ -88,6 +85,7 @@ async def upload(local_path: PosixPath, url: str) -> CachedFile:
 
 
 def clear_cache():
+    logger.info('clearing cache', {}, 'cache:clean')
     for file in scandir(config.cache_dir):
         if not file.is_file():
             continue
@@ -101,10 +99,7 @@ def clear_cache():
 async def clean_cache_worker():
     while True:
         try:
-            logger.info('clearing cache', {}, 'cache:clean')
             clear_cache()
-        except CancelledError:
-            return
         except Exception as e:
             logger.error('error while clearing cache: %(error)s', { 'error': e }, 'cache:clean')
         await sleep(config.cache.clear_interval_secs)

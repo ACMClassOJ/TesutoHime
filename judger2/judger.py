@@ -1,4 +1,5 @@
 import asyncio
+import atexit
 from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import field, dataclass
@@ -44,10 +45,10 @@ class Judger:
         while True:
             try:
                 await self.redis.set(config.queues.heartbeat, time())
-            except asyncio.CancelledError:
-                return
             except Exception as e:
                 logger.error("error sending heartbeat: %(error)s", {"error": e}, "heartbeat")
+            # put sleep outside the except block
+            # make sure not attempting sending heartbeat too frequently
             await asyncio.sleep(config.task.heartbeat_interval_secs)
 
     async def _wait_cancel(self, task_id: str):
@@ -59,11 +60,9 @@ class Judger:
                 if message is None:
                     continue
                 return
-            except asyncio.CancelledError:
-                return
             except Exception as e:
                 logger.error("error processing signal: %(error)s", {"error": e}, "task:abortsignal")
-                await asyncio.sleep(2)
+                await asyncio.sleep(2)  # avoid busy loop when redis is unavailable
 
     async def report_progress(self, task_id: str, status: Any):
         """
@@ -112,10 +111,10 @@ class Judger:
                         p.cancel()
                     res_cancels = await asyncio.gather(*pending, return_exceptions=True)
                     for res in res_cancels:
-                        # Exception is not base class of CancelledError
-                        assert not isinstance(
-                            res, Exception
-                        ), "Throw exception after cancel. Code has bad design. Terminating."
+                        # Throw exception after cancel means bad design. Terminating.
+                        # Note: Exception is not base class of CancelledError, so cancel is not counted here.
+                        if isinstance(res, Exception):
+                            raise res
                 for p in done:
                     exc = p.exception()
                     if exc is not None:
@@ -131,11 +130,16 @@ class Judger:
                     await self.redis.lrem(config.queues.in_progress, 0, task_id)
 
     async def online(self):
-        logger.info("starting judger")
+        logger.info("starting runner %(id)s", {"id": str(config.id)}, "runner:start")
+        atexit.register(
+            lambda: logger.info("runner %(id)s stopping", {"id": str(config.id)}, "runner:stop")
+        )
         try:
             async with asyncio.TaskGroup() as tg:
                 tg.create_task(self.send_heartbeats())
                 tg.create_task(self.task_loop())
                 tg.create_task(clean_cache_worker())
         except* (KeyboardInterrupt, asyncio.exceptions.CancelledError):
-            logger.info("judger stopped by keyboard interrupt")
+            logger.info(
+                "runner %(id)s stopped by keyboard interrupt", {"id": str(config.id)}, "runner:stop"
+            )

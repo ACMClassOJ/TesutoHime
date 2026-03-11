@@ -1,4 +1,3 @@
-from asyncio import CancelledError
 from logging import getLogger
 from pathlib import PosixPath
 from typing import List, Optional, Sequence, Union
@@ -19,8 +18,6 @@ logger = getLogger(__name__)
 async def compile_task(task: CompileTask) -> CompileResult:
     try:
         return (await compile(task)).result
-    except CancelledError:
-        return CompileResult(result='aborted', message='')
     except Exception as e:
         return CompileResult(result='system_error', message=format_exc(e))
 
@@ -99,9 +96,6 @@ async def judge_task(reporter: ProgressReporter, task: JudgeTask[Input]) -> Judg
             try:
                 result.testpoints[i] = \
                     await judge_testpoint(testpoint, result, cwd, rusage)
-
-            except CancelledError:
-                return result
             except Exception as e:
                 logger.error('error judging testpoint: %(error)s', { 'error': e }, 'testpoint:error')
                 result.testpoints[i] = TestpointJudgeResult(

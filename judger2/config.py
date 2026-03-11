@@ -8,7 +8,6 @@ from pydantic_settings import (
     SettingsConfigDict,
     YamlConfigSettingsSource,
 )
-from redis.asyncio import Redis
 
 from commons.task_typing import ResourceUsage
 from commons.util import RedisQueues
@@ -153,15 +152,3 @@ class Config(BaseSettings):
 
 
 config: Config = Config()  # type: ignore
-
-redis = Redis(
-    host=config.redis.connection.host,
-    port=config.redis.connection.port,
-    username=config.redis.connection.username,
-    password=config.redis.connection.password,
-    db=config.redis.connection.db,
-    decode_responses=True,
-    health_check_interval=30,
-    socket_connect_timeout=5,
-    socket_keepalive=True,
-)

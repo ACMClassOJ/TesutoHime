@@ -7,38 +7,32 @@ from commons.task_typing import (
     CompileTask,
     Input,
     JudgeTask,
-    StatusUpdate,
     StatusUpdateDone,
     StatusUpdateError,
     StatusUpdateStarted,
 )
-from commons.util import serialize
-from judger2.config import config, redis
-from judger2.judger import Judger
+from judger2.config import config
+from judger2.judger import Judger, ProgressReporter
 from judger2.logging_ import task_logger
-from judger2.task import run_task
+from judger2.task import compile_task, judge_task
 
 logger = getLogger(__name__)
 
 
-async def default_task_handler(judger: Judger, task: CompileTask | JudgeTask[Input], task_id: str):
-    async def report_progress(status: StatusUpdate):
-        task_logger.debug(
-            "reporting progress for task %(id)s: %(status)s",
-            {"id": task_id, "status": status},
-            "task:progress",
-        )
-        task_queues = config.queues.task(task_id)
-        await redis.lpush(task_queues.progress, serialize(status))
-        await redis.expire(task_queues.progress, config.task.timeout_secs)
-
+async def default_task_handler(reporter: ProgressReporter, task: CompileTask | JudgeTask[Input], task_id: str):
     try:
-        await report_progress(StatusUpdateStarted(str(config.id)))
-        result = await run_task(task, task_id)
-        await report_progress(StatusUpdateDone(result))
+        await reporter(StatusUpdateStarted(str(config.id)))
+        match task:
+            case CompileTask():
+                result = await compile_task(task)
+            case JudgeTask():
+                result = await judge_task(reporter, task)
+            case _:
+                assert False, "unreachable"
+        await reporter(StatusUpdateDone(result))
     except CancelledError:
         task_logger.info("task %(id)s cancelled", {"id": task_id}, "task:cancelled")
-        await report_progress(StatusUpdateError(str(config.id)))
+        await reporter(StatusUpdateError(str(config.id)))
 
 
 async def main():

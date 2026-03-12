@@ -2,10 +2,9 @@ from logging import getLogger
 from pathlib import PosixPath
 from typing import List, Optional, Sequence, Union
 from commons.task_typing import (Artifact, CompileResult, CompileTask, Input,
-                                 InvalidTaskException, JudgeResult, JudgeTask,
+                                 InvalidTaskException, JudgeResult, JudgeTask, ResourceUsage,
                                  RunResult, StatusUpdateProgress, Testpoint,
                                  TestpointJudgeResult)
-from commons.util import format_exc
 from judger2.judger import ProgressReporter
 from judger2.logging_ import task_logger
 from judger2.steps.check import check
@@ -19,7 +18,7 @@ async def compile_task(task: CompileTask) -> CompileResult:
     try:
         return (await compile(task)).result
     except Exception as e:
-        return CompileResult(result='system_error', message=format_exc(e))
+        return CompileResult(result='system_error', message=str(e))
 
 
 def get_skip_reason(
@@ -45,12 +44,12 @@ def get_skip_reason(
     return None
 
 
-class Ref:
-    def __init__(self, value):
+class Ref[T]:
+    def __init__(self, value: T | None = None):
         self.value = value
 
 async def judge_testpoint(testpoint: Testpoint[Input], result: JudgeResult, \
-    cwd: PosixPath, rusage: Ref):
+    cwd: PosixPath, rusage: Ref[ResourceUsage]):
     skip_reason = get_skip_reason(testpoint, result.testpoints)
     if skip_reason is not None:
         task_logger.debug('skipping testpoint %(id)s due to %(reason)s', { 'id': testpoint.id, 'reason': skip_reason }, 'testpoint:skip')
@@ -92,7 +91,7 @@ async def judge_task(reporter: ProgressReporter, task: JudgeTask[Input]) -> Judg
     result = JudgeResult([None for _ in task.testpoints])
     with TempDir() as cwd:
         for i, testpoint in enumerate(task.testpoints):
-            rusage = Ref(None)
+            rusage = Ref[ResourceUsage](None)
             try:
                 result.testpoints[i] = \
                     await judge_testpoint(testpoint, result, cwd, rusage)

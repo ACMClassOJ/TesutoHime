@@ -81,8 +81,8 @@ def deserialize(data: str) -> Any:
     return load_dataclass(json.loads(data), classes)
 
 
-working_dir = None
-before_exit = None
+working_dir: str | None = None
+before_exit: Callable[[PosixPath], None] | None = None
 
 class TempDir:
     path: PosixPath
@@ -105,7 +105,7 @@ class TempDir:
             logger.error('error removing temp dir %(path)s: %(error)s', { 'path': self.path, 'error': e }, 'tempdir:remove')
 
     @staticmethod
-    def config(_working_dir, _before_exit = None):
+    def config(_working_dir: str, _before_exit: Callable[[PosixPath], None] | None = None):
         global working_dir, before_exit
         working_dir = _working_dir
         before_exit = _before_exit
@@ -118,20 +118,20 @@ class RedisQueues:
         group: str
 
     def __init__(self, prefix: str, runner: Optional[RunnerInfo] = None):
-        def queue(name):
+        def queue(name: str):
             return f'{prefix}-{name}'
         self._prefix = prefix
         self._task_prefix = queue('task')
         if runner is not None:
-            def rqueue(name):
+            def rqueue(name: str):
                 return f'{queue(name)}-runner{runner.id}'
             self.tasks = queue(f'{runner.group}-tasks')
             self.in_progress = rqueue('in-progress')
             self.heartbeat = rqueue('heartbeat')
 
     class TaskRedisQueues:
-        def __init__(self, prefix, id):
-            def queue(name):
+        def __init__(self, prefix: str, id: str):
+            def queue(name: str):
                 return f'{prefix}-{name}-{id}'
             self.task = queue('task')
             self.progress = queue('progress')
@@ -146,5 +146,5 @@ class RedisQueues:
         return RedisQueues(self._prefix, runner)
 
 
-def format_exc(e):
-    return ''.join(format_exception(e, e, e.__traceback__))
+def format_exc(e: BaseException):
+    return ''.join(format_exception(type(e), e, e.__traceback__))

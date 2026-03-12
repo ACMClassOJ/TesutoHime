@@ -46,7 +46,7 @@ worker_uid_maps = [
     f'{worker_uid_inside}:{config.worker_uid}:1', # map worker
 ]
 
-def waitstatus_to_exitcode (status):
+def waitstatus_to_exitcode (status: int):
     if WIFEXITED(status):
         return WEXITSTATUS(status)
     if WIFSIGNALED(status):
@@ -108,8 +108,8 @@ async def run_with_limits(
     cwd: PosixPath,
     limits: ResourceUsage,
     *,
-    infile: Union[IO, int] = DEVNULL,
-    outfile: Union[IO, int] = DEVNULL,
+    infile: Union[IO[Any], int] = DEVNULL,
+    outfile: Union[IO[Any], int] = DEVNULL,
     supplementary_paths: Sequence[Union[str, PosixPath]] = [],
     supplementary_paths_rw: Sequence[Union[str, PosixPath]] = [],
     network_access: bool = False,
@@ -276,17 +276,16 @@ async def run_with_limits(
         # done
         return RunResult(None, err, usage)
 
-
-chown = which('chown')
-assert chown is not None
-chown: str
+_chown = which('chown')
+assert _chown is not None
+chown: str = _chown
 
 def chown_back(path: Union[PosixPath, str]):
     logger.debug('about to chown_back %(path)s', { 'path': path }, 'tempdir:chown_back')
     cwd = PosixPath(path)
     if not cwd.is_dir():
         cwd = cwd.parent
-    argv: List[str] = [nsjail] + format_args({
+    argv = [nsjail] + format_args({
         'cwd': str(cwd),
         'chroot': '/',
         'uid_mapping': worker_uid_maps,

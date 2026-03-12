@@ -4,7 +4,6 @@ from os import devnull
 from pathlib import PosixPath
 from shutil import copy2
 from typing import Any, Callable, Coroutine, Dict, Literal, Optional, Type
-from typing_extensions import TypeAlias
 
 from commons.task_typing import (Checker, CheckInput, CheckResult,
                                  CompareChecker, DirectChecker, RunResult, SpjChecker)
@@ -41,7 +40,7 @@ checker_errexit_code = 1
 checker_exe = '/bin/acmoj-checker'
 
 
-async def checker_cmp(_infile, outfile: PosixPath, _cwd, checker: CompareChecker):
+async def checker_cmp(_infile: PosixPath | None , outfile: PosixPath, _cwd: PosixPath, checker: CompareChecker):
     ans = (await ensure_cached(checker.answer)).path
     argv = [checker_exe, '-ZB', '--', str(outfile), str(ans)] if checker.ignore_whitespace \
         else [checker_exe, '--', str(outfile), str(ans)]
@@ -83,7 +82,7 @@ def checker_read_float(outfile: PosixPath, message: str = ''):
     result: Literal['accepted', 'wrong_answer'] = 'accepted' if score >= 1.0 else 'wrong_answer'
     return CheckResult(result, message, score)
 
-async def checker_direct(_infile, outfile: PosixPath, _cwd, _checker):
+async def checker_direct(_infile: PosixPath | None, outfile: PosixPath, _cwd: PosixPath, _checker: CompareChecker):
     return checker_read_float(outfile)
 
 
@@ -140,12 +139,12 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
         return checker_read_float(score, msg)
 
 
-CheckerFunction: TypeAlias = Callable[
+type CheckerFunction = Callable[
     [Optional[PosixPath], PosixPath, PosixPath, Checker],
     Coroutine[Any, Any, CheckResult],
 ]
 checkers: Dict[Type[Checker], CheckerFunction] = {
-    CompareChecker: checker_cmp,  # type: ignore
+    CompareChecker: checker_cmp,
     DirectChecker: checker_direct,
-    SpjChecker: checker_spj,  # type: ignore
-}
+    SpjChecker: checker_spj,
+} # type: ignore

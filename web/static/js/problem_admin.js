@@ -75,7 +75,39 @@ $(() => {
     }
 
     const editors = {}
+    function getEditorMarkdown(editormd_name) {
+        const editor = editors[editormd_name]
+        if (editor) {
+            if (typeof editor.getMarkdown === 'function') {
+                return editor.getMarkdown()
+            }
+            if (editor.cm) {
+                return editor.cm.getValue()
+            }
+        }
+        const textarea = document.getElementById(editormd_name)?.querySelector('textarea')
+        return textarea ? textarea.value : ''
+    }
+
+    function syncEditorTextarea(editormd_name) {
+        const content = getEditorMarkdown(editormd_name)
+        const el = document.getElementById(editormd_name)
+        if (!el) return content
+        for (const textarea of el.querySelectorAll('textarea')) {
+            textarea.value = content
+        }
+        return content
+    }
+
     function new_or_modify_content_in_editormd(editormd_name, content) {
+        content = content || ''
+
+        if (editors[editormd_name]?.cm) {
+            editors[editormd_name].cm.setValue(content)
+            syncEditorTextarea(editormd_name)
+            return
+        }
+
         editors[editormd_name] = editormd(editormd_name, {
             width: '100%',
             height: 400,
@@ -102,7 +134,13 @@ $(() => {
             sequenceDiagram: false,
             atLink: false,
             emailLink: true,
-            pageBreak: true
+            pageBreak: true,
+            onload: () => {
+                syncEditorTextarea(editormd_name)
+            },
+            onchange: () => {
+                syncEditorTextarea(editormd_name)
+            },
         })
     }
 
@@ -179,7 +217,7 @@ $(() => {
             for (const field of [ 'name', 'input', 'output' ]) {
                 obj[field] = getChild(field).value || null
             }
-            obj.description = getChild('description').querySelector('textarea').value || null
+            obj.description = getEditorMarkdown(getChild('description').id) || null
             return obj
         },
         export () {
@@ -240,6 +278,9 @@ $(() => {
     $('#form-description').submit(function (e) {
         e.preventDefault()
         e.stopPropagation()
+        for (const el of document.querySelectorAll('#form-description .init_editormd, #form-description .example__description')) {
+            syncEditorTextarea(el.id)
+        }
         const examples = Examples.export()
         Examples.clear()
         const data = $(this).serializeObject()
@@ -573,7 +614,8 @@ $(() => {
                 }
                 continue
             }
-            const value = formEl.querySelector(`textarea[name="${key}"]`).value
+            const el = formEl.querySelector(`textarea[name="${key}"]`).parentElement
+            const value = syncEditorTextarea(el.id)
             if (value.trim() !== '') {
                 md += `## ${name}\n\n${value}\n\n`
             }

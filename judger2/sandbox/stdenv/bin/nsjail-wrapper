@@ -69,4 +69,4 @@ if [ "$disable_clone_newnet" = "t" ]; then
   cat /etc/resolv.conf > "$chroot/acmoj/resolv.conf"
 fi
 
-exec "$nsjail" ${extra_args[@]} $@
+exec "$nsjail" "${extra_args[@]}" "$@"

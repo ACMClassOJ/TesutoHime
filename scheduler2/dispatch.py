@@ -15,6 +15,7 @@ from commons.util import deserialize, serialize
 from scheduler2.config import (redis, redis_queues,
                                task_concurrency_per_account, task_retries,
                                task_retry_interval_secs, task_timeout_secs)
+from scheduler2.metrics import observe_runner, tasks_by_state, tasks_retried_total
 from scheduler2.monitor import wait_until_offline
 from scheduler2.util import (RateLimiter, RunnerOfflineException, TaskInfo,
                              taskinfo_from_task_id)
@@ -45,18 +46,25 @@ async def run_task(taskinfo, onprogress = None, rate_limit_group = None,
     taskinfo.id = task_id
     task = taskinfo.task
     taskinfo_from_task_id[task_id] = taskinfo
+    tasks_by_state.labels(state='waiting_for_rate_limit').inc()
+
+    reached_started = False
 
     async def retry(msg):
         if retries_left <= 0:
             logger.warn('task %(id)s failed: %(message)s', { 'id': task_id, 'message': msg }, 'task:fail')
+            tasks_retried_total.labels(reason='exhausted').inc()
             raise Exception(msg)
         logger.info('task %(id)s failed: %(message)s, retrying', { 'id': task_id, 'message': msg }, 'task:retry')
+        tasks_retried_total.labels(reason='retry').inc()
         await sleep(task_retry_interval_secs)
         return await run_task(taskinfo, onprogress, rate_limit_group,
             retries_left - 1)
 
     try:
         async with rate_limiter.limit(rate_limit_group):
+            tasks_by_state.labels(state='waiting_for_rate_limit').dec()
+            tasks_by_state.labels(state='queued').inc()
             logger.debug('running task %(id)s: %(task)s', { 'id': task_id, 'task': task }, 'task:start')
 
             queues = redis_queues.task(task_id)
@@ -86,6 +94,10 @@ async def run_task(taskinfo, onprogress = None, rate_limit_group = None,
                     logger.debug('received status update from task %(id)s: %(status)s', { 'id': task_id, 'status': status }, 'task:update')
 
                     if isinstance(status, StatusUpdateStarted):
+                        tasks_by_state.labels(state='queued').dec()
+                        tasks_by_state.labels(state='started').inc()
+                        reached_started = True
+                        observe_runner(status.id)
                         offline_task = wait_until_offline(status.id)
                         if onprogress is not None:
                             await onprogress(status)
@@ -107,4 +119,8 @@ async def run_task(taskinfo, onprogress = None, rate_limit_group = None,
                 await redis.expire(queues.abort, task_timeout_secs)
                 raise
     finally:
+        if reached_started:
+            tasks_by_state.labels(state='started').dec()
+        else:
+            tasks_by_state.labels(state='queued').dec()
         del taskinfo_from_task_id[task_id]

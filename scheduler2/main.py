@@ -12,6 +12,7 @@ from urllib.parse import quote
 from aiohttp.web import (Application, HTTPNotFound, Request, Response,
                          RouteTableDef, json_response, run_app)
 from botocore.exceptions import ClientError
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from commons.task_typing import (CodeLanguage, ProblemJudgeResult,
                                  SourceLocation)
@@ -24,6 +25,9 @@ from scheduler2.plan import (InvalidCodeException, InvalidProblemException,
 from scheduler2.plan.languages import languages_accepted
 from scheduler2.plan.summary import summarize
 from scheduler2.s3 import read_file, upload_str
+from scheduler2.metrics import (judge_completed_total, judge_duration_seconds,
+                                judge_requests_total, start_metrics,
+                                stop_metrics)
 from scheduler2.util import make_request
 
 logger = getLogger(__name__)
@@ -90,6 +94,7 @@ async def update_problem(request: Request):
 async def run_judge(problem_id: str, submission_id: str,
     language: CodeLanguage, source: SourceLocation, rate_limit_group: str):
     res = None
+    start_time = time()
     logger.info('judging submission %(id)s for problem %(problem)s', { 'id': submission_id, 'problem': problem_id }, 'judge:start')
     try:
         plan_str = None
@@ -123,6 +128,8 @@ async def run_judge(problem_id: str, submission_id: str,
         logger.error('error judging problem: %(message)s', { 'message': msg }, 'judge:error')
         if res is None:
             res = ProblemJudgeResult(result='system_error', message=msg)
+    judge_duration_seconds.labels(language=language.value).observe(time() - start_time)
+    judge_completed_total.labels(result='none' if res is None else res.result, language=language.value).inc()
     task = make_request(f'api/submission/{quote(submission_id)}/result', res)
     try:
         await shield(task)
@@ -140,6 +147,7 @@ async def judge(request: Request):
         source = SourceLocation(**body['source'])
         rate_limit_group = body['rate_limit_group']
 
+        judge_requests_total.labels(language=language.value).inc()
         register_judge_task(problem_id, submission_id, language, source,
             rate_limit_group)
     except Exception as e:
@@ -207,9 +215,17 @@ async def runner_status(request: Request):
     return json_response(cached_runner_status)
 
 
+@routes.get('/metrics')
+async def metrics(request: Request):
+    data = generate_latest()
+    return Response(body=data, content_type=CONTENT_TYPE_LATEST.replace('; charset=utf-8', ''))
+
+
 if __name__ == '__main__':
     logger.info('scheduler starting', {}, 'scheduler:start')
     register(lambda: logger.info('scheduler stopping', {}, 'scheduler:stop'))
     app = Application()
     app.add_routes(routes)
+    app.on_startup.append(start_metrics)
+    app.on_cleanup.append(stop_metrics)
     run_app(app, host=host, port=port, print=None)  # type: ignore

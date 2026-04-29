@@ -48,6 +48,7 @@ async def run_task(taskinfo, onprogress = None, rate_limit_group = None,
     taskinfo_from_task_id[task_id] = taskinfo
     tasks_by_state.labels(state='waiting_for_rate_limit').inc()
 
+    reached_queued = False
     reached_started = False
 
     async def retry(msg):
@@ -65,6 +66,7 @@ async def run_task(taskinfo, onprogress = None, rate_limit_group = None,
         async with rate_limiter.limit(rate_limit_group):
             tasks_by_state.labels(state='waiting_for_rate_limit').dec()
             tasks_by_state.labels(state='queued').inc()
+            reached_queued = True
             logger.debug('running task %(id)s: %(task)s', { 'id': task_id, 'task': task }, 'task:start')
 
             queues = redis_queues.task(task_id)
@@ -121,6 +123,8 @@ async def run_task(taskinfo, onprogress = None, rate_limit_group = None,
     finally:
         if reached_started:
             tasks_by_state.labels(state='started').dec()
-        else:
+        elif reached_queued:
             tasks_by_state.labels(state='queued').dec()
+        else:
+            tasks_by_state.labels(state='waiting_for_rate_limit').dec()
         del taskinfo_from_task_id[task_id]

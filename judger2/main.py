@@ -1,6 +1,7 @@
 __import__('judger2.logging_')
 
-from asyncio import CancelledError, create_task, run, sleep, wait
+from asyncio import (FIRST_EXCEPTION, CancelledError, create_task, run, sleep,
+                     wait)
 from atexit import register
 from logging import getLogger
 from time import time
@@ -33,6 +34,8 @@ async def poll_for_tasks():
     await redis.delete(queues.in_progress)
     while True:
         task_id = None
+        report_progress = None
+        normal_completion = True
         try:
             task_id = await redis.brpoplpush(
                 queues.tasks,
@@ -48,6 +51,11 @@ async def poll_for_tasks():
 
             task_serialized = await redis.rpop(task_queues.task)
             if task_serialized is None:
+                task_logger.warning(
+                    'task %(id)s has no payload, dropping stale task id',
+                    { 'id': task_id },
+                    'task:stale',
+                )
                 continue
             task = deserialize(task_serialized)
             await report_progress(StatusUpdateStarted(runner_id))
@@ -94,7 +102,8 @@ async def poll_for_tasks():
                     task_logger.error('error removing task from queue: %(error)s', { 'error': e }, 'task:remove')
                 if not normal_completion:
                     try:
-                        await report_progress(StatusUpdateError(error))
+                        if report_progress is not None:
+                            await report_progress(StatusUpdateError(error))
                     except Exception as e:
                         task_logger.error('error sending nack: %(error)s', { 'error': e }, { 'task:nack' })
 
@@ -102,11 +111,20 @@ async def poll_for_tasks():
 async def main():
     logger.info('runner %(id)s starting', { 'id': runner_id }, 'runner:start')
     register(lambda: logger.info('runner %(id)s stopping', { 'id': runner_id }, 'runner:stop'))
-    await wait([
+    tasks = [
         create_task(send_heartbeats()),
         create_task(poll_for_tasks()),
         create_task(clean_cache_worker()),
-    ])
+    ]
+    done, pending = await wait(tasks, return_when=FIRST_EXCEPTION)
+    for task in done:
+        if task.cancelled():
+            continue
+        exc = task.exception()
+        if exc is not None:
+            for pending_task in pending:
+                pending_task.cancel()
+            raise exc
 
 if __name__ == '__main__':
     try:

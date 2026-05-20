@@ -83,17 +83,29 @@ class JudgerInterface:
             queue2handler[queue_name] = handler
 
         logger.info(f"listening for tasks in queues: {', '.join(queue_list)}")
+        await self.redis.delete(config.queues.in_progress)
 
         while True:
             task_id = None
             try:
                 queue_list.rotate()  # fairness
-                # start polling for tasks
+                # Start polling for tasks
                 queue_id, task_id = await self.redis.brpop(queue_list, timeout=0)
                 await self.redis.rpush(config.queues.in_progress, task_id)
-                _, task_serialized = await self.redis.brpop(
-                    config.queues.task(task_id).task, timeout=0
+                fetch_res = await self.redis.brpop(
+                    config.queues.task(task_id).task,
+                    timeout=config.task.poll_timeout_secs,
                 )
+                if fetch_res is None:
+                    logger.warning(
+                        "task %(id)s has no payload, dropping stale task id",
+                        {"id": task_id},
+                        "task:stale",
+                    )
+                    continue
+
+                # Start processing task
+                _, task_serialized = fetch_res
                 logger.info(f"received task {task_id} in queue {queue_id}")
 
                 # dispatch task to handler

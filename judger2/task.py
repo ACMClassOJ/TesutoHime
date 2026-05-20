@@ -5,6 +5,7 @@ from commons.task_typing import (Artifact, CompileResult, CompileTask, Input,
                                  InvalidTaskException, JudgeResult, JudgeTask, ResourceUsage,
                                  RunResult, StatusUpdateProgress, Testpoint,
                                  TestpointJudgeResult)
+from commons.util import format_exc
 from judger2.interface import ProgressReporter
 from judger2.logging_ import task_logger
 from judger2.steps.check import check
@@ -18,7 +19,7 @@ async def compile_task(task: CompileTask) -> CompileResult:
     try:
         return (await compile(task)).result
     except Exception as e:
-        return CompileResult(result='system_error', message=str(e))
+        return CompileResult(result='system_error', message=format_exc(e))
 
 
 def get_skip_reason(

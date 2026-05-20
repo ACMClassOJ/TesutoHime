@@ -65,7 +65,7 @@ async def ensure_cached(url: str) -> CachedFile:
             utime(part_path, (time(), last_modified))
             rename(part_path, cache.path)
         except:
-            unlink(part_path)
+            unlink(part_path, missing_ok=True)
             raise
         return cache
 

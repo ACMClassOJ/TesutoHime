@@ -15,7 +15,6 @@ from commons.util import serialize
 from judger2.cache import clean_cache_worker
 from judger2.config import config
 
-
 logger = getLogger(__name__)
 
 type ProgressReporter = Callable[[Any], Coroutine[None, Any, None]]
@@ -23,7 +22,7 @@ type JudgerHandler[T] = Callable[[ProgressReporter, T, str], Coroutine[None, Any
 
 
 @dataclass
-class Judger:
+class JudgerInterface:
     group_id: str = "default"
     task_handlers: dict[str, JudgerHandler[Any]] = field(
         default_factory=dict[str, JudgerHandler[Any]]
@@ -104,8 +103,10 @@ class Judger:
                 works = [handler(reporter, task, task_id), self._wait_cancel(task_id)]
 
                 # wait for task finish or cancel
-                works = map(asyncio.create_task, works)
-                done, pending = await asyncio.wait(works, return_when=asyncio.FIRST_COMPLETED)
+                done, pending = await asyncio.wait(
+                    map(asyncio.create_task, works),
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
                 if pending:
                     for p in pending:
                         p.cancel()

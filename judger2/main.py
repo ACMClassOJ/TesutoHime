@@ -9,7 +9,7 @@ from commons.task_typing import (
     StatusUpdateStarted,
 )
 from judger2.config import config
-from judger2.judger import Judger, ProgressReporter
+from judger2.interface import JudgerInterface, ProgressReporter
 from judger2.task import compile_task, judge_task
 
 logger = getLogger(__name__)
@@ -34,7 +34,7 @@ async def default_task_handler(
 
 
 async def main():
-    judger = Judger()
+    judger = JudgerInterface()
     judger.register_task_handler(config.group, default_task_handler)
     await judger.online()
 

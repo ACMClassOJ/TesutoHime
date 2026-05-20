@@ -151,4 +151,13 @@ class Config(BaseSettings):
         )
 
 
+if __name__ == "__main__":
+    import json
+
+    schema = Config.model_json_schema()
+    with open(".vscode/runner.schema.json", "w") as f:
+        json.dump(schema, f, indent=2)
+    exit(0)
+
+
 config: Config = Config()  # type: ignore

@@ -10,7 +10,7 @@ from commons.task_typing import (
 )
 from judger2.config import config
 from judger2.interface import JudgerInterface, ProgressReporter
-from judger2.task import compile_task, judge_task
+from judger2.steps.task import compile_task, judge_task
 
 logger = getLogger(__name__)
 

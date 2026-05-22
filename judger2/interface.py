@@ -90,7 +90,13 @@ class JudgerInterface:
             try:
                 queue_list.rotate()  # fairness
                 # Start polling for tasks
-                queue_id, task_id = await self.redis.brpop(queue_list, timeout=0)
+                fetch_res = await self.redis.brpop(
+                    queue_list,
+                    timeout=config.task.poll_timeout_secs,
+                )
+                if fetch_res is None:
+                    continue
+                queue_id, task_id = fetch_res
                 await self.redis.rpush(config.queues.in_progress, task_id)
                 fetch_res = await self.redis.brpop(
                     config.queues.task(task_id).task,

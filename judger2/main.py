@@ -15,8 +15,10 @@ from judger2.steps.task import compile_task, judge_task
 logger = getLogger(__name__)
 
 
-async def default_task_handler(
-    reporter: ProgressReporter, task: CompileTask | JudgeTask[Input], task_id: str
+async def task_handler(
+    reporter: ProgressReporter,
+    task: CompileTask | JudgeTask[Input],
+    task_id: str,
 ):
     try:
         await reporter(StatusUpdateStarted(str(config.id)))
@@ -35,7 +37,7 @@ async def default_task_handler(
 
 async def main():
     judger = JudgerInterface()
-    judger.register_task_handler(config.group, default_task_handler)
+    judger.register_task_handler(config.group, task_handler)
     await judger.online()
 
 

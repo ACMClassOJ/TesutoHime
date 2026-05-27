@@ -11,6 +11,7 @@ from commons.task_typing import (
 from judger2.config import config
 from judger2.interface import JudgerInterface, ProgressReporter
 from judger2.steps.task import compile_task, judge_task
+from judger2.logging_ import task_logger
 
 logger = getLogger(__name__)
 
@@ -20,6 +21,7 @@ async def task_handler(
     task: CompileTask | JudgeTask[Input],
     task_id: str,
 ):
+    task_logger.info('received task %(task)s', { 'id': task_id, 'task': task }, 'task:start')
     try:
         await reporter(StatusUpdateStarted(str(config.id)))
         match task:

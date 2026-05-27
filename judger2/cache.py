@@ -1,9 +1,9 @@
-from asyncio import CancelledError, sleep
+from asyncio import sleep
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from http.client import NOT_MODIFIED, OK
 from logging import getLogger
-from os import chmod, path, remove, rename, scandir, stat, utime
+from os import chmod, path, remove, rename, scandir, stat, unlink, utime
 from pathlib import PosixPath
 from shutil import copy
 from time import time
@@ -12,8 +12,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from aiohttp import request
 
-from judger2.config import (cache_clear_interval_secs, cache_dir,
-                            cache_max_age_secs)
+from judger2.config import config
 
 logger = getLogger(__name__)
 
@@ -27,7 +26,7 @@ class CachedFile:
 def cached_from_url(url: str) -> CachedFile:
     key = urlsplit(url).path
     cache_id = str(uuid5(NAMESPACE_URL, key))
-    p = PosixPath(path.join(cache_dir, cache_id))
+    p = PosixPath(path.join(config.cache_dir, cache_id))
     filename = PosixPath(key).name
     return CachedFile(p, filename)
 
@@ -38,7 +37,7 @@ utc_time_format = '%a, %d %b %Y %H:%M:%S GMT'
 async def ensure_cached(url: str) -> CachedFile:
     cache = cached_from_url(url)
     logger.debug('caching file %(filename)s to %(path)s', { 'filename': cache.filename, 'path': cache.path }, 'cache:ensure')
-    headers = {}
+    headers: dict[str, str] = {}
     try:
         mtime = stat(cache.path).st_mtime
         date = datetime.fromtimestamp(mtime).astimezone(timezone.utc)
@@ -65,11 +64,8 @@ async def ensure_cached(url: str) -> CachedFile:
                 .timestamp()
             utime(part_path, (time(), last_modified))
             rename(part_path, cache.path)
-        except CancelledError:
-            try:
-                remove(part_path)
-            except Exception:
-                pass
+        except:
+            unlink(part_path, missing_ok=True)
             raise
         return cache
 
@@ -89,23 +85,21 @@ async def upload(local_path: PosixPath, url: str) -> CachedFile:
 
 
 def clear_cache():
-    for file in scandir(cache_dir):
+    logger.info('clearing cache', {}, 'cache:clean')
+    for file in scandir(config.cache_dir):
         if not file.is_file():
             continue
         st = file.stat()
         atime = max(st.st_atime, st.st_mtime)
         age = time() - atime
-        if age > cache_max_age_secs:
+        if age > config.cache.max_age_secs:
             logger.debug('removing file %(path)s from cache as age is %(age)s', { 'path': file.path, 'age': age }, 'cache:purge')
             remove(file)
 
 async def clean_cache_worker():
     while True:
         try:
-            logger.info('clearing cache', {}, 'cache:clean')
             clear_cache()
-        except CancelledError:
-            return
         except Exception as e:
             logger.error('error while clearing cache: %(error)s', { 'error': e }, 'cache:clean')
-        await sleep(cache_clear_interval_secs)
+        await sleep(config.cache.clear_interval_secs)

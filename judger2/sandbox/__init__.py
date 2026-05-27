@@ -20,7 +20,7 @@ from typing_extensions import Literal
 
 from commons.task_typing import ResourceUsage, RunResult
 from commons.util import asyncrun
-from judger2.config import relative_slowness, task_envp, worker_uid
+from judger2.config import config
 from judger2.util import TempDir, format_args
 
 logger = getLogger(__name__)
@@ -43,10 +43,10 @@ bindmount_rw_base = ['/dev/null', '/dev/zero']
 worker_uid_inside = 65534
 worker_uid_maps = [
     f'0:{getuid()}:1', # map current user to 0
-    f'{worker_uid_inside}:{worker_uid}:1', # map worker
+    f'{worker_uid_inside}:{config.worker_uid}:1', # map worker
 ]
 
-def waitstatus_to_exitcode (status):
+def waitstatus_to_exitcode (status: int):
     if WIFEXITED(status):
         return WEXITSTATUS(status)
     if WIFSIGNALED(status):
@@ -95,7 +95,7 @@ class NsjailArgs:
     tmpfsmount: Union[Literal[False], str] = False
     execute_fd: bool = True
     nice_level: str = '0'
-    env: List[str] = field(default_factory=lambda: task_envp)
+    env: List[str] = field(default_factory=lambda: config.task.envp)
 
 
 time_tolerance_ratio = 1.25
@@ -108,8 +108,8 @@ async def run_with_limits(
     cwd: PosixPath,
     limits: ResourceUsage,
     *,
-    infile: Union[IO, int] = DEVNULL,
-    outfile: Union[IO, int] = DEVNULL,
+    infile: Union[IO[Any], int] = DEVNULL,
+    outfile: Union[IO[Any], int] = DEVNULL,
     supplementary_paths: Sequence[Union[str, PosixPath]] = [],
     supplementary_paths_rw: Sequence[Union[str, PosixPath]] = [],
     network_access: bool = False,
@@ -122,7 +122,7 @@ async def run_with_limits(
     # these are nsjail args
     fsize = 'inf' if limits.file_size_bytes < 0 else \
         str(ceil(limits.file_size_bytes / 1048576 + 256))
-    time_limit_scaled = limits.time_msecs * relative_slowness
+    time_limit_scaled = limits.time_msecs * config.relative_slowness
     time_limit_nsjail = str(ceil(time_limit_scaled / 1000 * time_tolerance_ratio + 1))
     # memory_limit = str(limits.memory_bytes + 1048576)
     bindmount_ro = bindmount_ro_base + [str(x) for x in supplementary_paths]
@@ -157,7 +157,7 @@ async def run_with_limits(
             disable_clone_newnet=network_access,
             disable_proc=disable_proc,
             tmpfsmount='/tmp' if tmpfsmount else False,
-            env=task_envp + env,
+            env=config.task.envp + env,
         )
         checker_time_limit = str(ceil(time_limit_scaled * time_tolerance_ratio + 500))
         run_args = [runner_path, checker_time_limit, str(result_file)] \
@@ -220,7 +220,7 @@ async def run_with_limits(
         file_size_bytes *= 1024
 
         usage = ResourceUsage(
-            time_msecs=int(realtime / relative_slowness),
+            time_msecs=int(realtime / config.relative_slowness),
             memory_bytes=mem,
             file_count=file_count,
             file_size_bytes=file_size_bytes,
@@ -276,17 +276,16 @@ async def run_with_limits(
         # done
         return RunResult(None, err, usage)
 
-
-chown = which('chown')
-assert chown is not None
-chown: str
+_chown = which('chown')
+assert _chown is not None
+chown: str = _chown
 
 def chown_back(path: Union[PosixPath, str]):
     logger.debug('about to chown_back %(path)s', { 'path': path }, 'tempdir:chown_back')
     cwd = PosixPath(path)
     if not cwd.is_dir():
         cwd = cwd.parent
-    argv: List[str] = [nsjail] + format_args({
+    argv = [nsjail] + format_args({
         'cwd': str(cwd),
         'chroot': '/',
         'uid_mapping': worker_uid_maps,

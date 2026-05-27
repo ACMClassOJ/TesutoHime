@@ -1,133 +1,48 @@
-__import__('judger2.logging_')
-
-from asyncio import (FIRST_EXCEPTION, CancelledError, create_task, run, sleep,
-                     wait)
-from atexit import register
+import asyncio
 from logging import getLogger
-from time import time
-
-from commons.task_typing import (StatusUpdateDone, StatusUpdateError,
-                                 StatusUpdateStarted)
-from commons.util import deserialize, serialize
-
-from judger2.cache import clean_cache_worker
-from judger2.config import (heartbeat_interval_secs, poll_timeout_secs, queues,
-                            redis, runner_id, task_timeout_secs)
-from judger2.logging_ import task_logger
-from judger2.task import run_task
+from commons.task_typing import (
+    CompileTask,
+    Input,
+    JudgeTask,
+    StatusUpdateDone,
+    StatusUpdateError,
+    StatusUpdateStarted,
+)
+from judger2.config import config
+from judger2.interface import JudgerInterface, ProgressReporter
+from judger2.steps.task import compile_task, judge_task
 
 logger = getLogger(__name__)
 
 
-async def send_heartbeats():
-    while True:
-        try:
-            await redis.set(queues.heartbeat, time())
-        except CancelledError:
-            return
-        except Exception as e:
-            logger.error('error sending heartbeat: %(error)s', { 'error': e }, 'heartbeat')
-        await sleep(heartbeat_interval_secs)
-
-
-async def poll_for_tasks():
-    await redis.delete(queues.in_progress)
-    while True:
-        task_id = None
-        report_progress = None
-        normal_completion = True
-        try:
-            task_id = await redis.brpoplpush(
-                queues.tasks,
-                queues.in_progress,
-                poll_timeout_secs,
-            )
-            if task_id is None: continue
-            task_queues = queues.task(task_id)
-            async def report_progress(status):
-                logger.debug('reporting progress for task %(id)s: %(status)s', { 'id': task_id, 'status': status }, 'task:progress')
-                await redis.lpush(task_queues.progress, serialize(status))
-                await redis.expire(task_queues.progress, task_timeout_secs)
-
-            task_serialized = await redis.rpop(task_queues.task)
-            if task_serialized is None:
-                task_logger.warning(
-                    'task %(id)s has no payload, dropping stale task id',
-                    { 'id': task_id },
-                    'task:stale',
-                )
-                continue
-            task = deserialize(task_serialized)
-            await report_progress(StatusUpdateStarted(runner_id))
-            aio_task = create_task(run_task(task, task_id))
-
-            async def poll_for_abort_signal():
-                while True:
-                    try:
-                        message = await redis.brpop(task_queues.abort,
-                            poll_timeout_secs)
-                        if message is None: continue
-                        aio_task.cancel()
-                        return
-                    except CancelledError:
-                        return
-                    except Exception as e:
-                        logger.error('error processing signal: %(error)s', { 'error': e }, 'task:abortsignal')
-                        await sleep(2)
-            abort_task = create_task(poll_for_abort_signal())
-
-            try:
-                result = await aio_task
-                abort_task.cancel()
-                task_logger.debug('task %(id)s completed with %(result)s', { 'id': task_id, 'result': result }, 'task:complete')
-                await report_progress(StatusUpdateDone(result))
-            except CancelledError:
-                abort_task.cancel()
-                task_logger.info('task %(id)s was aborted', { 'id': task_id }, 'task:abort')
-            normal_completion = True
-        except CancelledError:
-            normal_completion = False
-            error = 'Aborted'
-            return
-        except Exception as e:
-            normal_completion = False
-            error = str(e)
-            task_logger.error('error processing task: %(error)s', { 'error': e }, 'task:error')
-            await sleep(2)
-        finally:
-            if task_id is not None:
-                try:
-                    await redis.lrem(queues.in_progress, 0, task_id)
-                except Exception as e:
-                    task_logger.error('error removing task from queue: %(error)s', { 'error': e }, 'task:remove')
-                if not normal_completion:
-                    try:
-                        if report_progress is not None:
-                            await report_progress(StatusUpdateError(error))
-                    except Exception as e:
-                        task_logger.error('error sending nack: %(error)s', { 'error': e }, { 'task:nack' })
+async def task_handler(
+    reporter: ProgressReporter,
+    task: CompileTask | JudgeTask[Input],
+    task_id: str,
+):
+    try:
+        await reporter(StatusUpdateStarted(str(config.id)))
+        match task:
+            case CompileTask():
+                result = await compile_task(task)
+            case JudgeTask():
+                result = await judge_task(reporter, task)
+            case _:
+                assert False, "unreachable"
+        await reporter(StatusUpdateDone(result))
+    except Exception:
+        await reporter(StatusUpdateError(str(config.id)))
+        raise  # philosophy: termination is better than keeping silent
 
 
 async def main():
-    logger.info('runner %(id)s starting', { 'id': runner_id }, 'runner:start')
-    register(lambda: logger.info('runner %(id)s stopping', { 'id': runner_id }, 'runner:stop'))
-    tasks = [
-        create_task(send_heartbeats()),
-        create_task(poll_for_tasks()),
-        create_task(clean_cache_worker()),
-    ]
-    done, pending = await wait(tasks, return_when=FIRST_EXCEPTION)
-    for task in done:
-        if task.cancelled():
-            continue
-        exc = task.exception()
-        if exc is not None:
-            for pending_task in pending:
-                pending_task.cancel()
-            raise exc
+    judger = JudgerInterface()
+    judger.register_task_handler(config.group, task_handler)
+    await judger.online()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     try:
-        run(main())
+        asyncio.run(main())
     except KeyboardInterrupt:
         pass

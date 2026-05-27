@@ -1,16 +1,12 @@
-from asyncio import CancelledError
 from logging import getLogger
 from pathlib import PosixPath
 from typing import List, Optional, Sequence, Union
-
-from typing_extensions import overload
-
 from commons.task_typing import (Artifact, CompileResult, CompileTask, Input,
-                                 InvalidTaskException, JudgeResult, JudgeTask,
+                                 InvalidTaskException, JudgeResult, JudgeTask, ResourceUsage,
                                  RunResult, StatusUpdateProgress, Testpoint,
                                  TestpointJudgeResult)
-from commons.util import format_exc, serialize
-from judger2.config import queues, redis, task_timeout_secs
+from commons.util import format_exc
+from judger2.interface import ProgressReporter
 from judger2.logging_ import task_logger
 from judger2.steps.check import check
 from judger2.steps.compile_ import compile
@@ -19,26 +15,9 @@ from judger2.util import TempDir, copy_supplementary_files
 
 logger = getLogger(__name__)
 
-
-@overload
-async def run_task(task: CompileTask, task_id: str) -> CompileResult: pass
-@overload
-async def run_task(task: JudgeTask[Input], task_id: str) -> JudgeResult: pass
-async def run_task(task, task_id):
-    task_logger.info('received task %(task)s', { 'id': task_id, 'task': task }, 'task:start')
-    if isinstance(task, CompileTask):
-        return await compile_task(task)
-    elif isinstance(task, JudgeTask):
-        return await judge_task(task, task_id)
-    else:
-        raise InvalidTaskException(f'Unknown task type')
-
-
 async def compile_task(task: CompileTask) -> CompileResult:
     try:
         return (await compile(task)).result
-    except CancelledError:
-        return CompileResult(result='aborted', message='')
     except Exception as e:
         return CompileResult(result='system_error', message=format_exc(e))
 
@@ -66,12 +45,12 @@ def get_skip_reason(
     return None
 
 
-class Ref:
-    def __init__(self, value):
+class Ref[T]:
+    def __init__(self, value: T | None = None):
         self.value = value
 
 async def judge_testpoint(testpoint: Testpoint[Input], result: JudgeResult, \
-    cwd: PosixPath, rusage: Ref):
+    cwd: PosixPath, rusage: Ref[ResourceUsage]):
     skip_reason = get_skip_reason(testpoint, result.testpoints)
     if skip_reason is not None:
         task_logger.debug('skipping testpoint %(id)s due to %(reason)s', { 'id': testpoint.id, 'reason': skip_reason }, 'testpoint:skip')
@@ -109,17 +88,14 @@ async def judge_testpoint(testpoint: Testpoint[Input], result: JudgeResult, \
         task_logger.debug('testpoint %(id)s finished with %(result)s', { 'id': testpoint.id, 'result': res }, 'testpoint:done')
         return res
 
-async def judge_task(task: JudgeTask[Input], task_id: str) -> JudgeResult:
-    result = JudgeResult([None for _ in task.testpoints])  # type: ignore
+async def judge_task(reporter: ProgressReporter, task: JudgeTask[Input]) -> JudgeResult:
+    result = JudgeResult([None for _ in task.testpoints])
     with TempDir() as cwd:
         for i, testpoint in enumerate(task.testpoints):
-            rusage = Ref(None)
+            rusage = Ref[ResourceUsage](None)
             try:
                 result.testpoints[i] = \
                     await judge_testpoint(testpoint, result, cwd, rusage)
-
-            except CancelledError:
-                return result
             except Exception as e:
                 logger.error('error judging testpoint: %(error)s', { 'error': e }, 'testpoint:error')
                 result.testpoints[i] = TestpointJudgeResult(
@@ -129,8 +105,6 @@ async def judge_task(task: JudgeTask[Input], task_id: str) -> JudgeResult:
                     resource_usage=rusage.value,
                 )
 
-            queue = queues.task(task_id).progress
-            await redis.lpush(queue, serialize(StatusUpdateProgress(result)))
-            await redis.expire(queue, task_timeout_secs)
+            await reporter(StatusUpdateProgress(result))
 
     return result

@@ -410,6 +410,20 @@ async def execute_compile_tasks(ctx: ParseContext):
             msg = f'Cannot compile SPJ ({res.result}): {res.message}'
             raise InvalidProblemException(msg)
 
+def validate_plan(plan: JudgePlan):
+    given_testpoints: Set[str] = set(t.id for task in plan.judge for t in task.task.testpoints)
+    needed_testpoints: Set[str] = set()
+    for group in plan.score:
+        needed_testpoints.update(group.testpoints)
+
+    if given_testpoints != needed_testpoints:
+        msg = ''
+        if extra := given_testpoints - needed_testpoints:
+            msg += f'Extra testpoint ids: {extra}\n'
+        if missing := needed_testpoints - given_testpoints:
+            msg += f'Missing testpoint ids: {missing}\n'
+        msg = msg[:-1] # strip trailing newline
+        raise InvalidProblemException(msg)
 
 async def generate_plan(problem_id: str) -> JudgePlan:
     logger.info('generating plan for %(id)s', { 'id': problem_id }, 'plan:generate:start')
@@ -426,6 +440,7 @@ async def generate_plan(problem_id: str) -> JudgePlan:
             ctx.plan.compile = await parse_compile(ctx)
             ctx.plan.judge = await parse_testpoints(ctx)
             ctx.plan.score = await parse_groups(ctx)
+            validate_plan(ctx.plan)
             await upload_files(ctx)
             await execute_compile_tasks(ctx)
             logger.debug('generated plan for %(id)s: %(plan)s', { 'id': problem_id, 'plan': ctx.plan }, 'plan:generate:done')

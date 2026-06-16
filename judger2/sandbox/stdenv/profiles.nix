@@ -45,5 +45,17 @@ let
     valgrind = [ valgrind ] ++ libc;
     # for RunType=python
     python = [ python ];
+
+    # for Chaos/Rust nightly compilation
+    rust-nightly = [
+      binutils
+      bash coreutils
+      gcc
+      curl wget
+      procps
+      resolv-conf
+      git openssh acmoj-ssh-config cacert
+      rust-nightly-toolchain
+    ];
   };
 in profiles // { all = builtins.concatLists (builtins.attrValues profiles); }

@@ -1,12 +1,15 @@
 __all__ = 'compile', 'ensure_input'
 
+import json
+import shutil
 from dataclasses import dataclass
 from logging import getLogger
 from os import chmod, utime
 from pathlib import PosixPath
 from shutil import copy2
 from subprocess import DEVNULL
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, mkdtemp
+from time import time
 from typing import Any, Callable, Coroutine, Dict, List, Type
 from uuid import uuid4
 
@@ -109,7 +112,6 @@ async def ensure_input(input: Input) -> CachedFile:
     return await ensure_cached(input.url)
 
 
-
 async def prepare_cpp(
     cwd: PosixPath,
     source: CompileSourceCpp,
@@ -146,13 +148,26 @@ async def prepare_git(
 
     async def run_build_step(argv: List[str], *, output = DEVNULL):
         tempfile = NamedTemporaryFile('w+')
+        gitconfig = NamedTemporaryFile('w+')
         try:
             chmod(tempfile.name, 0o600)
             tempfile.write(config.git.ssh.private_key)
             tempfile.flush()
             chown_to_user(tempfile.name)
+            # Write a proper gitconfig file instead of relying on GIT_CONFIG_*
+            # env vars, because git unsets GIT_CONFIG_COUNT during submodule
+            # operations, which would disable the insteadOf URL rewriting.
+            gitconfig.write(
+                '[safe]\n'
+                '\tdirectory = *\n'
+                '[url "https://github.com/"]\n'
+                '\tinsteadOf = git@github.com:\n'
+            )
+            gitconfig.flush()
+            chown_to_user(gitconfig.name)
             bind = [
                 f'{tempfile.name}:/id_acmoj',
+                f'{gitconfig.name}:/gitconfig',
             ]
             return await run_with_limits(
                 'std', argv, cwd, limits,
@@ -160,31 +175,48 @@ async def prepare_git(
                 supplementary_paths=bind,
                 network_access=True,
                 env=[
-                    'GIT_CONFIG_COUNT=2',
-                    'GIT_CONFIG_KEY_0=safe.directory',
-                    'GIT_CONFIG_VALUE_0=*',
-                    'GIT_CONFIG_KEY_1=url.git@github.com:.insteadOf',
-                    'GIT_CONFIG_VALUE_1=https://github.com/'
+                    'GIT_CONFIG_GLOBAL=/gitconfig',
+                    "GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10",
                 ],
             )
         finally:
             chown_back(tempfile.name)
+            chown_back(gitconfig.name)
             tempfile.close()
+            gitconfig.close()
     
     # clone
     git_argv = ['/bin/git', 'clone', source.url, '.'] + config.git.flags
     logger.debug('about to run %(argv)s', { 'argv': git_argv }, 'compile:git:run')
-    clone_res = await run_build_step(git_argv)
+
+    t0 = time()
+    clone_stdout = ''
+    with NamedTemporaryFile('w+') as outf:
+        clone_res = await run_build_step(git_argv, output=outf)
+        outf.seek(0)
+        clone_stdout = outf.read(8192)
+    elapsed = time() - t0
+    logger.debug('git clone took %(elapsed).1f seconds, error=%(error)s',
+                 { 'elapsed': elapsed, 'error': clone_res.error }, 'compile:git:done')
+
     if clone_res.error is not None:
-        return StageResult(False, clone_res.message)
+        msg = clone_res.message
+        if clone_stdout.strip():
+            msg += f'\n--- git stdout ---\n{clone_stdout}'
+        return StageResult(False, msg)
     else:
         return StageResult(True, '')
 
-async def compile_git(
+async def _compile_chaos(
     cwd: PosixPath,
-    source: CompileSourceGit,
     limits: ResourceUsage,
+    target_file: PosixPath,
 ) -> CompileLocalResult:
+    """Chaos-mode compilation for git repos."""
+
+    chaos_config = config.compiler.chaos
+    assert chaos_config is not None
+
     async def run_build_step(argv: List[str], *, output = DEVNULL):
         return await run_with_limits(
             'std', argv, cwd, limits,
@@ -199,7 +231,7 @@ async def compile_git(
             ],
         )
 
-    # get commit hash
+    # 1. record commit hash
     with TempDir() as d, open(d / 'commit-hash', 'w+b') as ouf:
         commit_hash_argv = ['/bin/git', 'log', '-1', '--pretty=%H']
         commit_hash_res = await run_build_step(commit_hash_argv, output=ouf)
@@ -207,43 +239,139 @@ async def compile_git(
             return CompileLocalResult.from_run_failure(commit_hash_res)
         ouf.seek(0)
         commit_hash = ouf.read(128).decode().strip()
-        logger.debug('git commit hash: %(commit)s', { 'commit': commit_hash }, 'compile:git:commit')
-        message = f'Using git commit {commit_hash}'
+        logger.debug('git commit hash: %(commit)s', { 'commit': commit_hash }, 'compile:chaos:commit')
 
-    # configure
-    cmake_lists_path = cwd / 'CMakeLists.txt'
-    if cmake_lists_path.is_file():
-        logger.debug('CMake config found, invoking cmake', {}, 'compile:git:cmake')
-        res = await run_build_step(['/bin/cmake', '.'])
-        if res.error is not None:
-            return CompileLocalResult.from_run_failure(res)
-    else:
-        message += '\nWarning: CMakeLists.txt not found, skipping cmake invocation'
+    # 2. overlay official chaos-tests
+    chaos_tests_dest = cwd / 'chaos-tests'
+    # copy to a temp location first, then rename atomically so a
+    # partial copy is never left in place on failure.
+    tmp_dest = PosixPath(mkdtemp(dir=str(cwd), prefix='.chaos-tests-'))
+    try:
+        shutil.copytree(chaos_config.tests_path, tmp_dest, symlinks=True, dirs_exist_ok=True)
+        tmp_dest.chmod(0o777)
+        chown_to_user(tmp_dest)
+        if chaos_tests_dest.exists():
+            chown_back(chaos_tests_dest)
+            shutil.rmtree(chaos_tests_dest)
+        tmp_dest.rename(chaos_tests_dest)
+    except BaseException:
+        if tmp_dest.exists():
+            chown_back(tmp_dest)
+            shutil.rmtree(tmp_dest)
+        raise
+    logger.debug('chaos-tests copied from %(src)s to %(dest)s',
+                 {'src': str(chaos_config.tests_path), 'dest': str(chaos_tests_dest)},
+                 'compile:chaos:copytree')
 
-    # compile
-    makefile_paths = [cwd / x for x in ['GNUmakefile', 'makefile', 'Makefile']]
-    if any(x.is_file() for x in makefile_paths):
-        logger.debug('makefile found, invoking make', {}, 'compile:git:make')
-        res = await run_build_step(['/bin/make'])
-        if res.error is not None:
-            return CompileLocalResult.from_run_failure(res)
-    else:
-        message += '\nWarning: Makefile not found, skipping make invocation'
-
-    # check
-    exe = cwd / config.git.exec_name
-    if not exe.is_file():
-        msg = message + '\n' + \
-            f'Executable \'{config.git.exec_name}\' not found in built files; ' \
-            f'please ensure your compile output is named \'{config.git.exec_name}\' ' \
-            'in the root directory of the repository.'
+    # read test level from target file
+    test_level = target_file.read_text().splitlines()[0].strip()
+    if test_level not in ('basic', 'advanced', 'pressure'):
         return CompileLocalResult(
-            CompileResult('runtime_error', msg),
+            CompileResult('compile_error',
+                         f'Invalid test level "{test_level}", expected basic/advanced/pressure'),
+            None,
+        )
+    logger.debug('chaos test level: %(level)s', {'level': test_level}, 'compile:chaos:level')
+
+    # 3. run compile command (cargo test --no-run)
+    # cwd = chaos-tests so cargo finds Cargo.toml directly.
+    # Mount repo root as RW supplementary so symlinks like
+    # ../../kernel/src/kernel.rs resolve.  run_with_limits will
+    # deduplicate: since chaos-tests is a subpath of repo root,
+    # it won't be added as a separate mount.
+    cargo_home = chaos_tests_dest / '.cargo-home'
+    cargo_home.mkdir(exist_ok=True)
+    cargo_home.chmod(0o777)
+    chown_to_user(cargo_home)
+    cargo_target_dir = chaos_tests_dest / 'target'
+    cargo_target_dir.mkdir(exist_ok=True)
+    cargo_target_dir.chmod(0o777)
+    chown_to_user(cargo_target_dir)
+    message_file = cwd / 'cargo-output.json'
+    with open(message_file, 'w+b') as outfile:
+        cargo_argv = [
+            "/bin/cargo",
+            "test",
+            "--no-run",
+            "--message-format=json",
+            f"--target-dir={chaos_tests_dest}/target",
+            "--test",
+            test_level,
+        ]
+        logger.debug('about to run %(argv)s in %(cwd)s',
+                     {'argv': cargo_argv, 'cwd': str(chaos_tests_dest)}, 'compile:chaos:cargo')
+
+        res = await run_with_limits(
+            'rust-nightly', cargo_argv, chaos_tests_dest, limits,
+            outfile=outfile,
+            supplementary_paths_rw=[str(cwd)],
+            network_access=True,
+            disable_proc=False,
+            env=[
+                'CARGO_TERM_COLOR=never',
+                f'CARGO_HOME={cargo_home}',
+                f'CARGO_TARGET_DIR={chaos_tests_dest}/target',
+                'RUST_BACKTRACE=1',
+            ],
+        )
+
+    if res.error is not None:
+        try:
+            message_file.chmod(0o644)
+            cargo_output = message_file.read_text(errors='replace')[:4096]
+        except Exception:
+            cargo_output = '(unable to read cargo output)'
+        return CompileLocalResult(
+            CompileResult(res.error, f'cargo test failed: {res.message}\n{cargo_output}'),
             None,
         )
 
-    # done
-    return CompileLocalResult.from_file(exe, message)
+    # 4. check artifact: locate the test binary from cargo JSON output
+    test_binary: PosixPath | None = None
+    try:
+        message_file.chmod(0o644)
+        for line in message_file.read_text(errors='replace').splitlines():
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if data.get('reason') == 'compiler-artifact':
+                executable = data.get('executable')
+                target = data.get('target', {})
+                if executable and 'test' in target.get('kind', []):
+                    test_binary = PosixPath(executable)
+                    if not test_binary.is_absolute():
+                        test_binary = chaos_tests_dest / test_binary
+                    logger.debug('found test binary: %(path)s',
+                                 {'path': str(test_binary)}, 'compile:chaos:binary')
+                    break
+    except Exception as e:
+        logger.error('error parsing cargo output: %(error)s', {'error': e}, 'compile:chaos:parse')
+
+    if test_binary is None or not test_binary.is_file():
+        return CompileLocalResult(
+            CompileResult('compile_error',
+                         f'Test binary not found; please ensure cargo test --no-run '
+                         f'produces a test artifact'),
+            None,
+        )
+
+    # 5. return result
+    message = f'Using git commit {commit_hash}\nCompiled chaos test ({test_level})'
+    return CompileLocalResult.from_file(test_binary, message)
+
+
+async def compile_git(
+    cwd: PosixPath,
+    source: CompileSourceGit,
+    limits: ResourceUsage,
+) -> CompileLocalResult:
+    # If chaos mode is configured and the target file exists in
+    # supplementary files, switch to chaos compilation.
+    assert config.compiler.chaos is not None
+    target_file = cwd / config.compiler.chaos.target_file_name
+    assert target_file.is_file()
+    return await _compile_chaos(cwd, limits, target_file)
 
 
 async def prepare_verilog(

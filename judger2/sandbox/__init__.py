@@ -100,7 +100,7 @@ class NsjailArgs:
 
 time_tolerance_ratio = 1.25
 
-Profile = Literal['std', 'libc', 'valgrind', 'python']
+Profile = Literal['std', 'libc', 'valgrind', 'python', 'rust-nightly']
 
 async def run_with_limits(
     profile: Profile,
@@ -125,9 +125,26 @@ async def run_with_limits(
     time_limit_scaled = limits.time_msecs * config.relative_slowness
     time_limit_nsjail = str(ceil(time_limit_scaled / 1000 * time_tolerance_ratio + 1))
     # memory_limit = str(limits.memory_bytes + 1048576)
-    bindmount_ro = bindmount_ro_base + [str(x) for x in supplementary_paths]
-    bindmount_rw = bindmount_rw_base + [str(cwd)] \
-        + [str(x) for x in supplementary_paths_rw]
+    def _is_subpath(child: str, parent: str) -> bool:
+        try:
+            PosixPath(child).relative_to(PosixPath(parent))
+            return True
+        except ValueError:
+            return False
+
+    supp_ro = [str(x) for x in supplementary_paths]
+    supp_rw = [str(x) for x in supplementary_paths_rw]
+    cwd_str = str(cwd)
+
+    # if cwd is covered by a supplementary path, don't add it separately
+    # (nsjail fails when both parent and child paths are in the mount list)
+    if any(_is_subpath(cwd_str, p) for p in supp_ro + supp_rw):
+        cwd_mount = []
+    else:
+        cwd_mount = [cwd_str]
+
+    bindmount_ro = bindmount_ro_base + supp_ro
+    bindmount_rw = bindmount_rw_base + cwd_mount + supp_rw
     # get the absolute path for ./runner and ./du
     runner_path = str(PosixPath(__file__).with_name('runner'))
     du_path = str(PosixPath(__file__).with_name('du'))
@@ -227,7 +244,7 @@ async def run_with_limits(
         )
         errfile.seek(0)
         err = '' if disable_stderr else \
-            (await asyncrun(lambda: errfile.read(4096))) \
+            (await asyncrun(lambda: errfile.read(65536))) \
             .decode(errors='replace') \
             .replace(str(cwd), '') \
             .strip()
@@ -241,9 +258,9 @@ async def run_with_limits(
             # won't be accurate in this case. Therefore,
             # do not move this check down after the check
             # for exit code.
-            return RunResult('time_limit_exceeded', '', usage)
+            return RunResult('time_limit_exceeded', err, usage)
         if usage_is_accurate and mem > limits.memory_bytes:
-            return RunResult('memory_limit_exceeded', '', usage)
+            return RunResult('memory_limit_exceeded', err, usage)
         if code != 0:
             # code is ./runner's exit code, so there must be something wrong.
             msg = f'Task runner exited with status {code}{errmsg}'

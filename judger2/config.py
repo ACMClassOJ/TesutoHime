@@ -76,9 +76,16 @@ class ConfigVerilog(BaseModel):
     exec_name: str = "code"
 
 
+class ConfigChaos(BaseModel):
+    tests_path: Path  # 预部署的 chaos-tests 目录的宿主机路径
+    target_file_name: str = "target"  # supplementary_files 中用于判断测试级别的文件名
+    exec_name: str = "chaos-test"
+
+
 class ConfigCompiler(BaseModel):
     cxx: ConfigCxx = Field(default_factory=ConfigCxx)
     verilog: ConfigVerilog = Field(default_factory=ConfigVerilog)
+    chaos: ConfigChaos
     git: ConfigGit | None = None
 
 

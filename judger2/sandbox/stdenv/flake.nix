@@ -3,11 +3,21 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
-  outputs = { self, nixpkgs }: let
+  outputs = { self, nixpkgs, rust-overlay }: let
     system = "x86_64-linux";
-    pkgs = import nixpkgs (import ./nixpkgs.nix // { inherit system; });
+    nixpkgsConfig = import ./nixpkgs.nix;
+    pkgs = import nixpkgs {
+      inherit system;
+      overlays = nixpkgsConfig.overlays ++ [
+        rust-overlay.overlays.default
+        (final: prev: {
+          rust-nightly-toolchain = final.rust-bin.nightly.latest.default;
+        })
+      ];
+    };
     inherit(nixpkgs) lib;
 
     profiles = import ./profiles.nix pkgs;

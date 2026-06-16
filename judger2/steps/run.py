@@ -49,7 +49,9 @@ elf_mode = 0o550
 class ElfRunner(BaseRunner):
     def prepare(self, program: PosixPath):
         chmod(program, elf_mode)
-        return RunParams('libc', [str(program)], [])
+        return RunParams('libc',
+            [str(program), '--fail-fast', '-Z', 'unstable-options'],
+            [])
 
 class PythonRunner(BaseRunner):
     def prepare(self, program: PosixPath):

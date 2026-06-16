@@ -148,26 +148,13 @@ async def prepare_git(
 
     async def run_build_step(argv: List[str], *, output = DEVNULL):
         tempfile = NamedTemporaryFile('w+')
-        gitconfig = NamedTemporaryFile('w+')
         try:
             chmod(tempfile.name, 0o600)
             tempfile.write(config.git.ssh.private_key)
             tempfile.flush()
             chown_to_user(tempfile.name)
-            # Write a proper gitconfig file instead of relying on GIT_CONFIG_*
-            # env vars, because git unsets GIT_CONFIG_COUNT during submodule
-            # operations, which would disable the insteadOf URL rewriting.
-            gitconfig.write(
-                '[safe]\n'
-                '\tdirectory = *\n'
-                '[url "https://github.com/"]\n'
-                '\tinsteadOf = git@github.com:\n'
-            )
-            gitconfig.flush()
-            chown_to_user(gitconfig.name)
             bind = [
                 f'{tempfile.name}:/id_acmoj',
-                f'{gitconfig.name}:/gitconfig',
             ]
             return await run_with_limits(
                 'std', argv, cwd, limits,
@@ -175,35 +162,23 @@ async def prepare_git(
                 supplementary_paths=bind,
                 network_access=True,
                 env=[
-                    'GIT_CONFIG_GLOBAL=/gitconfig',
-                    "GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10",
+                    'GIT_CONFIG_COUNT=2',
+                    'GIT_CONFIG_KEY_0=safe.directory',
+                    'GIT_CONFIG_VALUE_0=*',
+                    'GIT_CONFIG_KEY_1=url.git@github.com:.insteadOf',
+                    'GIT_CONFIG_VALUE_1=https://github.com/'
                 ],
             )
         finally:
             chown_back(tempfile.name)
-            chown_back(gitconfig.name)
             tempfile.close()
-            gitconfig.close()
     
     # clone
     git_argv = ['/bin/git', 'clone', source.url, '.'] + config.git.flags
     logger.debug('about to run %(argv)s', { 'argv': git_argv }, 'compile:git:run')
-
-    t0 = time()
-    clone_stdout = ''
-    with NamedTemporaryFile('w+') as outf:
-        clone_res = await run_build_step(git_argv, output=outf)
-        outf.seek(0)
-        clone_stdout = outf.read(8192)
-    elapsed = time() - t0
-    logger.debug('git clone took %(elapsed).1f seconds, error=%(error)s',
-                 { 'elapsed': elapsed, 'error': clone_res.error }, 'compile:git:done')
-
+    clone_res = await run_build_step(git_argv)
     if clone_res.error is not None:
-        msg = clone_res.message
-        if clone_stdout.strip():
-            msg += f'\n--- git stdout ---\n{clone_stdout}'
-        return StageResult(False, msg)
+        return StageResult(False, clone_res.message)
     else:
         return StageResult(True, '')
 

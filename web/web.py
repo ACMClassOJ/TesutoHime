@@ -642,13 +642,13 @@ def problem_discuss(problem: Problem):
             if action == 'post':
                 text = form.get('text')
                 if ProblemManager.can_write(problem):
-                    DiscussManager.add_discuss(problem.id, g.user, text)
+                    DiscussManager.add_discuss(problem, g.user, text)
                     return ReturnCode.SUC
                 else:
                     return ReturnCode.ERR_PERMISSION_DENIED
             if action == 'edit':
                 discuss_id = int(form.get('discuss_id'))
-                discussion = DiscussManager.get_discussion(discuss_id)
+                discussion = DiscussManager.get_discussion(problem, discuss_id)
                 if discussion is None:
                     return ReturnCode.ERR_PERMISSION_DENIED
                 text = form.get('text')
@@ -659,7 +659,7 @@ def problem_discuss(problem: Problem):
                     return ReturnCode.ERR_PERMISSION_DENIED
             if action == 'delete':
                 discuss_id = int(form.get('discuss_id'))
-                discussion = DiscussManager.get_discussion(discuss_id)
+                discussion = DiscussManager.get_discussion(problem, discuss_id)
                 if discussion is None:
                     return ReturnCode.ERR_PERMISSION_DENIED
                 if g.user.id == discussion.user_id or ProblemManager.can_write(problem):

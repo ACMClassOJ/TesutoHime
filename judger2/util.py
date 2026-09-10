@@ -43,7 +43,7 @@ async def copy_supplementary_files(files: List[FileUrl], cwd: PosixPath):
         try:
             file = await f
             dest = cwd / file.filename
-            if dest.is_file():
+            if dest.exists(follow_symlinks=False):
                 raise FileConflictException(f'File \'{file.filename}\' already exists')
             copy2(file.path, dest)
         except FileConflictException:

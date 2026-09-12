@@ -190,9 +190,8 @@ class SearchDescriptor:
     # asc or desc
     __order__ = 'desc'
 
-    @classmethod
-    def __base_query__(cls):
-        return select(cls.__model__)
+    def __base_query__(self):
+        return select(self.__model__)
 
     @classmethod
     def __order_phrase__(cls):

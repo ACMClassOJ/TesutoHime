@@ -3,7 +3,7 @@ from math import isinf, isnan
 from os import devnull
 from pathlib import PosixPath
 from shutil import copy2
-from typing import Any, Callable, Coroutine, Dict, Literal, Optional, Type
+from typing import Any, Callable, Coroutine, Dict, Literal, Optional, Type, cast
 
 from commons.task_typing import (Checker, CheckInput, CheckResult,
                                  CompareChecker, DirectChecker, RunResult, SpjChecker)
@@ -144,7 +144,7 @@ type CheckerFunction = Callable[
     Coroutine[Any, Any, CheckResult],
 ]
 checkers: Dict[Type[Checker], CheckerFunction] = {
-    CompareChecker: checker_cmp,
-    DirectChecker: checker_direct,
-    SpjChecker: checker_spj,
-} # type: ignore
+    CompareChecker: cast(CheckerFunction, checker_cmp),
+    DirectChecker: cast(CheckerFunction, checker_direct),
+    SpjChecker: cast(CheckerFunction, checker_spj),
+}

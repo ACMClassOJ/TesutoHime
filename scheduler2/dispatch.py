@@ -1,4 +1,4 @@
-from asyncio import FIRST_COMPLETED, CancelledError, create_task, sleep, wait
+from asyncio import FIRST_COMPLETED, CancelledError, Task, create_task, sleep, wait
 from logging import getLogger
 from time import time
 from typing import Awaitable, Callable, Optional
@@ -75,12 +75,12 @@ async def run_task(taskinfo, onprogress = None, rate_limit_group = None,
             await redis.lpush(redis_queues.tasks_group(taskinfo.group), task_id)
             task_timeout = time() + task_timeout_secs
 
-            offline_task = None
+            offline_task: Task[tuple[str, str] | None] | None = None
             try:
                 while True:
                     progress_task = create_task(redis.brpop(queues.progress,
                         int(task_timeout - time())))
-                    tasks = (progress_task,)
+                    tasks: tuple[Task[tuple[str, str] | None], ...] = (progress_task,)
                     if offline_task is not None:
                         tasks = (progress_task, offline_task)
                     done, _ = await wait(tasks, return_when=FIRST_COMPLETED)

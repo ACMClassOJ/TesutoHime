@@ -149,6 +149,8 @@ class JudgeManager:
         s3_internal.put_object(Bucket=bucket, Key=key, Body=code.encode())
         db.commit()
         rec = db.get(JudgeRecordV2, submission_id)
+        if rec is None:
+            raise RuntimeError(f'Could not reload submission {submission_id}')
         JudgeManager.schedule_judge(problem_id, submission_id, language,
                                     str(user.id))
         return rec

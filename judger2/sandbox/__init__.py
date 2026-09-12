@@ -78,12 +78,8 @@ class NsjailArgs:
 
     # maximum size in megabytes of files that the process may create.
     rlimit_fsize: str = 'inf'
-    # Process-tree limits when a delegated cgroup is configured.
-    use_cgroupv2: bool = False
-    cgroupv2_mount: Union[str, bool] = False
-    cgroup_mem_max: Union[str, bool] = False
-    cgroup_mem_swap_max: Union[str, bool] = False
-    cgroup_pids_max: Union[str, bool] = False
+    # Trusted runner handles, closed before executing the submission.
+    pass_fd: List[str] = field(default_factory=list)
 
     # whether to enable network access in the container.
     disable_clone_newnet: bool = False
@@ -167,11 +163,7 @@ async def run_with_limits(
             rlimit_fsize=fsize,
             time_limit=time_limit_nsjail,
             rlimit_cpu=str(ceil(float(time_limit_nsjail) + 1)),
-            use_cgroupv2=cgroup is not None,
-            cgroupv2_mount=str(cgroup.path) if cgroup else False,
-            cgroup_mem_max=str(limits.memory_bytes + config.sandbox.memory_overhead_bytes) if cgroup else False,
-            cgroup_mem_swap_max='0' if cgroup else False,
-            cgroup_pids_max=str(config.sandbox.pids_max) if cgroup else False,
+            pass_fd=[str(cgroup.procs_fd)] if cgroup else [],
             bindmount_ro=bindmount_ro,
             bindmount=[str(result_dir)] + bindmount_rw,
             disable_clone_newnet=network_access,
@@ -181,16 +173,21 @@ async def run_with_limits(
         )
         checker_time_limit = str(ceil(time_limit_scaled * time_tolerance_ratio + 500))
         pty_args = ['--pty'] if config.sandbox.pty else []
+        cgroup_args = ['--cgroup'] if cgroup else []
         run_args = [runner_path, checker_time_limit, str(result_file)] + pty_args \
-            + argv
+            + cgroup_args + argv
         nsjail_argv = [profile] + pty_args + format_args(asdict(args)) + ['--'] + run_args
         argv_str = ' '.join(quote(x) for x in nsjail_argv)
         logger.debug('about to run nsjail with args %(args)s', { 'args': argv_str }, 'nsjail:run')
 
         # execute
         time_start = time()
+        launch_args = cgroup.launcher(
+            runner_path, limits.memory_bytes + config.sandbox.memory_overhead_bytes,
+            config.sandbox.pids_max,
+        ) if cgroup else []
         proc = Popen(
-            [nsjail_wrapper, nsjail] + nsjail_argv,
+            launch_args + [nsjail_wrapper, nsjail] + nsjail_argv,
             stdin=infile, stdout=outfile,
             stderr=DEVNULL if disable_stderr else errfile,
         )
@@ -200,8 +197,7 @@ async def run_with_limits(
         try:
             _, status, rusage = await shield(waiter)
         except BaseException:
-            if cgroup:
-                cgroup.kill()
+            # Stop setup first so it cannot create a group after cleanup.
             try:
                 proc.kill()
             except ProcessLookupError:
@@ -236,8 +232,8 @@ async def run_with_limits(
             mem = int(approx_mem)
             usage_is_accurate = False
 
-        # The retained parent includes all descendants, even after nsjail removes
-        # its child cgroup. Read before cleanup; ru_maxrss is not a tree total.
+        # Only the submission and its descendants enter this group. Neither
+        # the Python daemon nor the nsjail/runner supervisors are measured.
         if cgroup is not None:
             mem = cgroup.memory_peak
         memory_is_accurate = cgroup is not None or usage_is_accurate

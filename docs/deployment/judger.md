@@ -91,27 +91,16 @@ python3 -m judger2.main
 }
 ```
 
-在评测任务较多时，遇到过 linux namespaces 分配超出限制的情况，表现为 nsjail 返回 255 (clone3(2) 返回 ENOSPC)。应先排查未清理的进程和命名空间，并按实际并发需求设置有界限制。不要通过无限提高配额来掩盖泄漏。
+nsjail 报 `clone3(2): ENOSPC` 时，先排查进程和命名空间泄漏，再按并发量调整配额。
 
 [logrotate]: https://www.man7.org/linux/man-pages/man8/logrotate.8.html
 
 ## 可选 PTY 支持
 
-PTY 默认关闭。如果评测程序需要使用 `openpty()` 或 `forkpty()`，可以按下面的步骤开启。
-如果只想使用 cgroup 统计和限制内存，也按下面的步骤配置，但保留 `pty: false`。
-先确认评测机满足这些要求：
+需要 Python 3.14、Linux 5.19+、原生 x86-64 或小端 AArch64，以及 user namespace、devpts 和 cgroup v2 memory/pids 支持。
+升级后运行 `make -C judger2/sandbox`，重建 runner 和 nsjail。
 
-- Linux 5.19 或更新版本，支持 user namespace、devpts 和 cgroup v2 的 memory/pids 控制器及 `memory.peak`。
-- runner 使用原生 x86-64 或小端 AArch64 架构，内核已安装安全更新。
-- 宿主机上的评测程序使用 Python 3.14。
-- 评测服务账号有权管理一个 cgroup 子树，worker UID 无权访问它。
-  评测服务和 worker 必须使用不同的 UID。
-
-先运行 `make -C judger2/sandbox`，重新编译 runner 和构建脚本指定版本的 nsjail。
-runner 需要安装新增的系统调用过滤器，所以只复制 `pty.cfg` 不能启用 PTY。
-
-如果使用 systemd 254 或更新版本和仓库里的 `judger2.service`，
-运行 `systemctl edit judger2.service`，加入：
+systemd 254+：用 `systemctl edit judger2.service` 添加：
 
 ```ini
 [Service]
@@ -119,40 +108,27 @@ Delegate=memory pids
 DelegateSubgroup=supervisor
 ```
 
-先保持 PTY 关闭，重新加载 systemd 配置，等当前任务结束后重启服务。
-`DelegateSubgroup` 会把服务进程放进 `supervisor` 子组，让父组不包含进程，
-这样评测程序才能在父组下创建任务 cgroup。
-旧版 systemd 需要手动安排同样的结构：父组交给评测服务管理，服务进程放进单独的子组。
+父组交给评测服务管理，服务进程放在 `supervisor` 子组；旧版 systemd 需手动配置此结构。
+worker 必须使用不同的 UID，且无权管理该子树。
 
-用下面的命令查看服务的 cgroup 路径：
+查看服务的 cgroup 路径：
 
 ```sh
 systemctl show judger2.service --property=ControlGroup --value
 ```
 
-在输出路径前加上 `/sys/fs/cgroup`，就是下面 `cgroup_path` 要填写的值，通常是
-`/sys/fs/cgroup/system.slice/judger2.service`。
-评测程序会在创建任务 cgroup 前启用 memory/pids 控制器，重启后也会自动处理。
-这里的权限只给评测服务账号，不要让 worker 能写宿主机的 cgroup 根目录，也不要关闭 namespace 隔离。
-
-然后修改 `runner.yml`：
+在输出前加 `/sys/fs/cgroup`，填入 `runner.yml`：
 
 ```yaml
 sandbox:
   pty: true
   cgroup_path: /sys/fs/cgroup/system.slice/judger2.service
   pids_max: 128
-  memory_overhead_bytes: 67108864
 ```
 
-改好后，等当前任务结束再重启服务。控制器缺失、权限不足、挂载失败或过滤器安装失败时，
-评测程序会报错并中止这次运行。上面的进程数和额外内存限额只是示例，需要用实际构建任务确认是否够用。
+等任务结束后，运行 `systemctl daemon-reload` 和 `systemctl restart judger2.service`。
+PTY 默认关闭；只使用 cgroup 时设 `pty: false`。`pids_max` 限制每次运行的进程和线程总数。
+内存改为统计提交进程树的峰值，包含文件缓存和内核开销，详见[沙箱说明](../dev/sandbox.md#pty-与-cgroup)。
 
-配置 `cgroup_path` 后，显示的内存改为整个任务 cgroup 的峰值，包括子进程、runner、
-文件缓存和内核开销，和原来的 RSS 统计口径不同。
-`memory_overhead_bytes` 只是内核强制终止前的余量，统计峰值超过题目内存限制仍会判 MLE。
-未配置 cgroup 时保留原来的统计方式。
-
-每个沙箱最多使用 32 对 PTY。设置宿主机的 `kernel.pty.max` 时，要算上所有并发沙箱，
-保留 `kernel.pty.reserve`，也给管理员登录等操作留些余量。
-可以用 `sysctl kernel.pty.max kernel.pty.reserve kernel.pty.nr` 查看上限、保留数量和当前用量。
+每个沙箱最多 32 对 PTY。用 `sysctl kernel.pty.max kernel.pty.reserve kernel.pty.nr` 检查宿主机配额，
+按所有并发沙箱预留容量，并保留管理员终端配额。

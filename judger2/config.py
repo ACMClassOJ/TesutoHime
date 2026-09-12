@@ -110,7 +110,7 @@ class ConfigChecker(BaseModel):
 class ConfigSandbox(BaseModel):
     pty: bool = False
     cgroup_path: Path | None = None
-    pids_max: int = Field(default=128, ge=2)
+    pids_max: int = Field(default=128, ge=1)
 
     @model_validator(mode="after")
     def validate_cgroup(self):

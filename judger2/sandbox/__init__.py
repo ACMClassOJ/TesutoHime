@@ -1,17 +1,17 @@
 __all__ = 'run_with_limits', 'chown_back'
 
-from asyncio import create_subprocess_exec, create_task, shield, wait_for
+from asyncio import CancelledError, create_subprocess_exec, create_task, shield, wait_for
 from contextlib import ExitStack
 from dataclasses import asdict, dataclass, field
 from logging import getLogger
 from math import ceil
-from os import (WEXITSTATUS, WIFEXITED, WIFSIGNALED, WTERMSIG, getuid,
-                strerror, wait4)
+from os import (P_PID, WEXITED, WEXITSTATUS, WIFEXITED, WIFSIGNALED, WNOWAIT,
+                WTERMSIG, getuid, kill, strerror, wait4, waitid)
 from pathlib import PosixPath
 from posixpath import normpath
 from shlex import quote
 from shutil import which
-from signal import strsignal
+from signal import SIGKILL, strsignal
 from subprocess import DEVNULL, PIPE, Popen
 from sys import platform
 from time import time
@@ -66,7 +66,7 @@ class NsjailArgs:
     time_limit: str
     # cpu time limit (secs) RLIMIT_CPU.
     rlimit_cpu: str = '600'
-    # address space limit (mbytes) RLIMIT_AS.
+    # Default address-space limit (MiB); submission cgroups use memory.max.
     rlimit_as: str = '1536'
     # number of open file descriptors, defaults to 32 by nsjail which is too low.
     rlimit_nofile: str = '1024'
@@ -163,6 +163,7 @@ async def run_with_limits(
             rlimit_fsize=fsize,
             time_limit=time_limit_nsjail,
             rlimit_cpu=str(ceil(float(time_limit_nsjail) + 1)),
+            rlimit_as='inf' if cgroup else NsjailArgs.rlimit_as,
             pass_fd=[str(cgroup.procs_fd)] if cgroup else [],
             bindmount_ro=bindmount_ro,
             bindmount=[str(result_dir)] + bindmount_rw,
@@ -190,22 +191,27 @@ async def run_with_limits(
             stdin=infile, stdout=outfile,
             stderr=DEVNULL if disable_stderr else errfile,
         )
-        # Shield the single waiter so cancellation cannot leave wait4 running
-        # unobserved while the working directory and cgroup are removed.
-        waiter = create_task(asyncrun(lambda: wait4(proc.pid, 0)))
+        # Leave the child unreaped until cleanup, so its PID cannot be reused.
+        waiter = create_task(asyncrun(lambda: waitid(P_PID, proc.pid, WEXITED | WNOWAIT)))
         try:
-            _, status, rusage = await shield(waiter)
+            await shield(waiter)
         except BaseException:
-            # Stop setup first so it cannot create a group after cleanup.
+            # Popen.kill() polls and can reap the child before our waiter.
             try:
-                proc.kill()
+                kill(proc.pid, SIGKILL)
             except ProcessLookupError:
                 pass
-            _, killed_status, _ = await shield(waiter)
-            proc.returncode = waitstatus_to_exitcode(killed_status)
+            while True:
+                try:
+                    await shield(waiter)
+                    break
+                except CancelledError:
+                    pass
             raise
-        code = waitstatus_to_exitcode(status)
-        proc.returncode = code
+        finally:
+            _, status, rusage = wait4(proc.pid, 0)
+            code = waitstatus_to_exitcode(status)
+            proc.returncode = code
         approx_time = time() - time_start
         approx_mem = rusage.ru_maxrss * 1024
         oom_killed = cgroup.oom_killed if cgroup else False

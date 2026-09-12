@@ -30,7 +30,7 @@ end
 - 最长时间限制 (时限 +1s)
 - chroot (其实是 [pivot_root(2)][pivot-root])
   - 禁止执行 /bin 和 /usr/bin 里的二进制
-  - 默认不挂载 /proc /sys /tmp；只暴露所需的 /dev 设备
+  - 禁止访问 /proc /sys /tmp；只暴露所需的 /dev 设备
   - 禁止提交的程序访问输入输出文件
   - 限制对文件的写操作
 - 限制网络访问
@@ -45,7 +45,7 @@ end
 ## PTY 与 cgroup
 
 开启 `sandbox.pty` 后，每次运行使用独立的 devpts，最多 32 对 PTY；`/dev/ptmx` 指向其中的 `pts/ptmx`。
-禁止挂载覆盖这些设备。runner 降权后安装 seccomp，限制命名空间、挂载和危险终端 ioctl；设置失败则中止运行。
+禁止挂载覆盖这些设备。runner 降权后安装 seccomp，禁止创建 user namespace 和调用 TIOCSETD；设置失败则中止运行。
 
 `sandbox.cgroup_path` 必填，必须是评测服务可管理的绝对路径。
 runner 在宿主机创建任务组，仅提交子进程及其后代入组。入组描述符在宿主机打开以兼容 `nsdelegate`，执行用户程序前关闭。

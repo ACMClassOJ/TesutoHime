@@ -4,13 +4,12 @@ from asyncio import CancelledError, create_subprocess_exec, create_task, shield,
 from dataclasses import asdict, dataclass, field
 from logging import getLogger
 from math import ceil
-from os import (P_PID, WEXITED, WEXITSTATUS, WIFEXITED, WIFSIGNALED, WNOWAIT,
-                WTERMSIG, getuid, kill, strerror, waitid, waitpid)
+from os import getuid, strerror
 from pathlib import PosixPath
 from posixpath import normpath
 from shlex import quote
 from shutil import which
-from signal import SIGKILL, strsignal
+from signal import strsignal
 from subprocess import DEVNULL, PIPE, Popen
 from sys import platform
 from time import time
@@ -47,13 +46,6 @@ worker_uid_maps = [
     f'0:{getuid()}:1', # map current user to 0
     f'{worker_uid_inside}:{config.worker_uid}:1', # map worker
 ]
-
-def waitstatus_to_exitcode (status: int):
-    if WIFEXITED(status):
-        return WEXITSTATUS(status)
-    if WIFSIGNALED(status):
-        return -WTERMSIG(status)
-    raise ValueError(f'Invalid waitstatus {status}')
 
 @dataclass
 class NsjailArgs:
@@ -180,21 +172,28 @@ async def run_with_limits(
         launch_args = cgroup.launcher(
             runner_path, limits.memory_bytes, config.sandbox.pids_max,
         )
-        proc = Popen(
-            launch_args + [nsjail_wrapper, nsjail] + nsjail_argv,
+        launcher = create_task(create_subprocess_exec(
+            *launch_args, nsjail_wrapper, nsjail, *nsjail_argv,
             stdin=infile, stdout=outfile,
             stderr=DEVNULL if disable_stderr else errfile,
-        )
-        # Leave the child unreaped until cleanup, so its PID cannot be reused.
-        waiter = create_task(asyncrun(lambda: waitid(P_PID, proc.pid, WEXITED | WNOWAIT)))
+        ))
         try:
-            await shield(waiter)
-        except BaseException:
-            # Popen.kill() polls and can reap the child before our waiter.
-            try:
-                kill(proc.pid, SIGKILL)
-            except ProcessLookupError:
-                pass
+            # Finish spawning before cancellation can clean up its cgroup.
+            proc = await shield(launcher)
+            code = await proc.wait()
+        except CancelledError:
+            async def stop():
+                try:
+                    proc = await launcher
+                except Exception:
+                    return
+                try:
+                    proc.kill()
+                except ProcessLookupError:
+                    pass
+                await proc.wait()
+
+            waiter = create_task(stop())
             while True:
                 try:
                     await shield(waiter)
@@ -202,10 +201,6 @@ async def run_with_limits(
                 except CancelledError:
                     pass
             raise
-        finally:
-            _, status = waitpid(proc.pid, 0)
-            code = waitstatus_to_exitcode(status)
-            proc.returncode = code
         approx_time = time() - time_start
         mem = cgroup.memory_peak
         oom_killed = cgroup.oom_killed

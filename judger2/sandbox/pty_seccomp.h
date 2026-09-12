@@ -25,13 +25,7 @@
 #error "PTY sandbox seccomp supports native x86-64 and AArch64 only"
 #endif
 
-#define PTY_DENY_SYSCALL(nr) \
-  BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, (nr), 0, 1), \
-  BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | EPERM)
-
 static int install_pty_seccomp(void) {
-  const unsigned namespace_flags = CLONE_NEWUSER | CLONE_NEWNS | CLONE_NEWPID |
-    CLONE_NEWNET | CLONE_NEWIPC | CLONE_NEWUTS | CLONE_NEWCGROUP;
   struct sock_filter filter[] = {
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, offsetof(struct seccomp_data, arch)),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, PTY_AUDIT_ARCH, 1, 0),
@@ -45,33 +39,21 @@ static int install_pty_seccomp(void) {
      * ENOSYS lets glibc fall back to the filterable clone syscall. */
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_clone3, 0, 1),
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | ENOSYS),
-    PTY_DENY_SYSCALL(__NR_unshare),
-    PTY_DENY_SYSCALL(__NR_setns),
-    PTY_DENY_SYSCALL(__NR_mount),
-    PTY_DENY_SYSCALL(__NR_umount2),
-    PTY_DENY_SYSCALL(__NR_pivot_root),
-    PTY_DENY_SYSCALL(__NR_fsopen),
-    PTY_DENY_SYSCALL(__NR_fsconfig),
-    PTY_DENY_SYSCALL(__NR_fsmount),
-    PTY_DENY_SYSCALL(__NR_fspick),
-    PTY_DENY_SYSCALL(__NR_open_tree),
-    PTY_DENY_SYSCALL(__NR_move_mount),
-    PTY_DENY_SYSCALL(__NR_mount_setattr),
-    /* Ordinary fork/thread creation remains permitted. CLONE_NEWTIME is
-     * available via unshare/clone3, both of which are already blocked. */
-    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_clone, 0, 4),
+    /* A new user namespace would grant capabilities to mount extra devpts
+     * instances. Privileged mount and namespace operations are left to the
+     * kernel's capability checks. */
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_clone, 1, 0),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_unshare, 0, 4),
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, offsetof(struct seccomp_data, args[0])),
-    BPF_JUMP(BPF_JMP | BPF_JSET | BPF_K, namespace_flags, 0, 1),
+    BPF_JUMP(BPF_JMP | BPF_JSET | BPF_K, CLONE_NEWUSER, 0, 1),
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | EPERM),
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_ioctl, 0, 9),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_ioctl, 0, 3),
     /* The kernel truncates ioctl requests to unsigned int. Match those same
      * low 32 bits so setting high argument bits cannot bypass the filter. */
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, offsetof(struct seccomp_data, args[1])),
-    PTY_DENY_SYSCALL(TIOCSTI),
-    PTY_DENY_SYSCALL(TIOCSETD),
-    PTY_DENY_SYSCALL(TIOCCONS),
-    PTY_DENY_SYSCALL(TIOCLINUX),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, TIOCSETD, 0, 1),
+    BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | EPERM),
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
   };
   struct sock_fprog program = {
@@ -82,5 +64,4 @@ static int install_pty_seccomp(void) {
   return prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &program);
 }
 
-#undef PTY_DENY_SYSCALL
 #endif

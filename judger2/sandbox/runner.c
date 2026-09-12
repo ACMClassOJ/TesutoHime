@@ -64,25 +64,11 @@ static void require_cgroup_file(int dirfd, const char *name, int flags) {
   check(close(fd), "close cgroup control");
 }
 
-static unsigned long long positive_number(const char *value) {
-  char *end;
-  errno = 0;
-  unsigned long long number = strtoull(value, &end, 10);
-  if (errno || !number || *end || value[0] == '-') {
-    errno = EINVAL;
-    check(1, "invalid positive integer");
-  }
-  return number;
-}
-
 static void prepare_cgroup(int argc, char **argv) {
-  if (argc < 8 || strcmp(argv[6], "--") || strncmp(argv[3], "acmoj-", 6) ||
-      strlen(argv[3]) > 64 || strspn(argv[3], "abcdefghijklmnopqrstuvwxyz0123456789-") != strlen(argv[3])) {
+  if (argc < 8 || strcmp(argv[6], "--")) {
     fprintf(stderr, "Usage: runner --prepare-cgroup <parent> <acmoj-name> <memory bytes> <pids> -- <launcher> [args...]\n");
     exit(126);
   }
-  positive_number(argv[4]);
-  positive_number(argv[5]);
   int parent = open(argv[2], O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
   check(parent < 0, "open delegated cgroup");
   struct statfs fs;

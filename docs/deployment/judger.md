@@ -91,7 +91,11 @@ python3 -m judger2.main
 }
 ```
 
-nsjail 报 `clone3(2): ENOSPC` 时，先排查进程和命名空间泄漏，再按并发量调整配额。
+在评测任务较多时，遇到过 linux namespaces 分配超出限制的情况，表现为 nsjail 返回 255 (clone3(2) 返回 ENOSPC)。这本是不应该的，但是不知道为什么会发生。可以提高限制来避免遇到问题：
+
+```sh
+echo 1073741824 | sudo tee /proc/sys/user/max_*_namespaces
+```
 
 [logrotate]: https://www.man7.org/linux/man-pages/man8/logrotate.8.html
 

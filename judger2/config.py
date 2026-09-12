@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -107,6 +107,18 @@ class ConfigChecker(BaseModel):
     )
 
 
+class ConfigSandbox(BaseModel):
+    pty: bool = False
+    cgroup_path: Path
+    pids_max: int = Field(default=128, ge=1)
+
+    @model_validator(mode="after")
+    def validate_cgroup(self):
+        if not self.cgroup_path.is_absolute():
+            raise ValueError("Sandbox cgroup v2 path must be absolute")
+        return self
+
+
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         extra="ignore", env_nested_delimiter="_", yaml_file=["runner.yml", "runner.yaml"]
@@ -127,6 +139,7 @@ class Config(BaseSettings):
     compiler: ConfigCompiler = Field(default_factory=ConfigCompiler)
     valgrind: ConfigValgrind = Field(default_factory=ConfigValgrind)
     checker: ConfigChecker = Field(default_factory=ConfigChecker)
+    sandbox: ConfigSandbox
 
     @property
     def queues(self) -> RedisQueues:

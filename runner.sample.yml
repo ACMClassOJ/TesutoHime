@@ -8,6 +8,12 @@ cache_dir: /var/cache/oj/runner
 log_dir: /var/log/oj/runner
 worker_uid: 100001
 
+# Required: use the delegated cgroup path of the judge service.
+sandbox:
+  pty: false
+  cgroup_path: /sys/fs/cgroup/system.slice/judger2.service
+  pids_max: 128
+
 redis:
   prefix: 'task:'
   connection:

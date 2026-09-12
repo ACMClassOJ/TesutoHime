@@ -1,12 +1,12 @@
 __all__ = 'run_with_limits', 'chown_back'
 
-from asyncio import create_subprocess_exec, wait_for
+from asyncio import CancelledError, create_subprocess_exec, create_task, shield, wait_for
 from dataclasses import asdict, dataclass, field
 from logging import getLogger
 from math import ceil
-from os import (WEXITSTATUS, WIFEXITED, WIFSIGNALED, WTERMSIG, getuid,
-                strerror, wait4)
+from os import getuid, strerror
 from pathlib import PosixPath
+from posixpath import normpath
 from shlex import quote
 from shutil import which
 from signal import strsignal
@@ -21,6 +21,7 @@ from typing_extensions import Literal
 from commons.task_typing import ResourceUsage, RunResult
 from commons.util import asyncrun
 from judger2.config import config
+from judger2.cgroup import RunCgroup
 from judger2.util import TempDir, format_args
 
 logger = getLogger(__name__)
@@ -46,13 +47,6 @@ worker_uid_maps = [
     f'{worker_uid_inside}:{config.worker_uid}:1', # map worker
 ]
 
-def waitstatus_to_exitcode (status: int):
-    if WIFEXITED(status):
-        return WEXITSTATUS(status)
-    if WIFSIGNALED(status):
-        return -WTERMSIG(status)
-    raise ValueError(f'Invalid waitstatus {status}')
-
 @dataclass
 class NsjailArgs:
     # where to chroot to.
@@ -63,8 +57,8 @@ class NsjailArgs:
     time_limit: str
     # cpu time limit (secs) RLIMIT_CPU.
     rlimit_cpu: str = '600'
-    # address space limit (mbytes) RLIMIT_AS.
-    rlimit_as: str = '1536'
+    # Memory is limited by the submission cgroup.
+    rlimit_as: str = 'inf'
     # number of open file descriptors, defaults to 32 by nsjail which is too low.
     rlimit_nofile: str = '1024'
 
@@ -75,8 +69,8 @@ class NsjailArgs:
 
     # maximum size in megabytes of files that the process may create.
     rlimit_fsize: str = 'inf'
-    # cgroup-based memory limit: not working.
-    # cgroup_mem_max: str
+    # Trusted runner handles, closed before executing the submission.
+    pass_fd: List[str] = field(default_factory=list)
 
     # whether to enable network access in the container.
     disable_clone_newnet: bool = False
@@ -119,20 +113,28 @@ async def run_with_limits(
     env: List[str] = [],
     setup_root_dir: Optional[Callable[[PosixPath], Coroutine[Any, Any, None]]] = None,
 ) -> RunResult:
+    if limits.memory_bytes <= 0:
+        raise ValueError('Sandbox cgroups require a positive memory limit')
     # these are nsjail args
     fsize = 'inf' if limits.file_size_bytes < 0 else \
         str(ceil(limits.file_size_bytes / 1048576 + 256))
     time_limit_scaled = limits.time_msecs * config.relative_slowness
     time_limit_nsjail = str(ceil(time_limit_scaled / 1000 * time_tolerance_ratio + 1))
-    # memory_limit = str(limits.memory_bytes + 1048576)
     bindmount_ro = bindmount_ro_base + [str(x) for x in supplementary_paths]
     bindmount_rw = bindmount_rw_base + [str(cwd)] \
         + [str(x) for x in supplementary_paths_rw]
+    if config.sandbox.pty:
+        for mount in bindmount_ro + bindmount_rw:
+            destination = normpath(mount.split(':', 1)[-1])
+            if destination in ('/', '/dev', '/dev/ptmx', '/dev/pts') \
+                    or destination.startswith(('/dev/pts/', '/dev/ptmx/')):
+                raise ValueError(f'Mount would replace private PTY devices: {mount}')
     # get the absolute path for ./runner and ./du
     runner_path = str(PosixPath(__file__).with_name('runner'))
     du_path = str(PosixPath(__file__).with_name('du'))
 
-    with TempDir() as tmp_dir, open(tmp_dir / 'stderr', 'w+b') as errfile:
+    with TempDir() as tmp_dir, open(tmp_dir / 'stderr', 'w+b') as errfile, \
+            RunCgroup(config.sandbox.cgroup_path) as cgroup:
         # make needed files and dirs
         tmp_dir.chmod(0o700)
         chroot = tmp_dir / 'root'
@@ -150,8 +152,7 @@ async def run_with_limits(
             rlimit_fsize=fsize,
             time_limit=time_limit_nsjail,
             rlimit_cpu=str(ceil(float(time_limit_nsjail) + 1)),
-            # cgroups-based memory limit is not working
-            # cgroup_mem_max=memory_limit,
+            pass_fd=[str(cgroup.procs_fd)],
             bindmount_ro=bindmount_ro,
             bindmount=[str(result_dir)] + bindmount_rw,
             disable_clone_newnet=network_access,
@@ -160,25 +161,51 @@ async def run_with_limits(
             env=config.task.envp + env,
         )
         checker_time_limit = str(ceil(time_limit_scaled * time_tolerance_ratio + 500))
-        run_args = [runner_path, checker_time_limit, str(result_file)] \
-            + argv
-        nsjail_argv = [profile] + format_args(asdict(args)) + ['--'] + run_args
+        pty_args = ['--pty'] if config.sandbox.pty else []
+        run_args = [runner_path, checker_time_limit, str(result_file)] + pty_args + argv
+        nsjail_argv = [profile] + pty_args + format_args(asdict(args)) + ['--'] + run_args
         argv_str = ' '.join(quote(x) for x in nsjail_argv)
         logger.debug('about to run nsjail with args %(args)s', { 'args': argv_str }, 'nsjail:run')
 
         # execute
         time_start = time()
-        proc = Popen(
-            [nsjail_wrapper, nsjail] + nsjail_argv,
+        launch_args = cgroup.launcher(
+            runner_path, limits.memory_bytes, config.sandbox.pids_max,
+        )
+        launcher = create_task(create_subprocess_exec(
+            *launch_args, nsjail_wrapper, nsjail, *nsjail_argv,
             stdin=infile, stdout=outfile,
             stderr=DEVNULL if disable_stderr else errfile,
-        )
-        _, status, rusage = await asyncrun(lambda: wait4(proc.pid, 0))
-        code = waitstatus_to_exitcode(status)
+        ))
+        try:
+            # Finish spawning before cancellation can clean up its cgroup.
+            proc = await shield(launcher)
+            code = await proc.wait()
+        except CancelledError:
+            async def stop():
+                try:
+                    proc = await launcher
+                except Exception:
+                    return
+                try:
+                    proc.kill()
+                except ProcessLookupError:
+                    pass
+                await proc.wait()
+
+            waiter = create_task(stop())
+            while True:
+                try:
+                    await shield(waiter)
+                    break
+                except CancelledError:
+                    pass
+            raise
         approx_time = time() - time_start
-        approx_mem = rusage.ru_maxrss * 1024
-        logger.debug('nsjail run finished with code=%(code)s approx_time=%(approx_time)s approx_mem=%(approx_mem)s',
-                     { 'code': code, 'approx_time': approx_time, 'approx_mem': approx_mem },
+        mem = cgroup.memory_peak
+        oom_killed = cgroup.oom_killed
+        logger.debug('nsjail run finished with code=%(code)s approx_time=%(approx_time)s memory_peak=%(mem)s',
+                     { 'code': code, 'approx_time': approx_time, 'mem': mem },
                      'nsjail:done')
 
         # parse result file
@@ -186,22 +213,21 @@ async def run_with_limits(
             if result_file.is_symlink() or not result_file.is_file():
                 raise Exception('Invalid result file')
             text = result_file.read_text(errors='replace').replace('\n', '')
-            # 'run' code realtime mem
+            # 'run' code realtime
             params = text.split(' ')
-            if len(params) < 4 or params[0] != 'run':
+            if len(params) != 3 or params[0] != 'run':
                 logger.error('invalid runner output %(output)s', { 'output': repr(text) }, 'runner:output')
                 raise Exception('Invalid runner output')
-            program_code, realtime, mem = [int(x) for x in params[1:4]]
-            usage_is_accurate = True
+            program_code, realtime = [int(x) for x in params[1:]]
+            time_is_accurate = True
         except Exception:
             program_code = -1
             realtime = int(approx_time * 1000)
-            mem = int(approx_mem)
-            usage_is_accurate = False
+            time_is_accurate = False
 
         du_proc = await create_subprocess_exec(
             nsjail,
-            *format_args(asdict(NsjailArgs('/', str(cwd), '9.0'))),
+            *format_args(asdict(NsjailArgs('/', str(cwd), '9'))),
             '--', du_path, '-s',
             stdin=DEVNULL, stdout=PIPE, stderr=PIPE,
             limit=4096,
@@ -234,7 +260,7 @@ async def run_with_limits(
         errmsg = '' if err == '' else f': {err}'
 
         # check for errors
-        if usage_is_accurate and realtime > time_limit_scaled \
+        if time_is_accurate and realtime > time_limit_scaled \
         or approx_time * 1000 > time_limit_scaled + 500:
             # Check needed here as some TLE'd programs end
             # up being kill -9'd by nsjail; the real time
@@ -242,7 +268,7 @@ async def run_with_limits(
             # do not move this check down after the check
             # for exit code.
             return RunResult('time_limit_exceeded', '', usage)
-        if usage_is_accurate and mem > limits.memory_bytes:
+        if oom_killed or mem > limits.memory_bytes:
             return RunResult('memory_limit_exceeded', '', usage)
         if code != 0:
             # code is ./runner's exit code, so there must be something wrong.

@@ -7,3 +7,6 @@ du
 nsjail
 .du-build
 .nsjail-build
+.nsjail-build.*
+.nsjail-revision
+nsjail.new

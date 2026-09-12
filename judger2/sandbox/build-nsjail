@@ -1,23 +1,27 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
-dir=.nsjail-build
 source="https://github.com/google/nsjail"
+revision=f100fd917c6d3ed0fd15d868528b735cb5fb1a1a
 exe=nsjail
+revision_file=.nsjail-revision
 
-if [ -e "$exe" ]; then
+if [ -e "$exe" ] && [ -f "$revision_file" ] && [ "$(cat "$revision_file")" = "$revision" ]; then
   exit 0
 fi
 
-if [ -e "$dir" ]; then
-  rm -rf "$dir"
-fi
-
-git clone --recursive --depth 1 "$source" "$dir"
-cd "$dir"
+dir=$(mktemp -d "$PWD/.nsjail-build.XXXXXX")
+trap 'rm -rf "$dir"' EXIT
+git -C "$dir" init
+git -C "$dir" remote add origin "$source"
+git -C "$dir" fetch --depth 1 origin "$revision"
+git -C "$dir" checkout --detach FETCH_HEAD
+git -C "$dir" submodule update --init --recursive --depth 1
+pushd "$dir" >/dev/null
 make -j$(nproc)
 strip "$exe"
-cp "$exe" ../"$exe"
-cd ..
-rm -rf "$dir"
+cp "$exe" ../"$exe.new"
+popd >/dev/null
+mv "$exe.new" "$exe"
+printf '%s\n' "$revision" > "$revision_file"

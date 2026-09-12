@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: bin/nsjail-wrapper <nsjail path> <profile> [nsjail args...]
+# Usage: bin/nsjail-wrapper <nsjail path> <profile> [--pty] [nsjail args...]
 
 set -e
 IFS=$'\n'
@@ -14,6 +14,12 @@ wd="$(pwd)"
 cd "$(dirname $0)/.."
 basedir="$(pwd)"
 cd "$wd"
+policy_args=()
+if [ "${1:-}" = "--pty" ]; then
+  shift
+  # --config replaces previously parsed nsjail settings. It must come first.
+  policy_args+=(--config "$basedir/../pty.cfg")
+fi
 profile_dir="$basedir/profiles/$profile"
 requisites_file="$profile_dir/requisites"
 env_file="$profile_dir/env"
@@ -37,6 +43,10 @@ done
 
 rootdirs="$(ls "$result_dir")"
 for dir in $rootdirs; do
+  if [ "${#policy_args[@]}" -ne 0 ] && [ "$dir" = "dev" ]; then
+    echo "PTY profile must not overlay /dev" >&2
+    exit 1
+  fi
   extra_args+=('--bindmount_ro' "$result_dir/$dir:/$dir")
 done
 
@@ -69,4 +79,4 @@ if [ "$disable_clone_newnet" = "t" ]; then
   cat /etc/resolv.conf > "$chroot/acmoj/resolv.conf"
 fi
 
-exec "$nsjail" "${extra_args[@]}" "$@"
+exec "$nsjail" "${policy_args[@]}" "${extra_args[@]}" "$@"

@@ -11,14 +11,18 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <linux/magic.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/resource.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/vfs.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+
+#include "pty_seccomp.h"
 
 /* This is the worker UID inside the clone(2)'d user
    namespace. An UID map is needed to setuid(2) to this UID.
@@ -27,6 +31,7 @@
  */
 #define WORKER_UID 65534
 #define CHILD_DIE_STATUS 249
+#define CGROUP_PROCS_FD 3 /* Must match RunCgroup.procs_fd. */
 typedef long long time_ms_t;
 
 inline static void check (int cond, const char *msg) {
@@ -34,6 +39,66 @@ inline static void check (int cond, const char *msg) {
     perror(msg);
     exit(EXIT_FAILURE);
   }
+}
+
+/* Run on the host, after exec has replaced the Python daemon's address space.
+ * Keep the supervisors outside the measured group. Open the membership handle
+ * here so its credentials and cgroup namespace allow the sandboxed child to
+ * join, including on hosts mounted with nsdelegate. Never pass it to user code.
+ * Python owns cleanup, including when this setup fails before exec.
+ */
+static void write_cgroup(int dirfd, const char *name, const char *value) {
+  int fd = openat(dirfd, name, O_WRONLY | O_CLOEXEC | O_NOFOLLOW);
+  check(fd < 0, name);
+  ssize_t written;
+  do {
+    written = write(fd, value, strlen(value));
+  } while (written < 0 && errno == EINTR);
+  check(written != (ssize_t)strlen(value), name);
+  check(close(fd), "close cgroup control");
+}
+
+static void require_cgroup_file(int dirfd, const char *name, int flags) {
+  int fd = openat(dirfd, name, flags | O_CLOEXEC | O_NOFOLLOW);
+  check(fd < 0, name);
+  check(close(fd), "close cgroup control");
+}
+
+static void prepare_cgroup(int argc, char **argv) {
+  if (argc < 8 || strcmp(argv[6], "--")) {
+    fprintf(stderr, "Usage: runner --prepare-cgroup <parent> <acmoj-name> <memory bytes> <pids> -- <launcher> [args...]\n");
+    exit(126);
+  }
+  int parent = open(argv[2], O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
+  check(parent < 0, "open delegated cgroup");
+  struct statfs fs;
+  check(fstatfs(parent, &fs), "stat cgroup filesystem");
+  if (fs.f_type != CGROUP2_SUPER_MAGIC) {
+    fprintf(stderr, "Delegated path must be a cgroup v2 filesystem\n");
+    exit(126);
+  }
+  write_cgroup(parent, "cgroup.subtree_control", "+memory +pids");
+  check(mkdirat(parent, argv[3], 0700), "create submission cgroup");
+  int group = openat(parent, argv[3], O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
+  check(group < 0, "open submission cgroup");
+  require_cgroup_file(group, "memory.peak", O_RDONLY);
+  require_cgroup_file(group, "cgroup.kill", O_WRONLY);
+  write_cgroup(group, "memory.max", argv[4]);
+  write_cgroup(group, "memory.swap.max", "0");
+  write_cgroup(group, "memory.oom.group", "1");
+  write_cgroup(group, "pids.max", argv[5]);
+  int procs = openat(group, "cgroup.procs", O_WRONLY | O_CLOEXEC | O_NOFOLLOW);
+  check(procs < 0, "open cgroup.procs");
+  check(close(group), "close submission cgroup");
+  check(close(parent), "close cgroup parent fd");
+  if (procs != CGROUP_PROCS_FD) {
+    check(dup2(procs, CGROUP_PROCS_FD) < 0, "pass cgroup.procs");
+    check(close(procs), "close cgroup.procs");
+  } else {
+    check(fcntl(procs, F_SETFD, 0), "pass cgroup.procs");
+  }
+  execv(argv[7], &argv[7]);
+  check(1, "exec sandbox launcher");
 }
 
 #define SEC_TO_MS 1000
@@ -72,8 +137,11 @@ inline static void die_child (int fd, const char *msg) {
 }
 
 int main (int argc, char **argv) {
+  if (argc > 1 && strcmp(argv[1], "--prepare-cgroup") == 0) {
+    prepare_cgroup(argc, argv);
+  }
   if (argc < 4) {
-    fprintf(stderr, "Usage: runner <time limit msecs> <result file> <executable> [args...]\n");
+    fprintf(stderr, "Usage: runner <time limit msecs> <result file> [--pty] <executable> [args...]\n");
     exit(126);
   }
   if (getuid() != 0 || geteuid() != 0) {
@@ -86,6 +154,14 @@ int main (int argc, char **argv) {
 
   time_ms_t time_limit = atoll(argv[1]);
   const char * const results_file = argv[2];
+  int use_pty = 0;
+  int exec_index = 3;
+  if (strcmp(argv[exec_index], "--pty") == 0) {
+    use_pty = 1;
+    exec_index++;
+  }
+  check(argc <= exec_index, "missing executable");
+  check(fcntl(CGROUP_PROCS_FD, F_SETFD, FD_CLOEXEC), "protect cgroup.procs fd");
   FILE *results = fopen(results_file, "w");
   check(!results, "fopen");
   check(chmod(results_file, 0600), "chmod");
@@ -99,26 +175,31 @@ int main (int argc, char **argv) {
     if (fclose(results)) {
       die_child(pipefd[1], "fclose");
     }
+    ssize_t written;
+    do {
+      written = write(CGROUP_PROCS_FD, "0", 1);
+    } while (written < 0 && errno == EINTR);
+    if (written != 1) die_child(pipefd[1], "join submission cgroup");
+    if (close(CGROUP_PROCS_FD)) die_child(pipefd[1], "close cgroup.procs");
     if (setuid(WORKER_UID)) {
       die_child(pipefd[1], "setuid");
     }
+    if (use_pty && install_pty_seccomp()) {
+      die_child(pipefd[1], "install_pty_seccomp");
+    }
     set_timer(time_limit);
 
-    execv(argv[3], &argv[3]);
+    execv(argv[exec_index], &argv[exec_index]);
     /* execv return only on errors. */
     die_child(pipefd[1], "execv");
   }
+  check(close(CGROUP_PROCS_FD), "close supervisor cgroup.procs");
 
   time_ms_t start_time = gettime();
   int status = -1;
-  struct rusage rusage;
-  /* Using wait4(2) here to get rusage data directly. */
-  check(wait4(child_pid, &status, 0, &rusage) < 0, "wait4");
+  check(waitpid(child_pid, &status, 0) < 0, "waitpid");
   time_ms_t end_time = gettime();
   time_ms_t real_time = end_time - start_time;
-
-  /* maxrss is in kbytes on Linux. */
-  long mem = rusage.ru_maxrss * 1024;
 
   int code;
   if (WIFEXITED(status)) {
@@ -136,7 +217,7 @@ int main (int argc, char **argv) {
     }
   }
 
-  fprintf(results, "run %d %lld %ld\n", code, real_time, mem);
+  fprintf(results, "run %d %lld\n", code, real_time);
   check(fclose(results), "fclose");
 
   return 0;

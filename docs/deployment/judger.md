@@ -33,7 +33,7 @@ sudo chown ojrunner:ojrunner /var/oj/runner /var/log/oj/runner /var/cache/oj/run
 ssh-keygen -t ed25519
 ```
 
-复制并编辑配置文件:
+复制并编辑配置文件，填写必需的 [cgroup 配置](#cgroup-与-pty):
 
 ```sh
 cp runner.sample.yml runner.yml
@@ -98,3 +98,41 @@ echo 1073741824 | sudo tee /proc/sys/user/max_*_namespaces
 ```
 
 [logrotate]: https://www.man7.org/linux/man-pages/man8/logrotate.8.html
+
+## cgroup 与 PTY
+
+需要 Linux 5.19+、原生 x86-64 或小端 AArch64，以及 user namespace、devpts 和 cgroup v2 memory/pids 支持。
+升级后运行 `make -C judger2/sandbox`，重建 runner 和 nsjail。
+
+systemd 254+：用 `systemctl edit judger2.service` 添加：
+
+```ini
+[Service]
+Delegate=memory pids
+DelegateSubgroup=supervisor
+```
+
+父组交给评测服务管理，服务进程放在 `supervisor` 子组；旧版 systemd 需手动配置此结构。
+worker 必须使用不同的 UID，且无权管理该子树。
+
+查看服务的 cgroup 路径：
+
+```sh
+systemctl show judger2.service --property=ControlGroup --value
+```
+
+在输出前加 `/sys/fs/cgroup`，填入 `runner.yml`：
+
+```yaml
+sandbox:
+  pty: true
+  cgroup_path: /sys/fs/cgroup/system.slice/judger2.service
+  pids_max: 128
+```
+
+等任务结束后，运行 `systemctl daemon-reload` 和 `systemctl restart judger2.service`。
+cgroup 必须配置；PTY 默认关闭，设 `pty: true` 开启。`pids_max` 限制每次运行的进程和线程总数。
+内存改为统计提交进程树的峰值，包含文件缓存和内核开销，详见[沙箱说明](../dev/sandbox.md#pty-与-cgroup)。
+
+每个沙箱最多 32 对 PTY。用 `sysctl kernel.pty.max kernel.pty.reserve kernel.pty.nr` 检查宿主机配额，
+按所有并发沙箱预留容量，并保留管理员终端配额。

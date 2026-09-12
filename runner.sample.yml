@@ -8,6 +8,13 @@ cache_dir: /var/cache/oj/runner
 log_dir: /var/log/oj/runner
 worker_uid: 100001
 
+# Set cgroup_path to enable memory accounting and limits; PTYs also require it.
+sandbox:
+  pty: false
+  cgroup_path: null
+  pids_max: 128
+  memory_overhead_bytes: 67108864
+
 redis:
   prefix: 'task:'
   connection:

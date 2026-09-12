@@ -13,12 +13,15 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+
+#include "pty_seccomp.h"
 
 /* This is the worker UID inside the clone(2)'d user
    namespace. An UID map is needed to setuid(2) to this UID.
@@ -73,7 +76,7 @@ inline static void die_child (int fd, const char *msg) {
 
 int main (int argc, char **argv) {
   if (argc < 4) {
-    fprintf(stderr, "Usage: runner <time limit msecs> <result file> <executable> [args...]\n");
+    fprintf(stderr, "Usage: runner <time limit msecs> <result file> [--pty] <executable> [args...]\n");
     exit(126);
   }
   if (getuid() != 0 || geteuid() != 0) {
@@ -86,6 +89,9 @@ int main (int argc, char **argv) {
 
   time_ms_t time_limit = atoll(argv[1]);
   const char * const results_file = argv[2];
+  int use_pty = strcmp(argv[3], "--pty") == 0;
+  int exec_index = use_pty ? 4 : 3;
+  check(argc <= exec_index, "missing executable");
   FILE *results = fopen(results_file, "w");
   check(!results, "fopen");
   check(chmod(results_file, 0600), "chmod");
@@ -102,9 +108,12 @@ int main (int argc, char **argv) {
     if (setuid(WORKER_UID)) {
       die_child(pipefd[1], "setuid");
     }
+    if (use_pty && install_pty_seccomp()) {
+      die_child(pipefd[1], "install_pty_seccomp");
+    }
     set_timer(time_limit);
 
-    execv(argv[3], &argv[3]);
+    execv(argv[exec_index], &argv[exec_index]);
     /* execv return only on errors. */
     die_child(pipefd[1], "execv");
   }

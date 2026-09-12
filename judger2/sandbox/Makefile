@@ -9,12 +9,13 @@ clean:
 	rm -f runner
 	$(MAKE) -C stdenv clean
 
-runner: runner.c stdenv
+runner: runner.c pty_seccomp.h stdenv
 	$(CC) $(CFLAGS) $< -o $@
 
 du:
 	./build-du
 
+.PHONY: nsjail
 nsjail:
 	./build-nsjail
 

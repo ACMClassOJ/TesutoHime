@@ -47,21 +47,18 @@ end
 开启 `sandbox.pty` 后，每次运行使用独立的 devpts，最多 32 对 PTY；`/dev/ptmx` 指向其中的 `pts/ptmx`。
 禁止挂载覆盖这些设备。runner 降权后安装 seccomp，限制命名空间、挂载和危险终端 ioctl；设置失败则中止运行。
 
-PTY 要求配置 `sandbox.cgroup_path`；关闭 PTY 后仍可单独使用 cgroup。
+`sandbox.cgroup_path` 必填，必须是评测服务可管理的绝对路径。
 runner 在宿主机创建任务组，仅提交子进程及其后代入组。入组描述符在宿主机打开以兼容 `nsdelegate`，执行用户程序前关闭。
 Python 读取 `memory.peak`，统计提交进程树的峰值，包含文件缓存和内核开销，不包含 Python、nsjail 和 runner 父进程。
 `memory.max` 使用题目内存限制，禁用 swap；超限或 cgroup OOM 判 MLE。`sandbox.pids_max` 限制进程和线程总数。
 结束、超时或取消时，先回收启动进程，再清理提交进程树和 cgroup。
-未配置 cgroup 时保留原来的 `ru_maxrss` 和 1.5 GiB 地址空间限制。
 
-配置步骤见[部署文档](../deployment/judger.md#可选-pty-支持)。
+配置步骤见[部署文档](../deployment/judger.md#cgroup-与-pty)。
 
 ## setuid 沙箱 (aka runner.c)
 
-在包着一层 nsjail 的情况下，我们没办法精确地测量用户程序的执行用时和内存使用，
-因为 Linux 没有简单的办法在进程退出后获取任意进程的资源使用情况。
-因此，我们在 nsjail 里面跑一个我们自己的小程序用来测量这些参数。
-这个小程序就是 runner.c（配置 cgroup 时由 cgroup 统计内存）。它将测量结果输出到一个文件里 (因为
+runner.c 在 nsjail 内记录用户程序的用时和退出状态，内存由 cgroup 统计。
+它将结果输出到一个文件里 (因为
 stdout 和 stderr 都有可能要用)，而这个文件又不希望被用户执行的程序访问到
 (否则用户就可以自己写这个文件然后直接消除 TLE 和 MLE 了)。
 因此，我们让 runner.c 再 drop 一次 privilege，让它 [setuid(2)][suid]
@@ -104,9 +101,8 @@ runner setuid 到 65534 再执行用户程序，就可以防止用户程序乱�
 0. runner 的时间限制: 规定的时间限制 +1 ms。
    通过 [setitimer(2)][setitimer] 实现，用户程序可以取消这个时间限制。
    几乎所有情况下这个时间限制都是好使的，所以 nsjail 的时限不会真正触发。
-   这个时限到了之后，runner 主进程仍在运行，仍然能收集精确的时间和内存信息，
-   以及程序返回值的信息。而 nsjail 的时限到了之后，runner 会被一起干掉，
-   只能由 Python 估算用时；配置了 cgroup 时仍能读取内存峰值。
+   runner 超时时仍能记录用时和退出状态；nsjail 超时会终止 runner，
+   只能由 Python 估算用时。两种情况下都能读取 cgroup 内存峰值。
 
 [setitimer]: https://man7.org/linux/man-pages/man2/setitimer.2.html
 

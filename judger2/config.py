@@ -109,15 +109,13 @@ class ConfigChecker(BaseModel):
 
 class ConfigSandbox(BaseModel):
     pty: bool = False
-    cgroup_path: Path | None = None
+    cgroup_path: Path
     pids_max: int = Field(default=128, ge=1)
 
     @model_validator(mode="after")
     def validate_cgroup(self):
-        if self.cgroup_path is not None and not self.cgroup_path.is_absolute():
+        if not self.cgroup_path.is_absolute():
             raise ValueError("Sandbox cgroup v2 path must be absolute")
-        if self.pty and self.cgroup_path is None:
-            raise ValueError("PTY support requires an absolute delegated cgroup v2 path")
         return self
 
 
@@ -141,7 +139,7 @@ class Config(BaseSettings):
     compiler: ConfigCompiler = Field(default_factory=ConfigCompiler)
     valgrind: ConfigValgrind = Field(default_factory=ConfigValgrind)
     checker: ConfigChecker = Field(default_factory=ConfigChecker)
-    sandbox: ConfigSandbox = Field(default_factory=ConfigSandbox)
+    sandbox: ConfigSandbox
 
     @property
     def queues(self) -> RedisQueues:

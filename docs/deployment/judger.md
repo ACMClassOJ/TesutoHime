@@ -33,7 +33,7 @@ sudo chown ojrunner:ojrunner /var/oj/runner /var/log/oj/runner /var/cache/oj/run
 ssh-keygen -t ed25519
 ```
 
-复制并编辑配置文件:
+复制并编辑配置文件，填写必需的 [cgroup 配置](#cgroup-与-pty):
 
 ```sh
 cp runner.sample.yml runner.yml
@@ -95,9 +95,9 @@ nsjail 报 `clone3(2): ENOSPC` 时，先排查进程和命名空间泄漏，再�
 
 [logrotate]: https://www.man7.org/linux/man-pages/man8/logrotate.8.html
 
-## 可选 PTY 支持
+## cgroup 与 PTY
 
-需要 Python 3.14、Linux 5.19+、原生 x86-64 或小端 AArch64，以及 user namespace、devpts 和 cgroup v2 memory/pids 支持。
+需要 Linux 5.19+、原生 x86-64 或小端 AArch64，以及 user namespace、devpts 和 cgroup v2 memory/pids 支持。
 升级后运行 `make -C judger2/sandbox`，重建 runner 和 nsjail。
 
 systemd 254+：用 `systemctl edit judger2.service` 添加：
@@ -127,7 +127,7 @@ sandbox:
 ```
 
 等任务结束后，运行 `systemctl daemon-reload` 和 `systemctl restart judger2.service`。
-PTY 默认关闭；只使用 cgroup 时设 `pty: false`。`pids_max` 限制每次运行的进程和线程总数。
+cgroup 必须配置；PTY 默认关闭，设 `pty: true` 开启。`pids_max` 限制每次运行的进程和线程总数。
 内存改为统计提交进程树的峰值，包含文件缓存和内核开销，详见[沙箱说明](../dev/sandbox.md#pty-与-cgroup)。
 
 每个沙箱最多 32 对 PTY。用 `sysctl kernel.pty.max kernel.pty.reserve kernel.pty.nr` 检查宿主机配额，

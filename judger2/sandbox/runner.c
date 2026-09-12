@@ -15,7 +15,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/vfs.h>
@@ -156,7 +155,7 @@ int main (int argc, char **argv) {
     prepare_cgroup(argc, argv);
   }
   if (argc < 4) {
-    fprintf(stderr, "Usage: runner <time limit msecs> <result file> [--pty] [--cgroup] <executable> [args...]\n");
+    fprintf(stderr, "Usage: runner <time limit msecs> <result file> [--pty] <executable> [args...]\n");
     exit(126);
   }
   if (getuid() != 0 || geteuid() != 0) {
@@ -170,23 +169,13 @@ int main (int argc, char **argv) {
   time_ms_t time_limit = atoll(argv[1]);
   const char * const results_file = argv[2];
   int use_pty = 0;
-  int use_cgroup = 0;
   int exec_index = 3;
-  while (exec_index < argc) {
-    if (strcmp(argv[exec_index], "--pty") == 0) {
-      use_pty = 1;
-      exec_index++;
-    } else if (strcmp(argv[exec_index], "--cgroup") == 0) {
-      use_cgroup = 1;
-      exec_index++;
-    } else {
-      break;
-    }
+  if (strcmp(argv[exec_index], "--pty") == 0) {
+    use_pty = 1;
+    exec_index++;
   }
   check(argc <= exec_index, "missing executable");
-  if (use_cgroup) {
-    check(fcntl(CGROUP_PROCS_FD, F_SETFD, FD_CLOEXEC), "protect cgroup.procs fd");
-  }
+  check(fcntl(CGROUP_PROCS_FD, F_SETFD, FD_CLOEXEC), "protect cgroup.procs fd");
   FILE *results = fopen(results_file, "w");
   check(!results, "fopen");
   check(chmod(results_file, 0600), "chmod");
@@ -200,14 +189,12 @@ int main (int argc, char **argv) {
     if (fclose(results)) {
       die_child(pipefd[1], "fclose");
     }
-    if (use_cgroup) {
-      ssize_t written;
-      do {
-        written = write(CGROUP_PROCS_FD, "0", 1);
-      } while (written < 0 && errno == EINTR);
-      if (written != 1) die_child(pipefd[1], "join submission cgroup");
-      if (close(CGROUP_PROCS_FD)) die_child(pipefd[1], "close cgroup.procs");
-    }
+    ssize_t written;
+    do {
+      written = write(CGROUP_PROCS_FD, "0", 1);
+    } while (written < 0 && errno == EINTR);
+    if (written != 1) die_child(pipefd[1], "join submission cgroup");
+    if (close(CGROUP_PROCS_FD)) die_child(pipefd[1], "close cgroup.procs");
     if (setuid(WORKER_UID)) {
       die_child(pipefd[1], "setuid");
     }
@@ -220,18 +207,13 @@ int main (int argc, char **argv) {
     /* execv return only on errors. */
     die_child(pipefd[1], "execv");
   }
-  if (use_cgroup) check(close(CGROUP_PROCS_FD), "close supervisor cgroup.procs");
+  check(close(CGROUP_PROCS_FD), "close supervisor cgroup.procs");
 
   time_ms_t start_time = gettime();
   int status = -1;
-  struct rusage rusage;
-  /* Using wait4(2) here to get rusage data directly. */
-  check(wait4(child_pid, &status, 0, &rusage) < 0, "wait4");
+  check(waitpid(child_pid, &status, 0) < 0, "waitpid");
   time_ms_t end_time = gettime();
   time_ms_t real_time = end_time - start_time;
-
-  /* maxrss is in kbytes on Linux. */
-  long mem = rusage.ru_maxrss * 1024;
 
   int code;
   if (WIFEXITED(status)) {
@@ -249,7 +231,7 @@ int main (int argc, char **argv) {
     }
   }
 
-  fprintf(results, "run %d %lld %ld\n", code, real_time, mem);
+  fprintf(results, "run %d %lld\n", code, real_time);
   check(fclose(results), "fclose");
 
   return 0;

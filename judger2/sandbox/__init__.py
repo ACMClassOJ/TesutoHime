@@ -183,8 +183,7 @@ async def run_with_limits(
         # execute
         time_start = time()
         launch_args = cgroup.launcher(
-            runner_path, limits.memory_bytes + config.sandbox.memory_overhead_bytes,
-            config.sandbox.pids_max,
+            runner_path, limits.memory_bytes, config.sandbox.pids_max,
         ) if cgroup else []
         proc = Popen(
             launch_args + [nsjail_wrapper, nsjail] + nsjail_argv,

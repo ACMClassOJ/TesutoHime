@@ -111,7 +111,6 @@ class ConfigSandbox(BaseModel):
     pty: bool = False
     cgroup_path: Path | None = None
     pids_max: int = Field(default=128, ge=2)
-    memory_overhead_bytes: int = Field(default=67108864, ge=0)
 
     @model_validator(mode="after")
     def validate_cgroup(self):

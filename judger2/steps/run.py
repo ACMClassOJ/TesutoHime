@@ -42,6 +42,7 @@ class BaseRunner:
             disable_stderr=True,
             disable_proc=params.disable_procfs,
             tmpfsmount=params.tmpfsmount,
+            mount_devpts=args.mount_devpts,
         ))
 
 elf_mode = 0o550

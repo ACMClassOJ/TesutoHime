@@ -46,6 +46,10 @@ worker_uid_maps = [
     f'{worker_uid_inside}:{config.worker_uid}:1', # map worker
 ]
 
+#                     src  :  dst   :fstype:options
+pts_mount_options = 'devpts:/dev/pts:devpts:newinstance,ptmxmode=0666,mode=0600,max=32'
+ptmx_symlink = '/dev/pts/ptmx:/dev/ptmx'
+
 def waitstatus_to_exitcode (status: int):
     if WIFEXITED(status):
         return WEXITSTATUS(status)
@@ -72,6 +76,13 @@ class NsjailArgs:
     bindmount_ro: Union[List[str], bool] = False
     # R/W mount points.
     bindmount: Union[List[str], bool] = False
+
+    # General mounts and symlinks
+    # from `nsjail --help`:
+    # --mount|-m VALUE: Arbitrary mount, format src:dst:fs_type:options
+    mount: Union[List[str], str, Literal[False]] = False
+    # --symlink|-s VALUE: Symlink, format src:dst
+    symlink: Union[List[str], str, Literal[False]] = False
 
     # maximum size in megabytes of files that the process may create.
     rlimit_fsize: str = 'inf'
@@ -115,6 +126,7 @@ async def run_with_limits(
     network_access: bool = False,
     disable_proc: bool = True,
     tmpfsmount: bool = False,
+    mount_devpts: bool = False,
     disable_stderr: bool = False,
     env: List[str] = [],
     setup_root_dir: Optional[Callable[[PosixPath], Coroutine[Any, Any, None]]] = None,
@@ -158,6 +170,8 @@ async def run_with_limits(
             disable_proc=disable_proc,
             tmpfsmount='/tmp' if tmpfsmount else False,
             env=config.task.envp + env,
+            mount=pts_mount_options if mount_devpts else False,
+            symlink=ptmx_symlink if mount_devpts else False,
         )
         checker_time_limit = str(ceil(time_limit_scaled * time_tolerance_ratio + 500))
         run_args = [runner_path, checker_time_limit, str(result_file)] \

@@ -42,6 +42,7 @@ class RunConfig:
     Type: RunType
     # For interactive
     Interactor: Optional[SpjProgram] = None
+    MountDevPts: Optional[bool] = None
 
 @dataclass
 class CheckConfig:

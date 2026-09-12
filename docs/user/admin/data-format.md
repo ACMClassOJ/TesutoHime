@@ -1,6 +1,6 @@
 # 数据格式规范
 
-*By cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2024.10.11。*
+*By cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2026.9.13。*
 
 ## ZIP总格式
 
@@ -75,7 +75,7 @@
 
 ```json
 {
-  "$schema": "https://acm.sjtu.edu.cn/OnlineJudge/static/assets/problem-config.schema.json",
+  "$schema": "https://acm.sjtu.edu.cn/OnlineJudge/static/assets/problem-config.schema.json?v=20260913",
   ...
 }
 ```
@@ -426,3 +426,22 @@ Checker 可以使用 testlib.h 编写，具体参见 [testlib.h 文档][testlib-
 OJ 仅支持 \_ok 和 \_wa 两种评测结果，\_pe 和 \_fail 会认为是 \_wa。如果需要给出部分分，请使用 quitp，不支持 \_pc。
 
 [testlib-checker]: https://codeforces.com/blog/entry/18431
+
+## /dev/pts 和 /dev/ptmx 支持
+
+如果用户程序需要使用伪终端（PTY），可以在 `SPJ.Run` 的对象形式中将
+`MountDevPts` 设置为 `true`：
+
+```json
+{
+  "SPJ": {
+    "Run": {
+      "Type": "classic",
+      "MountDevPts": true
+    }
+  }
+}
+```
+
+启用后，评测沙箱会挂载一个新的 `devpts` 实例到 `/dev/pts`，并将
+`/dev/ptmx` 链接到该实例中的 `/dev/pts/ptmx`，用户程序即可正常创建和使用伪终端。

@@ -269,10 +269,14 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
             raise InvalidProblemException(f'Valgrind is not supported for RunType={run_type}')
         run_type = 'valgrind'
 
+    # `== True` here because it could also be None
+    mount_devpts = run_cfg.MountDevPts == True
+
     if run_type == 'skip':
         run: Optional[RunArgs] = None
     else:
-        run = RunArgs(type=run_type, limits=run_limits, infile=infile, supplementary_files=[])
+        run = RunArgs(type=run_type, limits=run_limits, infile=infile,
+                      supplementary_files=[], mount_devpts=mount_devpts)
         if run_cfg.Type == 'interactive':
             interactor = artifact_from_spj_program(ctx, run_cfg.Interactor,
                                                    interactor_precompiled_filename,

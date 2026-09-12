@@ -1,5 +1,5 @@
 <h1 id="数据格式规范">数据格式规范</h1>
-<p><em>By cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2024.10.11。</em></p>
+<p><em>By cong258258，Anoxiacxy，Alan-Liang，LauYeeYu，更新于 2026.9.13。</em></p>
 <h2 id="zip总格式">ZIP总格式</h2>
 <p><em>注：请尽量使用避免任何未在此处出现的特性或问题（特别是做出某个特定文件名的文件存在的假设），因为这可能在评测后端升级后发生变化。</em></p>
 <ul>
@@ -69,7 +69,7 @@
 <h2 id="config.json">config.json</h2>
 <p>如果您使用 VS Code，您可以在 config.json 中加入一行：</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;$schema&quot;</span><span class="fu">:</span> <span class="st">&quot;https://acm.sjtu.edu.cn/OnlineJudge/static/assets/problem-config.schema.json&quot;</span><span class="fu">,</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;$schema&quot;</span><span class="fu">:</span> <span class="st">&quot;https://acm.sjtu.edu.cn/OnlineJudge/static/assets/problem-config.schema.json?v=20260913&quot;</span><span class="fu">,</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="er">...</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>以获得更好的代码补全体验。</p>
@@ -121,17 +121,17 @@
 <p>默认为 compare，IgnoreInsignificantWhitespace 为 true。</p>
 <h4 id="config.json-格式">config.json 格式</h4>
 <p>在 config.json 中，可以指定这三个步骤的类型。例如：</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Compile&quot;</span><span class="fu">:</span> <span class="st">&quot;classic&quot;</span><span class="fu">,</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="st">&quot;classic&quot;</span><span class="fu">,</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="st">&quot;custom&quot;</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span></code></pre></div>
 <p>默认值可以省略：</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb3"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="st">&quot;custom&quot;</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span></code></pre></div>
 <p>如果该类型有需要填写的参数，则需要这样写出：</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Type&quot;</span><span class="fu">:</span> <span class="st">&quot;compare&quot;</span><span class="fu">,</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;IgnoreInsignificantWhitespace&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
@@ -142,7 +142,7 @@
 <li><p>spj 0 single file with diff</p>
 <p>这是通常类型题目将会使用到的评测类型，将会直接编译用户提交的代码，使用 <code>*.in</code> 作为程序输入，<code>*.out/ans</code> 作为标准答案，直接和程序输出进行 <code>diff</code> 比较来给分。</p>
 <p><code>"SPJ": 0</code> 相当于：</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Compile&quot;</span><span class="fu">:</span> <span class="st">&quot;classic&quot;</span><span class="fu">,</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="st">&quot;classic&quot;</span><span class="fu">,</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="st">&quot;compare&quot;</span><span class="fu">,</span></span>
@@ -150,7 +150,7 @@
 <li><p>spj 1 single file with spj</p>
 <p>这是答案不唯一的题目可能会使用到的评测类型，流程和 spj 0 基本相同，只是在获取了程序输出之后，会将程序输出，<code>*.in</code> 和 <code>*.out/ans</code> 文件交付给出题人自定义的 <code>spj_bin</code> 或 <code>spj.cpp</code> 文件进行评测，具体参见 <a href="#自定义-checker">自定义 Checker 部分</a>。</p>
 <p><code>"SPJ": 1</code> 相当于：</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb6"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Compile&quot;</span><span class="fu">:</span> <span class="st">&quot;classic&quot;</span><span class="fu">,</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="st">&quot;classic&quot;</span><span class="fu">,</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="st">&quot;custom&quot;</span><span class="fu">,</span></span>
@@ -158,7 +158,7 @@
 <li><p>spj 2 hpp without diff</p>
 <p>这是需要对头文件进行测试的评测类型，用户提交的代码将会被保存在 <code>src.hpp</code> 中。在数据包的根目录下需要有 <code>main.cpp</code> 或者 <code>1.cpp</code>、<code>2.cpp</code> 这样的文件，文件中需要 <code>#include "src.hpp"</code>，即可调用用户提交的代码进行测试。程序输出的就是最终的得分，所以你需要有一些奇特的方法来避免用户在 <code>src.hpp</code> 中输出一些奇怪的内容而影响最终的评分。更好的评测方式应该是使用 spj 4。注意，该评测类型可能不需要使用到 <code>*.out/ans</code> 文件。</p>
 <p><code>"SPJ": 2</code> 相当于：</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb7"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Compile&quot;</span><span class="fu">:</span> <span class="st">&quot;hpp&quot;</span><span class="fu">,</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="st">&quot;classic&quot;</span><span class="fu">,</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="st">&quot;skip&quot;</span><span class="fu">,</span></span>
@@ -166,7 +166,7 @@
 <li><p>spj 3 hpp with diff</p>
 <p>这同样是对头文件进行测试的评测类型，但是在最终的评分环节，是将输出和 <code>*.out/ans</code> 进行 <code>diff</code> 比对而给分的。</p>
 <p><code>"SPJ": 3</code> 相当于：</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb8"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Compile&quot;</span><span class="fu">:</span> <span class="st">&quot;hpp&quot;</span><span class="fu">,</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="st">&quot;classic&quot;</span><span class="fu">,</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="st">&quot;compare&quot;</span><span class="fu">,</span></span>
@@ -174,7 +174,7 @@
 <li><p>spj 4 hpp with spj</p>
 <p>这是一个 spj 2/3 的完美替代品，用户提交的代码会被保存在 <code>src.hpp</code> 里面，数据包内需要包含 <code>main.cpp</code> 或者 <code>1.cpp</code>、<code>2.cpp</code>，这些文件将会被一起编译成用户程序 <code>program</code>，数据包还需要有另外的 <code>spj_bin</code> 或 <code>spj.cpp</code>，它接受 <code>program</code> 程序的输出，<code>*.in</code> 、<code>*.out/ans</code> 作为参数，具体参见 <a href="#自定义-checker">自定义 Checker 部分</a>。一个解决 spj 2 中用户输出或者输入的方法是将文件 <code>*.in</code> 加密，并加入完整性检测的 MD5，以防止用户程序擅自在 <code>src.hpp</code> 中读入，可以在 <code>program</code> 的输出也加入完整性检测的 MD5，同时使用 <code>spj_bin</code> 或 <code>spj.cpp</code> 对 <code>program</code> 的输出进行检测，以防止用户程序擅自在 <code>src.hpp</code> 中输出。</p>
 <p><code>"SPJ": 4</code> 相当于：</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Compile&quot;</span><span class="fu">:</span> <span class="st">&quot;hpp&quot;</span><span class="fu">,</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="st">&quot;classic&quot;</span><span class="fu">,</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="st">&quot;custom&quot;</span><span class="fu">,</span></span>
@@ -182,7 +182,7 @@
 <li><p>spj 5 output only</p>
 <p>这里将直接把用户提交的文件作为 <code>userOutput</code> 传递给 <code>spj_bin</code> 或 <code>spj.cpp</code>，如果你的 <code>spj_bin</code> 或 <code>spj.cpp</code> 中内置了一个编译器，理论上你可以支持所有程序语言的评测。关于 <code>spj_bin</code> 或 <code>spj.cpp</code>，具体参见 <a href="#自定义-checker">自定义 Checker 部分</a>。</p>
 <p><code>"SPJ": 5</code> 相当于：</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb10"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Compile&quot;</span><span class="fu">:</span> <span class="st">&quot;skip&quot;</span><span class="fu">,</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="st">&quot;skip&quot;</span><span class="fu">,</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="st">&quot;custom&quot;</span><span class="fu">,</span></span>
@@ -190,7 +190,7 @@
 </ul>
 <h3 id="supportedfiles">SupportedFiles</h3>
 <p>一个数组，包含运行时需要额外引用的非库的头文件。<strong>注意</strong>，这里引入的文件需要被放入数据包的根目录下，而且该文件只会在文件的编译期被使用，程序运行时是不可以使用到这里的文件的。例：</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SupportedFiles&quot;:</span> <span class="ot">[</span></span>
+<div class="sourceCode" id="cb11"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SupportedFiles&quot;</span><span class="er">:</span> <span class="ot">[</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;utility.hpp&quot;</span><span class="ot">,</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;exceptions.hpp&quot;</span><span class="ot">,</span></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;class-bint.hpp&quot;</span><span class="ot">,</span></span>
@@ -214,7 +214,7 @@
 </ul>
 <p><strong>注意：</strong>为了使得评测能够进行下去，选手程序和裁判程序应当在输出每一行后主动 flush 输出流：例如 <code>fflush(stdout)</code> 或者使用 <code>std::cout &lt;&lt; std::endl</code> 换行。否则，可能会导致交互死锁造成 TLE。</p>
 <p>Interactor 可以为可执行文件或 C++ 源代码，可以在 config.json 中指定 interactor 的位置：</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb14"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Type&quot;</span><span class="fu">:</span> <span class="st">&quot;interactive&quot;</span><span class="fu">,</span></span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Interactor&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -224,7 +224,7 @@
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
 <span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb15"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb15"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Type&quot;</span><span class="fu">:</span> <span class="st">&quot;interactive&quot;</span><span class="fu">,</span></span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Interactor&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -237,7 +237,7 @@
 <p>如果不指定类型和位置，OJ 将使用 <code>interactor</code> （可执行文件）和 <code>interactor.cpp</code> （C++ 源码）作为 interactor 位置。</p>
 <p><strong>注意：为保证数据包的兼容性，interactor 可执行文件应当是文本文件（使用 #! 的 shell/python 等脚本），不建议是二进制文件。</strong></p>
 <p>对于 I/O 交互题，经常直接让 interactor 输出评测结果，而不使用另外的 checker。此时需要将 check 步骤指定为 skip：</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb16"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="st">&quot;interactive&quot;</span><span class="fu">,</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="st">&quot;skip&quot;</span></span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span></code></pre></div>
@@ -269,7 +269,7 @@
 <li>message 是错误/提示信息。Checker 向此文件写入的内容将展示给选手。</li>
 </ul>
 <p>Checker 可以为可执行文件或 C++ 源代码，可以在 config.json 中指定 checker 的位置：</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb20"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Type&quot;</span><span class="fu">:</span> <span class="st">&quot;custom&quot;</span><span class="fu">,</span></span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Checker&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -279,7 +279,7 @@
 <span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
 <span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb21"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>  <span class="er">&quot;SPJ&quot;:</span> <span class="fu">{</span></span>
+<div class="sourceCode" id="cb21"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SPJ&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Check&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Type&quot;</span><span class="fu">:</span> <span class="st">&quot;custom&quot;</span><span class="fu">,</span></span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Checker&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -294,3 +294,14 @@
 <h3 id="testlib-1">testlib</h3>
 <p>Checker 可以使用 testlib.h 编写，具体参见 <a href="https://codeforces.com/blog/entry/18431">testlib.h 文档</a>。OJ 的编译环境中自带 testlib.h，无需在数据包中包含。本地调试时，请使用 <a href="https://github.com/ACMClassOJ/testlib">ACMOJ 专用的 testlib.h</a>，不要使用 Codeforces/DOMjudge 等版本。</p>
 <p>OJ 仅支持 _ok 和 _wa 两种评测结果，_pe 和 _fail 会认为是 _wa。如果需要给出部分分，请使用 quitp，不支持 _pc。</p>
+<h2 id="devpts-和-devptmx-支持">/dev/pts 和 /dev/ptmx 支持</h2>
+<p>如果用户程序需要使用伪终端（PTY），可以在 <code>SPJ.Run</code> 的对象形式中将 <code>MountDevPts</code> 设置为 <code>true</code>：</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;SPJ&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;Run&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Type&quot;</span><span class="fu">:</span> <span class="st">&quot;classic&quot;</span><span class="fu">,</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;MountDevPts&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>启用后，评测沙箱会挂载一个新的 <code>devpts</code> 实例到 <code>/dev/pts</code>，并将 <code>/dev/ptmx</code> 链接到该实例中的 <code>/dev/pts/ptmx</code>，用户程序即可正常创建和使用伪终端。</p>

@@ -89,6 +89,15 @@ class NsjailArgs:
     # cgroup-based memory limit: not working.
     # cgroup_mem_max: str
 
+    # Block new user namespaces and TIOCSETD; clone3 falls back via ENOSYS.
+    seccomp_string: str = (
+        'ERRNO(1) { clone { (clone_flags & 0x10000000) != 0 }, '
+        'unshare { (unshare_flags & 0x10000000) != 0 }, ioctl { cmd == 0x5423 } } '
+        'ERRNO(38) { clone3 } '
+        'KILL { SYSCALL[0x40000038], SYSCALL[0x40000110], '
+        'SYSCALL[0x400001b3], SYSCALL[0x40000202] } DEFAULT ALLOW'
+    )
+
     # whether to enable network access in the container.
     disable_clone_newnet: bool = False
 
@@ -215,7 +224,7 @@ async def run_with_limits(
 
         du_proc = await create_subprocess_exec(
             nsjail,
-            *format_args(asdict(NsjailArgs('/', str(cwd), '9.0'))),
+            *format_args(asdict(NsjailArgs('/', str(cwd), '9'))),
             '--', du_path, '-s',
             stdin=DEVNULL, stdout=PIPE, stderr=PIPE,
             limit=4096,

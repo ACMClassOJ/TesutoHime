@@ -46,6 +46,10 @@ worker_uid_maps = [
     f'{worker_uid_inside}:{config.worker_uid}:1', # map worker
 ]
 
+#                     src  :  dst   :fstype:options
+pts_mount_options = 'devpts:/dev/pts:devpts:newinstance,ptmxmode=0666,mode=0600,max=32'
+ptmx_symlink = '/dev/pts/ptmx:/dev/ptmx'
+
 def waitstatus_to_exitcode (status: int):
     if WIFEXITED(status):
         return WEXITSTATUS(status)
@@ -73,10 +77,26 @@ class NsjailArgs:
     # R/W mount points.
     bindmount: Union[List[str], bool] = False
 
+    # General mounts and symlinks
+    # from `nsjail --help`:
+    # --mount|-m VALUE: Arbitrary mount, format src:dst:fs_type:options
+    mount: Union[List[str], str, Literal[False]] = False
+    # --symlink|-s VALUE: Symlink, format src:dst
+    symlink: Union[List[str], str, Literal[False]] = False
+
     # maximum size in megabytes of files that the process may create.
     rlimit_fsize: str = 'inf'
     # cgroup-based memory limit: not working.
     # cgroup_mem_max: str
+
+    # Block new user namespaces and TIOCSETD; clone3 falls back via ENOSYS.
+    seccomp_string: str = (
+        'ERRNO(1) { clone { (clone_flags & 0x10000000) != 0 }, '
+        'unshare { (unshare_flags & 0x10000000) != 0 }, ioctl { cmd == 0x5423 } } '
+        'ERRNO(38) { clone3 } '
+        'KILL { SYSCALL[0x40000038], SYSCALL[0x40000110], '
+        'SYSCALL[0x400001b3], SYSCALL[0x40000202] } DEFAULT ALLOW'
+    )
 
     # whether to enable network access in the container.
     disable_clone_newnet: bool = False
@@ -115,6 +135,7 @@ async def run_with_limits(
     network_access: bool = False,
     disable_proc: bool = True,
     tmpfsmount: bool = False,
+    mount_devpts: bool = False,
     disable_stderr: bool = False,
     env: List[str] = [],
     setup_root_dir: Optional[Callable[[PosixPath], Coroutine[Any, Any, None]]] = None,
@@ -158,6 +179,8 @@ async def run_with_limits(
             disable_proc=disable_proc,
             tmpfsmount='/tmp' if tmpfsmount else False,
             env=config.task.envp + env,
+            mount=pts_mount_options if mount_devpts else False,
+            symlink=ptmx_symlink if mount_devpts else False,
         )
         checker_time_limit = str(ceil(time_limit_scaled * time_tolerance_ratio + 500))
         run_args = [runner_path, checker_time_limit, str(result_file)] \
@@ -201,7 +224,7 @@ async def run_with_limits(
 
         du_proc = await create_subprocess_exec(
             nsjail,
-            *format_args(asdict(NsjailArgs('/', str(cwd), '9.0'))),
+            *format_args(asdict(NsjailArgs('/', str(cwd), '9'))),
             '--', du_path, '-s',
             stdin=DEVNULL, stdout=PIPE, stderr=PIPE,
             limit=4096,

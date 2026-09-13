@@ -16,13 +16,16 @@ class PySanitizer(ast.NodeVisitor):
             raise SecurityError('Invalid Constant')
 
     # For compat with Python 3.7 :(
-    def visit_Num(self, node: ast.Num) -> Any:
+    # def visit_Num(self, node: ast.Num) -> Any:
+    def visit_Num(self, node: Any) -> Any:
         if type(node.n) not in (int, float):
             raise SecurityError('Invalid Num')
-    def visit_Str(self, node: ast.Str) -> Any:
+    # def visit_Str(self, node: ast.Str) -> Any:
+    def visit_Str(self, node: Any) -> Any:
         if type(node.s) != str:
             raise SecurityError('Invalid Str')
-    def visit_NameConstant(self, node: ast.NameConstant) -> Any:
+    # def visit_NameConstant(self, node: ast.NameConstant) -> Any:
+    def visit_NameConstant(self, node: Any) -> Any:
         if node.value not in (True, False):
             raise SecurityError('Invalid NameConstant')
 

@@ -58,11 +58,11 @@ async def get_runner_status(runner_id: str):
 
 watch_tasks: Dict[str, Task] = {}
 
-def wait_until_offline(runner_id: str):
+def wait_until_offline(runner_id: str) -> Task[tuple[str, str] | None]:
     if runner_id in watch_tasks:
         return watch_tasks[runner_id]
     logger.debug('Polling runner %(id)s for offline signal', { 'id': runner_id }, 'runner:poll')
-    async def task():
+    async def task() -> tuple[str, str] | None:
         runner_info = RedisQueues.RunnerInfo(runner_id, '')
         key = redis_queues.runner(runner_info).heartbeat
         while True:

@@ -94,6 +94,7 @@ class RunArgs(DataclassBase):
     supplementary_files: list[FileUrl]
     outfile: Artifact | None = None
     interactor: InteractorOptions | None = None
+    mount_devpts: bool = False
 
 
 @dataclass

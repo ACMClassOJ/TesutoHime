@@ -1,8 +1,10 @@
 import asyncio
 from logging import getLogger
 from commons.task_typing import (
+    CompileResult,
     CompileTask,
     Input,
+    JudgeResult,
     JudgeTask,
     StatusUpdateDone,
     StatusUpdateError,
@@ -24,6 +26,7 @@ async def task_handler(
     task_logger.info('received task %(task)s', { 'id': task_id, 'task': task }, 'task:start')
     try:
         await reporter(StatusUpdateStarted(str(config.id)))
+        result: CompileResult | JudgeResult
         match task:
             case CompileTask():
                 result = await compile_task(task)

@@ -115,6 +115,7 @@ class SpjChecker(DataclassBase):
     answer: FileUrl | None
     supplementary_files: list[FileUrl]
     limits: ResourceUsage
+    mount_devpts: bool = False
 
 
 type Checker = CompareChecker | DirectChecker | SpjChecker

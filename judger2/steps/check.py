@@ -122,7 +122,8 @@ async def checker_spj(infile: Optional[PosixPath], outfile: PosixPath, \
 
         res = await run_with_limits('std', argv, cwd, checker.limits,
                                     supplementary_paths=bindmount,
-                                    supplementary_paths_rw=[user_cwd])
+                                    supplementary_paths_rw=[user_cwd],
+                                    mount_devpts=checker.mount_devpts)
         if res.error is not None:
             return CheckResult('bad_problem', f'checker error: {res.message}')
 

@@ -445,3 +445,9 @@ OJ 仅支持 \_ok 和 \_wa 两种评测结果，\_pe 和 \_fail 会认为是 \_w
 
 启用后，评测沙箱会挂载一个新的 `devpts` 实例到 `/dev/pts`，并将
 `/dev/ptmx` 链接到该实例中的 `/dev/pts/ptmx`，用户程序即可正常创建和使用伪终端。
+
+`SPJ.Check` 的对象形式也支持 `MountDevPts`，用于启用自定义 checker 沙箱中的 PTY。
+`SPJ.Run.MountDevPts` 和 `SPJ.Check.MountDevPts` 独立生效，默认均为 `false`。
+每次启用后都会创建独立的 `devpts` 实例，最多分配 32 对 PTY。
+
+此选项不改变现有的 seccomp 限制或沙箱内进程之间的权限隔离。

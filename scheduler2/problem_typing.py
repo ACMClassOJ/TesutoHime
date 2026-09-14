@@ -51,6 +51,7 @@ class CheckConfig:
     IgnoreInsignificantWhitespace: bool = True
     # For custom
     Checker: Optional[SpjProgram] = None
+    MountDevPts: bool = False
 
 @dataclass
 class SpjConfig:

@@ -312,6 +312,7 @@ def parse_testpoint(ctx: ParseContext, conf: ConfigTestpoint) -> Testpoint:
             answer=ans(),
             supplementary_files=[],
             limits=default_check_limits,
+            mount_devpts=check_cfg.MountDevPts,
         )
     else:
         raise InvalidProblemException(f'Unknown check type {ctx.check_type}')

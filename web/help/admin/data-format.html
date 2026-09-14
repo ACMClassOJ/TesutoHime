@@ -305,3 +305,5 @@
 <span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
 <span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>启用后，评测沙箱会挂载一个新的 <code>devpts</code> 实例到 <code>/dev/pts</code>，并将 <code>/dev/ptmx</code> 链接到该实例中的 <code>/dev/pts/ptmx</code>，用户程序即可正常创建和使用伪终端。</p>
+<p><code>SPJ.Check</code> 的对象形式也支持 <code>MountDevPts</code>，用于启用自定义 checker 沙箱中的 PTY。 <code>SPJ.Run.MountDevPts</code> 和 <code>SPJ.Check.MountDevPts</code> 独立生效，默认均为 <code>false</code>。 每次启用后都会创建独立的 <code>devpts</code> 实例，最多分配 32 对 PTY。</p>
+<p>此选项不改变现有的 seccomp 限制或沙箱内进程之间的权限隔离。</p>

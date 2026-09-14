@@ -227,6 +227,10 @@
                         "Path"
                       ],
                       "default": null
+                    },
+                    "MountDevPts": {
+                      "type": "boolean",
+                      "default": false
                     }
                   },
                   "required": [

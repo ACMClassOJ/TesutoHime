@@ -449,5 +449,3 @@ OJ 仅支持 \_ok 和 \_wa 两种评测结果，\_pe 和 \_fail 会认为是 \_w
 `SPJ.Check` 的对象形式也支持 `MountDevPts`，用于启用自定义 checker 沙箱中的 PTY。
 `SPJ.Run.MountDevPts` 和 `SPJ.Check.MountDevPts` 独立生效，默认均为 `false`。
 每次启用后都会创建独立的 `devpts` 实例，最多分配 32 对 PTY。
-
-此选项不改变现有的 seccomp 限制或沙箱内进程之间的权限隔离。

@@ -28,7 +28,7 @@ let
       git openssh acmoj-ssh-config cacert
       gcc testlib bits-pch
       cmake  # gnumake is in stdenv
-      iverilog
+      iverilog verilator
       python
 
       # checker

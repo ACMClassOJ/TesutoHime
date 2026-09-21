@@ -7,5 +7,6 @@ cat << END
 <p>CMake version: <code>$(cmake --version | head -1)</code></p>
 <p>Python version: <code>$(python3 -V)</code></p>
 <p>Verilog version: <code>$(iverilog -V | head -1)</code></p>
+<p>Verilator version: <code>$(verilator --version)</code></p>
 END
 EOF

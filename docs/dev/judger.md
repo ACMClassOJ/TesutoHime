@@ -22,7 +22,7 @@ Judger 模块相关代码位于 [`judger2/`](../../judger2/) 目录下。本文�
 
 评测过程中会用到多个不同的环境，这些环境在代码中称作 profile：
 
-- 标准环境（std）：用于编译、运行 interactor 和 checker、运行 verilog 等
+- 标准环境（std）：包含 Icarus Verilog 和 Verilator，用于编译、运行 interactor 和 checker、运行 verilog 等
 - libc 环境：仅包含 libc，用于运行选手提交的 C++ 程序
 - Valgrind 环境：仅包含 libc 和 valgrind，用于启用 Valgrind 的测试点
 - Python 环境：仅包含 Python，用于运行选手提交的 Python 程序

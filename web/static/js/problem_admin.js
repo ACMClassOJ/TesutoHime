@@ -85,7 +85,7 @@ $(() => {
                 return editor.cm.getValue()
             }
         }
-        const textarea = document.getElementById(editormd_name)?.querySelector('textarea')
+        const textarea = document.getElementById(editormd_name)?.querySelector(':scope > textarea')
         return textarea ? textarea.value : ''
     }
 
@@ -93,7 +93,8 @@ $(() => {
         const content = getEditorMarkdown(editormd_name)
         const el = document.getElementById(editormd_name)
         if (!el) return content
-        for (const textarea of el.querySelectorAll('textarea')) {
+        const textarea = el.querySelector(':scope > textarea')
+        if (textarea) {
             textarea.value = content
         }
         return content

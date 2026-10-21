@@ -1624,7 +1624,7 @@ def process_admin():
         if args['student_id'] is not None:
             user.student_id = args['student_id']
         if args['friendly_name'] is not None:
-            user.student_id = args['friendly_name']
+            user.friendly_name = args['friendly_name']
         if args['password'] is not None:
             UserManager.set_password(user, args['password'])
         priv = request.form.get('privilege')

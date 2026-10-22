@@ -65,7 +65,7 @@
                         {%- endif -%}
                     </div>
                     <div class="card-body">
-                        <span>{{ contest.problems[j].id }}. {{ contest.problems[j].title }}</span>
+                        <span>{{ contest.problems[j].id }}. {{ show_problem_title(contest.problems[j]) }}</span>
                         <div class="float-right">
                             {%- if problem['count'] + problem['pending_count'] > 0 -%}
                             <form action="{{ url_for('.status') }}" class="d-inline">

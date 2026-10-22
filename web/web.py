@@ -965,6 +965,7 @@ def problemset(contest: Contest):
         status=contest_status,
         percentage=percentage,
         problems_visible=problems_visible,
+        show_problem_title=ProblemManager.show_problem_title,
         has_real_name=has_real_name,
         real_name_map=real_name_map,
         data=data,

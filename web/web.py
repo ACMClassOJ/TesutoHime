@@ -1003,10 +1003,10 @@ def export_problemset(contest: Contest):
                 '\n'.join(line_prefix + x for x in content.strip().splitlines()) +
                 postfix)
 
-    def prelude (s: JudgeRecordV2) -> str:
+    def prelude (s: JudgeRecordV2, can_show: bool) -> str:
         details_message = ''
-        message = s.message
-        if s.details is not None:
+        message = s.message if can_show else ''
+        if can_show and s.details is not None:
             details: ProblemJudgeResult = deserialize(s.details)
             details_message = '\n'.join(f'{group.name}: {group.score} {group.result}' for group in details.groups)
         user = player_by_id[s.user_id]
@@ -1015,7 +1015,7 @@ def export_problemset(contest: Contest):
             late_phrase = ' (Late Submission)'
         content = f'''
 {user.student_id} {names[user.id]} ({user.username})
-Problem {s.problem_id} - {problem_by_id[s.problem_id].title}
+Problem {s.problem_id} - {ProblemManager.show_problem_title(problem_by_id[s.problem_id])}
 Time: {s.created_at.strftime('%Y-%m-%d %H:%M:%S')}{late_phrase}
 Status: {s.status.name}
 Score: {s.score}
@@ -1054,10 +1054,14 @@ Message: {message}
         score = max(x.score for x in tries)
         score_tries = list(sorted(filter(lambda x: x.score == score, tries), key=lambda x: x.id))
         s = score_tries[-1]
-        r = s3_internal.get_object(Bucket=S3Config.Buckets.submissions,
-                                   Key=f'{s.id}.code')['Body'].read()
+        can_show = JudgeManager.can_show(s)
+        if can_show:
+            r = s3_internal.get_object(Bucket=S3Config.Buckets.submissions,
+                                       Key=f'{s.id}.code')['Body'].read()
+        else:
+            r = b'access denied: you do not have the permission to view this submission'
         with f.open(f'{s.problem_id}/{filename(s)}', 'w') as w:
-            w.write(prelude(s).encode())
+            w.write(prelude(s, can_show).encode())
             w.write(r)
 
     f.close()

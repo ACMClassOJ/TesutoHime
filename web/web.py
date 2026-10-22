@@ -1186,6 +1186,8 @@ def problemset_admin(contest: Contest):
     return render_template('contest_admin.html', contest=contest,
                            problem_stats=problem_stats,
                            completion_stats=completion_stats,
+                           show_problem_title=ProblemManager.show_problem_title,
+                           show_problem_release_time=ProblemManager.show_problem_release_time,
                            completion_criteria_max_length=completion_criteria_max_length)
 
 @web.route('/problemset/<contest:contest>/problem/add', methods=['POST'])

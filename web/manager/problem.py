@@ -14,7 +14,7 @@ from web.config import S3Config
 from web.const import FAR_FUTURE_TIME, MAX_ATTACHMENT_SIZE_BYTES, PrivilegeType, language_info
 from web.manager.contest import ContestManager
 from web.manager.user import UserManager
-from web.utils import SearchDescriptor, db, generate_s3_public_url, s3_internal
+from web.utils import SearchDescriptor, db, generate_s3_public_url, readable_time, s3_internal
 
 
 class ProblemManager:
@@ -84,6 +84,16 @@ class ProblemManager:
         if submission_count > 0 or contest_count > 0 or len(problem.attachments) > 0:
             abort(BAD_REQUEST)
         db.delete(problem)
+
+    @classmethod
+    def show_problem_title(cls, problem: Problem) -> str:
+        return problem.title if cls.can_show(problem) else '[题目未发布]'
+
+    @classmethod
+    def show_problem_release_time(cls, problem: Problem) -> str:
+        if not cls.can_show(problem):
+            return '[无权查看]'
+        return readable_time(problem.release_time)
 
 
     # Attachments
